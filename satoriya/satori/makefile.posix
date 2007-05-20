@@ -1,0 +1,97 @@
+# -*- makefile -*-
+
+# 使用するツール類の設定
+CXX = g++
+LD = g++
+STRIP = strip
+MKDEP = mkdep
+
+# 作るライブラリ名の設定
+# これはdarwin用の設定で、libsatori.bundleを生成する。
+# LinuxやBSDならpostfixを.soにする必要がある筈。
+DYLIB_NAME_PREFIX = lib
+DYLIB_NAME_POSTFIX = .bundle
+
+# 追加するフラグ。
+# CXXFLAGSは必要無ければ空でも良いが、LDFLAGSはdlopen可能なライブラリを
+# 作れる設定にしなければならない。darwinなら-bundle、LinuxやBSDなら-shared。
+CXXFLAGS = -O3
+LDFLAGS = -bundle
+
+
+################## これより下は弄らなくてもコンパイル出来ます ##################
+CXXFLAGS_ADD = -DPOSIX -DSATORI_DLL -I. -I../_
+LIBSATORI_OBJ = \
+	../_/Sender.o \
+	../_/Utilities.o \
+	../_/calc.o \
+	../_/stltool.o \
+	../_/mersenne-twister.o \
+	SakuraCS.o \
+	SakuraClient.o \
+	SakuraDLLClient.o \
+	SakuraDLLHost.o \
+	SaoriClient.o \
+	satori.o \
+	satoriTranslate.o \
+	satori_AnalyzeRequest.o \
+	satori_CreateResponce.o \
+	satori_EventOperation.o \
+	satori_Kakko.o \
+	satori_load_dict.o \
+	satori_load_unload.o \
+	satori_sentence.o \
+	satori_tool.o \
+	shiori_plugin.o \
+	$(NULL)
+LIBSSU_OBJ = \
+	../_/Sender.o \
+	../_/Utilities.o \
+	../_/calc.o \
+	../_/calc_float.o \
+	../_/stltool.o \
+	../_/mersenne-twister.o \
+	SakuraCS.o \
+	SakuraDLLHost.o \
+	SaoriHost.o \
+	ssu.o \
+	$(NULL)
+
+LIBSATORI = $(DYLIB_NAME_PREFIX)satori$(DYLIB_NAME_POSTFIX)
+LIBSSU = $(DYLIB_NAME_PREFIX)ssu$(DYLIB_NAME_POSTFIX)
+
+all: $(LIBSATORI) $(LIBSSU)
+
+depend:
+	mkdep $(CXXFLAGS) $(CXXFLAGS_ADD) $(LIBSATORI_OBJ:.o=.cpp) $(LIBSSU_OBJ:.o=.cpp)
+
+clean:
+	rm -f $(LIBSATORI) $(LIBSATORI_OBJ)
+	rm -f $(LIBSSU) $(LIBSSU_OBJ)
+
+$(LIBSATORI): $(LIBSATORI_OBJ)
+	$(LD) -o $@ $(LIBSATORI_OBJ) $(LDFLAGS)
+	$(STRIP) -x $@
+
+$(LIBSSU): $(LIBSSU_OBJ)
+	$(LD) -o $@ $(LIBSSU_OBJ) $(LDFLAGS)
+	$(STRIP) -x $@
+
+.cpp.o:
+	$(CXX) $(CXXFLAGS) $(CXXFLAGS_ADD) -o $@ -c $<
+
+DESTDIR = satori-src
+dist:
+	rm -rf $(DESTDIR)
+	mkdir -p $(DESTDIR)
+	cp -f ../satori_license.txt $(DESTDIR)
+	mkdir -p $(DESTDIR)/_
+	cp -f ../_/*.cpp ../_/*.h $(DESTDIR)/_
+	mkdir -p $(DESTDIR)/satori
+	cp -f *.cpp *.h makefile.* *.html *.dsp *.dsw $(DESTDIR)/satori
+	mkdir -p $(DESTDIR)/satori/test
+	cp -f test/*.txt test/*.ini $(DESTDIR)/satori/test
+	zip -r $(DESTDIR).zip $(DESTDIR)
+	rm -rf $(DESTDIR)
+
+.PHONY: all clean depend dist

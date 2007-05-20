@@ -1,0 +1,11 @@
+
+＊hwnd
+（Weirds,set_hwnd,（Ｒ０））
+
+＊uniqueid
+（Weirds,owner_id,（Ｒ０））
+
+＊OnMouseClick
+
+（Weirds,show）
+（Weirds,menu_close）

@@ -1,0 +1,43 @@
+使い方：
+
+	// 敵初期化
+	g_pEnemyControlTask = new EnemyControlTask();
+	g_pEnemyControlTask->addChildBottom(new TakoEnemyTask(x,y));
+	g_pEnemyControlTask->addChildBottom(new IkaEnemyTask(x,y,color));
+
+	// 敵全滅
+	while ( g_pEnemyControlTask->getChildTop() )
+		delete g_pEnemyControlTask->getChildTop();
+	
+	// 敵全滅（親含め）
+	delete g_pEnemyControlTask;
+
+
+	Taskの樹構造エレメントとしての性格は、
+	主要クラスとしての使い勝手を鑑みて、
+	継承でもテンプレートコンテナでもなくそのまんま持たせてました。
+	拙作TreeTemplateからほぼコピペ。
+	
+	親はdeleteされると子孫を道連れにします。
+	死にたくなければ独立しましょう。
+
+
+利用上の注意：
+
+	仮想デストラクタの恩恵にあずかるため、Taskクラスは必ずnewで確保しましょう。
+	静的とかスタック上とか不可。
+
+	kill()は無くしました。delete thisしてください。
+	自殺後はメンバ変数に触らず、速やかにreturn。
+
+	handle()内では原則的に子殺し・及び自殺（＝子供全滅）のみ許可。
+	親～先祖を殺してはいけない。他人は慎重に。兄弟はすぐ下の弟以外なら可。
+	とにかく自殺なら安全なので推奨。このへんの用語はどうにかならんもんか。
+
+	継承したクラスのコンストラクタは、初期化リストで Task() を呼ぶのを忘れずに。
+	デストラクタにはvirtual必須。
+
+その他：
+	setParentが無いのは、親のどこに所属するかが不明なため。
+	そもそも設定するべき親がわかってるんだからaddChildTop/Bottomしてください。
+

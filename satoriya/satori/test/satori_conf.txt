@@ -1,0 +1,60 @@
+
+＃
+＃　変数等の初期化。
+＃　上書きしないので、途中追加した変数にも初期値を設定できます。
+＃
+
+＊初期化
+＄喋り間隔	１８０秒
+＄喋り間隔誤差	１０％
+＄会話時サーフェス戻し	有効
+＄スコープ切り換え時	\n[half]
+＄ユーザ名	ユーザ
+＄自動挿入ウェイトの倍率	１００％
+
+
+
+＃　SAORIを使わない場合、ここから下を消去してしまって構いません。
+＃　SAORIフォルダも不要です。
+
+
+
+＃
+＃　各栞共通プラグイン規格『SAORI』用の定義。
+＃　使うdllは予めここで列挙してください。
+＃
+＃　カンマ区切りで、左から順に
+＃　　・辞書からの呼び出すときの名前。dll名そのままでも構いません。
+＃　　・プラグインdllの相対パス。
+＃　　・自動設定される引数。これは省略可。
+＃
+
+
+＠SAORI
+＃ssu ---------------------------------------------------------------
+calc,saori/ssu.dll,calc
+calc_float,saori/ssu.dll,calc_float
+if,saori/ssu.dll,if
+unless,saori/ssu.dll,unless
+nswitch,saori/ssu.dll,nswitch
+switch,saori/ssu.dll,switch
+substr,saori/ssu.dll,substr
+split,saori/ssu.dll,split
+replace,saori/ssu.dll,replace
+replace_first,saori/ssu.dll,replace_first
+erase,saori/ssu.dll,erase
+erase_first,saori/ssu.dll,erase_first
+count,saori/ssu.dll,count
+compare,saori/ssu.dll,compare
+compare_head,saori/ssu.dll,compare_head
+compare_tail,saori/ssu.dll,compare_tail
+length,saori/ssu.dll,length
+zen2han,saori/ssu.dll,zen2han
+han2zen,saori/ssu.dll,han2zen
+hira2kata,saori/ssu.dll,hira2kata
+kata2hira,saori/ssu.dll,kata2hira
+sprintf,saori/ssu.dll,sprintf
+iflist,saori/ssu.dll,iflist
+is_empty,saori/ssu.dll,is_empty
+is_digit,saori/ssu.dll,is_digit
+is_alpha,saori/ssu.dll,is_alpha
