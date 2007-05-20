@@ -1,0 +1,113 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// 日本語 resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_JPN)
+#ifdef _WIN32
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+#pragma code_page(932)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_DIALOG DIALOGEX 0, 0, 223, 281
+STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "さとりて"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    EDITTEXT        IDC_EDIT1,7,7,209,171,ES_MULTILINE | ES_WANTRETURN | 
+                    WS_VSCROLL,WS_EX_ACCEPTFILES
+    DEFPUSHBUTTON   "送信(&S)",IDOK,158,181,58,14
+    EDITTEXT        IDC_EDIT2,7,198,209,61,ES_MULTILINE | ES_READONLY | 
+                    WS_VSCROLL
+    PUSHBUTTON      "終了(&X)",IDEXIT,7,181,28,14
+    CONTROL         "辞書扱い",IDC_LIKE_DICT,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,98,264,43,10
+    PUSHBUTTON      "Button1",IDCANCEL,166,175,50,14,NOT WS_VISIBLE
+    CONTROL         "Escで消去",IDC_ERASE_AT_ESC,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,264,43,10
+    PUSHBUTTON      "Button1",ID_READCLIPBOARD,166,193,50,14,NOT WS_VISIBLE
+    CONTROL         "クリップボード監視",IDC_CHECK_CLIPBOARD,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,146,264,70,10
+    CONTROL         "里々",IDC_SATORI,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    62,264,30,10
+    PUSHBUTTON      "Button1",ID_READCLIPBOARD_SYNC,0,203,50,14,NOT 
+                    WS_VISIBLE
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 216
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 274
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // 日本語 resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

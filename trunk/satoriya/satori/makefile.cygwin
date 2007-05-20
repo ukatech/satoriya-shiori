@@ -1,0 +1,62 @@
+# -*- makefile -*-
+
+# 使用するツール類の設定
+CXX = g++
+LD = g++
+STRIP= strip
+
+# 作るライブラリ名の設定
+# これはdarwin用の設定で、libsatori.bundleを生成する。
+# LinuxやBSDならpostfixを.soにする必要がある筈。
+DYLIB_NAME_PREFIX = 
+DYLIB_NAME_POSTFIX = .so
+
+# 追加するフラグ。
+# CXXFLAGSは必要無ければ空でも良いが、LDFLAGSはdlopen可能なライブラリを
+# 作れる設定にしなければならない。darwinなら-bundle、LinuxやBSDなら-shared。
+CXXFLAGS = -O3
+LDFLAGS = -shared
+
+
+################## これより下は弄らなくてもコンパイル出来ます ##################
+CXXFLAGS_ADD = -DPOSIX -DSATORI_DLL -I. -I../_
+LIBSATORI_OBJ = \
+	../_/Sender.o \
+	../_/Utilities.o \
+	../_/calc.o \
+	../_/stltool.o \
+	../_/mersenne-twister.o \
+	SakuraCS.o \
+	SakuraClient.o \
+	SakuraDLLClient.o \
+	SakuraDLLHost.o \
+	SaoriClient.o \
+	satori.o \
+	satoriTranslate.o \
+	satori_AnalyzeRequest.o \
+	satori_CreateResponce.o \
+	satori_EventOperation.o \
+	satori_Kakko.o \
+	satori_load_dict.o \
+	satori_load_unload.o \
+	satori_sentence.o \
+	satori_tool.o \
+	shiori_plugin.o
+
+DYLIB_NAME = $(DYLIB_NAME_PREFIX)satori$(DYLIB_NAME_POSTFIX)
+
+all: $(DYLIB_NAME)
+
+clean:
+	rm -f $(DYLIB_NAME)
+	rm -f $(LIBSATORI_OBJ)
+
+$(DYLIB_NAME): $(LIBSATORI_OBJ)
+	$(LD) -o $@ $(LIBSATORI_OBJ) $(LDFLAGS)
+	$(STRIP) -x $@
+
+.cpp.o:
+	$(CXX) $(CXXFLAGS) $(CXXFLAGS_ADD) -o $@ -c $<
+
+.PHONY: all clean
+

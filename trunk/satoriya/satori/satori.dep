@@ -1,0 +1,140 @@
+# Microsoft Developer Studio Generated Dependency File, included by satori.mak
+
+..\_\calc.cpp : \
+	"..\_\simple_stack.h"\
+	"..\_\stltool.h"\
+	
+
+..\_\Sender.cpp : \
+	"..\..\..\program files\msvs\vc98\include\basetsd.h"\
+	"..\_\Sender.h"\
+	
+
+..\_\stltool.cpp : \
+	"..\_\stltool.h"\
+	
+
+..\_\Utilities.cpp : \
+	"..\_\Utilities.h"\
+	
+
+.\shiori_plugin.cpp : \
+	"..\..\..\program files\msvs\vc98\include\basetsd.h"\
+	"..\_\Sender.h"\
+	"..\_\stltool.h"\
+	".\shiori_plugin.h"\
+	
+
+.\dll_interface.cpp : \
+	"..\..\..\program files\msvs\vc98\include\basetsd.h"\
+	"..\_\OverlapController.h"\
+	"..\_\Sender.h"\
+	"..\_\simple_stack.h"\
+	"..\_\stltool.h"\
+	".\satori.h"\
+	".\shiori_plugin.h"\
+	
+
+.\satori_load_dict.cpp : \
+	"..\..\..\program files\msvs\vc98\include\basetsd.h"\
+	"..\_\OverlapController.h"\
+	"..\_\Sender.h"\
+	"..\_\simple_stack.h"\
+	"..\_\stltool.h"\
+	"..\_\Utilities.h"\
+	".\satori.h"\
+	".\shiori_plugin.h"\
+	
+
+.\satori_load_unload.cpp : \
+	"..\..\..\program files\msvs\vc98\include\basetsd.h"\
+	"..\_\OverlapController.h"\
+	"..\_\Sender.h"\
+	"..\_\simple_stack.h"\
+	"..\_\stltool.h"\
+	"..\_\Utilities.h"\
+	".\satori.h"\
+	".\shiori_plugin.h"\
+	
+
+.\satori_AnalyzeRequest.cpp : \
+	"..\..\..\program files\msvs\vc98\include\basetsd.h"\
+	"..\_\OverlapController.h"\
+	"..\_\Sender.h"\
+	"..\_\simple_stack.h"\
+	"..\_\stltool.h"\
+	".\satori.h"\
+	".\shiori_plugin.h"\
+	
+
+.\satori_CreateResponce.cpp : \
+	"..\..\..\program files\msvs\vc98\include\basetsd.h"\
+	"..\_\OverlapController.h"\
+	"..\_\Sender.h"\
+	"..\_\simple_stack.h"\
+	"..\_\stltool.h"\
+	".\satori.h"\
+	".\shiori_plugin.h"\
+	
+
+.\satori_EventOperation.cpp : \
+	"..\..\..\program files\msvs\vc98\include\basetsd.h"\
+	"..\_\OverlapController.h"\
+	"..\_\Sender.h"\
+	"..\_\simple_stack.h"\
+	"..\_\stltool.h"\
+	".\satori.h"\
+	".\shiori_plugin.h"\
+	
+
+.\satori_Kakko.cpp : \
+	"..\..\..\program files\msvs\vc98\include\basetsd.h"\
+	"..\_\OverlapController.h"\
+	"..\_\Sender.h"\
+	"..\_\simple_stack.h"\
+	"..\_\stltool.h"\
+	"..\_\Utilities.h"\
+	".\satori.h"\
+	".\shiori_plugin.h"\
+	
+
+.\satori_sentence.cpp : \
+	"..\..\..\program files\msvs\vc98\include\basetsd.h"\
+	"..\_\OverlapController.h"\
+	"..\_\Sender.h"\
+	"..\_\simple_stack.h"\
+	"..\_\stltool.h"\
+	".\satori.h"\
+	".\shiori_plugin.h"\
+	
+
+.\satori_tool.cpp : \
+	"..\..\..\program files\msvs\vc98\include\basetsd.h"\
+	"..\_\OverlapController.h"\
+	"..\_\Sender.h"\
+	"..\_\simple_stack.h"\
+	"..\_\stltool.h"\
+	".\satori.h"\
+	".\shiori_plugin.h"\
+	
+
+.\satoriFMO.cpp : \
+	"..\..\..\program files\msvs\vc98\include\basetsd.h"\
+	"..\_\FMO.h"\
+	"..\_\OverlapController.h"\
+	"..\_\Sender.h"\
+	"..\_\simple_stack.h"\
+	"..\_\stltool.h"\
+	".\satori.h"\
+	".\shiori_plugin.h"\
+	
+
+.\satoriTranslate.cpp : \
+	"..\..\..\program files\msvs\vc98\include\basetsd.h"\
+	"..\_\OverlapController.h"\
+	"..\_\Sender.h"\
+	"..\_\simple_stack.h"\
+	"..\_\stltool.h"\
+	".\satori.h"\
+	".\shiori_plugin.h"\
+	
