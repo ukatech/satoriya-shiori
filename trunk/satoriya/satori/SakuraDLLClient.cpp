@@ -44,7 +44,7 @@ string	SakuraDLLClient::request(const string& iRequestString)
 	long len = iRequestString.length();
 
 #ifdef POSIX
-	char* h = static_cast<char*>(malloc(len + 1));
+	char* h = static_cast<char*>(malloc(len) + 1);
 #else
 	HGLOBAL h = ::GlobalAlloc(GMEM_FIXED, len + 1);
 #endif

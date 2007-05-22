@@ -6,7 +6,7 @@
 #endif
 #include "SakuraDLLHost.h"
 #include <iostream>
-#include "../_/Sender.h"
+#include "../_/sender.h"
 
 //////////DEBUG/////////////////////////
 #ifdef _WINDOWS
@@ -53,15 +53,14 @@ extern "C" __declspec(dllexport) BOOL __cdecl unload(void)
 
 #ifdef POSIX
 extern "C" char* request(char* i_data, long* io_data_len) {
-    // O[oï¿½Æ‚ï¿½
+    // ƒOƒ[ƒoƒ‹ƒƒ‚ƒŠ‚ğó‚¯‚Æ‚é
     string the_req_str(i_data, *io_data_len);
     free(i_data);
 
-    // NGXg
-
+    // ƒŠƒNƒGƒXƒgÀs
     string the_resp_str = SakuraDLLHost::I()->request(the_req_str);
 
-    // O[oÅ•Ô‚
+    // ƒOƒ[ƒoƒ‹ƒƒ‚ƒŠ‚Å•Ô‚·
     *io_data_len = the_resp_str.size();
     char* the_return_data = static_cast<char*>(malloc(*io_data_len));
     memcpy(the_return_data, the_resp_str.c_str(), *io_data_len);
@@ -70,15 +69,14 @@ extern "C" char* request(char* i_data, long* io_data_len) {
 #else
 extern "C" __declspec(dllexport) HGLOBAL __cdecl request(HGLOBAL i_data, long* io_data_len)
 {
-	// O[oï¿½Æ‚ï¿½
+	// ƒOƒ[ƒoƒ‹ƒƒ‚ƒŠ‚ğó‚¯‚Æ‚é
 	string the_req_str((char*)::GlobalLock(i_data), *io_data_len);
 	::GlobalFree(i_data);
 
-	// NGXg
-s
+	// ƒŠƒNƒGƒXƒgÀs
 	string	the_resp_str = SakuraDLLHost::I()->request(the_req_str);
 
-	// O[oÅ•Ô‚
+	// ƒOƒ[ƒoƒ‹ƒƒ‚ƒŠ‚Å•Ô‚·
 	*io_data_len = the_resp_str.size();
 	HGLOBAL the_return_data = ::GlobalAlloc(GMEM_FIXED, *io_data_len);
 	::CopyMemory(the_return_data, the_resp_str.c_str(), *io_data_len);
@@ -93,27 +91,27 @@ string SakuraDLLHost::request(const string& i_request_string)
 {
 	//sender << "--- Request ---" << endl << i_request_string << endl;
 
-	// HTTPï¿½`Ì—vï¿½ï¿½ï¿½
+	// HTTP‚à‚Ç‚«Œ`®‚Ì—v‹•¶š—ñ‚ğ‰ğÍ‚·‚é
 
-	// restÉ‚Í–ï¿½Ìucï¿½BÄ‚ï¿½
+	// rest‚É‚Í–¢‰ğß‚Ìuc‚èv‚ª“ü‚Á‚Ä‚¢‚é
 	string rest = i_request_string;
 	
-	// ï¿½Ú‚ï¿½ï¿½
+	// ˆês–Ú‚ğØ‚èo‚µ
 	string command = cut_token(rest, CRLF);
-	// ï¿½ï¿½' ' ï¿½AÂ‚ï¿½ï¿½~ï¿½gRÆ‚Ä”Fï¿½
+	// Œã‚ë‚©‚ç ' ' ‚ğ’T‚µAŒ©‚Â‚©‚ê‚Î‚»‚êˆÈ~‚ğƒvƒƒgƒRƒ‹•”•ª‚Æ‚µ‚Ä”F¯‚·‚é
 	string protocol, protocol_version;
 	for ( int n = command.size()-1 ; n >= 0 ; --n )
 	{
 		if ( command[n] == ' ' )
 		{
-			protocol_version = command.substr(n+1); // Bï¿½ï¿½Äcc
-			protocol = cut_token(protocol_version, "/"); // /ï¿½Oï¿½ï¿½B /ï¿½Sá‚¢ó‚¯‚ï¿½
+			protocol_version = command.substr(n+1); // ‚¢‚Á‚½‚ñ‘S•”‚ğ—a‚¯‚Äcc
+			protocol = cut_token(protocol_version, "/"); // /‚æ‚è‘O‚ğæ‚èo‚·B /‚ª–³‚¯‚ê‚Î‘S•”–á‚¢ó‚¯‚é
 			command = command.substr(0, n);
 			break;
 		}
 	}
 	
-	// È~Ìƒf[^sï¿½ï¿½
+	// ˆÈ~‚Ìƒf[ƒ^s‚ğØ‚èo‚µ
 	strpairvec data;
 	while ( rest.size() > 0 )
 	{
@@ -124,9 +122,9 @@ string SakuraDLLHost::request(const string& i_request_string)
 	
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	
-	// NGXgï¿½sï¿½
+	// ƒŠƒNƒGƒXƒg‚ğÀs‚·‚é
 	
-	// ß‚ï¿½i[pIuWFNg
+	// –ß‚è’lŠi”[—pƒIƒuƒWƒFƒNƒg
 	string r_protocol, r_protocol_version;
 	strpairvec r_data;
 	
@@ -136,7 +134,7 @@ string SakuraDLLHost::request(const string& i_request_string)
 
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-	// Ô“ï¿½TTPï¿½ï¿½Æ‚Ä\zAÔ‚B
+	// •Ô“š‚ğHTTP‚à‚Ç‚«•¶š—ñŒ`®‚Æ‚µ‚Ä\’z‚µA•Ô‚·B
 	
 	string response;
 	response += r_protocol + "/" + r_protocol_version + " ";
@@ -150,7 +148,7 @@ string SakuraDLLHost::request(const string& i_request_string)
 	}
 	response += CRLF;
 
-	// Charsetï¿½tï¿½
+	// Charset‚ª–³‚¯‚ê‚Î•t‚¯‚éB
 	bool charset_exists = false;
 	for (strpairvec::iterator ite = r_data.begin(); ite != r_data.end(); ite++) {
 	    if (ite->first == "Charset") {
