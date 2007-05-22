@@ -1,7 +1,7 @@
 #include	"../_/utilities.h"
 #include	"../_/FMO.h"
 #include	"../satori/satori.h"
-#include	"../_/sender.h"
+#include	"../_/Sender.h"
 #include	"../_/stltool.h"
 #include	"../_/Font.h"
 #include	"resource.h"

@@ -11,7 +11,7 @@
 #endif
 #include	<assert.h>
 #include	"../_/stltool.h"
-#include	"../_/sender.h"
+#include	"../_/Sender.h"
 #include	"shiori_plugin.h"
 #include	"console_application.h"
 #include	<sstream>
