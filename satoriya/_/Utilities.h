@@ -86,7 +86,7 @@ T	Max( T a, T b ) { return (a>b)?a:b; }
 template<class T>
 T	Abs( T a ) { return (a>=0)?a:-a; }
 template<class T>
-T	MinMax( T min, T t, T max ) { return t<min ? min : Min(max,target); }
+T	MinMax( T min, T t, T max ) { return t<min ? min : Min(max,t); }
 template<class T>
 void Swap( T* a, T* b ) { assert( a!=NULL && b!=NULL ); T temp; temp=*a; *a=*b; *b=temp; }
 

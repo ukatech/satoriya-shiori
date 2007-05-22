@@ -1,4 +1,4 @@
-#include "Satori.h"
+#include "satori.h"
 
 //////////DEBUG/////////////////////////
 #ifdef _WINDOWS
@@ -10,9 +10,9 @@
 ////////////////////////////////////////
 
 const char* gSatoriName = "Satori";
-const char* gSatoriNameW = "—¢X";
+const char* gSatoriNameW = "X";
 const char* gSatoriCraftman = "Yagi Kushigahama/The Maintenance Shop";
-const char* gSatoriCraftmanW = "‹ùƒ–•l‚â‚¬/®”õ”Ç";
+const char* gSatoriCraftmanW = "lâ‚¬/ï¿½";
 const char* gSatoriVersion = "phase Mc132-3";
 const char* gShioriVersion = "3.0";
 const char* gSaoriVersion = "1.0";
@@ -20,7 +20,7 @@ const char* gSaoriVersion = "1.0";
 
 
 #ifdef SATORI_DLL
-	// Satori‚Ì—Bˆê‚ÌÀ‘Ì
+	// SatoriÌ—Bï¿½ï¿½
 	Satori gSatori;
 	SakuraDLLHost* SakuraDLLHost::m_dll = &gSatori;
 #else
@@ -28,10 +28,10 @@ const char* gSaoriVersion = "1.0";
 #endif // SATORI_DLL
 
 
-// ƒGƒXƒP[ƒv•¶š—ñ
+// GXP[vï¿½
 const char escaper::sm_escape_sjis_code[3]={(char)0x9e,(char)0xff,0x00};
 
-// ˆø”•¶š—ñ‚ğó‚¯æ‚èAƒƒ“ƒo‚ÉŠi”[‚µAuƒGƒXƒP[ƒv‚³‚ê‚½•¶š—ñv‚ğ•Ô‚·B
+// ï¿½ó‚¯ï¿½AoÉŠi[AuGXP[vê‚½ï¿½ï¿½B
 string escaper::insert(const string& i_str)
 {
 	m_id2str.push_back(i_str);
@@ -39,7 +39,7 @@ string escaper::insert(const string& i_str)
 	return string() + sm_escape_sjis_code + itos(m_id2str.size()-1) + " ";
 }
 
-// ‘ÎÛ•¶š—ñ’†‚ÉŠÜ‚Ü‚ê‚éuƒGƒXƒP[ƒv‚³‚ê‚½•¶š—ñv‚ğŒ³‚É–ß‚·B
+// ÎÛ•ñ’†‚ÉŠÜ‚Ü‚ï¿½uGXP[vê‚½ï¿½ì³‚É–ß‚B
 void escaper::unescape(string& io_str)
 {
 	const int	max = m_id2str.size();
@@ -47,7 +47,7 @@ void escaper::unescape(string& io_str)
 		replace(io_str, string(sm_escape_sjis_code)+itos(i)+" ", m_id2str[i]);
 }
 
-// ƒƒ“ƒo‚ğƒNƒŠƒA
+// oï¿½A
 void escaper::clear()
 {
 	//m_str2id.clear();
@@ -55,14 +55,14 @@ void escaper::clear()
 }
 
 
-// ®‚ğ•]‰¿‚µAŒ‹‰Ê‚ğ^‹U’l‚Æ‚µ‚Ä‰ğß‚·‚é
+// ï¿½AÊ‚ï¿½UlÆ‚Ä‰ï¿½ï¿½
 bool Satori::evalcate_to_bool(const Condition& i_cond)
 {
 	string r;
 	if ( !calculate(i_cond.c_str(), r) )
 	{
-		// ŒvZ¸”s
+		// vZs
 		return false;
 	}
-	return  ( r!="0" && r!="‚O" );
+	return  ( r!="0" && r!="O" );
 }
