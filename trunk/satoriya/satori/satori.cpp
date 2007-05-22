@@ -1,4 +1,4 @@
-#include "Satori.h"
+#include "satori.h"
 
 //////////DEBUG/////////////////////////
 #ifdef _WINDOWS

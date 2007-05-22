@@ -1,5 +1,5 @@
 #include "ShioriClient.h"
-#include "../_/sender.h"
+#include "../_/Sender.h"
 
 bool ShioriClient::load(
 	const string& i_sender,

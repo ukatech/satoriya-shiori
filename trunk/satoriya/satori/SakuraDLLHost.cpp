@@ -6,7 +6,7 @@
 #endif
 #include "SakuraDLLHost.h"
 #include <iostream>
-#include "../_/sender.h"
+#include "../_/Sender.h"
 
 //////////DEBUG/////////////////////////
 #ifdef _WINDOWS

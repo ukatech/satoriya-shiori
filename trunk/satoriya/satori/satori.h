@@ -13,7 +13,7 @@
 #include	"../_/simple_stack.h"
 
 // ‚ê‚µ‚Î‚Ö‚Ì‘—M
-#include	"../_/sender.h"
+#include	"../_/Sender.h"
 
 // SAORIŠÖ˜A
 #include	"shiori_plugin.h"

@@ -1,4 +1,4 @@
-#include	"Satori.h"
+#include	"satori.h"
 #include	<iostream>
 using namespace std;
 

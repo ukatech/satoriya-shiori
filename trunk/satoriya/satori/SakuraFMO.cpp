@@ -1,6 +1,6 @@
 #include "SakuraFMO.h"
 #include "../_/FMO.h"
-#include "../_/sender.h"
+#include "../_/Sender.h"
 
 //////////DEBUG/////////////////////////
 #ifdef _WINDOWS
