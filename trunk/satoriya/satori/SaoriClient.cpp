@@ -45,8 +45,11 @@ int SaoriClient::request(
 
 	//---------------------
 	// 返答を解析
+	// 注意！Valueヘッダが存在しないときは、S?系システム変数を温存するためにデータを上書きしないこと！
+	// 他ゴーストの互換性問題に注意（o_value）
 
 	string result;
+	int maxValueSize = -1;
 
 	for ( strpairvec::const_iterator i = r_data.begin() ; i != r_data.end() ; ++i )
 	{
@@ -66,11 +69,19 @@ int SaoriClient::request(
 				o_value.resize(pos+1);
 			}
 			o_value[pos] = value;
+			if ( maxValueSize < pos ) {
+				maxValueSize = pos;
+			}
 		}
 		else if ( key=="Result" )
 		{
 			o_result = value;
 		}
+	}
+
+	//Valueヘッダがなかった場合のみ切り詰める
+	if ( maxValueSize >= 0 ) {
+		o_value.resize(maxValueSize+1);
 	}
 
 	return return_code;
