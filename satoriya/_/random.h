@@ -2,7 +2,7 @@
 #define RANDOM_H
 
 void	randomize(unsigned int seed);
-int		random();
+int		random(void);
 inline int random(int max) {
 	if ( max <= 0 ) {
 		return 0;
