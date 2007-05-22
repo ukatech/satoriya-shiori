@@ -273,11 +273,13 @@ string	Satori::SentenceToSakuraScript(const strvec& vec) {
 					}
 				}
 
-				sender << "" << key << "" << value << "^" << 
-					(( variables.find(key) == variables.end() ) ?
-					"writed." : "overwrited.")<< endl;
+				bool isOverwrited;
+				string *pstr = GetValue(key,true,&isOverwrited);
 
-				variables[key] = value;
+				sender << "" << key << "" << value << "^" << 
+					(isOverwrited ? "writed." : "overwrited.")<< endl;
+
+				if ( pstr ) { *pstr = value; }
 				system_variable_operation(key, value, &result);
 			}
 			continue;

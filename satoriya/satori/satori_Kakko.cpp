@@ -76,11 +76,13 @@ string	Satori::inc_call(
 				erase_var(key);	// 存在抹消
 			}
 			else {
+				bool isOverwrited;
+				string *pstr = GetValue(key,true,&isOverwrited);
+				
 				sender << "＄" << key << "＝" << value << "／" << 
-					(( variables.find(key) == variables.end() ) ?
-					"writed." : "overwrited.")<< endl;
+					(isOverwrited ? "writed." : "overwrited.")<< endl;
 
-				variables[key] = value;
+				if ( pstr ) { *pstr = value; }
 				system_variable_operation(key, value, &result);
 			}
 			return	result;
@@ -196,6 +198,90 @@ string	Satori::inc_call(
 	return	"";
 }
 
+// 変数取得
+string* Satori::GetValue(const string &iName,bool iIsExpand,bool *oIsExpanded)
+{
+	if ( oIsExpanded ) { *oIsExpanded = false; }
+
+	if ( variables.find(iName) != variables.end() ) {
+		// 変数名であれば変数の内容を返す
+		return &(variables[iName]);
+	}
+
+	string hankaku=zen2han(iName);
+	strvec*	p_kakko_replace_history = kakko_replace_history.empty() ? NULL : &(kakko_replace_history.top());
+
+	if ( hankaku[0]=='R' && aredigits(hankaku.c_str()+1) ) {
+		// Event通知時の引数取得
+		int	ref=atoi(hankaku.c_str()+1);
+		if (ref>=0 && ref<mReferences.size()) {
+			return &(mReferences[ref]);
+		}
+		else {
+			if ( iIsExpand && ref >= 0 ) {
+				mReferences.resize(ref+1);
+				if ( oIsExpanded ) { *oIsExpanded = true; }
+				return &(mReferences[ref]);
+			}
+			return NULL;
+		}
+	}
+	if ( p_kakko_replace_history!=NULL && hankaku[0]=='H' && aredigits(hankaku.c_str()+1) ) {
+		// 過去の置き換え履歴を参照
+		int	ref = atoi(hankaku.c_str() +1) - 1;
+		if ( ref>=0 && ref < p_kakko_replace_history->size() ) {
+			return &(p_kakko_replace_history->at(ref));
+		}
+		else {
+			return NULL;
+		}
+	}
+	if ( mCallStack.size()>0 && hankaku[0]=='A' && aredigits(hankaku.c_str()+1)) {
+		// callによる呼び出しの引数を参照
+		int	ref = atoi(hankaku.c_str() +1);
+		strvec&	v = mCallStack.top();
+		if ( ref >= 0 && ref < v.size() ) {
+			return &(v[ref]);
+		}
+		else {
+			return NULL;
+		}
+	}
+	if ( mCallStack.size()>0 && hankaku.compare(0,4,"argv") && aredigits(hankaku.c_str()+4)) {
+		// callによる呼び出しの引数を参照
+		int	ref = atoi(hankaku.c_str() +4);
+		strvec&	v = mCallStack.top();
+		if ( ref >= 0 && ref < v.size() ) {
+			return &(v[ref]);
+		}
+		else {
+			return NULL;
+		}
+	}
+	if ( hankaku[0]=='S' && aredigits(hankaku.c_str()+1)) {
+		// SAORIなどコール時の結果処理
+		int	ref=atoi(hankaku.c_str()+1);
+		if (ref>=0 && ref<mKakkoCallResults.size()) {
+			return &(mKakkoCallResults[ref]);
+		}
+		else {
+			if ( iIsExpand && ref >= 0 ) {
+				mKakkoCallResults.resize(ref+1);
+				if ( oIsExpanded ) { *oIsExpanded = true; }
+				return &(mKakkoCallResults[ref]);
+			}
+			return NULL;
+		}
+	}
+
+	if ( iIsExpand ) {
+		variables[iName] = string("");
+		if ( oIsExpanded ) { *oIsExpanded = true; }
+		return &(variables[iName]);
+	}
+	return NULL;
+}
+
 
 // 引数に渡されたものを何かの名前であるとし、置き換え対象があれば置き換える。
 bool	Satori::Call(const string& iName, string& oResult) {
@@ -214,8 +300,8 @@ bool	Satori::Call(const string& iName, string& oResult) {
 	return r;
 }
 
-bool	Satori::CallReal(const string& iName, string& oResult) {
-	string	hankaku;
+bool	Satori::CallReal(const string& iName, string& oResult)
+{
 	strvec*	p_kakko_replace_history = kakko_replace_history.empty() ? NULL : &(kakko_replace_history.top());
 
 	bool	_pre_called_=false;
@@ -277,7 +363,6 @@ bool	Satori::CallReal(const string& iName, string& oResult) {
 		{
 			_pre_called_=true;
 			strvec	theArguments;
-			mKakkoCallResults.clear();
 
 			if ( p!=NULL )// 引数があるなら
 			{
@@ -324,6 +409,8 @@ bool	Satori::CallReal(const string& iName, string& oResult) {
 	}
 
 	const Word* w;
+	string hankaku=zen2han(iName);
+	string *pstr = GetValue(iName);
 
 	if ( _pre_called_ ) {
 		// 前段階ですでに対応カッコ展開済み
@@ -340,11 +427,11 @@ bool	Satori::CallReal(const string& iName, string& oResult) {
 		// ＊に定義があれば文を取得
 		oResult = GetSentence(iName);
 	}
-	else if ( variables.find(iName) != variables.end() ) {
+	else if ( pstr ) {
 		// 変数名であれば変数の内容を返す
-		oResult = variables[iName];
+		oResult = *pstr;
 	}
-	else if ( aredigits(hankaku=zen2han(iName)) || (hankaku[0]=='-' && aredigits(hankaku.c_str()+1)) ) {
+	else if ( aredigits(hankaku) || (hankaku[0]=='-' && aredigits(hankaku.c_str()+1)) ) {
 		// サーフェス切り替え
 		int	s = stoi(hankaku);
 		if ( s != -1 ) // -1は「消し」なので特別扱い
@@ -353,43 +440,9 @@ bool	Satori::CallReal(const string& iName, string& oResult) {
 		if ( !is_speaked(speaker) )
 			surface_changed_before_speak.insert(speaker);
 	}
-	else if ( hankaku[0]=='R' && aredigits(hankaku.c_str()+1) ) {
-		// Event通知時の引数取得
-		int	ref=atoi(hankaku.c_str()+1);
-		oResult = (ref>=0 && ref<mReferences.size()) ? mReferences[ref] : "";
-		//oResult = mRequestMap[ string("Reference") + (hankaku.c_str()+1) ];
-	}
-	else if ( hankaku[0]=='H' && p_kakko_replace_history!=NULL && aredigits(hankaku.c_str()+1) ) {
-		// 過去の置き換え履歴を参照
-		int	num = atoi(hankaku.c_str() +1) - 1;
-		if ( num>=0 && num < p_kakko_replace_history->size() )
-			oResult = p_kakko_replace_history->at(num);
-	}
-	else if ( hankaku[0]=='A' && mCallStack.size()>0 && aredigits(hankaku.c_str()+1)) {
-		// callによる呼び出しの引数を参照
-		int	num = atoi(hankaku.c_str() +1);
-		strvec&	v = mCallStack.top();
-		if ( num < v.size() )
-			oResult = v.at(num);
-	}
-	else if ( hankaku[0]=='S' && aredigits(hankaku.c_str()+1)) {
-		// SAORIなどコール時の結果処理
-		int	ref=atoi(hankaku.c_str()+1);
-		oResult = (ref>=0 && ref<mKakkoCallResults.size()) ? mKakkoCallResults[ref] : "";
-	}
 	else if ( hankaku=="argc" ) {
-		// callによる呼び出しの引数をまとめて
-		int	num = atoi(hankaku.c_str() +1) - 1;
 		strvec&	v = mCallStack.top();
-		if ( num < v.size() )
-			oResult = v.at(num);
-	}
-	else if ( hankaku=="argv" ) {
-		// callによる呼び出しの引数をまとめて
-		int	num = atoi(hankaku.c_str() +1) - 1;
-		strvec&	v = mCallStack.top();
-		if ( num < v.size() )
-			oResult = v.at(num);
+		oResult = itos(v.size());
 	}
 	else if ( strncmp(iName.c_str(), "乱数", 4)==0 && iName.size()>6 ) { 
 		strvec	vec;
@@ -611,7 +664,8 @@ bool	Satori::CallReal(const string& iName, string& oResult) {
 
 	else if ( compare_head(iName, "変数「") && compare_tail(iName, "」の存在") ) {
 		string	str(iName, 6, iName.length()-6-8);
-		oResult = (variables.find(str) != variables.end()) ? "1" : "0";
+		string *v = GetValue(str);
+		oResult = v ? "1" : "0";
 	}
 
 	else if ( compare_tail(iName, "の存在") ) {

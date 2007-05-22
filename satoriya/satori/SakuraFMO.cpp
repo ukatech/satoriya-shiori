@@ -2,6 +2,16 @@
 #include "../_/FMO.h"
 #include "../_/sender.h"
 
+//////////DEBUG/////////////////////////
+#ifdef _WINDOWS
+#ifdef _DEBUG
+#include <crtdbg.h>
+#define new new( _NORMAL_BLOCK, __FILE__, __LINE__)
+#endif
+#endif
+////////////////////////////////////////
+
+
 bool SakuraFMO::update()
 {
 	vector<char> v;
