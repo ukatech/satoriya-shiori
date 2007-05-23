@@ -25,6 +25,9 @@
 #include	<cassert>
 using namespace std;
 
+
+#define const_strlen(s) ((sizeof(s) / sizeof(s[0]))-1)
+
 class strvec : public vector<string>
 {
 public:
@@ -83,12 +86,17 @@ bool	getline(istream& i, int& o, int delimtier='\n');
 
 // intとの相互変換
 inline int	stoi(const string& s) { return atoi(s.c_str()); }
+inline int  stoi(const char* s) { return atoi(s); }
+
 inline string	itos(int i, const char* iFormat="%d") { char buf[32]; sprintf(buf,iFormat,i); return buf; }
 inline string	uitos(unsigned int i, const char* iFormat="%u") { char buf[32]; sprintf(buf,iFormat,i); return buf; }
 
 // それてなに。
-bool	aredigits(const string& s);
-bool	arealphabets(const string& s);
+bool	aredigits(const char* p);
+inline bool	aredigits(const string& s) { return aredigits(s.c_str()); }
+
+bool	arealphabets(const char* p);
+inline bool	arealphabets(const string& s) { return arealphabets(s.c_str()); }
 
 // target中の最初にfind文字列が出現する位置を返す。半角全角両対応
 const char*	strstr_hz(const char* target, const char* find);
@@ -134,31 +142,34 @@ string	get_a_chr(const char*& p);
 
 // 文字単位に分割
 template<class T>
-int	split(const string& i, T& o) {
-	const char* p=i.c_str();
+int	split(const char* p, T& o) {
 	while ( *p != '\0' )
 		o.push_back(get_a_chr(p));
 	return	o.size();
 }
 
+template<class T>
+inline int split(const string& i, T& o) {
+	split(i.c_str(),o);
+}
+
 // 単語単位に分割 max_wordsは最大切り出し単語数。0なら制限しない。
 template<class T>
-int	split(const string& i, const string& dlmt, T& o, int max_words=0) {
+int	split(const char* p, const char* dp, T& o, int max_words=0)
+{
 	set<string>	dlmt_set;
-	const char* p=dlmt.c_str();
-	while ( *p != '\0' )
-		dlmt_set.insert(get_a_chr(p));
+	while ( *dp != '\0' )
+		dlmt_set.insert(get_a_chr(dp));
 
 	if ( dlmt_set.empty() )
-		return	split(i, o);
+		return	split(p, o);
 
 	if ( max_words==1 ) {
-		o.push_back(i);
+		o.push_back(p);
 		return	1;
 	}
 
 	string	word;
-	p=i.c_str();
 	while ( *p != '\0' ) {
 		string	c = get_a_chr(p);
 		if ( dlmt_set.find(c) != dlmt_set.end() ) {
@@ -179,6 +190,17 @@ int	split(const string& i, const string& dlmt, T& o, int max_words=0) {
 
 	return	o.size();
 }
+
+template<class T>
+inline int split(const string& i, const string& dlmt, T& o, int max_words=0) { return split(i.c_str(),dlmt.c_str(),o,max_words); }
+
+template<class T>
+inline int split(const char* p, const string& dlmt, T& o, int max_words=0) { return split(p,dlmt.c_str(),o,max_words); }
+
+template<class T>
+inline int split(const string& i, const char* dp, T& o, int max_words=0) { return split(i.c_str(),dp,o,max_words); }
+
+
 
 inline int	splitToSet(const string& iString, set<string>& oSet, int iDelimiter) {
 	oSet.clear();

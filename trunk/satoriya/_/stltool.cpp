@@ -81,8 +81,7 @@ bool	getline(istream& i, int& o, int delimtier) {
 	return	true;
 }
 
-bool	aredigits(const string& s) {
-	const char* p = s.c_str();
+bool	aredigits(const char* p) {
 	if ( *p=='-' )
 		++p;
 	if ( *p=='\0' )
@@ -93,8 +92,7 @@ bool	aredigits(const string& s) {
 	return	true;
 }
 
-bool	arealphabets(const string& s) {
-	const char*	p = s.c_str();
+bool	arealphabets(const char* p) {
 	while (*p) {
 		int	c = *p++;
 		if ( c>='a' && c<='z' )

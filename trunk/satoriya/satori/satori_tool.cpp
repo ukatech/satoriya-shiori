@@ -33,11 +33,11 @@ bool	GetLastWriteTime(LPCSTR iFileName, SYSTEMTIME& oSystemTime) {
 		OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL );
 	if ( theFile==INVALID_HANDLE_VALUE )
 		return	false;
-
+	
 	BY_HANDLE_FILE_INFORMATION	theInfo;
 	::GetFileInformationByHandle(theFile, &theInfo);
 	::CloseHandle(theFile);
-
+	
 	FILETIME	FileTime;
 	::FileTimeToLocalFileTime(&(theInfo.ftLastWriteTime), &FileTime);
 	::FileTimeToSystemTime(&FileTime, &oSystemTime);
@@ -75,35 +75,35 @@ int CompareTime(const string& file1, const string& file2) {
     int r1 = ::stat(file1.c_str(), &s1);
     int r2 = ::stat(file2.c_str(), &s2);
     if (r1 == 0) {
-	if (r2 != 0) {
-	    return 1;
-	}
+		if (r2 != 0) {
+			return 1;
+		}
     }
     else {
-	if (r2 == 0) {
-	    return -1;
-	}
-	else {
-	    return 0;
-	}
+		if (r2 == 0) {
+			return -1;
+		}
+		else {
+			return 0;
+		}
     }
     if (s1.st_mtime > s2.st_mtime) {
-	return 1;
+		return 1;
     }
     else if (s1.st_mtime < s2.st_mtime) {
-	return -1;
+		return -1;
     }
     else {
-	return 0;
+		return 0;
     }
 }
 #else
 int	CompareTime(LPCSTR szL, LPCSTR szR) {
 	assert(szL!=NULL && szR!=NULL);
-
+	
 	SYSTEMTIME	stL, stR;
 	BOOL		fexistL, fexistR;
-
+	
 	// 更新日付を得る。
 	fexistL = GetLastWriteTime(szL, stL);
 	fexistR	= GetLastWriteTime(szR, stR);
@@ -117,7 +117,7 @@ int	CompareTime(LPCSTR szL, LPCSTR szR) {
 		else
 			return	0;	// どっちもありゃしねぇ
 	}
-
+	
 	// 最終更新日付を比較
 	if ( stL.wYear > stR.wYear )	return	1;
 	else if ( stL.wYear < stR.wYear )	return	-1;
@@ -139,7 +139,8 @@ int	CompareTime(LPCSTR szL, LPCSTR szR) {
 #endif
 #endif
 
-string	zen2han(string str) {
+string	zen2han(string str)
+{
 	static const char	before[] = "０１２３４５６７８９ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ－＋";
 	static const char	after[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-+";
 	char	buf1[3]="\0\0", buf2[2]="\0";
@@ -154,7 +155,7 @@ string	zen2han(string str) {
 
 string int2zen(int i) {
 	static const char*	ary[] = {"０","１","２","３","４","５","６","７","８","９"};
-
+	
 	string	zen;
 	if ( i<0 ) {
 		zen += "－";
@@ -180,9 +181,9 @@ string	Satori::surface_restore_string() {
 	string	str="";
 	if ( !surface_restore_at_talk )	// そもそも必要なし、の場合
 		return	"\\1";
-
+	
 	//for ( set<int>::const_iterator i=surface_changed_before_speak.begin() ; i!=surface_changed_before_speak.end() ; ++i )
-
+	
 	for ( map<int, int>::const_iterator i=default_surface.begin() ; i!=default_surface.end() ; ++i ) {
 		if ( mIsMateria ) {
 			if ( i->first >= 2 )
@@ -193,7 +194,7 @@ string	Satori::surface_restore_string() {
 			if ( surface_changed_before_speak.find(i->first) == surface_changed_before_speak.end() )
 				str += string() + "\\p[" + itos(i->first) + "]\\s[" + itos(i->second) + "]";
 	}
-
+	
 	surface_changed_before_speak.clear();
 	return	str;
 }
@@ -205,13 +206,13 @@ bool	Satori::GetURLList(const string& name, string& result)
 	Family<Talk>* f = talks.get_family(name);
 	if ( f == NULL )
 		return false;
-
+	
 	vector<const Talk*> tg;
 	f->get_elements_pointers(tg);
-
+	
 	const string sep_1 = "\1";
 	const string sep_2 = "\2";
-
+	
 	for ( vector<const Talk*>::iterator it = tg.begin() ; it != tg.end() ; ++it )
 	{
 		const Talk& vec = **it;
@@ -220,10 +221,10 @@ bool	Satori::GetURLList(const string& name, string& result)
 		string	menu = vec[0];
 		string	url = (vec.size()<2) ? ("") : (vec[1]);
 		string	banner = (vec.size()<3) ? ("") : (vec[2]);
-
+		
 		int	len = menu.size()+url.size()+banner.size()+3;
 		result.reserve(result.size() + len + 1);
-
+		
 		result += menu;
 		result += sep_1;
 		result += url;
@@ -240,7 +241,7 @@ bool	Satori::GetRecommendsiteSentence(const string& name, string& result)
 	Family<Talk>* f = talks.get_family(name);
 	if ( f == NULL )
 		return false;
-
+	
 	vector<const Talk*> tg;
 	f->get_elements_pointers(tg);
 	for ( vector<const Talk*>::iterator it = tg.begin() ; it != tg.end() ; ++it )
@@ -260,7 +261,7 @@ strmap*	Satori::find_ghost_info(string name) {
 	for ( ; i!=ghosts_info.end() ; ++i )
 		if ( (*i)["name"] == name )
 			return	&(*i);
-	return	NULL;
+		return	NULL;
 }
 
 
@@ -274,7 +275,7 @@ string	Satori::KakkoSection(const char*& p,bool for_calc) {
 	while (true) {
 		if ( p[0] == '\0' )
 			return	string("（") + kakko_str;	// 閉じカッコが無かった
-
+		
 		string c = get_a_chr(p);
 		if ( c=="）" )
 			break;
@@ -284,7 +285,7 @@ string	Satori::KakkoSection(const char*& p,bool for_calc) {
 		else
 			kakko_str += c;
 	}
-
+	
 	string	result;
 	if ( Call(kakko_str, result) )
 		return	result;
@@ -304,141 +305,220 @@ string	Satori::UnKakko(const char* p,bool for_calc) {
 	return	result;
 }
 
-void	Satori::erase_var(const string& key) {
-	if ( key == "スコープ切り換え時" )
+void	Satori::erase_var(const string& key)
+{
+	if ( key == "スコープ切り換え時" ) {
 		append_at_scope_change = "";
-	else if ( key == "さくらスクリプトによるスコープ切り換え時" )
+	}
+	else if ( key == "さくらスクリプトによるスコープ切り換え時" ) {
 		append_at_scope_change_with_sakura_script = "";
+	}
+	else if ( key == "スクリプトの一番頭" ) {
+		header_script = "";
+	}
+	else if ( key == "トーク開始時" ) {
+		append_at_talk_start = "";
+	}
+	else if ( key == "トーク終了時" ) {
+		append_at_talk_end = "";
+	}
+	else if ( key == "選択肢開始時" ) {
+		append_at_choice_start = "";
+	}
+	else if ( key == "選択肢終了時" ) {
+		append_at_choice_end = "";
+	}
+
 	variables.erase(key);
 }
 
 bool	Satori::system_variable_operation(string key, string value, string* result)
 {
 	// mapにしようよ。
-
+	
 	if ( key == "喋り間隔" ) {
 		talk_interval = stoi( zen2han(value) );
 		if ( talk_interval<3 ) talk_interval=0; // 3未満は喋らない
-
+		
 		// 喋りカウント初期化
-		int	dist = int(talk_interval*(talk_interval_random/100.0));
-		talk_interval_count = ( dist==0 ) ? talk_interval : 
-			(talk_interval-dist)+(random(dist*2));
+		int	dist = static_cast<int>(talk_interval*(talk_interval_random/100.0));
+		talk_interval_count = ( dist==0 ) ? talk_interval : (talk_interval-dist)+(random(dist*2));
+		
+		return true;
 	}
-	else if ( key == "喋り間隔誤差" ) {
+	
+	if ( key == "喋り間隔誤差" ) {
 		talk_interval_random = stoi( zen2han(value) );
 		if ( talk_interval_random>100 ) talk_interval_random=100;
 		if ( talk_interval_random<0 ) talk_interval_random=0;
-
+		
 		// 喋りカウント初期化
 		int	dist = int(talk_interval*(talk_interval_random/100.0));
 		talk_interval_count = ( dist==0 ) ? talk_interval : 
-			(talk_interval-dist)+(random(dist*2));
-	}else if ( key =="見切れてても喋る" ) {
+		(talk_interval-dist)+(random(dist*2));
+		
+		return true;
+	}
+	
+	if ( key =="見切れてても喋る" ) {
 		is_call_ontalk_at_mikire= (value=="有効");
+		return true;
 	}
-	else if ( key == "今回は喋らない" ) {
+
+	if ( key == "今回は喋らない" ) {
 		return_empty=(value=="有効");
+		return true;
 	}
-	else if ( key == "スクリプトの一番頭" ) {
+	
+	if ( key == "スクリプトの一番頭" ) {
 		header_script = value;
+		return true;
 	}
-	else if ( key == "呼び出し回数制限" ) {
+
+	if ( key == "呼び出し回数制限" ) {
 		nest_limit = stoi( zen2han(value) );
 		if ( nest_limit < 0 ) { nest_limit = 0; }
+		return true;
 	}
-	else if ( key == "スコープ切り換え時" ) {
+	
+	if ( key == "スコープ切り換え時" ) {
 		append_at_scope_change = zen2han(value);
+		return true;
 	}
-	else if ( key == "さくらスクリプトによるスコープ切り換え時" ) {
+
+	if ( key == "さくらスクリプトによるスコープ切り換え時" ) {
 		append_at_scope_change_with_sakura_script = zen2han(value);
+		return true;
 	}
-	else if ( key == "トーク開始時" ) {
+
+	if ( key == "トーク開始時" ) {
 		append_at_talk_start = zen2han(value);
+		return true;
 	}
-	else if ( key == "トーク終了時" ) {
+
+	if ( key == "トーク終了時" ) {
 		append_at_talk_end = zen2han(value);
+		return true;
 	}
-	else if ( key == "選択肢開始時" ) {
+
+	if ( key == "選択肢開始時" ) {
 		append_at_choice_start = zen2han(value);
+		return true;
 	}
-	else if ( key == "選択肢終了時" ) {
+	
+	if ( key == "選択肢終了時" ) {
 		append_at_choice_end = zen2han(value);
+		return true;
 	}
-	else if ( key == "会話時サーフェス戻し" ) {
+
+	if ( key == "会話時サーフェス戻し" ) {
 		surface_restore_at_talk=(value=="有効");
+		return true;
 	}
-	else if ( compare_head(key,  "サーフェス加算値") && aredigits(key.c_str() + strlen("サーフェス加算値")) ) {
+	
+	if ( compare_head(key,  "サーフェス加算値") && aredigits(key.c_str() + const_strlen("サーフェス加算値")) ) {
 		int n = atoi(key.c_str() + strlen("サーフェス加算値"));
 		surface_add_value[n]=stoi( zen2han(value) );
-
+		
 		variables[string()+"デフォルトサーフェス"+itos(n)] = value;
 		next_default_surface[n]=stoi( zen2han(value) );
 		if ( !is_speaked_anybody() )
 			default_surface[n]=next_default_surface[n];
+		return true;
 	}
-	else if ( compare_head(key,  "デフォルトサーフェス") && aredigits(key.c_str() + strlen("デフォルトサーフェス")) ) {
+
+	if ( compare_head(key,  "デフォルトサーフェス") && aredigits(key.c_str() + const_strlen("デフォルトサーフェス")) ) {
 		int n = atoi(key.c_str() + strlen("デフォルトサーフェス"));
 		next_default_surface[n]=stoi( zen2han(value) );
 		if ( !is_speaked_anybody() )
 			default_surface[n]=next_default_surface[n];
+		return true;
 	}
-	else if ( compare_head(key,  "BalloonOffset") && aredigits(key.c_str() + strlen("BalloonOffset")) ) {
+
+	if ( compare_head(key,  "BalloonOffset") && aredigits(key.c_str() + const_strlen("BalloonOffset")) ) {
 		int n = atoi(key.c_str() + strlen("BalloonOffset"));
 		BalloonOffset[n] = value;
 		validBalloonOffset[n] = true;
+		return true;
 	}
-	else if ( key == "トーク中のなでられ反応") {
+
+	if ( key == "トーク中のなでられ反応") {
 		insert_nade_talk_at_other_talk= (value=="有効");
+		return true;
 	}
-	else if ( key == "なでられ持続秒数") {
+	
+	if ( key == "なでられ持続秒数") {
 		nade_valid_time_initializer = stoi( zen2han(value) );
+		return true;
 	}
-	else if ( key == "なでられ反応回数") {
+
+	if ( key == "なでられ反応回数") {
 		nade_sensitivity = stoi( zen2han(value) );
+		return true;
 	}
-	else if ( key == "Log" ) {
+
+	if ( key == "Log" ) {
 		Sender::validate(value=="有効");
+		return true;
 	}
-	else if ( key == "RequestLog" ) {
+
+	if ( key == "RequestLog" ) {
 		fRequestLog = (value=="有効");
+		return true;
 	}
-	else if ( key == "OperationLog" ) {
+
+	if ( key == "OperationLog" ) {
 		fOperationLog = (value=="有効");
+		return true;
 	}
-	else if ( key == "ResponseLog" ) {
+	
+	if ( key == "ResponseLog" ) {
 		fResponseLog = (value=="有効");
+		return true;
 	}
-	else if ( key == "自動挿入ウェイトの倍率" ) {
+	
+	if ( key == "自動挿入ウェイトの倍率" ) {
 		rate_of_auto_insert_wait=stoi( zen2han(value) );
 		rate_of_auto_insert_wait = min(1000, max(0, rate_of_auto_insert_wait));
 		variables["自動挿入ウェイトの倍率"] = itos(rate_of_auto_insert_wait);
+		return true;
 	}
-	else if ( key == "辞書フォルダ" ) {
+	
+	if ( key == "辞書フォルダ" ) {
 		strvec	words;
 		split(value, ",",dic_folder);
 		reload_flag=true;
+		return true;
 	}
-	else if ( key == "セーブデータ暗号化" ) {
+	
+	if ( key == "セーブデータ暗号化" ) {
 		fEncodeSavedata = (value=="有効");
+		return true;
 	}
-	else if ( compare_head(key,"単語群「") && compare_tail(key,"」の重複回避") ) {
+	
+	if ( compare_head(key,"単語群「") && compare_tail(key,"」の重複回避") ) {
 		variables.erase(key);
 		words.setOC( string(key.c_str()+8, key.length()-8-12), value );
+		return true;
 	}
-	else if ( compare_head(key,"文「") && compare_tail(key,"」の重複回避") ) {
+
+	if ( compare_head(key,"文「") && compare_tail(key,"」の重複回避") ) {
 		variables.erase(key);
 		talks.setOC( string(key.c_str()+4, key.length()-4-12), value );
+		return true;
 	}
-	else if ( key == "次のトーク" ) {
+	
+	if ( key == "次のトーク" ) {
 		variables.erase(key);
 		int	count=1;
 		while ( reserved_talk.find(count) != reserved_talk.end() )
 			++count;
 		reserved_talk[count] = value;
 		sender << "次回のランダムトークが「" << value << "」に予\x96\xf1されました。" << endl;
+		return true;
 	}
-	else if ( compare_head(key,"次から") && compare_tail(key,"回目のトーク") ) {
+	
+	if ( compare_head(key,"次から") && compare_tail(key,"回目のトーク") ) {
 		variables.erase(key);
 		int	count = stoi( zen2han( string(key.c_str()+6, key.length()-6-12) ) );
 		if ( count<=0 ) {
@@ -450,8 +530,10 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 			reserved_talk[count] = value;
 			sender << count << "回後のランダムトークが「" << value << "」に予\x96\xf1されました。" << endl;
 		}
+		return true;
 	}
-	else if ( key=="トーク予\x96\xf1のキャンセル" ) {
+
+	if ( key=="トーク予\x96\xf1のキャンセル" ) {
 		if ( value=="＊" )
 			reserved_talk.clear();
 		else
@@ -460,96 +542,115 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 					reserved_talk.erase(it++);
 				else
 					++it;
+		return true;
 	}
-	else if ( key == "SAORI引数の計算" ) {
+
+	if ( key == "SAORI引数の計算" ) {
 		if (value=="有効")
 			mSaoriArgumentCalcMode = SACM_ON;
 		else if (value=="無効")
 			mSaoriArgumentCalcMode = SACM_OFF;
 		else
 			mSaoriArgumentCalcMode = SACM_AUTO;
+		return true;
 	}
-	else if ( key == "辞書リロード" && value=="実行") {
+	
+	if ( key == "辞書リロード" && value=="実行") {
 		variables.erase(key);
 		reload_flag=true;
+		return true;
 	}
-	else if ( key == "手動セーブ" && value=="実行") {
+	
+	if ( key == "手動セーブ" && value=="実行") {
 		variables.erase(key);
 		if ( is_dic_loaded ) {
 			this->Save();
 		}
+		return true;
 	}
-	else if ( key == "自動セーブ間隔" ) {
+	
+	if ( key == "自動セーブ間隔" ) {
 		mAutoSaveInterval = stoi(zen2han(value));
 		mAutoSaveCurrentCount = mAutoSaveInterval;
 		if ( mAutoSaveInterval > 0 )
 			sender << ""  << itos(mAutoSaveInterval) << "秒間隔で自動セーブを行います。" << endl;
 		else
 			sender << "自動セーブは行いません。" << endl;
+		return true;
 	}
-	else if ( key == "全タイマ解除" && value=="実行") {
+	
+	if ( key == "全タイマ解除" && value=="実行") {
 		variables.erase(key);
 		for (strintmap::iterator i=timer.begin();i!=timer.end();++i)
 			variables.erase(i->first + "タイマ");
 		timer.clear();
+		return true;
 	}
-	else if ( key == "教わること" ) {
+	
+	if ( key == "教わること" ) {
 		variables.erase(key);
 		teach_genre=value;
 		if ( result != NULL )
 			*result += "\\![open,teachbox]";
+		return true;
 	}
-	else if ( key.size()>6 && compare_tail(key, "タイマ") ) {
+	
+	if ( key.size()>6 && compare_tail(key, "タイマ") ) {
 		string	name(key.c_str(), strlen(key.c_str())-6);
 		/*if ( sentences.find(name) == sentences.end() ) {
-			result = string("※　タイマ終了時のジャンプ先 ＊")+name+" がありません　※";
-			// セーブデータ復帰時を考慮
+		result = string("※　タイマ終了時のジャンプ先 ＊")+name+" がありません　※";
+		// セーブデータ復帰時を考慮
 		}
 		else */{
-			int sec = stoi(zen2han(value));
-			if ( sec < 1 ) {
-				variables.erase(key);
-				if ( timer.find(name)!=timer.end() ) {
-					timer.erase(name);
-					sender << "タイマ「"  << name << "」の予\x96\xf1がキャンセルされました。" << endl;
-				} else
-					sender << "タイマ「"  << name << "」は元から予\x96\xf1されていません。" << endl;
-			} else {
-				timer[name] = sec;
-				sender << "タイマ「"  << name << "」が" << sec << "秒後に予\x96\xf1されました。" << endl;
-			}
+		int sec = stoi(zen2han(value));
+		if ( sec < 1 ) {
+			variables.erase(key);
+			if ( timer.find(name)!=timer.end() ) {
+				timer.erase(name);
+				sender << "タイマ「"  << name << "」の予\x96\xf1がキャンセルされました。" << endl;
+			} else
+				sender << "タイマ「"  << name << "」は元から予\x96\xf1されていません。" << endl;
+		} else {
+			timer[name] = sec;
+			sender << "タイマ「"  << name << "」が" << sec << "秒後に予\x96\xf1されました。" << endl;
 		}
+		}
+		return true;
 	}
-	else if ( key == "引数区切り追加" && value.size()>0 ) {
+
+	if ( key == "引数区切り追加" && value.size()>0 ) {
 		variables.erase(key);
 		mDelimiters.insert(value);
+		return true;
 	}
-	else if ( key == "引数区切り削除" && value.size()>0 ) {
+	
+	if ( key == "引数区切り削除" && value.size()>0 ) {
 		variables.erase(key);
 		mDelimiters.erase(value);
+		return true;
 	}
-	else if ( compare_head(key, "Value") && aredigits(key.substr(5)) )
+	
+	if ( compare_head(key, "Value") && aredigits(key.c_str() + 5) )
 	{
 		variables.erase(key);
 		mResponseMap[string()+"Reference"+key.substr(5)] = value;
+		return true;
 	}
-	else
-		return	false;
 
-	return	true;
+	return	false;
 }
 
 
 bool	Satori::calculate(const string& iExpression, string& oResult) {
-
+	
 	oResult = UnKakko(iExpression.c_str(),true);
-
+	
 	bool r = calc(oResult);
 	if ( !r ) {
 #ifdef POSIX
-	        std::cerr <<
-		    "error on Satori::calculate" << std::endl <<
-		    "Error in expression: " << iExpression << std::endl;
+		std::cerr <<
+			"error on Satori::calculate" << std::endl <<
+			"Error in expression: " << iExpression << std::endl;
 #else
 		// もうちょっと抽象化を……
 		::MessageBox(NULL, (string() + "式が計算不能です。\n" + iExpression).c_str(), "error on Satori::calculate" , MB_OK);
