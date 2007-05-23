@@ -587,7 +587,7 @@ bool	Satori::CallReal(const string& iName, string& oResult)
 	else if ( iName == "time_t" ) { time_t tm; time(&tm); oResult=itos(tm); }
 	else if ( iName == "最終トークからの経過秒" ) { oResult=itos(second_from_last_talk); }
 
-	else if ( compare_head(iName, "ResponseHistory") && aredigits(iName.c_str()+strlen("ResponseHistory")) ) {
+	else if ( compare_head(iName, "ResponseHistory") && aredigits(iName.c_str()+const_strlen("ResponseHistory")) ) {
 	}
 
 	else if ( compare_head(iName, "サーフェス") && aredigits(iName.c_str()+10) ) {

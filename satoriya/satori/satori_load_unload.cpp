@@ -246,7 +246,13 @@ bool	Satori::load(const string& iBaseFolder)
 	
 	reload_flag = false;
 
-	tick_count_total = stoi(variables["ゴースト起動時間累計(ms)"]);
+	if ( variables.find("ゴースト起動時間累計ミリ秒") != variables.end() ) {
+		tick_count_total = stoi(variables["ゴースト起動時間累計ミリ秒"]);
+	}
+	else {
+		tick_count_total = stoi(variables["ゴースト起動時間累計(ms)"]);
+		variables.erase("ゴースト起動時間累計(ms)");
+	}
 	variables["起動回数"] = itos( stoi(variables["起動回数"])+1 );
 
 	// 「単語の追加」で登録された単語を覚えておく
@@ -302,10 +308,10 @@ bool	Satori::Save(bool isOnUnload) {
 		variables[string("次から")+itos(it->first)+"回目のトーク"] = it->second;
 	// 起動時間累計を設定
 #ifdef POSIX
-	variables["ゴースト起動時間累計(ms)"] =
+	variables["ゴースト起動時間累計ミリ秒"] =
 	    itos(posix_get_current_millis() - tick_count_at_load + tick_count_total);
 #else
-	variables["ゴースト起動時間累計(ms)"] = itos( ::GetTickCount() - tick_count_at_load + tick_count_total );
+	variables["ゴースト起動時間累計ミリ秒"] = itos( ::GetTickCount() - tick_count_at_load + tick_count_total );
 #endif
 
 	if ( isOnUnload ) {
