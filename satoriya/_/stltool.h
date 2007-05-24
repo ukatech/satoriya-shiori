@@ -150,7 +150,7 @@ int	split(const char* p, T& o) {
 
 template<class T>
 inline int split(const string& i, T& o) {
-	split(i.c_str(),o);
+	return split(i.c_str(),o);
 }
 
 // 単語単位に分割 max_wordsは最大切り出し単語数。0なら制限しない。
@@ -176,7 +176,7 @@ int	split(const char* p, const char* dp, T& o, int max_words=0)
 			if ( word.size() > 0 ) {
 				o.push_back(word);
 
-				if ( max_words>0 && o.size()+1 >= max_words ) {	// 単語数制限
+				if ( max_words>0 && static_cast<int>(o.size()+1) >= max_words ) {	// 単語数制限
 					word = p;
 					break;
 				} else
