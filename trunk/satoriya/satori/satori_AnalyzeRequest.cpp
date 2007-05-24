@@ -43,10 +43,10 @@ int	Satori::request(
 	o_protocol = "SHIORI";
 	o_protocol_version = "3.0";
 
-	// 返り値抑止機能
+	// 返り値抑止
 	return_empty = false;
 
-	// スクリプトヘッダ機能
+	// スクリプトヘッダ
 	header_script = "";
 
 	// プロトコルを判別

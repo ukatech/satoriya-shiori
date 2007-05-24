@@ -202,13 +202,13 @@ private:
 	map<int, int>	next_default_surface; // 途中でdef_surfaceを切り換えても、そのrequestでは使わない
 	string	surface_restore_string();
 
-	// 返り値抑止機能
+	// 返り値抑止
 	bool return_empty;
 
-	// スクリプトヘッダ機能
+	// スクリプトヘッダ
 	string header_script;
 
-	// 無限呼び出し抑止機能
+	// 無限呼び出し抑止
 	int nest_limit;
 
 	// ばるーん位置
