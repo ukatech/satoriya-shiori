@@ -10,61 +10,62 @@
 // ほぼ map< string, Family<T> > だがpublic継承はせず、インタフェースを限定する
 
 template<typename T>
-class Families : private map< string, Family<T> >
+class Families
 {
-        typedef typename map< string, Family<T> >::iterator iterator;
-        typedef typename map< string, Family<T> >::const_iterator const_iterator;
+    typedef typename map< string, Family<T> >::iterator iterator;
+    typedef typename map< string, Family<T> >::const_iterator const_iterator;
+	
 	set<string> m_clearOC_at_talk_end;
-
+	map< string, Family<T> > m_elements;
+	
 public:
 	//Families() { cout << "Families()" << endl; }
 	//~Families() { cout << "~Families()" << endl; }
-
+	
 	// 要素の登録
 	const T* add_element(const string& i_name, const T& i_t, const Condition& i_condition=Condition())
 	{
-		Family<T>& f = (*this)[i_name];
+		Family<T>& f = m_elements[i_name];
 		return f.add_element(i_t, i_condition);
 	}
-
+	
 	// 過去互換の提供
 	const map< string, Family<T> >& compatible() const
 	{
-		return *this;
+		return m_elements;
 	}
-
+	
 	// 名前からFamilyを取得
 	Family<T>* get_family(string i_name)
 	{
-	        iterator i = find(i_name);
-		return ( i == end() ) ? NULL : &(i->second);
+		iterator i = m_elements.find(i_name);
+		return ( i == m_elements.end() ) ? NULL : &(i->second);
 	}
-
+	
 	// 名前の存在を確認
 	bool is_exist(const string& i_name) const
 	{
-		return find(i_name) != end();
+		return m_elements.find(i_name) != m_elements.end();
 	}
-
+	
 	// Tを１つ選択し、そのポインタを返す
 	const T* select(const string& i_name, Evalcator& i_evalcator)
 	{
-		iterator it = find(i_name);
-		if ( it == end() )
-		{
+		iterator it = m_elements.find(i_name);
+		if ( it == m_elements.end() ) {
 			return NULL;
 		}
 		return it->second.select(i_evalcator);
 	}
-
+	
 	// 削除
 	void erase(const string& i_name)
 	{
-		iterator it = find(i_name);
-		if ( it == end() ) {
+		iterator it = m_elements.find(i_name);
+		if ( it == m_elements.end() ) {
 			return;
 		}
-		erase(it);
+		m_elements.erase(it);
 	}
 	
 	// トークの終了を通知。重複制御期間が「トーク中」であるFamilyの重複回避制御をクリアする
@@ -75,44 +76,44 @@ public:
 			get_family(*it)->clear_OC();
 		}
 	}
-
+	
 	// family数
 	int size_of_family() const
 	{
-		return size();
+		return m_elements.size();
 	}
-
+	
 	// 全Familyの全要素数を計算
 	int size_of_element() const
 	{
 		int r = 0;
-		for ( const_iterator it = begin() ; it != end() ; ++it )
+		for ( const_iterator it = m_elements.begin() ; it != m_elements.end() ; ++it )
 		{
 			r += it->second.size_of_element();
 		}
 		return r;
 	}
-
+	
 	// 全クリア
 	void clear()
 	{
-		map< string, Family<T> >::clear();
+		m_elements.clear();
 		m_clearOC_at_talk_end.clear();
 	}
-
+	
 	// 重複回避制御を選択する。引数はタイプ、期間
 	void setOC(string i_name, string i_value)
 	{
 		iterator st, ed;
 		if ( i_name == "＊" )
 		{
-			st = begin();
-			ed = end();
+			st = m_elements.begin();
+			ed = m_elements.end();
 		}
 		else
 		{
-			st = find(i_name);
-			if ( st == end() )
+			st = m_elements.find(i_name);
+			if ( st == m_elements.end() )
 			{
 				sender << "'" << i_name << "' は存在しません。" << endl;
 				return;
@@ -132,7 +133,7 @@ public:
 			{
 				continue;
 			}
-
+			
 			if (0)
 				NULL;
 			else if ( method=="直前" )
@@ -154,19 +155,19 @@ public:
 				NULL;
 			else
 				sender << "重複回避の期間'" << method << "' は定義されていません。" << endl;
-		
+			
 		}
 	}
-
+	
 	const Talk* communicate_search(const string& iSentence, bool iAndMode)
 	{
 		sender << "文名の検索を開始" << endl;
 		sender << "　対象文字列: " << iSentence << endl;
 		sender << "　全単語一致モード: " << (iAndMode?"true":"false") << endl;
-
+		
 		vector<const Talk*>	result;
 		int	max_hit_point=0;
-		for ( iterator it = begin() ; it != end() ; ++it )
+		for ( iterator it = m_elements.begin() ; it != m_elements.end() ; ++it )
 		{
 			// 語群を全角スペースで区切る
 			strvec	words;
@@ -174,7 +175,7 @@ public:
 			{
 				continue; // 全角スペースが無い。該当外。
 			}
-
+			
 			// いくつの単語がヒットしたか。単語１つで10てん、長さ１もじで1てん
 			int	hit_point=0;
 			strvec::iterator wds_it=words.begin();
@@ -196,9 +197,9 @@ public:
 			{
 				continue;	// いっこも一致しない場合
 			}
-
+			
 			sender << "'" << it->first << "' : " << hit_point << "pt ,";
-
+			
 			if ( hit_point<max_hit_point) {
 				sender << "却下" << endl;
 				continue;
@@ -209,20 +210,20 @@ public:
 				sender << "単独で採用" << endl;
 				result.clear();
 			}
-
-
+			
+			
 			it->second.get_elements_pointers(result);
 		}
-
+		
 		sender << "結果: ";
 		if ( result.size() <= 0 ) {
 			sender << "該当なし" << endl;
 			return	NULL;
 		}
-
+		
 		return result[ random(result.size()) ];
 	}
-
+	
 };
 
 
