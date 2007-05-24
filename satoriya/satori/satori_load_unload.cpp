@@ -17,6 +17,7 @@
 #include	<ctime>	// for randomize
 
 #include	"../_/Utilities.h"
+#include     "../_/random.h"
 
 #ifdef POSIX
 #include "posix_utils.h"
