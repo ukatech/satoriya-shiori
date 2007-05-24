@@ -597,6 +597,7 @@ bool	Satori::CallReal(const string& iName, string& oResult)
 		oResult=itos(last_talk_exiting_surface[ stoi(zen2han(iName.c_str()+20)) ]);
 	}
 
+#ifndef POSIX
 	else if ( compare_head(iName, "ウィンドウハンドル") && iName.length() > 18 ) {
 		int character = stoi(zen2han(iName.c_str()+18));
 		map<int,HWND>::iterator found = characters_hwnd.find(character);
@@ -604,6 +605,7 @@ bool	Satori::CallReal(const string& iName, string& oResult)
 			oResult = uitos((unsigned int)characters_hwnd[character]);
 		}
 	}
+#endif
 
 	else if ( iName == "隣で起動しているゴースト" ) { 
 		updateGhostsInfo();	// ゴースト情報を更新

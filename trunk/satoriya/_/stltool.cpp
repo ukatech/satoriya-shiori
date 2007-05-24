@@ -354,7 +354,7 @@ string	get_a_chr(const char*& p) {
 	if ( *p=='\0' )
 		return	"";
 	char	buf[3];
-	if ( p[0] == 0xff ) { //“à•”‚Å“ÁŽê‚È•\Œ»‚Æ‚µ‚Ä‚¢‚é
+	if ( p[0] == static_cast<char>(0xffU) ) { //“à•”‚Å“ÁŽê‚È•\Œ»‚Æ‚µ‚Ä‚¢‚é
 		buf[0]=*p++;
 		buf[1]='\0';
 	}
