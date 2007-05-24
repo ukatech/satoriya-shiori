@@ -368,7 +368,8 @@ void list_files(string i_path, list<string>& o_files)
 #if defined(__WINDOWS__) || defined(__CYGWIN__)
 	    string fname(ent->d_name);
 #else
-	    string fname(ent->d_name, ent->d_namlen);
+//	    string fname(ent->d_name, ent->d_namlen);
+	    string fname(ent->d_name);
 #endif
 		o_files.push_back(fname);
 	}

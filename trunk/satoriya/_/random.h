@@ -1,7 +1,7 @@
 #ifndef	RANDOM_H
 #define RANDOM_H
 #include <stdlib.h>
-//void	randomize(unsigned int seed);
+void	randomize(unsigned int seed);
 //int		random(void);
 inline int random(int max) {
 	if ( max <= 0 ) {
