@@ -337,7 +337,7 @@ private:
 public:
 
 	Satori() {}
-	~Satori() {}
+	virtual ~Satori() {}
 
 	// SHIORI/3.0インタフェース
 	virtual bool load(const string& i_base_folder);

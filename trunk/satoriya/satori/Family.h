@@ -12,6 +12,8 @@ class Evalcator
 {
 public:
 	virtual bool evalcate_to_bool(const Condition&) =0;
+
+	virtual ~Evalcator(void) { }
 };
 
 
