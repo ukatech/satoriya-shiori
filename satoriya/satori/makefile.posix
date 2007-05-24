@@ -10,13 +10,13 @@ MKDEP = mkdep
 # これはdarwin用の設定で、libsatori.bundleを生成する。
 # LinuxやBSDならpostfixを.soにする必要がある筈。
 DYLIB_NAME_PREFIX = lib
-DYLIB_NAME_POSTFIX = .bundle
+DYLIB_NAME_POSTFIX = .so
 
 # 追加するフラグ。
 # CXXFLAGSは必要無ければ空でも良いが、LDFLAGSはdlopen可能なライブラリを
 # 作れる設定にしなければならない。darwinなら-bundle、LinuxやBSDなら-shared。
 CXXFLAGS = -O3 -Wall
-LDFLAGS = -bundle
+LDFLAGS = -shared
 
 
 ################## これより下は弄らなくてもコンパイル出来ます ##################
