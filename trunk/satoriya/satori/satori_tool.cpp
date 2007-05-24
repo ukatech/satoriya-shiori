@@ -9,8 +9,10 @@
 #include	<fstream>
 #include	<cassert>
 
+
 #ifdef POSIX
 #  include <iostream>
+#include <sys/stat.h>
 #endif
 
 #include "random.h"
