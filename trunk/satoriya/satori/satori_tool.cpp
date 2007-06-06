@@ -8,7 +8,7 @@
 
 #include	<fstream>
 #include	<cassert>
-
+#include <algorithm>
 
 #ifdef POSIX
 #  include <iostream>
@@ -179,24 +179,46 @@ string	Satori::GetWord(const string& name) {
 	return "いぬ";
 }
 
-string	Satori::surface_restore_string() { 
-	string	str="";
-	if ( !surface_restore_at_talk )	// そもそも必要なし、の場合
-		return	"\\1";
-	
-	//for ( set<int>::const_iterator i=surface_changed_before_speak.begin() ; i!=surface_changed_before_speak.end() ; ++i )
-	
-	for ( map<int, int>::const_iterator i=default_surface.begin() ; i!=default_surface.end() ; ++i ) {
-		if ( mIsMateria ) {
-			if ( i->first >= 2 )
-				continue;
-			else if ( surface_changed_before_speak.find(i->first) == surface_changed_before_speak.end() )
-				str += string() + "\\" + itos(i->first) + "\\s[" + itos(i->second) + "]";
-		} else
-			if ( surface_changed_before_speak.find(i->first) == surface_changed_before_speak.end() )
-				str += string() + "\\p[" + itos(i->first) + "]\\s[" + itos(i->second) + "]";
+void Satori::surface_restore_string_addfunc(string &str,map<int, int>::const_iterator &i)
+{
+	if ( i->first >= 2 ) {
+		if ( ! mIsMateria ) {
+			str += string() + "\\p[" + itos(i->first) + "]\\s[" + itos(i->second) + "]";
+		}
 	}
+	else {
+		str += string() + "\\" + itos(i->first) + "\\s[" + itos(i->second) + "]";
+	}
+}
+
+string	Satori::surface_restore_string()
+{ 
+	if ( surface_restore_at_talk == SR_NONE ) {	// そもそも必要なし、の場合
+		return	"\\1";
+	}
+
+	string	str="";
 	
+	if ( surface_restore_at_talk == SR_FORCE ) {	
+		for ( map<int, int>::const_iterator i=default_surface.begin() ; i!=default_surface.end() ; ++i ) {
+			if ( surface_changed_before_speak.size() ) {
+				if ( i->first != surface_changed_before_speak[0] ) {
+					surface_restore_string_addfunc(str,i);
+				}
+			}
+			else {
+				surface_restore_string_addfunc(str,i);
+			}
+		}
+	}
+	else {
+		for ( map<int, int>::const_iterator i=default_surface.begin() ; i!=default_surface.end() ; ++i ) {
+			if ( find(surface_changed_before_speak.begin(),surface_changed_before_speak.end(),i->first) == surface_changed_before_speak.end() ) {
+				surface_restore_string_addfunc(str,i);
+			}
+		}
+	}
+		
 	surface_changed_before_speak.clear();
 	return	str;
 }
@@ -414,7 +436,15 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 	}
 
 	if ( key == "会話時サーフェス戻し" ) {
-		surface_restore_at_talk=(value=="有効");
+		if ( value == "有効" ) {
+			surface_restore_at_talk = SR_NORMAL;
+		}
+		else if ( value == "強制" ) {
+			surface_restore_at_talk = SR_FORCE;
+		}
+		else {
+			surface_restore_at_talk = SR_NONE;
+		}
 		return true;
 	}
 	

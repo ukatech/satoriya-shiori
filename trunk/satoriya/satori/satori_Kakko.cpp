@@ -438,7 +438,7 @@ bool	Satori::CallReal(const string& iName, string& oResult)
 			s += surface_add_value[speaker];
 		oResult = string("\\s[") + itos(s) + "]";
 		if ( !is_speaked(speaker) )
-			surface_changed_before_speak.insert(speaker);
+			surface_changed_before_speak.push_back(speaker);
 	}
 	else if ( hankaku=="argc" ) {
 		strvec&	v = mCallStack.top();

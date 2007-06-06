@@ -184,7 +184,7 @@ string	Satori::SentenceToSakuraScript(const strvec& vec) {
 		// ちょっと微妙な存在意義。
 		if ( strncmp(p, "\\s", 2)==0 ) {	
 			if ( !is_speaked(speaker) )
-				surface_changed_before_speak.insert(speaker);
+				surface_changed_before_speak.push_back(speaker);
 		}
 
 		// ジャンプ
