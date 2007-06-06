@@ -194,7 +194,8 @@ private:
 	bool	is_speaked_anybody() { return speaked_speaker.size()>0; }
 	int		characters;
 	int		question_num;
-	vector<int>	surface_changed_before_speak;	// 会話前にサーフェスが切り替え指示があった？
+
+	map<int,bool> surface_changed_before_speak;	// 会話前にサーフェスが切り替え指示があった？
 
 
 	// 過去のカッコ置き換えを記憶。反復（Ｈ？）で使用
