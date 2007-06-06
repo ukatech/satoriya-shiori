@@ -9,6 +9,6 @@ void randomize(unsigned int dwSeed)
 	init_genrand(dwSeed);
 }
 
-int	random(void) {
+int	gen_random(void) {
 	return genrand_int31();
 }

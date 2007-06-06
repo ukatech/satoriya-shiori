@@ -55,6 +55,12 @@ extern const char* gSaoriVersion;
 
 static const int RESPONSE_HISTORY_SIZE=64;
 
+enum SurfaceRestoreMode {
+	SR_NONE = 0,
+	SR_NORMAL,
+	SR_FORCE,
+};
+
 //---------------------------------------------------------------------------
 
 class escaper
@@ -188,7 +194,7 @@ private:
 	bool	is_speaked_anybody() { return speaked_speaker.size()>0; }
 	int		characters;
 	int		question_num;
-	set<int>	surface_changed_before_speak;	// 会話前にサーフェスが切り替え指示があった？
+	vector<int>	surface_changed_before_speak;	// 会話前にサーフェスが切り替え指示があった？
 
 
 	// 過去のカッコ置き換えを記憶。反復（Ｈ？）で使用
@@ -196,7 +202,7 @@ private:
 	simple_stack<strvec>	kakko_replace_history;	
 
 	// 会話時サーフェス戻し・＄変数
-	bool	surface_restore_at_talk;
+	enum SurfaceRestoreMode	surface_restore_at_talk;
 	map<int, int>	default_surface;
 	map<int, int>	surface_add_value;
 	map<int, int>	next_default_surface; // 途中でdef_surfaceを切り換えても、そのrequestでは使わない
@@ -333,6 +339,8 @@ private:
 	bool	CallReal(const string& word, string& result);
 
 	string* GetValue(const string &key,bool iIsExpand = false,bool *oIsExpanded = NULL);
+
+	void surface_restore_string_addfunc(string &str,map<int, int>::const_iterator &i);
 
 public:
 

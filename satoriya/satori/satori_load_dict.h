@@ -54,7 +54,7 @@ void	Satori::InitMembers() {
 
 	assert(kakko_replace_history.size()==0);
 
-	surface_restore_at_talk=true;
+	surface_restore_at_talk=SR_NORMAL;
 	surface_add_value.clear();
 	last_talk_exiting_surface.clear();
 	next_default_surface.clear();
