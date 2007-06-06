@@ -183,8 +183,11 @@ string	Satori::SentenceToSakuraScript(const strvec& vec) {
 
 		// ちょっと微妙な存在意義。
 		if ( strncmp(p, "\\s", 2)==0 ) {	
-			if ( !is_speaked(speaker) )
-				surface_changed_before_speak.push_back(speaker);
+			if ( !is_speaked(speaker) ) {
+				if ( surface_changed_before_speak.find(speaker) == surface_changed_before_speak.end() ) {
+					surface_changed_before_speak.insert(map<int,bool>::value_type(speaker,is_speaked_anybody()) );
+				}
+			}
 		}
 
 		// ジャンプ

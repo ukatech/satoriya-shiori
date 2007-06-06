@@ -202,7 +202,8 @@ string	Satori::surface_restore_string()
 	if ( surface_restore_at_talk == SR_FORCE ) {	
 		for ( map<int, int>::const_iterator i=default_surface.begin() ; i!=default_surface.end() ; ++i ) {
 			if ( surface_changed_before_speak.size() ) {
-				if ( i->first != surface_changed_before_speak[0] ) {
+				map<int,bool>::const_iterator found = surface_changed_before_speak.find(i->first);
+				if ( found == surface_changed_before_speak.end() || found->second ) {
 					surface_restore_string_addfunc(str,i);
 				}
 			}
@@ -213,7 +214,7 @@ string	Satori::surface_restore_string()
 	}
 	else {
 		for ( map<int, int>::const_iterator i=default_surface.begin() ; i!=default_surface.end() ; ++i ) {
-			if ( find(surface_changed_before_speak.begin(),surface_changed_before_speak.end(),i->first) == surface_changed_before_speak.end() ) {
+			if ( surface_changed_before_speak.find(i->first) == surface_changed_before_speak.end() ) {
 				surface_restore_string_addfunc(str,i);
 			}
 		}
