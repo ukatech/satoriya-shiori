@@ -109,7 +109,10 @@ void	Satori::InitMembers() {
 	return_empty = false;
 	is_dic_loaded = false;
 	is_call_ontalk_at_mikire = false;
-	nest_limit = 200; //200‰ñ‚àŒÄ‚Ô‚ÈI
+
+	m_nest_limit = 200; //200‰ñ‚àŒÄ‚Ô‚ÈI
+	m_nest_count = 0;
+
 	header_script = "";
 
 	mReferences.clear();

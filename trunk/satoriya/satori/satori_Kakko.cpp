@@ -285,18 +285,17 @@ string* Satori::GetValue(const string &iName,bool iIsExpand,bool *oIsExpanded)
 
 // 引数に渡されたものを何かの名前であるとし、置き換え対象があれば置き換える。
 bool	Satori::Call(const string& iName, string& oResult) {
-	static int nest_count = 0;
-	++nest_count;
+	++m_nest_count;
 
-	if ( nest_limit > 0 && nest_count > nest_limit ) {
+	if ( m_nest_limit > 0 && m_nest_count > m_nest_limit ) {
 		sender << "呼び出し回数超過：" << iName << endl;
 		oResult = "（" + iName + "）";
-		--nest_count;
+		--m_nest_count;
 		return false;
 	}
 
 	bool r = CallReal(iName,oResult);
-	--nest_count;
+	--m_nest_count;
 	return r;
 }
 
