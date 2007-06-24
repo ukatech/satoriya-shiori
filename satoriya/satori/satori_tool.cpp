@@ -401,8 +401,8 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 	}
 
 	if ( key == "ŒÄ‚Ño‚µ‰ñ”§ŒÀ" ) {
-		nest_limit = stoi( zen2han(value) );
-		if ( nest_limit < 0 ) { nest_limit = 0; }
+		m_nest_limit = stoi( zen2han(value) );
+		if ( m_nest_limit < 0 ) { m_nest_limit = 0; }
 		return true;
 	}
 	

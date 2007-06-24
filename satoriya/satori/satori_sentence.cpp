@@ -79,11 +79,24 @@ bool	Satori::FindEventTalk(string& ioevent) {
 
 
 
-string	Satori::GetSentence(const string& name) {
+string	Satori::GetSentence(const string& name)
+{
 	string	accumulater, script, sentence=name;
+
+	/*++m_nest_count;
+
+	if ( m_nest_limit > 0 && m_nest_count > m_nest_limit ) {
+		sender << "呼び出し回数超過：" << name << endl;
+		--m_nest_count;
+		return string("（" + name + "）");
+	}*/
+
 	while ( GetSentence(sentence, script) )
 		accumulater += script;
 	accumulater += script;
+
+	//--m_nest_count;
+
 	return	accumulater;
 }
 
@@ -103,7 +116,7 @@ string	Satori::SentenceToSakuraScript(const strvec& vec) {
 	++nest_count;
 	//DBG(sender << "enter SentenceToSakuraScript, nest-count: " << nest_count << ", vector_size: " << vec.size() << endl);
 
-	if ( nest_limit > 0 && nest_count > nest_limit ) {
+	if ( m_nest_limit > 0 && nest_count > m_nest_limit ) {
 		sender << "呼び出し回数超過" << endl;
 		--nest_count;
 		return string("");
@@ -298,7 +311,7 @@ string	Satori::SentenceToSakuraScript(const strvec& vec) {
 			}
 			else if ( c=="\xff" ) {	//内部特殊表現
 				c=get_a_chr(p);
-				if ( c=="\x01" ) { //0xff0x01＝サーフィス切り替え　後に半角数値が1文字続く
+				if ( c=="\x01" ) { //0xff0x01＝サーフェス切り替え　後に半角数値が1文字続く
 					c=get_a_chr(p);
 					int speaker_tmp = atoi(c.c_str());
 					if ( is_speaked(speaker) && speaker != speaker_tmp ) {

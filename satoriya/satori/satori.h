@@ -216,7 +216,8 @@ private:
 	string header_script;
 
 	// 無限呼び出し抑止
-	int nest_limit;
+	int m_nest_limit;
+	int m_nest_count;
 
 	// ばるーん位置
 	map<int, bool>	validBalloonOffset;	// 1回でも設定されたら有効 つーか片方だけだと意味無かった。むぅ。
