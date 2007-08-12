@@ -76,11 +76,12 @@ string	Satori::inc_call(
 				erase_var(key);	// 存在抹消
 			}
 			else {
-				bool isOverwrited;
-				string *pstr = GetValue(key,true,&isOverwrited);
+				bool isOverwritten;
+				bool isSysValue;
+				string *pstr = GetValue(key,isSysValue,true,&isOverwritten);
 				
 				sender << "＄" << key << "＝" << value << "／" << 
-					(isOverwrited ? "writed." : "overwrited.")<< endl;
+					(isOverwritten ? "written." : "overwritten.")<< endl;
 
 				if ( pstr ) { *pstr = value; }
 				system_variable_operation(key, value, &result);
@@ -199,9 +200,10 @@ string	Satori::inc_call(
 }
 
 // 変数取得
-string* Satori::GetValue(const string &iName,bool iIsExpand,bool *oIsExpanded)
+string* Satori::GetValue(const string &iName,bool &oIsSysValue,bool iIsExpand,bool *oIsExpanded)
 {
 	if ( oIsExpanded ) { *oIsExpanded = false; }
+	oIsSysValue = false;
 
 	if ( variables.find(iName) != variables.end() ) {
 		// 変数名であれば変数の内容を返す
@@ -212,6 +214,8 @@ string* Satori::GetValue(const string &iName,bool iIsExpand,bool *oIsExpanded)
 	strvec*	p_kakko_replace_history = kakko_replace_history.empty() ? NULL : &(kakko_replace_history.top());
 
 	if ( hankaku[0]=='R' && aredigits(hankaku.c_str()+1) ) {
+		oIsSysValue = true;
+
 		// Event通知時の引数取得
 		int	ref=atoi(hankaku.c_str()+1);
 		if (ref>=0 && ref<mReferences.size()) {
@@ -227,6 +231,8 @@ string* Satori::GetValue(const string &iName,bool iIsExpand,bool *oIsExpanded)
 		}
 	}
 	if ( p_kakko_replace_history!=NULL && hankaku[0]=='H' && aredigits(hankaku.c_str()+1) ) {
+		oIsSysValue = true;
+
 		// 過去の置き換え履歴を参照
 		int	ref = atoi(hankaku.c_str() +1) - 1;
 		if ( ref>=0 && ref < p_kakko_replace_history->size() ) {
@@ -237,6 +243,8 @@ string* Satori::GetValue(const string &iName,bool iIsExpand,bool *oIsExpanded)
 		}
 	}
 	if ( mCallStack.size()>0 && hankaku[0]=='A' && aredigits(hankaku.c_str()+1)) {
+		oIsSysValue = true;
+
 		// callによる呼び出しの引数を参照
 		int	ref = atoi(hankaku.c_str() +1);
 		strvec&	v = mCallStack.top();
@@ -248,6 +256,8 @@ string* Satori::GetValue(const string &iName,bool iIsExpand,bool *oIsExpanded)
 		}
 	}
 	if ( mCallStack.size()>0 && hankaku.compare(0,4,"argv") && aredigits(hankaku.c_str()+4)) {
+		oIsSysValue = true;
+
 		// callによる呼び出しの引数を参照
 		int	ref = atoi(hankaku.c_str() +4);
 		strvec&	v = mCallStack.top();
@@ -259,6 +269,8 @@ string* Satori::GetValue(const string &iName,bool iIsExpand,bool *oIsExpanded)
 		}
 	}
 	if ( hankaku[0]=='S' && aredigits(hankaku.c_str()+1)) {
+		oIsSysValue = true;
+
 		// SAORIなどコール時の結果処理
 		int	ref=atoi(hankaku.c_str()+1);
 		if (ref>=0 && ref<mKakkoCallResults.size()) {
@@ -409,7 +421,8 @@ bool	Satori::CallReal(const string& iName, string& oResult)
 
 	const Word* w;
 	string hankaku=zen2han(iName);
-	string *pstr = GetValue(iName);
+	bool isSysValue;
+	string *pstr = GetValue(iName,isSysValue);
 
 	if ( _pre_called_ ) {
 		// 前段階ですでに対応カッコ展開済み
@@ -426,9 +439,14 @@ bool	Satori::CallReal(const string& iName, string& oResult)
 		// ＊に定義があれば文を取得
 		oResult = GetSentence(iName);
 	}
-	else if ( pstr ) {
+	else if ( pstr || isSysValue ) {
 		// 変数名であれば変数の内容を返す
-		oResult = *pstr;
+		if ( pstr ) {
+			oResult = *pstr;
+		}
+		else {
+			oResult = "";
+		}
 	}
 	else if ( aredigits(hankaku) || (hankaku[0]=='-' && aredigits(hankaku.c_str()+1)) ) {
 		// サーフェス切り替え
@@ -668,7 +686,8 @@ bool	Satori::CallReal(const string& iName, string& oResult)
 
 	else if ( compare_head(iName, "変数「") && compare_tail(iName, "」の存在") ) {
 		string	str(iName, 6, iName.length()-6-8);
-		string *v = GetValue(str);
+		bool isSysValue;
+		string *v = GetValue(str,isSysValue); //こっちはシステム変数かどうかどっちでもいい
 		oResult = v ? "1" : "0";
 	}
 
