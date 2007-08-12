@@ -289,11 +289,12 @@ string	Satori::SentenceToSakuraScript(const strvec& vec) {
 					}
 				}
 
-				bool isOverwrited;
-				string *pstr = GetValue(key,true,&isOverwrited);
+				bool isOverwritten;
+				bool isSysValue;
+				string *pstr = GetValue(key,isSysValue,true,&isOverwritten);
 
 				sender << "" << key << "" << value << "^" << 
-					(isOverwrited ? "writed." : "overwrited.")<< endl;
+					(isOverwritten ? "written." : "overwritten.")<< endl;
 
 				if ( pstr ) { *pstr = value; }
 				system_variable_operation(key, value, &result);

@@ -247,11 +247,17 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 		// タイマ予約発話
 		for (strintmap::iterator i=timer.begin();i!=timer.end();++i) {
 			if ( i->second < 1 ) {
-				string	var_name = i->first + "タイマ";
+				//GetSentence実行後にtimerのイテレータは状態変化しているかもしれないので
+				//いったん保存しておく
+				string  timer_name = i->first;
+				string	var_name = timer_name + "タイマ";
+
 				sender << var_name << "が発動。" << endl;
-				script=GetSentence(i->first);
-				timer.erase(i);
+				script=GetSentence(timer_name);
+				
+				timer.erase(timer_name);
 				variables.erase(var_name);
+
 				if ( !is_empty_script(script) )
 					diet_script(script);
 				break;
