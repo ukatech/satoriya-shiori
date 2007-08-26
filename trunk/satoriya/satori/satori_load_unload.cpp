@@ -332,14 +332,25 @@ bool	Satori::Save(bool isOnUnload) {
 		sender << "failed." << endl;
 		return	false;
 	}
+
 	string	line = "＊セーブデータ";
+	string  data;
+
 	out << ENCODE(line) << endl;
 	for (strmap::const_iterator it=variables.begin() ; it!=variables.end() ; ++it) {
 		string	zen2han(string str);
 		string	str = zen2han(it->first);
 		if ( str[0]=='S' && aredigits(str.c_str()+1) )
 			continue;
-		string	line = string("＄")+it->first+"\t"+it->second; // 変数を保存
+
+		data = it->second;
+		
+		m_escaper.unescape(data);
+		replace(data,"φ","φφ");
+		replace(data,"（","φ（");
+		replace(data,"）","φ）");
+
+		string	line = string("＄")+it->first+"\t"+data; // 変数を保存
 		out << ENCODE(line) << endl;
 	}
 
