@@ -405,6 +405,12 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 		if ( m_nest_limit < 0 ) { m_nest_limit = 0; }
 		return true;
 	}
+
+	if ( key == "ジャンプ回数制限" ) {
+		m_jump_limit = stoi( zen2han(value) );
+		if ( m_jump_limit < 0 ) { m_jump_limit = 0; }
+		return true;
+	}
 	
 	if ( key == "スコープ切り換え時" ) {
 		append_at_scope_change = zen2han(value);

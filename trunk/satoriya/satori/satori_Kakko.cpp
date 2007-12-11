@@ -340,6 +340,7 @@ bool	Satori::CallReal(const string& iName, string& oResult)
 				inner_commands.insert("remember");
 				inner_commands.insert("call");
 				inner_commands.insert("freeze");
+				inner_commands.insert("バイト値");
 				inner_commands.insert("単語の追加");
 				inner_commands.insert("単語の数");
 				inner_commands.insert("文の数");
