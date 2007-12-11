@@ -274,7 +274,7 @@ bool	Satori::GetRecommendsiteSentence(const string& name, string& result)
 		const Talk& t = **it;
 		if ( t.size() >= 4 && t[1]==mReferences[1] )
 		{
-			result = SentenceToSakuraScript( Talk(t.begin()+3, t.end()) );
+			result = SentenceToSakuraScriptExec( Talk(t.begin()+3, t.end()) );
 			return	true;
 		}
 	}
@@ -691,4 +691,5 @@ bool	Satori::calculate(const string& iExpression, string& oResult) {
 	}
 	return	r;
 }
+
 

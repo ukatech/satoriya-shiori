@@ -85,6 +85,40 @@ extern "C" __declspec(dllexport) HGLOBAL __cdecl request(HGLOBAL i_data, long* i
 #endif
 
 
+#ifdef POSIX
+extern "C" char* getversionlist(HGLOBAL i_data, long* io_data_len) {
+	// グローバルメモリを受けとる
+	string the_req_str((char*)::GlobalLock(i_data), *io_data_len);
+	::GlobalFree(i_data);
+
+    // リクエスト実行
+    string the_resp_str = SakuraDLLHost::I()->getversionlist(the_req_str);
+
+    // グローバルメモリで返す
+    *io_data_len = the_resp_str.size();
+    char* the_return_data = static_cast<char*>(malloc(*io_data_len));
+    memcpy(the_return_data, the_resp_str.c_str(), *io_data_len);
+    return the_return_data;
+}
+#else
+extern "C" __declspec(dllexport) HGLOBAL __cdecl getversionlist(HGLOBAL i_data, long* io_data_len)
+{
+	// グローバルメモリを受けとる
+	string the_req_str((char*)::GlobalLock(i_data), *io_data_len);
+	::GlobalFree(i_data);
+
+	// リクエスト実行
+	string	the_resp_str = SakuraDLLHost::I()->getversionlist(the_req_str);
+
+	// グローバルメモリで返す
+	*io_data_len = the_resp_str.size();
+	HGLOBAL the_return_data = ::GlobalAlloc(GMEM_FIXED, *io_data_len);
+	::CopyMemory(the_return_data, the_resp_str.c_str(), *io_data_len);
+	return	the_return_data;
+}
+#endif
+
+
 
 
 string SakuraDLLHost::request(const string& i_request_string)
@@ -169,6 +203,7 @@ string SakuraDLLHost::request(const string& i_request_string)
 	//sender << "--- Response ---" << endl << response << endl;
 	return response;
 }
+
 
 
 

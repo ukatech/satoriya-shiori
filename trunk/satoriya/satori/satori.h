@@ -187,7 +187,7 @@ private:
 	string	append_at_choice_start;
 	string	append_at_choice_end;
 
-	// しゃべり管理。SentenceToSakuraScriptの未再帰呼び出し時に初期化。
+	// しゃべり管理。SentenceToSakuraScriptExecの未再帰呼び出し時に初期化。
 	int		speaker;		// 話者
 	set<int>	speaked_speaker;		// 少しでも喋った？
 	bool	is_speaked(int n) { return speaked_speaker.find(n) != speaked_speaker.end(); }
@@ -199,7 +199,7 @@ private:
 
 
 	// 過去のカッコ置き換えを記憶。反復（Ｈ？）で使用
-	// SentenceToSakuraScriptの再帰に同期する。
+	// SentenceToSakuraScriptExecの再帰に同期する。
 	simple_stack<strvec>	kakko_replace_history;	
 
 	// 会話時サーフェス戻し・＄変数
@@ -332,7 +332,7 @@ private:
 	bool	system_variable_operation(string key, string value, string* result=NULL);
 
 	// 内部。返値は続行の有無。続行時はSentenceNameをGetSentence。
-	bool	GetSentence(string& ioSentenceName, string& oResultScript);
+	const Talk* GetSentenceInternal(string& ioSentenceName);
 
 	// 式を評価し、結果の真偽値を返す
 	bool evalcate_to_bool(const Condition& i_cond);
@@ -344,6 +344,9 @@ private:
 
 	void surface_restore_string_addfunc(string &str,map<int, int>::const_iterator &i);
 
+	// SentenceToSakuraScriptExecの実体。
+	int SentenceToSakuraScriptInternal(const Talk &vec,string &result,string &jumpto,ptrdiff_t &ip);
+
 public:
 
 	Satori() {}
@@ -352,6 +355,7 @@ public:
 	// SHIORI/3.0インタフェース
 	virtual bool load(const string& i_base_folder);
 	virtual bool unload();
+	virtual string getversionlist(const string& i_base_folder);
 	virtual int	request(
 		const string& i_protocol,
 		const string& i_protocol_version,
@@ -366,9 +370,9 @@ public:
 	bool	Save(bool isOnUnload=false);	
 
 	// strvecからさくらスクリプトを生成する
-	string	SentenceToSakuraScript(const strvec& vec);
+	string	SentenceToSakuraScriptExec(const strvec& vec);
 	// strvecにプリプロセスを掛けた後、さくらスクリプトを生成する。さとりて用
-	string	SentenceToSakuraScript_with_PreProcess(const strvec& vec);
+	string	SentenceToSakuraScriptExec_with_PreProcess(const strvec& vec);
 	// 指定された名前の＊文を取得する
 	string	GetSentence(const string& name);
 	// 引数に渡されたものを何かの名前であるとし、置き換え対象があれば置き換える。
@@ -392,5 +396,6 @@ void	diet_script(string&);
 
 //---------------------------------------------------------------------------
 #endif
+
 
 

@@ -190,11 +190,11 @@ static bool pre_process(
 	return true;
 }
 
-string	Satori::SentenceToSakuraScript_with_PreProcess(const strvec& i_vec)
+string	Satori::SentenceToSakuraScriptExec_with_PreProcess(const strvec& i_vec)
 {
 	strvec vec;
 	pre_process(i_vec, vec, m_escaper, replace_before_dic);
-	return SentenceToSakuraScript(vec);
+	return SentenceToSakuraScriptExec(vec);
 }
 
 // .txt‚Æ.sat‚Ì—¼•û‚ª‚­‚é‚Ì‚ÅAV‚µ‚¢•û‚¾‚¯‚ğ“Ç‚İ‚ŞB
