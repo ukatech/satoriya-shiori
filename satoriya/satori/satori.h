@@ -199,7 +199,6 @@ private:
 
 
 	// 過去のカッコ置き換えを記憶。反復（Ｈ？）で使用
-	// SentenceToSakuraScriptExecの再帰に同期する。
 	simple_stack<strvec>	kakko_replace_history;	
 
 	// 会話時サーフェス戻し・＄変数
@@ -217,6 +216,7 @@ private:
 
 	// 無限呼び出し抑止
 	int m_nest_limit;
+	int m_jump_limit;
 	int m_nest_count;
 
 	// ばるーん位置

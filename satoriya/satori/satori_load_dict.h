@@ -111,6 +111,7 @@ void	Satori::InitMembers() {
 	is_call_ontalk_at_mikire = false;
 
 	m_nest_limit = 200; //200‰ñ‚àŒÄ‚Ô‚ÈI
+	m_jump_limit = 20000; //‚±‚Á‚¿‚Í‚©‚È‚è‹–—e
 	m_nest_count = 0;
 
 	header_script = "";

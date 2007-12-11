@@ -129,10 +129,12 @@ string Satori::SentenceToSakuraScriptExec(const Talk& vec)
 	surface_changed_before_speak.clear(); // 会話前にサーフェス切り換え指示があったか
 	characters = 0;	// 喋った字数
 
+	int jumpcount = 0;
+
 	while ( TRUE ) {
 		if ( speaker != 1 ) {
 			allresult += "\\1";
-			speaker = 1;
+			speaker = 1;	// 本体は 0 うにゅうは 1
 		}
 
 		result = "";
@@ -169,6 +171,12 @@ string Satori::SentenceToSakuraScriptExec(const Talk& vec)
 				ip = 0;
 			}
 		}
+		++jumpcount;
+
+		if ( m_jump_limit > 0 && jumpcount >= m_jump_limit ) {
+			sender << "ジャンプ回数超過" << endl;
+			break;
+		}
 	}
 
 	return allresult;
@@ -187,7 +195,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 		return 0;
 	}
 
-	kakko_replace_history.push(strvec()); // カッコの前方参照用
+	//kakko_replace_history.push(strvec()); // カッコの前方参照用
 
 	static const int basewait=3;
 
@@ -462,7 +470,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 		result += "\\n";
 	}
 
-	kakko_replace_history.pop(1);
+	//kakko_replace_history.pop(1);
 	//DBG(sender << "leave SentenceToSakuraScriptInternal, nest-count: " << nest_count << endl);
 	--nest_count;
 	return 0;
