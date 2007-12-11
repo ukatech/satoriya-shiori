@@ -87,6 +87,13 @@ DummyDbgSetFlagClass dummy;
 #endif // _WINDOWS
 #endif // _DEBUG
 
+
+string	Satori::getversionlist(const string& iBaseFolder)
+{
+	return "SHIORI/3.0\1SAORI/1.0";
+}
+
+
 bool	Satori::load(const string& iBaseFolder)
 {
 	Sender::initialize();
@@ -410,4 +417,5 @@ bool	Satori::unload() {
 	sender << "¡SATORI::Unload ---------------------" << endl;
 	return	true;
 }
+
 

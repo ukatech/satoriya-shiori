@@ -15,6 +15,8 @@ public:
 	virtual bool	load(const string& i_base_folder) { return true; }
 	virtual bool	unload() { return true; }
 
+	virtual string  getversionlist(const string& i_base_folder) { return ""; }
+
 	// 素のリクエスト文字列を受け取り、素のレスポンス文字列を返す。
 	// 内部で↓を呼ぶ。
 	virtual string request(const string& i_request_string);

@@ -129,7 +129,7 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 			v.push_back("＞（Ｒ３）（Ｒ４）つつかれ");
 			v.push_back("（）");
 		}
-		script = SentenceToSakuraScript(v);
+		script = SentenceToSakuraScriptExec(v);
 	}
 	else if ( iEvent=="OnMouseMove" ) {
 		nade_valid_time = nade_valid_time_initializer; // なでセッションの有効期限を更新
@@ -336,9 +336,10 @@ bool	Satori::TalkSearch(const string& iSentence, string& oScript, bool iAndMode)
 		return false;
 	}
 
-	oScript = SentenceToSakuraScript(*talk);
+	oScript = SentenceToSakuraScriptExec(*talk);
 	sender << oScript << endl;
 	return	true;
 }
+
 
 

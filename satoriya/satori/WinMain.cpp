@@ -182,7 +182,7 @@ string	Do(const string& str, bool like_dict, bool satori, HWND hwnd)
 		}
 	} else {
 		// さくらスクリプト変換
-		script = pSatori->SentenceToSakuraScript_with_PreProcess(vec) + "\\e";
+		script = pSatori->SentenceToSakuraScriptExec_with_PreProcess(vec) + "\\e";
 	}
 	if ( !pSatori->Translate(script) )
 		script="";
@@ -379,4 +379,5 @@ WinMain(
 
 	return	ret;
 }
+
 

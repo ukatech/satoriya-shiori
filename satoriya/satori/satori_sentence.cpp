@@ -81,7 +81,7 @@ bool	Satori::FindEventTalk(string& ioevent) {
 
 string	Satori::GetSentence(const string& name)
 {
-	string	accumulater, script, sentence=name;
+	string script, sentence=name;
 
 	/*++m_nest_count;
 
@@ -91,13 +91,14 @@ string	Satori::GetSentence(const string& name)
 		return string("（" + name + "）");
 	}*/
 
-	while ( GetSentence(sentence, script) )
-		accumulater += script;
-	accumulater += script;
-
-	//--m_nest_count;
-
-	return	accumulater;
+	// トークをさくらスクリプトに変換
+	const Talk *pTalk = GetSentenceInternal(sentence);
+	if ( pTalk ) {
+		Sender::nest_object smo(2); 
+		script = SentenceToSakuraScriptExec(*pTalk);
+		sender << "return: " << script << "" << endl;
+	}
+	return	script;
 }
 
 
@@ -109,34 +110,90 @@ string	Satori::GetSentence(const string& name)
 		result += string("\\_w[") + itos( int(characters*basewait*rate_of_auto_insert_wait/100) ) + "]"; characters=0; \
 	} else NULL
 
-string	Satori::SentenceToSakuraScript(const strvec& vec) {
 
+
+string Satori::SentenceToSakuraScriptExec(const Talk& vec)
+{
+	string jump_to;
+	string result;
+	ptrdiff_t ip = 0;
+	const Talk* pVec = &vec;
+	bool comAndMode = mRequestID!="OnCommunicate";
+
+	//実行環境初期化
+	string allresult = "\\1";
+	speaker = 1;	// 本体は 0 うにゅうは 1
+
+	question_num=0;	// 選択肢番号
+	speaked_speaker.clear(); // 少しでも喋ったかどうか
+	surface_changed_before_speak.clear(); // 会話前にサーフェス切り換え指示があったか
+	characters = 0;	// 喋った字数
+
+	while ( TRUE ) {
+		if ( speaker != 1 ) {
+			allresult += "\\1";
+			speaker = 1;
+		}
+
+		result = "";
+		jump_to = "";
+		int resp = SentenceToSakuraScriptInternal(*pVec,result,jump_to,ip);
+
+		allresult += result;
+
+		//resp == 0で全実行終了
+		if ( ! resp ) {
+			break;
+		}
+
+		//それ以外はどこかにジャンプを示す
+		if ( resp == 1 ) {
+			string jump = jump_to;
+			const Talk* pTR = GetSentenceInternal(jump);
+			if ( ! pTR ) {
+				sender << "＞" << jump_to << " not found." << endl;
+			}
+			else {
+				pVec = pTR;
+				ip = 0;
+			}
+		}
+		else if ( resp == 2 ) {
+			string jump = jump_to;
+			const Talk* pTR = talks.communicate_search(jump, comAndMode);
+			if ( ! pTR ) {
+				sender << "≫" << jump_to << " not found." << endl;
+			}
+			else {
+				pVec = pTR;
+				ip = 0;
+			}
+		}
+	}
+
+	return allresult;
+}
+
+int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,string &jump_to,ptrdiff_t &ip)
+{
 	// 再帰管理
 	static	int nest_count=0;
 	++nest_count;
-	//DBG(sender << "enter SentenceToSakuraScript, nest-count: " << nest_count << ", vector_size: " << vec.size() << endl);
+	//DBG(sender << "enter SentenceToSakuraScriptInternal, nest-count: " << nest_count << ", vector_size: " << vec.size() << endl);
 
 	if ( m_nest_limit > 0 && nest_count > m_nest_limit ) {
 		sender << "呼び出し回数超過" << endl;
 		--nest_count;
-		return string("");
+		return 0;
 	}
 
-	if ( nest_count==1 ) {
-		question_num=0;	// 選択肢番号
-		speaked_speaker.clear(); // 少しでも喋ったかどうか
-		surface_changed_before_speak.clear(); // 会話前にサーフェス切り換え指示があったか
-		characters = 0;	// 喋った字数
-	}
 	kakko_replace_history.push(strvec()); // カッコの前方参照用
 
 	static const int basewait=3;
-	string	result;
-
-	result = "\\1";
-	speaker = 1;	// 本体は 0 うにゅうは 1
 
 	strvec::const_iterator it = vec.begin();
+	std::advance(it,ip);
+
 	for ( ; it != vec.end() ; ++it) {
 		const char*	p = it->c_str();
 		//DBG(sender << nest_count << " '" << p << "'" << endl);
@@ -207,7 +264,7 @@ string	Satori::SentenceToSakuraScript(const strvec& vec) {
 		if ( strncmp(p, "＞", 2)==0 || strncmp(p, "≫", 2)==0 ) {
 			strvec	words;
 			split(p+2, "\t", words); // ジャンプ先とジャンプ条件の区切り
-			string	jump_to="";
+
 			if ( words.size()>=1 ) {
 				jump_to = UnKakko(words[0].c_str());
 				if ( words.size()>=2 ) {
@@ -223,23 +280,15 @@ string	Satori::SentenceToSakuraScript(const strvec& vec) {
 			}
 
 			if ( strncmp(p, "≫", 2)==0 ) {
-
-				string	script;
-				if ( TalkSearch(jump_to, script, (mRequestID!="OnCommunicate") ) ) {
-					result += script;
-					break;	// このフェーズは終了する
-				}
-				sender << "≫" << jump_to << " not found." << endl;
+				ip = std::distance(vec.begin(),it) + 1;
+				--nest_count;
+				return 2;
 			}
-			else if ( talks.is_exist(jump_to) ) {
-				sender << "＞" << jump_to << "" << endl;
-				result += GetSentence(jump_to);
-				break;	// このフェーズは終了する
-			} 
 			else {
-				sender << "＞" << jump_to << " not found." << endl;
-			}
-			continue;
+				ip = std::distance(vec.begin(),it) + 1;
+				--nest_count;
+				return 1;
+			} 
 		}
 
 		// 変数を設定
@@ -414,9 +463,9 @@ string	Satori::SentenceToSakuraScript(const strvec& vec) {
 	}
 
 	kakko_replace_history.pop(1);
-	//DBG(sender << "leave SentenceToSakuraScript, nest-count: " << nest_count << endl);
+	//DBG(sender << "leave SentenceToSakuraScriptInternal, nest-count: " << nest_count << endl);
 	--nest_count;
-	return	result;
+	return 0;
 }
 
 #undef	DBG
@@ -425,7 +474,8 @@ string	Satori::SentenceToSakuraScript(const strvec& vec) {
 // 指定された名前に該当する候補からランダムで一つ選び、
 // さくらスクリプトに展開して返す。
 // 再帰をカウントしてるので不用意なreturnは厳禁。
-bool	Satori::GetSentence(string& ioSentenceName, string& oResultScript) {
+const Talk* Satori::GetSentenceInternal(string& ioSentenceName)
+{
 	// 再帰管理
 	static	int nest_count=0;
 	++nest_count;
@@ -481,17 +531,9 @@ bool	Satori::GetSentence(string& ioSentenceName, string& oResultScript) {
 	{
 		sender << " not matched." << endl; // 条件に一致するものがなかった。
 		--nest_count;
-		return	false;
+		return NULL;
 	}
 	sender << endl;
-
-	// トークをさくらスクリプトに変換
-	{
-		Sender::nest_object smo(2); 
-		oResultScript = SentenceToSakuraScript(*talk);
-		sender << "return: " << oResultScript << "" << endl;
-	}
-
 	--nest_count;
-	return	false;
+	return talk;
 }
