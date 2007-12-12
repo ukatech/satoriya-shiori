@@ -131,6 +131,9 @@ string Satori::SentenceToSakuraScriptExec(const Talk& vec)
 
 	int jumpcount = 0;
 
+	//return禁止
+	kakko_replace_history.push(strvec()); // カッコの前方参照用
+
 	while ( TRUE ) {
 		if ( speaker != 1 ) {
 			allresult += "\\1";
@@ -139,6 +142,8 @@ string Satori::SentenceToSakuraScriptExec(const Talk& vec)
 
 		result = "";
 		jump_to = "";
+
+		kakko_replace_history.top().clear();
 		int resp = SentenceToSakuraScriptInternal(*pVec,result,jump_to,ip);
 
 		allresult += result;
@@ -179,6 +184,9 @@ string Satori::SentenceToSakuraScriptExec(const Talk& vec)
 		}
 	}
 
+	kakko_replace_history.pop(1);
+	//return禁止終了
+
 	return allresult;
 }
 
@@ -194,8 +202,6 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 		--nest_count;
 		return 0;
 	}
-
-	//kakko_replace_history.push(strvec()); // カッコの前方参照用
 
 	static const int basewait=3;
 
@@ -470,7 +476,6 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 		result += "\\n";
 	}
 
-	//kakko_replace_history.pop(1);
 	//DBG(sender << "leave SentenceToSakuraScriptInternal, nest-count: " << nest_count << endl);
 	--nest_count;
 	return 0;
