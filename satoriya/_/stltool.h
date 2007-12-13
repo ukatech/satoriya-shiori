@@ -119,6 +119,9 @@ int	erase(string& str, const string& before);
 int	count(const string& str, const string& target);
 // 対象語句の存在確認
 inline bool find(const string& str, const string& target) { return	strstr_hz(str.c_str(), target.c_str())!=NULL; }
+inline bool find(const char* str, const string& target) { return	strstr_hz(str, target.c_str())!=NULL; }
+inline bool find(const string& str, const char* target) { return	strstr_hz(str.c_str(), target)!=NULL; }
+inline bool find(const char* str, const char* target) { return	strstr_hz(str, target)!=NULL; }
 
 
 // dequeの後ろから n 個目を参照する
@@ -302,6 +305,7 @@ inline bool	compare_head(const char* str, const char* head) {
 }
 // strの末尾がtailであればtrue
 bool	compare_tail(const string& str, const string& tail);	
+bool	compare_tail(const string& str, const char* tail);	
 
 // target中の最初にfind文字列が出現する位置を返す。半角全角両対応
 const char*	strstr_hz(const char* target, const char* find);
@@ -330,14 +334,14 @@ void	string_to_binary(const string& iString, byte* oArray);
 
 
 // コンテナ内を検索、存在有無をboolで返す
-template<typename C, typename E>
+/*template<typename C, typename E>
 bool exists(const C& iC, const E& iE) {
 	for ( typename C::const_iterator i=iC.begin() ; i!=iC.end() ; ++i )
 		if ( *i == iE )
 			return	true;
 	return	false;
 }
-/*
+
 template<typename K, typename V, typename E>
 inline bool exists< map<K, V> >(const map<K,V>& iC, const E& iE) {
 	return	(iC.find(iE) != iC.end());

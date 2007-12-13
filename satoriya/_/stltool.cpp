@@ -451,15 +451,22 @@ const char*	strstr_hz(const char* target, const char* find) {
 	return	NULL;
 }
 
-bool	compare_tail(const string& str, const string& tail) {
+bool	compare_tail(const string& str, const string& tail)
+{
 	const int diff = str.size()-tail.size();
 	if ( diff < 0 )
 		return	false;
 	return	tail.compare(str.c_str()+diff)==0;
 }
 
-
-
+bool	compare_tail(const string& str, const char* tail)
+{
+	size_t len = strlen(tail);
+	const int diff = str.size()-len;
+	if ( diff < 0 )
+		return	false;
+	return str.compare(diff,len,tail)==0;
+}
 
 inline int charactor_to_binary(char c) {
 	if ( c>='0' && c<='9' )
@@ -726,4 +733,5 @@ string	stringf(const char* iFormat, ...) {
 	va_end(argptr);
 	return	buf;
 }
+
 

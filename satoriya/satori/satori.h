@@ -340,7 +340,7 @@ private:
 	// 引数に渡されたものを何かの名前であるとし、置き換え対象があれば置き換える。
 	bool	CallReal(const string& word, string& result);
 
-	string* GetValue(const string &key,bool &oIsSysValue,bool iIsExpand = false,bool *oIsExpanded = NULL);
+	string* GetValue(const string &key,bool &oIsSysValue,bool iIsExpand = false,bool *oIsExpanded = NULL,const char *pDefault = "");
 
 	void surface_restore_string_addfunc(string &str,map<int, int>::const_iterator &i);
 
