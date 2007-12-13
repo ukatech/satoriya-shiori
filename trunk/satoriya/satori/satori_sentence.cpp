@@ -340,21 +340,19 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 				erase_var(key);	// 存在抹消
 			}
 			else {
+				bool isOverwritten;
+				bool isSysValue;
+
+				// "0"は代入先を先に参照する時、エラーを返さないように。
+				string *pstr = GetValue(key,isSysValue,true,&isOverwritten,"0");
 
 				if ( do_calc ) {
-					// 代入先を先に参照する時、エラーを返さないように。
-					variables[key] = "0";	
-
 					if ( !calculate(value, value) )
 						break;
 					if ( aredigits(value) ) {
 						value = int2zen(stoi(value));
 					}
 				}
-
-				bool isOverwritten;
-				bool isSysValue;
-				string *pstr = GetValue(key,isSysValue,true,&isOverwritten);
 
 				sender << "＄" << key << "＝" << value << "／" << 
 					(isOverwritten ? "written." : "overwritten.")<< endl;

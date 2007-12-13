@@ -200,7 +200,7 @@ string	Satori::inc_call(
 }
 
 // ïœêîéÊìæ
-string* Satori::GetValue(const string &iName,bool &oIsSysValue,bool iIsExpand,bool *oIsExpanded)
+string* Satori::GetValue(const string &iName,bool &oIsSysValue,bool iIsExpand,bool *oIsExpanded,const char *pDefault)
 {
 	if ( oIsExpanded ) { *oIsExpanded = false; }
 	oIsSysValue = false;
@@ -287,7 +287,7 @@ string* Satori::GetValue(const string &iName,bool &oIsSysValue,bool iIsExpand,bo
 	}
 
 	if ( iIsExpand ) {
-		variables[iName] = string("");
+		variables[iName] = string(pDefault);
 		if ( oIsExpanded ) { *oIsExpanded = true; }
 		return &(variables[iName]);
 	}
