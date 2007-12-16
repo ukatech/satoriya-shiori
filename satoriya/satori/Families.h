@@ -23,7 +23,7 @@ public:
 	//~Families() { cout << "~Families()" << endl; }
 	
 	// 要素の登録
-	const T* add_element(const string& i_name, const T& i_t, const Condition& i_condition=Condition())
+	const T& add_element(const string& i_name, const T& i_t, const Condition& i_condition = Condition())
 	{
 		Family<T>& f = m_elements[i_name];
 		return f.add_element(i_t, i_condition);
@@ -61,11 +61,8 @@ public:
 	// 削除
 	void erase(const string& i_name)
 	{
-		iterator it = m_elements.find(i_name);
-		if ( it == m_elements.end() ) {
-			return;
-		}
-		m_elements.erase(it);
+		m_elements.erase(i_name);
+		m_clearOC_at_talk_end.erase(i_name);
 	}
 	
 	// トークの終了を通知。重複制御期間が「トーク中」であるFamilyの重複回避制御をクリアする

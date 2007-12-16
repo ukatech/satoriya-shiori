@@ -136,7 +136,7 @@ private:
 	void	erase_var(const string& key);
 
 	// 動的に登録された単語。wordsにも収録する。satori_savedata.txtに保存するのが目的。
-	map<string, vector<const Word*> >	mAppendedWords; // setでなくvectorなのは「重複回避：昇順/降順」に備えて。
+	map<string, set<Word> >	mAppendedWords; // setでなくvectorなのは「重複回避：昇順/降順」に備えて。
 
 	// 戻したトークの履歴
 	deque<string>	mResponseHistory;
