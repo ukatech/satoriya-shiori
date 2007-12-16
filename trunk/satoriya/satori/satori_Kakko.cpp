@@ -182,7 +182,7 @@ string	Satori::inc_call(
 			Family<Word>* f = words.get_family(iArgv[0]);
 			if ( f == NULL || false == f->is_exist_element(iArgv[1]) )
 			{
-				mAppendedWords[ iArgv[0] ].push_back( f->add_element(iArgv[1]) );
+				mAppendedWords[ iArgv[0] ].insert( words.add_element(iArgv[0],iArgv[1],Condition()) );
 				sender << "単語群「" << iArgv[0] << "」に単語「" << iArgv[1] << "」が追加されました。" << endl;
 			}
 			else
@@ -192,6 +192,59 @@ string	Satori::inc_call(
 		}
 		else
 			sender << "error: '単語の追加' : 引数が不正です。" << endl;
+
+	}
+	else if ( iCallName == "追加単語の削除" ) {
+		if ( iArgv.size() == 2 )
+		{
+			Family<Word>* f = words.get_family(iArgv[0]);
+			if ( f && f->is_exist_element(iArgv[1]) ) { //すでに存在し…
+				map<string, set<Word> >::iterator it = mAppendedWords.find(iArgv[0]);
+				if ( it != mAppendedWords.end() ) { //しかも「単語の追加」で追加したもので…
+					set<Word> &setword = it->second;
+						
+					set<Word>::iterator its = setword.find(iArgv[1]);
+					if ( its != setword.end() ) {
+						setword.erase(its);
+						f->delete_element(iArgv[1]);
+
+						if ( setword.empty() ) {
+							mAppendedWords.erase(it);
+						}
+						sender << "単語群「" << iArgv[0] << "」の単語「" << iArgv[1] << "」が削除されました。" << endl;
+					}
+				}
+				if ( f->empty() ) {
+					words.erase(iArgv[0]);
+				}
+			}
+		}
+		else
+			sender << "error: '追加単語の削除' : 引数が不正です。" << endl;
+
+	}
+	else if ( iCallName == "追加単語の全削除" ) {
+		if ( iArgv.size() == 1 )
+		{
+			Family<Word>* f = words.get_family(iArgv[0]);
+			if ( f ) { //すでに存在し…
+				map<string, set<Word> >::iterator it = mAppendedWords.find(iArgv[0]);
+				if ( it != mAppendedWords.end() ) { //しかも「単語の追加」で追加したもので…
+					set<Word> &setword = it->second;
+					for ( set<Word>::const_iterator its = setword.begin(); its != setword.end() ; ++its ) {
+						f->delete_element(*its);
+					}
+					mAppendedWords.erase(it);
+
+					sender << "単語群「" << iArgv[0] << "」に追加された単語は全て削除されました。" << endl;
+				}
+				if ( f->empty() ) {
+					words.erase(iArgv[0]);
+				}
+			}
+		}
+		else
+			sender << "error: '単語の削除' : 引数が不正です。" << endl;
 
 	}
 	else if ( iCallName=="nop" ) {
@@ -341,11 +394,10 @@ bool	Satori::CallReal(const string& iName, string& oResult)
 				inner_commands.insert("call");
 				inner_commands.insert("freeze");
 				inner_commands.insert("バイト値");
-				inner_commands.insert("単語の追加");
-				inner_commands.insert("単語の数");
 				inner_commands.insert("文の数");
-				//inner_commands.insert("単語の削除");
-				//inner_commands.insert("単語の存在");
+				inner_commands.insert("単語の追加");
+				inner_commands.insert("追加単語の削除");
+				inner_commands.insert("追加単語の全削除");
 			}
 
 			for (set<string>::const_iterator i=mDelimiters.begin() ; i!=mDelimiters.end() ; ++i) {
@@ -673,11 +725,6 @@ bool	Satori::CallReal(const string& iName, string& oResult)
 			Family<Word>* f = words.get_family(str);
 			if ( f ) {
 				count += f->size_of_element();
-			}
-
-			map<string, vector<const Word*> >::const_iterator it = mAppendedWords.find(str);
-			if ( it != mAppendedWords.end() ) {
-				count += it->second.size();
 			}
 
 			oResult = itos(count);

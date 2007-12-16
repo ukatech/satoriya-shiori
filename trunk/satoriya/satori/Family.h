@@ -130,11 +130,22 @@ public:
 	}
 
 	// “o˜^
-	const T* add_element(const T& i_t, const Condition& i_condition=Condition())
+	const T& add_element(const T& i_t, const Condition& i_condition = Condition())
 	{
 		Elements& lt = m_conds_map[i_condition];
 		lt.push_back(i_t);
-		return &( lt.back() );
+		return lt.back();
+	}
+	// íœ
+	void delete_element(const T& i_t, const Condition& i_condition = Condition())
+	{
+		CondsMap::iterator it = m_conds_map.find(i_condition);
+		if ( it == m_conds_map.end() ) { return; }
+		Elements& lt = it->second;
+		lt.remove(i_t);
+		if ( lt.empty() ) {
+			m_conds_map.erase(it);
+		}
 	}
 	
 	// d•¡‰ñ”ğ‚ğİ’è

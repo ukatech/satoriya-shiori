@@ -269,7 +269,9 @@ bool	Satori::load(const string& iBaseFolder)
 	{
 		vector<const Word*> v;
 		it->second.get_elements_pointers(v);
-		mAppendedWords[it->first] = v;
+		for ( vector<const Word*>::iterator itx = v.begin() ; itx < v.end() ; ++itx ) {
+			mAppendedWords[it->first].insert(**itx);
+		}
 	}
 
 	//------------------------------------------
@@ -361,12 +363,14 @@ bool	Satori::Save(bool isOnUnload) {
 		out << ENCODE(line) << endl;
 	}
 
-	for ( map<string, vector<const Word*> >::const_iterator i=mAppendedWords.begin() ; i!=mAppendedWords.end() ; ++i )
+	for ( map<string, set<Word> >::const_iterator i=mAppendedWords.begin() ; i!=mAppendedWords.end() ; ++i )
 	{
-		out << endl << ENCODE( string("—") + i->first ) << endl;
-		for ( vector<const Word*>::const_iterator j=i->second.begin() ; j!=i->second.end() ; ++j )
-		{
-			out << ENCODE(**j) << endl;
+		if ( ! i->second.empty() ) {
+			out << endl << ENCODE( string("—") + i->first ) << endl;
+			for ( set<Word>::const_iterator j=i->second.begin() ; j!=i->second.end() ; ++j )
+			{
+				out << ENCODE( *j ) << endl;
+			}
 		}
 	}
 
