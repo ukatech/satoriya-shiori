@@ -220,11 +220,11 @@ bool	Satori::load(const string& iBaseFolder)
 	Family<Word>* f = words.get_family("SAORI");
 	if ( f != NULL )
 	{
-		list<const Word*> els;
+		vector<const Word*> els;
 		f->get_elements_pointers(els);
 
 		mShioriPlugins.load(mBaseFolder);
-		for ( list<const Word*>::const_iterator i=els.begin(); i!=els.end() ; ++i)
+		for ( vector<const Word*>::const_iterator i=els.begin(); i!=els.end() ; ++i)
 		{
 			if ( (*i)->size()>0 && !mShioriPlugins.load_a_plugin(**i) )
 			{
@@ -270,7 +270,7 @@ bool	Satori::load(const string& iBaseFolder)
 		vector<const Word*> v;
 		it->second.get_elements_pointers(v);
 		for ( vector<const Word*>::iterator itx = v.begin() ; itx < v.end() ; ++itx ) {
-			mAppendedWords[it->first].insert(**itx);
+			mAppendedWords[it->first].push_back(**itx);
 		}
 	}
 
@@ -363,11 +363,11 @@ bool	Satori::Save(bool isOnUnload) {
 		out << ENCODE(line) << endl;
 	}
 
-	for ( map<string, set<Word> >::const_iterator i=mAppendedWords.begin() ; i!=mAppendedWords.end() ; ++i )
+	for ( map<string, vector<Word> >::const_iterator i=mAppendedWords.begin() ; i!=mAppendedWords.end() ; ++i )
 	{
 		if ( ! i->second.empty() ) {
 			out << endl << ENCODE( string("—") + i->first ) << endl;
-			for ( set<Word>::const_iterator j=i->second.begin() ; j!=i->second.end() ; ++j )
+			for ( vector<Word>::const_iterator j=i->second.begin() ; j!=i->second.end() ; ++j )
 			{
 				out << ENCODE( *j ) << endl;
 			}

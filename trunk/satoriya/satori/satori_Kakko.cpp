@@ -182,7 +182,7 @@ string	Satori::inc_call(
 			Family<Word>* f = words.get_family(iArgv[0]);
 			if ( f == NULL || false == f->is_exist_element(iArgv[1]) )
 			{
-				mAppendedWords[ iArgv[0] ].insert( words.add_element(iArgv[0],iArgv[1],Condition()) );
+				mAppendedWords[ iArgv[0] ].push_back( words.add_element(iArgv[0],iArgv[1],Condition()) );
 				sender << "単語群「" << iArgv[0] << "」に単語「" << iArgv[1] << "」が追加されました。" << endl;
 			}
 			else
@@ -199,39 +199,39 @@ string	Satori::inc_call(
 		{
 			Family<Word>* f = words.get_family(iArgv[0]);
 			if ( f && f->is_exist_element(iArgv[1]) ) { //すでに存在し…
-				map<string, set<Word> >::iterator it = mAppendedWords.find(iArgv[0]);
+				map<string, vector<Word> >::iterator it = mAppendedWords.find(iArgv[0]);
 				if ( it != mAppendedWords.end() ) { //しかも「単語の追加」で追加したもので…
-					set<Word> &setword = it->second;
-						
-					set<Word>::iterator its = setword.find(iArgv[1]);
-					if ( its != setword.end() ) {
-						setword.erase(its);
+					vector<Word> &setword = it->second;
+					
+					vector<Word>::iterator itrm = remove(setword.begin(),setword.end(),iArgv[1]);
+					if ( itrm != setword.end() ) {
+						setword.erase(itrm,setword.end());
 						f->delete_element(iArgv[1]);
 
 						if ( setword.empty() ) {
 							mAppendedWords.erase(it);
 						}
 						sender << "単語群「" << iArgv[0] << "」の単語「" << iArgv[1] << "」が削除されました。" << endl;
+						if ( f->empty() ) {
+							words.erase(iArgv[0]);
+						}
 					}
-				}
-				if ( f->empty() ) {
-					words.erase(iArgv[0]);
 				}
 			}
 		}
-		else
+		else {
 			sender << "error: '追加単語の削除' : 引数が不正です。" << endl;
-
+		}
 	}
 	else if ( iCallName == "追加単語の全削除" ) {
 		if ( iArgv.size() == 1 )
 		{
 			Family<Word>* f = words.get_family(iArgv[0]);
 			if ( f ) { //すでに存在し…
-				map<string, set<Word> >::iterator it = mAppendedWords.find(iArgv[0]);
+				map<string, vector<Word> >::iterator it = mAppendedWords.find(iArgv[0]);
 				if ( it != mAppendedWords.end() ) { //しかも「単語の追加」で追加したもので…
-					set<Word> &setword = it->second;
-					for ( set<Word>::const_iterator its = setword.begin(); its != setword.end() ; ++its ) {
+					vector<Word> &setword = it->second;
+					for ( vector<Word>::const_iterator its = setword.begin(); its != setword.end() ; ++its ) {
 						f->delete_element(*its);
 					}
 					mAppendedWords.erase(it);
