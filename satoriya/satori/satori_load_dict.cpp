@@ -350,7 +350,7 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName)
 #  include <dirent.h>
 #endif
 
-void list_files(string i_path, list<string>& o_files)
+void list_files(string i_path, vector<string>& o_files)
 {
 	unify_dir_char(i_path); // \\と/を環境に応じて適切な方に統一
 #ifdef POSIX
@@ -398,12 +398,12 @@ void list_files(string i_path, list<string>& o_files)
 int Satori::LoadDicFolder(const string& i_base_folder)
 {
 	sender << "LoadDicFolder(" << i_base_folder << ")" << endl;
-	list<string> files;
+	vector<string> files;
 	list_files(i_base_folder, files);
 
 	int count = 0;
 	
-	for (list<string>::const_iterator it=files.begin() ; it!=files.end() ; ++it)
+	for (vector<string>::const_iterator it=files.begin() ; it!=files.end() ; ++it)
 	{
 		const int len = it->size();
 		if ( len < 7 ) { continue; } // dic.txtが最短ファイル名

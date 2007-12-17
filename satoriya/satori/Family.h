@@ -2,7 +2,7 @@
 #include	"Selector.h"
 
 #include <string>
-#include <list>
+#include <algorithm>
 #include <map>
 using namespace std;
 
@@ -23,7 +23,7 @@ template<typename T>
 class Family
 {
 	// 条件式をキー、要素リストを値としたmap
-	typedef list<T> Elements;
+	typedef vector<T> Elements;
 	typedef map<Condition, Elements> CondsMap;
 	CondsMap m_conds_map;
 
@@ -142,7 +142,7 @@ public:
 		CondsMap::iterator it = m_conds_map.find(i_condition);
 		if ( it == m_conds_map.end() ) { return; }
 		Elements& lt = it->second;
-		lt.remove(i_t);
+		lt.erase(remove(lt.begin(),lt.end(),i_t),lt.end());
 		if ( lt.empty() ) {
 			m_conds_map.erase(it);
 		}
@@ -180,7 +180,7 @@ public:
 			{
 				// 複数の候補があった
 				list<const T*> candidates;
-				for ( typename list<T>::const_iterator j = e.begin() ; j != e.end() ; ++j )
+				for ( typename vector<T>::const_iterator j = e.begin() ; j != e.end() ; ++j )
 				{
 					candidates.push_back( &(*j) );
 				}
@@ -200,7 +200,7 @@ public:
 				// 「無条件」であるか「条件式を評価した結果、0/０を返さなかったもの」を採用
 				if ( i->first.empty() || i_evalcator.evalcate_to_bool(i->first) )
 				{
-					for ( typename list<T>::const_iterator j = i->second.begin() ; j != i->second.end() ; ++j )
+					for ( typename vector<T>::const_iterator j = i->second.begin() ; j != i->second.end() ; ++j )
 					{
 						candidates.push_back( &(*j) );
 						cout << "[" << *j << "]" << endl;
