@@ -28,8 +28,11 @@ typedef string Word;
 typedef strvec Talk;
 
 #include "Families.h"
-class AllWords : public Families<Word> {};
-class AllTalks : public Families<Talk> {};
+
+typedef Families<Word> AllWords;
+typedef Families<Talk> AllTalks;
+//class AllWords : public Families<Word> {};
+//class AllTalks : public Families<Talk> {};
 
 //---------------------------------------------------------------------------
 #ifdef	_DEBUG

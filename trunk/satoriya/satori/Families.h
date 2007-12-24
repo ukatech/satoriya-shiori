@@ -25,8 +25,11 @@ public:
 	// 要素の登録
 	const T& add_element(const string& i_name, const T& i_t, const Condition& i_condition = Condition())
 	{
-		Family<T>& f = m_elements[i_name];
-		return f.add_element(i_t, i_condition);
+		std::pair<iterator,bool> found = m_elements.insert(map< string, Family<T> >::value_type(i_name,Family<T>()));
+		if ( found.second ) {
+			found.first->second.set_namevec(i_name);
+		}
+		return found.first->second.add_element(i_t, i_condition);
 	}
 	
 	// 過去互換の提供
@@ -156,31 +159,61 @@ public:
 		}
 	}
 	
-	const Talk* communicate_search(const string& iSentence, bool iAndMode)
+	const Talk* communicate_search(const string& iSentence, bool iAndMode) const
 	{
 		sender << "文名の検索を開始" << endl;
 		sender << "　対象文字列: " << iSentence << endl;
 		sender << "　全単語一致モード: " << (iAndMode?"true":"false") << endl;
+
+		vector<const_iterator> elem_vector;
+
+		bool isComNameMode = (iSentence.find("「") != string::npos);
+		if ( isComNameMode ) {
+			sender << "　「発見、名前限定モードに移行" << endl;
+			for ( const_iterator it = m_elements.begin() ; it != m_elements.end() ; ++it )
+			{
+				if ( it->second.is_comname() ) {
+					string comName = it->second.get_comname();
+					if ( comName.length() ) {
+						if ( iSentence.compare(0,comName.size(),comName) == 0 ) {
+							elem_vector.push_back(it);
+						}
+					}
+				}
+			}
+		}
+		else {
+			sender << "　「なし、通常コミュ探索モードに移行" << endl;
+			for ( const_iterator it = m_elements.begin() ; it != m_elements.end() ; ++it )
+			{
+				if ( ! it->second.is_comname() ) {
+					elem_vector.push_back(it);
+				}
+			}
+		}
+
+		if ( elem_vector.size() <= 0 ) {
+			sender << "結果: 該当なし（そもそも候補なし）" << endl;
+			return	NULL;
+		}
 		
 		vector<const Talk*>	result;
 		int	max_hit_point=0;
-		for ( iterator it = m_elements.begin() ; it != m_elements.end() ; ++it )
+		for ( vector<const_iterator>::const_iterator it = elem_vector.begin() ; it != elem_vector.end() ; ++it )
 		{
 			// 語群を全角スペースで区切る
-			strvec	words;
-			if ( split(it->first, "　", words)<2 )
-			{
-				continue; // 全角スペースが無い。該当外。
-			}
+			const strvec &words = (**it).second.get_namevec();
 			
 			// いくつの単語がヒットしたか。単語１つで10てん、長さ１もじで1てん
 			int	hit_point=0;
-			strvec::iterator wds_it=words.begin();
+			strvec::const_iterator wds_it=words.begin();
+			if ( isComNameMode ) { wds_it += 1; }; //ひとつめは名前（すでに抽出済）
+
 			for ( ; wds_it!=words.end() ; ++wds_it )
 			{
 				if ( iSentence.find(*wds_it) != string::npos )
 				{
-					if ( compare_tail(*wds_it, "「") )	// 末尾が 「 であるものだけの場合はヒットと見なさないように。
+					if ( (!isComNameMode) && compare_tail(*wds_it, "「") )	// 末尾が 「 であるものだけの場合はヒットと見なさないように。
 						hit_point += 4;
 					else
 						hit_point += 10+(wds_it->size()/4);	// 一致した単語。
@@ -195,7 +228,7 @@ public:
 				continue;	// いっこも一致しない場合
 			}
 			
-			sender << "'" << it->first << "' : " << hit_point << "pt ,";
+			sender << "'" << (**it).first << "' : " << hit_point << "pt ,";
 			
 			if ( hit_point<max_hit_point) {
 				sender << "却下" << endl;
@@ -209,18 +242,17 @@ public:
 			}
 			
 			
-			it->second.get_elements_pointers(result);
+			(**it).second.get_elements_pointers(result);
 		}
 		
 		sender << "結果: ";
 		if ( result.size() <= 0 ) {
-			sender << "該当なし" << endl;
+			sender << "該当なし（検索候補あり、単語検索失敗）" << endl;
 			return	NULL;
 		}
 		
 		return result[ random(result.size()) ];
 	}
-	
 };
 
 

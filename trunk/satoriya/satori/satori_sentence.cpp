@@ -277,21 +277,19 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 		// ジャンプ
 		if ( strncmp(p, "＞", 2)==0 || strncmp(p, "≫", 2)==0 ) {
 			strvec	words;
-			split(p+2, "\t", words); // ジャンプ先とジャンプ条件の区切り
+			split(p+2, "\t", words, 2); // ジャンプ先とジャンプ条件の区切り
 
-			if ( words.size()>=1 ) {
-				jump_to = UnKakko(words[0].c_str());
-				if ( words.size()>=2 ) {
-					string	r;
-					if ( !calculate(words[1], r) )
-						break;
-					if ( r=="0" || r=="０" )
-					{
-						sender << "＊計算結果が０だったため、続行します。" << endl;
-						continue;
-					}
+			if ( words.size()>=2 ) {
+				string	r;
+				if ( !calculate(words[1], r) )
+					break;
+				if ( r=="0" || r=="０" ) {
+					sender << "＊計算結果が０だったため、続行します。" << endl;
+					continue;
 				}
 			}
+
+			jump_to = UnKakko(words[0].c_str());
 
 			if ( strncmp(p, "≫", 2)==0 ) {
 				ip = std::distance(vec.begin(),it) + 1;
