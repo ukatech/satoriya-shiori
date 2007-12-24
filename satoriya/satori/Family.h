@@ -22,6 +22,9 @@ public:
 template<typename T>
 class Family
 {
+	strvec NameVector;
+	bool ComNameFound;
+
 	// 条件式をキー、要素リストを値としたmap
 	typedef vector<T> Elements;
 	typedef map<Condition, Elements> CondsMap;
@@ -60,28 +63,16 @@ class Family
 	};
 /*
 	vector<Elements> m_elements;
-
 	とかかなあ
-
 	- - - - - - - - - - - - - - - - - - 
-
 	Familyが「条件式」を持ってるのがそもそもの間違いだわね。
-
 	条件式へのポインタだけもって、条件式自体は独立させた方がいい。
-	
 	「同一の条件式は一回だけ評価される」を前提とするならば。
-
 	速度を考えないなら全要素個数分評価しなおすのが正しい気がするが……
-
 	- - - - - - - - - - - - - - - - - - 
-
   　条件式を外部に持っていくべきか。
-
 　　必要に応じて評価し、結果をキャッシュし、任意タイミングで評価をリセットする。
-
   　Evalcatorに保持させるとか。
-
-  
 */
 
 #endif
@@ -94,7 +85,10 @@ class Family
 
 
 public:
-	//Family() { cout << "Family()" << endl; }
+	Family() {
+		//cout << "Family()" << endl;
+		ComNameFound = false;
+	}
 	//~Family() { cout << "~Family()" << endl; }
 
 
@@ -108,6 +102,36 @@ public:
 				o_c.push_back(&(*j));
 			}
 		}
+	}
+
+	void set_namevec(const std::string &name)
+	{
+		split(name,"\t　",NameVector);
+		
+		for ( strvec::iterator wds_it=NameVector.begin() ; wds_it!=NameVector.end() ; ++wds_it ) {
+			if ( compare_tail(*wds_it, "「") ) {
+				if ( wds_it != NameVector.begin() ) {
+					string comName = *wds_it;
+					NameVector.erase(wds_it);
+					NameVector.insert(NameVector.begin(),comName);
+				}
+				ComNameFound = true;
+				break;
+			}
+		}
+	}
+	const strvec& get_namevec(void) const
+	{
+		return NameVector;
+	}
+	string get_comname(void) const
+	{
+		if ( ! ComNameFound || NameVector.empty() ) { return ""; }
+		return NameVector[0];
+	}
+	bool is_comname(void) const
+	{
+		return ComNameFound && !NameVector.empty();
 	}
 
 	bool empty() const { return m_conds_map.empty(); }

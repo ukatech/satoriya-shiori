@@ -28,7 +28,7 @@ using namespace std;
 
 #define const_strlen(s) ((sizeof(s) / sizeof(s[0]))-1)
 
-class strvec : public vector<string>
+/*class strvec : public vector<string>
 {
 public:
 	strvec() : vector<string>() {}
@@ -45,8 +45,9 @@ public:
 		}
 		return r;
 	}
-};
+}:*/
 
+typedef vector<string> strvec;
 typedef	map<string, string>	strmap;
 typedef	set<string>	stringset;
 typedef	list<string>	strlist;
