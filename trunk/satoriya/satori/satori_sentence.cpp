@@ -289,7 +289,12 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 				}
 			}
 
-			jump_to = UnKakko(words[0].c_str());
+			if ( words.size() >= 1 ) {
+				jump_to = UnKakko(words[0].c_str());
+			}
+			else {
+				jump_to.erase();
+			}
 
 			if ( strncmp(p, "Å‚", 2)==0 ) {
 				ip = std::distance(vec.begin(),it) + 1;
