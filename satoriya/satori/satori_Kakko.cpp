@@ -162,10 +162,10 @@ string	Satori::inc_call(
 			return	r;
 		}
 	}
-	else if ( iCallName=="freeze" ) {
+	/*else if ( iCallName=="freeze" ) {
 
 
-	}
+	}*/
 	else if ( iCallName == "バイト値" ) {
 		if ( iArgv.size() ) {
 			char bytes[2] = {0,0};
@@ -295,24 +295,11 @@ string* Satori::GetValue(const string &iName,bool &oIsSysValue,bool iIsExpand,bo
 			return NULL;
 		}
 	}
-	if ( mCallStack.size()>0 && hankaku[0]=='A' && aredigits(hankaku.c_str()+1)) {
+	if ( !mCallStack.empty() && hankaku[0]=='A' && aredigits(hankaku.c_str()+1)) {
 		oIsSysValue = true;
 
-		// callによる呼び出しの引数を参照
+		// callによる呼び出しの引数を参照S
 		int	ref = atoi(hankaku.c_str() +1);
-		strvec&	v = mCallStack.top();
-		if ( ref >= 0 && ref < v.size() ) {
-			return &(v[ref]);
-		}
-		else {
-			return NULL;
-		}
-	}
-	if ( mCallStack.size()>0 && hankaku.compare(0,4,"argv") && aredigits(hankaku.c_str()+4)) {
-		oIsSysValue = true;
-
-		// callによる呼び出しの引数を参照
-		int	ref = atoi(hankaku.c_str() +4);
 		strvec&	v = mCallStack.top();
 		if ( ref >= 0 && ref < v.size() ) {
 			return &(v[ref]);
@@ -392,7 +379,7 @@ bool	Satori::CallReal(const string& iName, string& oResult)
 				inner_commands.insert("loop");
 				inner_commands.insert("remember");
 				inner_commands.insert("call");
-				inner_commands.insert("freeze");
+				//inner_commands.insert("freeze");
 				inner_commands.insert("バイト値");
 				inner_commands.insert("文の数");
 				inner_commands.insert("単語の追加");
@@ -513,9 +500,19 @@ bool	Satori::CallReal(const string& iName, string& oResult)
 			}
 		}
 	}
-	else if ( hankaku=="argc" ) {
-		strvec&	v = mCallStack.top();
-		oResult = itos(v.size());
+	else if ( hankaku=="Aの数" ) {
+		if ( ! mCallStack.empty() ) {
+			oResult = itos(mCallStack.top().size());
+		}
+		else {
+			oResult = "0";
+		}
+	}
+	else if ( hankaku=="Rの数" ) {
+		oResult = itos(mReferences.size());
+	}
+	else if ( hankaku=="Sの数" ) {
+		oResult = itos(mKakkoCallResults.size());
 	}
 	else if ( strncmp(iName.c_str(), "乱数", 4)==0 && iName.size()>6 ) { 
 		strvec	vec;
