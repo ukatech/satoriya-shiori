@@ -104,7 +104,18 @@ const char*	strstr_hz(const char* target, const char* find);
 
 // •¶š—ñ’uŠ·
 bool	replace_first(string& str, const string& before, const string& after);
-int	replace(string& str, const string& before, const string& after);
+
+int	replace(string& str, const char* before, const char* after);
+inline int	replace(string& str, const string& before, const string& after) {
+	return replace(str,before.c_str(),after.c_str());
+}
+inline int	replace(string& str, const char* before, const string& after) {
+	return replace(str,before,after.c_str());
+}
+inline int	replace(string& str, const string& before, const char* after) {
+	return replace(str,before.c_str(),after);
+}
+
 template<class T>
 int	multi_replace(string& str, T* array1, T* array2, int array_size) {
 	int	count=0;

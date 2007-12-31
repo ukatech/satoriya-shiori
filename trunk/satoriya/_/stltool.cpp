@@ -128,19 +128,19 @@ bool	replace_first(string& str, const string& before, const string& after) {
 }
 */
 
-int	replace(string& str, const string& before, const string& after) {
-	if ( str=="" || before=="" ) return 0;
+int	replace(string& str, const char* before, const char* after) {
+	if ( str=="" || before[0] == 0 ) return 0;
 
 	// 文字列長の計算用
-	const int		beforeLength = before.size();
-	const int		afterLength = after.size();
+	const int		beforeLength = strlen(before);
+	const int		afterLength = strlen(after);
 	const int		textLength = str.size();
 	const int		diffLength = afterLength - beforeLength;
 
 	// 置き換え対象がいくつあるかをカウントしておく
 	const char*	found=str.c_str();
 	int	count=0;
-	while ( (found=strstr_hz(found, before.c_str())) != NULL ) {
+	while ( (found=strstr_hz(found, before)) != NULL ) {
 		found += beforeLength;
 		++count;
 	}
@@ -153,14 +153,14 @@ int	replace(string& str, const string& before, const string& after) {
 	const char*	pread = str.c_str();
 	char*	pwrite = buf;
 	found = str.c_str();
-	while ( (found=strstr_hz(pread, before.c_str())) != NULL ) {
+	while ( (found=strstr_hz(pread, before)) != NULL ) {
 		// 対象文字列直前までをコピー
 		strncpy(pwrite, pread, found-pread);
 		pwrite += found-pread;
 		pread = found;
 
 		// 置き換え文字列をコピー
-		strcpy(pwrite, after.c_str());
+		strcpy(pwrite, after);
 		pwrite += afterLength;
 		pread += beforeLength;
 	}
