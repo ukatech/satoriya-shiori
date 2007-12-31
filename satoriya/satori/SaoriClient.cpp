@@ -30,12 +30,15 @@ int SaoriClient::request(
 
 	strpairvec data;
 
+	data.push_back( strpair("Charset", "Shift_JIS" ) );
+	data.push_back( strpair("Sender", "SATORI" ) );
+	data.push_back( strpair("SecurityLevel", (i_is_secure ? "Local" : "External") ) );
+
 	int idx=0;
 	for ( vector<string>::const_iterator i=i_argument.begin() ; i!=i_argument.end() ; ++i,++idx )
 	{
 		data.push_back( strpair(string("Argument")+itos(idx), *i) );
 	}
-	data.push_back( strpair("SecurityLevel", (i_is_secure ? "Local" : "External") ) );
 
 	//---------------------
 	// リクエスト実行

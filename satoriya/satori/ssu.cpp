@@ -75,20 +75,32 @@ SRV	ssu::request(deque<string>& iArguments, deque<string>& oValues) {
 #include	"../_/stltool.h"
 
 /* 「ソ」の2バイト目は「\」であるので、エスケープする必要がある。 */
-static const char	zen[] = 
-	"　ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ"
-	"０１２３４５６７８９！”＃＄％＆’（）＝～｜‘｛＋＊｝＜＞？＿ー＾￥＠「；：」、。・÷×－，．［］"
-	"アイウエオカキクケコサシスセ\x83\x5cタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィゥェォャュョ゛゜、。";
-static const char	han[] = 
-	" ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-	"0123456789!\"#$%&'()=~|`{+*}<>?_-^\\@[;:],.･/*-,.[]"
-	"ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝｧｨｩｪｫｬｭｮﾞﾟ､｡";
+//static const char	zen[] = 
+//	"　ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ"
+//	"０１２３４５６７８９！”＃＄％＆’（）＝～｜‘｛＋＊｝＜＞？＿ー＾￥＠「；：」、。・÷×－，．［］"
+//	"アイウエオカキクケコサシスセ\x83\x5cタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィゥェォャュョッ゛゜、。";
+//static const char	han[] = 
+//	" ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+//	"0123456789!\"#$%&'()=~|`{+*}<>?_-^\\@[;:],.･/*-,.[]"
+//	"ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝｧｨｩｪｫｬｭｮｯﾞﾟ､｡";
 static const char	kata[] = "アイウエオカキクケコサシスセ\x83\x5cタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヰヱヲンァィゥェォャュョッガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ";
-static const char	hira[] = "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわゐゑをんぁぃぅぇぉゃゅょっガギグゲゴざじずぜぞだぢづでどばびぶべぼぱぴぷぺぽ";
+static const char	hira[] = "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわゐゑをんぁぃぅぇぉゃゅょっがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽ";
+
+//半角全角変換テーブル
 static const char	zen_alpha[] = "ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ";
 static const char	han_alpha[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
 static const char	zen_digit[] = "０１２３４５６７８９";
 static const char	han_digit[] = "0123456789";
+
+static const char   zen_symbol[] = "　！”＃＄％＆’（）＝～｜‘｛＋＊｝＜＞？＿ー＾￥＠「；：」、。・÷×－，．［］";
+static const char   han_symbol[] = " !\"#$%&'()=~|`{+*}<>?_-^\\@[;:],.･/*-,.[]";
+
+static const char   zen_kana_1[] = "アイウエオカキクケコサシスセ\x83\x5cタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィゥェォャュョッ、。";
+static const char   han_kana_1[] = "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝｧｨｩｪｫｬｭｮｯ､｡";
+
+static const char   zen_kana_2[] = "ガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ";
+static const char   han_kana_2[] = "ｶﾞｷﾞｸﾞｹﾞｺﾞｻﾞｼﾞｽﾞｾﾞｿﾞﾀﾞﾁﾞﾂﾞﾃﾞﾄﾞﾊﾞﾋﾞﾌﾞﾍﾞﾎﾞﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟ";
 
 extern	bool calc(string& ioString);
 extern	bool calc_float(string& ioString);
@@ -464,32 +476,139 @@ SRV _is_alpha(deque<string>& iArguments, deque<string>& oValues) {
 }
 
 SRV _zen2han(deque<string>& iArguments, deque<string>& oValues) {
-	if ( iArguments.size()!=1 )
+	if ( ! iArguments.size() )
 		return	SRV(400, "引数の個数が正しくありません。");
+
+	unsigned int flag = 0xffff;
+	if ( iArguments.size() >= 2 ) {
+		flag = 0;
+		if ( iArguments[1].find("アルファベット") != string::npos ) {
+			flag |= 0x1;
+		}
+		if ( iArguments[1].find("数字") != string::npos ) {
+			flag |= 0x2;
+		}
+		if ( iArguments[1].find("記号") != string::npos ) {
+			flag |= 0x4;
+		}
+		if ( iArguments[1].find("カナ") != string::npos ) {
+			flag |= 0x8;
+		}
+	}
 
 	char	before[3]="　", after[2]=" ";
 	string&	str=iArguments[0];
-	for (int n=0 ; n<sizeof(han) ; ++n) {
-		before[0]=zen[n*2];
-		before[1]=zen[n*2+1];
-		after[0]=han[n];
-		replace(str, before, after);
+
+	if ( flag & 0x1 ) { //アルファベット
+		for (int n=0 ; n<sizeof(han_alpha) ; ++n) {
+			before[0]=zen_alpha[n*2];
+			before[1]=zen_alpha[n*2+1];
+			after[0]=han_alpha[n];
+			replace(str, before, after);
+		}
+	}
+	if ( flag & 0x2 ) { //数字
+		for (int n=0 ; n<sizeof(han_digit) ; ++n) {
+			before[0]=zen_digit[n*2];
+			before[1]=zen_digit[n*2+1];
+			after[0]=han_digit[n];
+			replace(str, before, after);
+		}
+	}
+	if ( flag & 0x4 ) { //記号
+		for (int n=0 ; n<sizeof(han_symbol) ; ++n) {
+			before[0]=zen_symbol[n*2];
+			before[1]=zen_symbol[n*2+1];
+			after[0]=han_symbol[n];
+			replace(str, before, after);
+		}
+	}
+	if ( flag & 0x8 ) { //カナ
+		int n;
+		char after2[3] = "  ";
+		for (n=0 ; n< (sizeof(han_kana_2)/2) ; ++n) {
+			before[0]=zen_kana_2[n*2];
+			before[1]=zen_kana_2[n*2+1];
+			after2[0]=han_kana_2[n*2];
+			after2[1]=han_kana_2[n*2+1];
+			replace(str, before, after2);
+		}
+		for (n=0 ; n<sizeof(han_kana_1) ; ++n) {
+			before[0]=zen_kana_1[n*2];
+			before[1]=zen_kana_1[n*2+1];
+			after[0]=han_kana_1[n];
+			replace(str, before, after);
+		}
 	}
 	return	str;
 }
 
 SRV _han2zen(deque<string>& iArguments, deque<string>& oValues) {
-	if ( iArguments.size()!=1 )
+	if ( ! iArguments.size() )
 		return	SRV(400, "引数の個数が正しくありません。");
+
+	unsigned int flag = 0xffff;
+	if ( iArguments.size() >= 2 ) {
+		flag = 0;
+		if ( iArguments[1].find("アルファベット") != string::npos ) {
+			flag |= 0x1;
+		}
+		if ( iArguments[1].find("数字") != string::npos ) {
+			flag |= 0x2;
+		}
+		if ( iArguments[1].find("記号") != string::npos ) {
+			flag |= 0x4;
+		}
+		if ( iArguments[1].find("カナ") != string::npos ) {
+			flag |= 0x8;
+		}
+	}
 
 	char	before[2]=" ", after[3]="  ";
 	string&	str=iArguments[0];
-	for (int n=0 ; n<sizeof(han) ; ++n) {
-		before[0]=han[n];
-		after[0]=zen[n*2];
-		after[1]=zen[n*2+1];
-		replace(str, before, after);
+
+	if ( flag & 0x1 ) { //アルファベット
+		for (int n=0 ; n<sizeof(han_alpha) ; ++n) {
+			before[0]=han_alpha[n];
+			after[0]=zen_alpha[n*2];
+			after[1]=zen_alpha[n*2+1];
+			replace(str, before, after);
+		}
 	}
+	if ( flag & 0x2 ) { //数字
+		for (int n=0 ; n<sizeof(han_digit) ; ++n) {
+			before[0]=han_digit[n];
+			after[0]=zen_digit[n*2];
+			after[1]=zen_digit[n*2+1];
+			replace(str, before, after);
+		}
+	}
+	if ( flag & 0x4 ) { //記号
+		for (int n=0 ; n<sizeof(han_symbol) ; ++n) {
+			before[0]=han_symbol[n];
+			after[0]=zen_symbol[n*2];
+			after[1]=zen_symbol[n*2+1];
+			replace(str, before, after);
+		}
+	}
+	if ( flag & 0x8) { //カナ
+		int n;
+		char before2[3] = "  ";
+		for (n=0 ; n<(sizeof(han_kana_2)/2) ; ++n) {
+			before2[0]=han_kana_2[n*2];
+			before2[1]=han_kana_2[n*2+1];
+			after[0]=zen_kana_2[n*2];
+			after[1]=zen_kana_2[n*2+1];
+			replace(str, before2, after);
+		}
+		for (n=0 ; n<sizeof(han_kana_1) ; ++n) {
+			before[0]=han_kana_1[n];
+			after[0]=zen_kana_1[n*2];
+			after[1]=zen_kana_1[n*2+1];
+			replace(str, before, after);
+		}
+	}
+
 	return	str;
 }
 
