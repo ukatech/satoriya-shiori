@@ -162,10 +162,6 @@ string	Satori::inc_call(
 			return	r;
 		}
 	}
-	/*else if ( iCallName=="freeze" ) {
-
-
-	}*/
 	else if ( iCallName == "バイト値" ) {
 		if ( iArgv.size() ) {
 			char bytes[2] = {0,0};
@@ -379,7 +375,6 @@ bool	Satori::CallReal(const string& iName, string& oResult)
 				inner_commands.insert("loop");
 				inner_commands.insert("remember");
 				inner_commands.insert("call");
-				//inner_commands.insert("freeze");
 				inner_commands.insert("バイト値");
 				inner_commands.insert("文の数");
 				inner_commands.insert("単語の追加");
@@ -656,9 +651,6 @@ bool	Satori::CallReal(const string& iName, string& oResult)
 #endif
 	else if ( iName == "time_t" ) { time_t tm; time(&tm); oResult=itos(tm); }
 	else if ( iName == "最終トークからの経過秒" ) { oResult=itos(second_from_last_talk); }
-
-	else if ( compare_head(iName, "ResponseHistory") && aredigits(iName.c_str()+const_strlen("ResponseHistory")) ) {
-	}
 
 	else if ( compare_head(iName, "サーフェス") && aredigits(iName.c_str()+10) ) {
 		oResult=itos(cur_surface[ atoi(iName.c_str()+10) ]);
