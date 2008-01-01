@@ -228,24 +228,20 @@ string	Satori::surface_restore_string()
 // ある名前により指定される「全ての」URL及び付帯情報、のリスト
 bool	Satori::GetURLList(const string& name, string& result)
 {
-	Family<Talk>* f = talks.get_family(name);
-	if ( f == NULL )
-		return false;
-	
-	vector<const Talk*> tg;
-	f->get_elements_pointers(tg);
+	list<const Talk*> tg;
+	talks.select_all(name,*this,tg);
 	
 	const string sep_1 = "\1";
 	const string sep_2 = "\2";
 	
-	for ( vector<const Talk*>::iterator it = tg.begin() ; it != tg.end() ; ++it )
+	for ( list<const Talk*>::iterator it = tg.begin() ; it != tg.end() ; ++it )
 	{
 		const Talk& vec = **it;
 		if ( vec.size() < 1 )
 			continue;
-		string	menu = vec[0];
-		string	url = (vec.size()<2) ? ("") : (vec[1]);
-		string	banner = (vec.size()<3) ? ("") : (vec[2]);
+		string	menu = UnKakko(vec[0].c_str());
+		string	url = (vec.size()<2) ? ("") : (UnKakko(vec[1].c_str()));
+		string	banner = (vec.size()<3) ? ("") : (UnKakko(vec[2].c_str()));
 		
 		int	len = menu.size()+url.size()+banner.size()+3;
 		result.reserve(result.size() + len + 1);
@@ -263,13 +259,10 @@ bool	Satori::GetURLList(const string& name, string& result)
 // ある名前により指定されるURL中の指定サイトのスクリプトを取得
 bool	Satori::GetRecommendsiteSentence(const string& name, string& result)
 {
-	Family<Talk>* f = talks.get_family(name);
-	if ( f == NULL )
-		return false;
+	list<const Talk*> tg;
+	talks.select_all(name,*this,tg);
 	
-	vector<const Talk*> tg;
-	f->get_elements_pointers(tg);
-	for ( vector<const Talk*>::iterator it = tg.begin() ; it != tg.end() ; ++it )
+	for ( list<const Talk*>::iterator it = tg.begin() ; it != tg.end() ; ++it )
 	{
 		const Talk& t = **it;
 		if ( t.size() >= 4 && t[1]==mReferences[1] )

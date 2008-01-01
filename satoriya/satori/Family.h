@@ -183,40 +183,21 @@ public:
 		m_selector.clear_OC();
 	}
 
-	// 条件式を評価して候補を選び、
-	// 選んだ候補からさらにユーザ定義の重複回避設定を適用した選択を行う。
-	// 引数は「評価者」。
-	const T* select(Evalcator& i_evalcator)
+	// 条件式を評価して候補をすべて選ぶ。
+	// 引数は「評価者」と候補のvector。
+	void select_all(Evalcator& i_evalcator,list<const T*> &candidates)
 	{
 		assert(m_conds_map.size() > 0);
-		if ( m_conds_map.size() == 1 && m_conds_map.begin()->first.empty() )
-		{
+		if ( m_conds_map.size() == 1 && m_conds_map.begin()->first.empty() ) {
 			// 無条件の群のみが存在する（条件式導入前と同じ状態）
-
 			Elements& e = m_conds_map.begin()->second;
 			assert(e.size() > 0);
-			if ( e.size() == 1 )
-			{
-				// 候補がたった１つだった
-				return	&( *(e.begin()) );
-			}
-			else
-			{
-				// 複数の候補があった
-				list<const T*> candidates;
-				for ( typename vector<T>::const_iterator j = e.begin() ; j != e.end() ; ++j )
-				{
-					candidates.push_back( &(*j) );
-				}
-				m_selector.update_candidates(candidates);
-				return	m_selector.select();
+
+			for ( typename vector<T>::const_iterator j = e.begin() ; j != e.end() ; ++j ) {
+				candidates.push_back( &(*j) );
 			}
 		}
-		else
-		{
-			// 採用された要素へのイテレータ群
-			list<const T*> candidates;
-			
+		else {
 			//  候補を選択
 			cout << "selecting" << endl;
 			for ( typename CondsMap::const_iterator i = m_conds_map.begin() ; i != m_conds_map.end() ; ++i )
@@ -231,23 +212,25 @@ public:
 					}
 				}
 			}
-			
-			if ( candidates.empty() )
-			{
-				// 候補が１つも見つからなかった
-				return NULL;
-			}
-			else if ( candidates.size()==1 )
-			{
-				// 候補がたった１つだった
-				return	*( candidates.begin() );
-			}
-			else
-			{
-				// 複数の候補があった
-				m_selector.update_candidates(candidates);
-				return	m_selector.select();
-			}
+		}
+	}
+
+	// 選んだ候補からさらにユーザ定義の重複回避設定を適用した選択を行う。
+	// 引数は「評価者」。
+	const T* select(Evalcator& i_evalcator)
+	{
+		list<const T*> candidates;
+		select_all(i_evalcator,candidates);
+
+		if ( candidates.empty() ) {
+			return NULL;
+		}
+		else if ( candidates.size() == 1 ) {
+			return *candidates.begin();
+		}
+		else {
+			m_selector.update_candidates(candidates);
+			return	m_selector.select();
 		}
 	}
 };
