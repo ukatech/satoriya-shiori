@@ -60,6 +60,16 @@ public:
 		}
 		return it->second.select(i_evalcator);
 	}
+
+	// T‚ğ‚·‚×‚Ä‘I‘ğ‚·‚é
+	void select_all(const string& i_name, Evalcator& i_evalcator,list<const T*> &candidates)
+	{
+		iterator it = m_elements.find(i_name);
+		if ( it == m_elements.end() ) {
+			return;
+		}
+		it->second.select_all(i_evalcator,candidates);
+	}
 	
 	// íœ
 	void erase(const string& i_name)
