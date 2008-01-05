@@ -1,4 +1,9 @@
 #labels Featured
+=Mc139-1=
+  * hira2kata/kata2hiraが小さいワを認識できない問題を修正
+  * is_digitが符号つき数字を認識できない問題を修正
+  * 括弧展開をちょっとだけ高速化
+
 =Mc138-901=
   * recommendsites / portalsites系の改修
    * 4行目以外も単純な括弧展開なら実行するようにした
