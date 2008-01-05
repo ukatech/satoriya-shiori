@@ -83,8 +83,8 @@ SRV	ssu::request(deque<string>& iArguments, deque<string>& oValues) {
 //	" ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 //	"0123456789!\"#$%&'()=~|`{+*}<>?_-^\\@[;:],.･/*-,.[]"
 //	"ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝｧｨｩｪｫｬｭｮｯﾞﾟ､｡";
-static const char	kata[] = "アイウエオカキクケコサシスセ\x83\x5cタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヰヱヲンァィゥェォャュョッガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ";
-static const char	hira[] = "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわゐゑをんぁぃぅぇぉゃゅょっがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽ";
+static const char	kata[] = "アイウエオカキクケコサシスセ\x83\x5cタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヰヱヲンァィゥェォャュョヮッガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ";
+static const char	hira[] = "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわゐゑをんぁぃぅぇぉゃゅょゎっがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽ";
 
 //半角全角変換テーブル
 static const char	zen_alpha[] = "ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ";
@@ -453,17 +453,39 @@ SRV _is_digit(deque<string>& iArguments, deque<string>& oValues) {
 	if ( iArguments.size()<1 || iArguments[0].empty() )
 		return	"0";
 	int	i;
-	for ( const char* p = iArguments[0].c_str() ; *p ; p += (_ismbblead(*p)?2:1) ) {
-		for ( i=0 ; i<20 ; i+=2)
-			if ( p[0]==zen_digit[i] && p[1]==zen_digit[i+1] )
+	const char* p = iArguments[0].c_str();
+	int step = 1;
+
+	static const char zen_pm[] = "＋－";
+
+	if ( p[0] == '-' || p[0] == '+' ) {
+		p += 1;
+	}
+	else if ( (p[0] == zen_pm[0] && p[1] == zen_pm[1]) || (p[0] == zen_pm[2] && p[1] == zen_pm[3]) ) {
+		p += 2;
+	}
+
+	for ( ; *p ; p += step ) {
+		for ( i=0 ; i<20 ; i+=2) {
+			if ( p[0]==zen_digit[i] && p[1]==zen_digit[i+1] ) {
 				break;
-		if ( i<20 )
+			}
+		}
+		if ( i<20 ) {
+			step = 2;
 			continue;
-		for ( i=0 ; i<10 ; ++i)
-			if ( p[0]==han_digit[i] )
+		}
+
+		for ( i=0 ; i<10 ; ++i) {
+			if ( p[0]==han_digit[i] ) {
 				break;
-		if ( i<10 )
+			}
+		}
+		if ( i<10 ) {
+			step = 1;
 			continue;
+		}
+
 		return	"0";
 	}
 	return	"1";
