@@ -259,66 +259,78 @@ string* Satori::GetValue(const string &iName,bool &oIsSysValue,bool iIsExpand,bo
 		return &(variables[iName]);
 	}
 
-	string hankaku=zen2han(iName);
-	strvec*	p_kakko_replace_history = kakko_replace_history.empty() ? NULL : &(kakko_replace_history.top());
+	if ( ((iName[0]=='R' || iName[0]=='H' || iName[0]=='A' || iName[0]=='S') && iName.size() >= 2) ||
+		((iName.compare(0,2,"Ｒ") == 0 || iName.compare(0,2,"Ｈ") == 0 ||
+		iName.compare(0,2,"Ａ") == 0 || iName.compare(0,2,"Ｓ") == 0) && iName.size() >= 3) ) {
 
-	if ( hankaku[0]=='R' && aredigits(hankaku.c_str()+1) ) {
-		oIsSysValue = true;
+		string hankaku=zen2han(iName);
+		if ( aredigits(hankaku.c_str()+1) ) {
 
-		// Event通知時の引数取得
-		int	ref=atoi(hankaku.c_str()+1);
-		if (ref>=0 && ref<mReferences.size()) {
-			return &(mReferences[ref]);
-		}
-		else {
-			if ( iIsExpand && ref >= 0 ) {
-				mReferences.resize(ref+1);
-				if ( oIsExpanded ) { *oIsExpanded = true; }
-				return &(mReferences[ref]);
+			if ( hankaku[0]=='R' ) {
+				oIsSysValue = true;
+
+				// Event通知時の引数取得
+				int	ref=atoi(hankaku.c_str()+1);
+				if (ref>=0 && ref<mReferences.size()) {
+					return &(mReferences[ref]);
+				}
+				else {
+					if ( iIsExpand && ref >= 0 ) {
+						mReferences.resize(ref+1);
+						if ( oIsExpanded ) { *oIsExpanded = true; }
+						return &(mReferences[ref]);
+					}
+					return NULL;
+				}
 			}
-			return NULL;
-		}
-	}
-	if ( p_kakko_replace_history!=NULL && hankaku[0]=='H' && aredigits(hankaku.c_str()+1) ) {
-		oIsSysValue = true;
+			else if ( hankaku[0]=='H' ) {
+				oIsSysValue = true;
 
-		// 過去の置き換え履歴を参照
-		int	ref = atoi(hankaku.c_str() +1) - 1;
-		if ( ref>=0 && ref < p_kakko_replace_history->size() ) {
-			return &(p_kakko_replace_history->at(ref));
-		}
-		else {
-			return NULL;
-		}
-	}
-	if ( !mCallStack.empty() && hankaku[0]=='A' && aredigits(hankaku.c_str()+1)) {
-		oIsSysValue = true;
+				// 過去の置き換え履歴を参照
+				if ( kakko_replace_history.empty() ) { return NULL; }
 
-		// callによる呼び出しの引数を参照S
-		int	ref = atoi(hankaku.c_str() +1);
-		strvec&	v = mCallStack.top();
-		if ( ref >= 0 && ref < v.size() ) {
-			return &(v[ref]);
-		}
-		else {
-			return NULL;
-		}
-	}
-	if ( hankaku[0]=='S' && aredigits(hankaku.c_str()+1)) {
-		oIsSysValue = true;
+				strvec&	khr = kakko_replace_history.top();
 
-		// SAORIなどコール時の結果処理
-		int	ref=atoi(hankaku.c_str()+1);
-		if (ref>=0 && ref<mKakkoCallResults.size()) {
-			return &(mKakkoCallResults[ref]);
-		}
-		else {
-			if ( iIsExpand && ref >= 0 ) {
-				mKakkoCallResults.resize(ref+1);
-				if ( oIsExpanded ) { *oIsExpanded = true; }
-				return &(mKakkoCallResults[ref]);
+				int	ref = atoi(hankaku.c_str() +1) - 1;
+				if ( ref>=0 && ref < khr.size() ) {
+					return &(khr[ref]);
+				}
+				else {
+					return NULL;
+				}
 			}
-			return NULL;
+			else if ( hankaku[0]=='A' ) {
+				oIsSysValue = true;
+
+				if ( mCallStack.empty() ) { return NULL; }
+
+				// callによる呼び出しの引数を参照S
+				int	ref = atoi(hankaku.c_str() +1);
+				strvec&	v = mCallStack.top();
+				if ( ref >= 0 && ref < v.size() ) {
+					return &(v[ref]);
+				}
+				else {
+					return NULL;
+				}
+			}
+			else if ( hankaku[0]=='S' ) {
+				oIsSysValue = true;
+
+				// SAORIなどコール時の結果処理
+				int	ref=atoi(hankaku.c_str()+1);
+				if (ref>=0 && ref<mKakkoCallResults.size()) {
+					return &(mKakkoCallResults[ref]);
+				}
+				else {
+					if ( iIsExpand && ref >= 0 ) {
+						mKakkoCallResults.resize(ref+1);
+						if ( oIsExpanded ) { *oIsExpanded = true; }
+						return &(mKakkoCallResults[ref]);
+					}
+					return NULL;
+				}
+			}
 		}
 	}
 
