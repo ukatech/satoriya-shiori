@@ -4,6 +4,7 @@
 	Version="8.00"
 	Name="satori"
 	ProjectGUID="{436B7CDA-BF6C-46DA-B930-D99E3AD5E7B2}"
+	RootNamespace="satori"
 	>
 	<Platforms>
 		<Platform
@@ -724,29 +725,19 @@
 				>
 			</File>
 			<File
-				RelativePath="..\_\zsfmt.cpp"
+				RelativePath="..\_\mt19937ar.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\_\zsfmt.h"
+				RelativePath="..\_\mt19937ar.h"
+				>
+			</File>
+			<File
+				RelativePath="..\_\random.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\_\random.h"
 				>
 			</File>
 			<File
