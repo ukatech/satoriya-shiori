@@ -344,7 +344,7 @@ string* Satori::GetValue(const string &iName,bool &oIsSysValue,bool iIsExpand,bo
 
 
 // 引数に渡されたものを何かの名前であるとし、置き換え対象があれば置き換える。
-bool	Satori::Call(const string& iName, string& oResult) {
+bool	Satori::Call(const string& iName, string& oResult, bool for_calc) {
 	++m_nest_count;
 
 	if ( m_nest_limit > 0 && m_nest_count > m_nest_limit ) {
@@ -354,12 +354,12 @@ bool	Satori::Call(const string& iName, string& oResult) {
 		return false;
 	}
 
-	bool r = CallReal(iName,oResult);
+	bool r = CallReal(iName,oResult,for_calc);
 	--m_nest_count;
 	return r;
 }
 
-bool	Satori::CallReal(const string& iName, string& oResult)
+bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc)
 {
 	strvec*	p_kakko_replace_history = kakko_replace_history.empty() ? NULL : &(kakko_replace_history.top());
 
@@ -492,7 +492,12 @@ bool	Satori::CallReal(const string& iName, string& oResult)
 			oResult = *pstr;
 		}
 		else {
-			oResult = "";
+			if ( for_calc ) {
+				oResult = "０";
+			}
+			else {
+				oResult = "";
+			}
 		}
 	}
 	else if ( aredigits(hankaku) || (hankaku[0]=='-' && aredigits(hankaku.c_str()+1)) ) {

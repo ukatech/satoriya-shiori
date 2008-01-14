@@ -194,7 +194,7 @@ private:
 	int		speaker;		// 話者
 	set<int>	speaked_speaker;		// 少しでも喋った？
 	bool	is_speaked(int n) { return speaked_speaker.find(n) != speaked_speaker.end(); }
-	bool	is_speaked_anybody() { return speaked_speaker.size()>0; }
+	bool	is_speaked_anybody() { return !speaked_speaker.empty(); }
 	int		characters;
 	int		question_num;
 
@@ -341,7 +341,7 @@ private:
 	bool evalcate_to_bool(const Condition& i_cond);
 
 	// 引数に渡されたものを何かの名前であるとし、置き換え対象があれば置き換える。
-	bool	CallReal(const string& word, string& result);
+	bool	CallReal(const string& word, string& result, bool for_calc);
 
 	string* GetValue(const string &key,bool &oIsSysValue,bool iIsExpand = false,bool *oIsExpanded = NULL,const char *pDefault = "");
 
@@ -379,7 +379,7 @@ public:
 	// 指定された名前の＊文を取得する
 	string	GetSentence(const string& name);
 	// 引数に渡されたものを何かの名前であるとし、置き換え対象があれば置き換える。
-	bool	Call(const string& word, string& result);
+	bool	Call(const string& word, string& result, bool for_calc = false);
 	// 里々レベルでの計算を行う。戻り値は成否。
 	bool calculate(const string& iExpression, string& oResult);
 

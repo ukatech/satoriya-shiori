@@ -305,7 +305,7 @@ string	Satori::KakkoSection(const char*& p,bool for_calc) {
 	}
 	
 	string	result;
-	if ( Call(kakko_str, result) )
+	if ( Call(kakko_str, result, for_calc) )
 		return	result;
 	if ( for_calc )
 		return	string("‚O");
