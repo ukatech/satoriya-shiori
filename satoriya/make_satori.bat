@@ -1,10 +1,5 @@
 mkdir tmp\
 
-del /F /S /Q tmp\satori-src\*
-mkdir tmp\satori-src\
-svn export --force .\satori tmp\satori-src\satori
-svn export --force .\_ tmp\satori-src\_
-
 del /F /S /Q tmp\satori\*
 
 mkdir tmp\satori\
@@ -19,12 +14,9 @@ upx --best tmp\satori\saori\ssu.dll
 
 copy /B /Y .\satori\satori_license.txt tmp\satori\satori_license.txt
 
-del /F /S /Q tmp\satori-src.zip
 del /F /S /Q tmp\satori.zip
 
-chdir tmp\satori-src\
-zip -r -9 -q ..\satori-src.zip *
-chdir ..\satori\
+chdir tmp\satori\
 zip -r -9 -q ..\satori.zip *
 chdir ..\..
 
