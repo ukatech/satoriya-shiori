@@ -125,8 +125,6 @@ string Satori::SentenceToSakuraScriptExec(const Talk& vec)
 	speaker = 1;	// 本体は 0 うにゅうは 1
 
 	question_num=0;	// 選択肢番号
-	speaked_speaker.clear(); // 少しでも喋ったかどうか
-	surface_changed_before_speak.clear(); // 会話前にサーフェス切り換え指示があったか
 	characters = 0;	// 喋った字数
 
 	int jumpcount = 0;
