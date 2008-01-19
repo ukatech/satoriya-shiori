@@ -177,7 +177,9 @@ public:
 
 		vector<const_iterator> elem_vector;
 
-		bool isComNameMode = (iSentence.find("「") != string::npos);
+		std::string::size_type sentenceNamePos = iSentence.find("「");
+
+		bool isComNameMode = sentenceNamePos != string::npos;
 		if ( isComNameMode ) {
 			sender << "　「発見、名前限定モードに移行" << endl;
 			for ( const_iterator it = m_elements.begin() ; it != m_elements.end() ; ++it )
@@ -185,6 +187,9 @@ public:
 				if ( it->second.is_comname() ) {
 					string comName = it->second.get_comname();
 					if ( comName.length() ) {
+						if ( comName == "「" ) { //なんでも当たる記法
+							elem_vector.push_back(it);
+						}
 						if ( iSentence.compare(0,comName.size(),comName) == 0 ) {
 							elem_vector.push_back(it);
 						}
@@ -200,6 +205,7 @@ public:
 					elem_vector.push_back(it);
 				}
 			}
+			sentenceNamePos = 0;
 		}
 
 		if ( elem_vector.size() <= 0 ) {
@@ -221,7 +227,7 @@ public:
 
 			for ( ; wds_it!=words.end() ; ++wds_it )
 			{
-				if ( iSentence.find(*wds_it) != string::npos )
+				if ( iSentence.find(*wds_it,sentenceNamePos) != string::npos )
 				{
 					if ( (!isComNameMode) && compare_tail(*wds_it, "「") )	// 末尾が 「 であるものだけの場合はヒットと見なさないように。
 						hit_point += 4;
