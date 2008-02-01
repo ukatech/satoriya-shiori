@@ -339,6 +339,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 			else if ( value=="" ) {
 				sender << "＄" << key << "／cleared." << endl;
 				erase_var(key);	// 存在抹消
+				system_variable_operation(key, "", &result);//存在抹消したものがシステム変数かも！
 			}
 			else {
 				bool isOverwritten;
