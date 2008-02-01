@@ -160,7 +160,7 @@ bool	SakuraDLLClient::load(
 	    return false;
 	}
 #else
-	mModule = ::LoadLibrary(dll_fullpath.c_str());
+	mModule = ::LoadLibraryEx(dll_fullpath.c_str(),NULL,LOAD_WITH_ALTERED_SEARCH_PATH);
 	if ( mModule==NULL ) {
 		sender << "failed." << endl;
 		PluginError(dll_fullpath + ": LoadLibrary‚ÅŽ¸”sB");
