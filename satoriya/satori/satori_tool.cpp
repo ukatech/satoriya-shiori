@@ -665,7 +665,11 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 	if ( compare_head(key, "Value") && aredigits(key.c_str() + 5) )
 	{
 		variables.erase(key);
-		mResponseMap[string()+"Reference"+key.substr(5)] = value;
+		if(value!=""){
+			mResponseMap[string()+"Reference"+key.substr(5)] = value;
+		}else{
+			mResponseMap.erase(string()+"Reference"+key.substr(5));
+		}
 		return true;
 	}
 
