@@ -42,7 +42,7 @@ BOOL CALLBACK MonitorEnumFunc(HMONITOR hMonitor,HDC hdc,LPRECT rect,LPARAM lPara
     MonitorInfoEx.cbSize=sizeof(MonitorInfoEx);
 
 	BOOL (WINAPI* pGetMonitorInfo)(HMONITOR,LPMONITORINFO);
-	(FARPROC&)pGetMonitorInfo = ::GetProcAddress(::LoadLibrary("user32.dll"), "GetMonitorInfoA");
+	(FARPROC&)pGetMonitorInfo = ::GetProcAddress(::GetModuleHandle("user32.dll"), "GetMonitorInfoA");
 	if ( pGetMonitorInfo==NULL )
 		return	FALSE;
 	if ( !(*pGetMonitorInfo)(hMonitor,&MonitorInfoEx) ) {
@@ -156,7 +156,7 @@ bool	Satori::load(const string& iBaseFolder)
 		is_single_monitor = true;
 	} else {
 		BOOL (WINAPI* pEnumDisplayMonitors)(HDC,LPRECT,MONITORENUMPROC,LPARAM);
-		(FARPROC&)pEnumDisplayMonitors = ::GetProcAddress(::LoadLibrary("user32.dll"), "EnumDisplayMonitors");
+		(FARPROC&)pEnumDisplayMonitors = ::GetProcAddress(::GetModuleHandle("user32.dll"), "EnumDisplayMonitors");
 		if ( pEnumDisplayMonitors==NULL ) {
 			is_single_monitor = true;
 		}
