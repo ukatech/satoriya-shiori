@@ -58,6 +58,23 @@ string	Satori::inc_call(
 	strvec& oResults, 
 	bool iIsSecure) 
 {
+
+	if ( iCallName == "バイト値" ) {
+		if ( iArgv.size() ) {
+			char bytes[2] = {0,0};
+			bytes[0] = stoi(iArgv[0]);
+			return bytes;
+		}
+		else {
+			sender << "error: 'バイト値' : 引数が不正です。" << endl;
+			return "";
+		}
+	}
+
+	if ( iCallName=="nop" ) {
+		return "";
+	}
+
 	if ( !iIsSecure ) {
 		sender << "local/Localでないので蹴りました: " << iCallName << endl;
 		return	"";
@@ -88,8 +105,10 @@ string	Satori::inc_call(
 			}
 			return	result;
 		}
+		return	"";
 	}
-	else if ( iCallName=="loop" ) {
+	
+	if ( iCallName=="loop" ) {
 		int	init=1, max=0, step=1, arg_size=iArgv.size();
 		if ( arg_size==2 )
 			max=stoi(iArgv[1]);
@@ -132,7 +151,8 @@ string	Satori::inc_call(
 		variables.erase(name+"カウンタ");
 		return	ret;
 	}
-	else if ( iCallName=="sync" ) {
+	
+	if ( iCallName=="sync" ) {
 		string	str = "\\![raise,OnDirectSaoriCall";
 		if ( !iArgv.empty() ) {
 			string	arg;
@@ -143,14 +163,18 @@ string	Satori::inc_call(
 		str += "]";
 		return	str;
 	}
-	else if ( iCallName=="remember" ) {
+	
+	if ( iCallName=="remember" ) {
 		if ( iArgv.size() == 1 ) {
 			int	n = stoi(iArgv[0]);
-			if ( mResponseHistory.size() > n )
+			if ( mResponseHistory.size() > n ) {
 				return	mResponseHistory[n];
+			}
 		}
+		return	"";
 	}
-	else if ( iCallName=="call" ) {
+	
+	if ( iCallName=="call" ) {
 		if ( iArgv.size() >= 1 ) {
 			mCallStack.push( strvec() );
 			strvec&	v = mCallStack.top();
@@ -161,17 +185,10 @@ string	Satori::inc_call(
 			mCallStack.pop();
 			return	r;
 		}
+		return	"";
 	}
-	else if ( iCallName == "バイト値" ) {
-		if ( iArgv.size() ) {
-			char bytes[2] = {0,0};
-			bytes[0] = stoi(iArgv[0]);
-			return bytes;
-		}
-		else
-			sender << "error: 'バイト値' : 引数が不正です。" << endl;
-	}
-	else if ( iCallName == "単語の追加" ) {
+	
+	if ( iCallName == "単語の追加" ) {
 
 		if ( iArgv.size() == 2 )
 		{
@@ -186,11 +203,13 @@ string	Satori::inc_call(
 				sender << "単語群「" << iArgv[0] << "」に単語「" << iArgv[1] << "」は既に存在します。" << endl;
 			}
 		}
-		else
+		else {
 			sender << "error: '単語の追加' : 引数が不正です。" << endl;
-
+		}
+		return	"";
 	}
-	else if ( iCallName == "追加単語の削除" ) {
+
+	if ( iCallName == "追加単語の削除" ) {
 		if ( iArgv.size() == 2 )
 		{
 			Family<Word>* f = words.get_family(iArgv[0]);
@@ -218,8 +237,10 @@ string	Satori::inc_call(
 		else {
 			sender << "error: '追加単語の削除' : 引数が不正です。" << endl;
 		}
+		return	"";
 	}
-	else if ( iCallName == "追加単語の全削除" ) {
+	
+	if ( iCallName == "追加単語の全削除" ) {
 		if ( iArgv.size() == 1 )
 		{
 			Family<Word>* f = words.get_family(iArgv[0]);
@@ -239,11 +260,10 @@ string	Satori::inc_call(
 				}
 			}
 		}
-		else
+		else {
 			sender << "error: '単語の削除' : 引数が不正です。" << endl;
-
-	}
-	else if ( iCallName=="nop" ) {
+		}
+		return	"";
 	}
 	return	"";
 }
