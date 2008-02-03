@@ -1,4 +1,8 @@
 #labels Featured
+=Mc139-4=
+  * http://ssp.shillest.net/bts/guest.cgi?project=ms&action=top
+   * ID=20ならびに21番対応
+
 =Mc139-3=
   * 名前限定コミュニケート処理の細かな不具合を修正
 
