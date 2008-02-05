@@ -465,6 +465,8 @@ SRV _is_digit(deque<string>& iArguments, deque<string>& oValues) {
 		p += 2;
 	}
 
+	if ( *p == 0 ) { return "0"; }
+
 	for ( ; *p ; p += step ) {
 		for ( i=0 ; i<20 ; i+=2) {
 			if ( p[0]==zen_digit[i] && p[1]==zen_digit[i+1] ) {
