@@ -75,6 +75,20 @@ string	Satori::inc_call(
 		return "";
 	}
 
+	if ( iCallName == "合成単語群" ) {
+		if ( iArgv.size() ) {
+			std::vector<const Word*> vt;
+			for ( strvec::const_iterator it = iArgv.begin() ; it != iArgv.end() ; ++it ) {
+				words.select_all(*it,*this,vt);
+			}
+			return *(vt[random(vt.size())]);
+		}
+		else {
+			sender << "error: '合成単語群' : 引数が不正です。" << endl;
+			return "";
+		}
+	}
+
 	if ( !iIsSecure ) {
 		sender << "local/Localでないので蹴りました: " << iCallName << endl;
 		return	"";
@@ -410,6 +424,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc)
 				inner_commands.insert("バイト値");
 				inner_commands.insert("文の数");
 				inner_commands.insert("単語の追加");
+				inner_commands.insert("合成単語群");
 				inner_commands.insert("追加単語の削除");
 				inner_commands.insert("追加単語の全削除");
 			}

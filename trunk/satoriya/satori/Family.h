@@ -185,7 +185,7 @@ public:
 
 	// 条件式を評価して候補をすべて選ぶ。
 	// 引数は「評価者」と候補のvector。
-	void select_all(Evalcator& i_evalcator,list<const T*> &candidates)
+	template <typename Candidates> select_all(Evalcator& i_evalcator,Candidates &candidates)
 	{
 		assert(m_conds_map.size() > 0);
 		if ( m_conds_map.size() == 1 && m_conds_map.begin()->first.empty() ) {
