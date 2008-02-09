@@ -1,4 +1,7 @@
 #labels Featured
+=Mc140-3=
+  * 特定条件下で自動喋り機能が暴走する問題を暫定修正
+
 =Mc140-2=
   * http://ssp.shillest.net/bts/guest.cgi?project=ms&action=top
    * ID=23番対応
