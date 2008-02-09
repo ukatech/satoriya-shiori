@@ -122,20 +122,23 @@ string Satori::SentenceToSakuraScriptExec(const Talk& vec)
 
 	//実行環境初期化
 	string allresult = "\\1";
-	speaker = 1;	// 本体は 0 うにゅうは 1
 
 	question_num=0;	// 選択肢番号
 	characters = 0;	// 喋った字数
 
 	int jumpcount = 0;
 
+	speaker = 1;	// 本体は 0 うにゅうは 1
+	bool jump_inited = true;
+
 	//return禁止
 	kakko_replace_history.push(strvec()); // カッコの前方参照用
 
 	while ( TRUE ) {
-		if ( speaker != 1 ) {
+		if ( speaker != 1 && ! jump_inited ) {
 			allresult += "\\1";
 			speaker = 1;	// 本体は 0 うにゅうは 1
+			jump_inited = true;
 		}
 
 		result = "";
@@ -161,6 +164,7 @@ string Satori::SentenceToSakuraScriptExec(const Talk& vec)
 			else {
 				pVec = pTR;
 				ip = 0;
+				jump_inited = false;
 			}
 		}
 		else if ( resp == 2 ) {
@@ -172,6 +176,7 @@ string Satori::SentenceToSakuraScriptExec(const Talk& vec)
 			else {
 				pVec = pTR;
 				ip = 0;
+				jump_inited = false;
 			}
 		}
 		++jumpcount;
