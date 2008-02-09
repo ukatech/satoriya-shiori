@@ -1,4 +1,7 @@
 #labels Featured
+=Mc140-2=
+  * http://ssp.shillest.net/bts/guest.cgi?project=ms&action=top
+   * ID=23番対応
 
 =Mc140-1=
   * （合成単語群、Ａ、Ｂ、Ｃ）と書くとＡ／Ｂ／Ｃそれぞれの単語群の内容全てからランダム選択
