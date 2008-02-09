@@ -227,12 +227,8 @@ private:
 	map<int, string>	BalloonOffset;
 
 	// 時間系情報取得用
-#ifdef POSIX
 	unsigned long tick_count_at_load, tick_count_total;
-#else
-	DWORD	tick_count_at_load, tick_count_total;
-#endif
-	
+
 	// サーフェス
 	map<int, int>	cur_surface;
 	map<int, int>	last_talk_exiting_surface;

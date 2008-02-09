@@ -242,6 +242,9 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 	}
 
 	diet_script(script);
+
+	bool is_rnd_talk = false;
+
 	if ( is_empty_script(script) && can_talk_flag && iEvent=="OnSecondChange" ) {
 
 		// タイマ予約発話
@@ -258,8 +261,10 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 				timer.erase(timer_name);
 				variables.erase(var_name);
 
-				if ( !is_empty_script(script) )
+				if ( !is_empty_script(script) ) {
 					diet_script(script);
+				}
+				is_rnd_talk = true;
 				break;
 			}
 		}
@@ -277,6 +282,7 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 				FindEventTalk(iEvent);
 				script=GetSentence(iEvent);
 				diet_script(script);
+				is_rnd_talk = true;
 			}
 		}
 	}
@@ -285,7 +291,7 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 		return	204;	// 喋らない
 
 	// scriptへの付与処理
-	if ( is_speaked_anybody() ) {
+	if ( is_speaked_anybody() || is_rnd_talk ) {
 		script = surface_restore_string() + append_at_talk_start + script + append_at_talk_end;
 
 		// 喋りカウント初期化
