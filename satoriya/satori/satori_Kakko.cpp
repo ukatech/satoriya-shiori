@@ -390,6 +390,12 @@ bool	Satori::Call(const string& iName, string& oResult, bool for_calc) {
 
 	bool r = CallReal(iName,oResult,for_calc);
 	--m_nest_count;
+
+	if ( r && oResult.empty() && m_nest_count == 0 ) {
+		if ( for_calc ) {
+			oResult = "‚O";
+		}
+	}
 	return r;
 }
 
@@ -514,8 +520,10 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc)
 		// ’PŒê‚ğ‘I‘ğ‚µ‚½
 		sender << "—" << iName << endl;
 		oResult = UnKakko( w->c_str() );
-		speaked_speaker.insert(speaker);
-		add_characters(oResult.c_str(), characters);
+		if ( ! for_calc ) {
+			speaked_speaker.insert(speaker);
+			add_characters(oResult.c_str(), characters);
+		}
 	}
 	else if ( talks.is_exist(iName) ) {
 		// –‚É’è‹`‚ª‚ ‚ê‚Î•¶‚ğæ“¾
@@ -527,12 +535,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc)
 			oResult = *pstr;
 		}
 		else {
-			if ( for_calc ) {
-				oResult = "‚O";
-			}
-			else {
-				oResult = "";
-			}
+			oResult = "";
 		}
 	}
 	else if ( aredigits(hankaku) || (hankaku[0]=='-' && aredigits(hankaku.c_str()+1)) ) {
