@@ -293,7 +293,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 			}
 
 			if ( words.size() >= 1 ) {
-				jump_to = UnKakko(words[0].c_str());
+				jump_to = UnKakko(words[0].c_str(),false,true);
 			}
 			else {
 				jump_to.erase();
@@ -318,10 +318,10 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 			bool	do_calc=false;
 			p+=2;
 			if ( (v=strstr_hz(p, "\t"))!=NULL ) { // •Ï”–¼‚Æ•Ï”‚Éİ’è‚·‚é“à—e‚Ì‹æØ‚è
-				value = UnKakko(v+1);
+				value = UnKakko(v+1,false,true);
 			}
 			else if ( (v=strstr_hz(p, ""))!=NULL || (v=strstr_hz(p, "="))!=NULL ) {
-				value = UnKakko(v+((*v=='=') ? 1 : 2));
+				value = UnKakko(v+((*v=='=') ? 1 : 2),false,true);
 				do_calc=true;
 			}
 			else {
@@ -332,10 +332,11 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 			}
 
 			string	key(p, v-p);
-			key = UnKakko(key.c_str());
+			key = UnKakko(key.c_str(),false,true);
 
 			if ( key=="" ) {
 				result += ""; // ‚»‚Ì‚Ü‚Ü•\¦
+				speaked_speaker.insert(speaker);
 			}
 			else if ( aredigits(zen2han(key)) ) {
 				sender << "" << key << "@”š‚Ì‚İ‚Ì•Ï”–¼‚Íˆµ‚¦‚Ü‚¹‚ñ." << endl;

@@ -288,7 +288,12 @@ strmap*	Satori::find_ghost_info(string name) {
 // 文章の中で （ を見つけた場合、pが （ の次の位置まで進められた上でこれが実行される。
 // pはこの内部で ） の次の位置まで進められる。
 // 返値はカッコの解釈結果。
-string	Satori::KakkoSection(const char*& p,bool for_calc) {
+string	Satori::KakkoSection(const char*& p,bool for_calc,bool for_non_talk)
+{
+	if ( for_calc ) {
+		for_non_talk = true;
+	}
+
 	string	kakko_str;
 	while (true) {
 		if ( p[0] == '\0' )
@@ -298,14 +303,14 @@ string	Satori::KakkoSection(const char*& p,bool for_calc) {
 		if ( c=="）" )
 			break;
 		else if ( c=="（" ) {
-			kakko_str += KakkoSection(p,for_calc);
+			kakko_str += KakkoSection(p,for_calc,for_non_talk);
 		}
 		else
 			kakko_str += c;
 	}
 	
 	string	result;
-	if ( Call(kakko_str, result, for_calc) )
+	if ( Call(kakko_str, result, for_calc, for_non_talk) )
 		return	result;
 	if ( for_calc )
 		return	string("０");
@@ -313,12 +318,13 @@ string	Satori::KakkoSection(const char*& p,bool for_calc) {
 		return	string("（") + kakko_str + "）";
 }
 
-string	Satori::UnKakko(const char* p,bool for_calc) {
+string	Satori::UnKakko(const char* p,bool for_calc,bool for_non_talk)
+{
 	assert(p!=NULL);
 	string	result;
 	while ( p[0] != '\0' ) {
 		string c=get_a_chr(p);
-		result += (c=="（") ? KakkoSection(p,for_calc) : c;
+		result += (c=="（") ? KakkoSection(p,for_calc,for_non_talk) : c;
 	}
 	return	result;
 }
@@ -694,5 +700,6 @@ bool	Satori::calculate(const string& iExpression, string& oResult) {
 	}
 	return	r;
 }
+
 
 

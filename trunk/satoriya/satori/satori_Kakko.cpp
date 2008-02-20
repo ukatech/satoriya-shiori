@@ -378,7 +378,12 @@ string* Satori::GetValue(const string &iName,bool &oIsSysValue,bool iIsExpand,bo
 
 
 // 引数に渡されたものを何かの名前であるとし、置き換え対象があれば置き換える。
-bool	Satori::Call(const string& iName, string& oResult, bool for_calc) {
+bool	Satori::Call(const string& iName, string& oResult, bool for_calc, bool for_non_talk)
+{
+	if ( for_calc ) {
+		for_non_talk = true;
+	}
+
 	++m_nest_count;
 
 	if ( m_nest_limit > 0 && m_nest_count > m_nest_limit ) {
@@ -388,7 +393,7 @@ bool	Satori::Call(const string& iName, string& oResult, bool for_calc) {
 		return false;
 	}
 
-	bool r = CallReal(iName,oResult,for_calc);
+	bool r = CallReal(iName,oResult,for_calc,for_non_talk);
 	--m_nest_count;
 
 	if ( r && oResult.empty() && m_nest_count == 0 ) {
@@ -399,7 +404,7 @@ bool	Satori::Call(const string& iName, string& oResult, bool for_calc) {
 	return r;
 }
 
-bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc)
+bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool for_non_talk)
 {
 	strvec*	p_kakko_replace_history = kakko_replace_history.empty() ? NULL : &(kakko_replace_history.top());
 
@@ -466,7 +471,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc)
 			if ( p!=NULL )// 引数があるなら
 			{
 				assert(theDelimiter != mDelimiters.end());
-				string argstr = UnKakko(p);
+				string argstr = UnKakko(p,false,true);
 
 				while (true)
 				{
@@ -520,9 +525,11 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc)
 		// 単語を選択した
 		sender << "＠" << iName << endl;
 		oResult = UnKakko( w->c_str() );
-		if ( ! for_calc ) {
-			speaked_speaker.insert(speaker);
-			add_characters(oResult.c_str(), characters);
+		if ( ! for_non_talk ) {
+			if ( oResult.size() ) {
+				speaked_speaker.insert(speaker);
+				add_characters(oResult.c_str(), characters);
+			}
 		}
 	}
 	else if ( talks.is_exist(iName) ) {
