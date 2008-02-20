@@ -10,7 +10,8 @@
 
 string	SATORITE_WINDOW_CAPTION()
 {
-	return	string() + "‚³‚Æ‚è‚Ä phase 9 / " + gSatoriName + " " + gSatoriVersion;
+	static string wcaption(string() + "‚³‚Æ‚è‚Ä phase 9 / " + gSatoriName + " " + gSatoriVersion); 
+	return wcaption;
 }
 
 
@@ -379,5 +380,6 @@ WinMain(
 
 	return	ret;
 }
+
 
 

@@ -315,8 +315,8 @@ private:
 
 	string	GetWord(const string& name);
 
-	string	KakkoSection(const char*& p,bool for_calc = false);
-	string	UnKakko(const char* p,bool for_calc = false);
+	string	KakkoSection(const char*& p,bool for_calc = false,bool for_non_talk = false);
+	string	UnKakko(const char* p,bool for_calc = false,bool for_non_talk = false);
 
 	bool	GetURLList(const string& name, string& result);
 	bool	GetRecommendsiteSentence(const string& name, string& result);
@@ -337,7 +337,7 @@ private:
 	bool evalcate_to_bool(const Condition& i_cond);
 
 	// 引数に渡されたものを何かの名前であるとし、置き換え対象があれば置き換える。
-	bool	CallReal(const string& word, string& result, bool for_calc);
+	bool	CallReal(const string& word, string& result, bool for_calc, bool for_non_talk);
 
 	string* GetValue(const string &key,bool &oIsSysValue,bool iIsExpand = false,bool *oIsExpanded = NULL,const char *pDefault = "");
 
@@ -375,7 +375,7 @@ public:
 	// 指定された名前の＊文を取得する
 	string	GetSentence(const string& name);
 	// 引数に渡されたものを何かの名前であるとし、置き換え対象があれば置き換える。
-	bool	Call(const string& word, string& result, bool for_calc = false);
+	bool	Call(const string& word, string& result, bool for_calc = false,bool for_non_talk = false);
 	// 里々レベルでの計算を行う。戻り値は成否。
 	bool calculate(const string& iExpression, string& oResult);
 
@@ -395,6 +395,7 @@ void	diet_script(string&);
 
 //---------------------------------------------------------------------------
 #endif
+
 
 
 
