@@ -1,6 +1,6 @@
 #labels Featured
 =Mc141-2=
-  * ID=26 修正漏れ
+  * ID=25 修正漏れ
 
 =Mc141-1=
   * http://ssp.shillest.net/bts/guest.cgi?project=ms&action=top
