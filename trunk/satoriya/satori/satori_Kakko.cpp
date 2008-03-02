@@ -396,7 +396,7 @@ bool	Satori::Call(const string& iName, string& oResult, bool for_calc, bool for_
 	bool r = CallReal(iName,oResult,for_calc,for_non_talk);
 	--m_nest_count;
 
-	if ( r && oResult.empty() && m_nest_count == 0 ) {
+	if ( r && oResult.empty() ) {
 		if ( for_calc ) {
 			oResult = "‚O";
 		}

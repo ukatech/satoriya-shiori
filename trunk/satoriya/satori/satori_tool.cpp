@@ -303,7 +303,7 @@ string	Satori::KakkoSection(const char*& p,bool for_calc,bool for_non_talk)
 		if ( c=="Åj" )
 			break;
 		else if ( c=="Åi" ) {
-			kakko_str += KakkoSection(p,for_calc,for_non_talk);
+			kakko_str += KakkoSection(p,false,for_non_talk); //ì‡ë§ÇÃäáå ÇÕ0Ç…íuÇ´ä∑Ç¶ÇµÇ»Ç¢
 		}
 		else
 			kakko_str += c;
