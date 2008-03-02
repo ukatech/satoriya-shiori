@@ -81,6 +81,7 @@ public:
 	string insert(const string& i_str);
 	// 対象文字列中に含まれる「エスケープされた文字列」を元に戻す。
 	void unescape(string& io_str);
+	void unescape_for_dic(string& io_str);
 	// メンバをクリア
 	void clear();
 };
