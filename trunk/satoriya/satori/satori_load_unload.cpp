@@ -354,10 +354,10 @@ bool	Satori::Save(bool isOnUnload) {
 
 		data = it->second;
 		
-		m_escaper.unescape(data);
 		replace(data,"φ","φφ");
 		replace(data,"（","φ（");
 		replace(data,"）","φ）");
+		m_escaper.unescape_for_dic(data);
 
 		string	line = string("＄")+it->first+"\t"+data; // 変数を保存
 		out << ENCODE(line) << endl;

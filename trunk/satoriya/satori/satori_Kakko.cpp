@@ -504,10 +504,15 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 			}
 
 			// 引数渡して返値を取得、と。
-			if ( state==SAORI_CALL )
+			if ( state==SAORI_CALL ) {
+				for ( strvec::iterator i=theArguments.begin() ; i!=theArguments.end() ; ++i ) {
+					m_escaper.unescape(*i);
+				}
 				oResult = mShioriPlugins.request(thePluginName, theArguments, mKakkoCallResults, secure_flag ? "Local" : "External" );
-			else
+			}
+			else {
 				oResult = inc_call(thePluginName, theArguments, mKakkoCallResults, secure_flag);
+			}
 			oResult = UnKakko(oResult.c_str());	// 返値を再度カッコ展開
 		}
 	}
