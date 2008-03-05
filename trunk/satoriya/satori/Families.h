@@ -62,7 +62,8 @@ public:
 	}
 
 	// T‚ð‚·‚×‚Ä‘I‘ð‚·‚é
-	template <typename Candidates> void select_all(const string& i_name, Evalcator& i_evalcator,Candidates &candidates)
+	template <typename Candidates>
+	void select_all(const string& i_name, Evalcator& i_evalcator,Candidates &candidates)
 	{
 		iterator it = m_elements.find(i_name);
 		if ( it == m_elements.end() ) {

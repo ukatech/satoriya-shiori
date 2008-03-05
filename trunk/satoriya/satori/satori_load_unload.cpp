@@ -98,6 +98,8 @@ bool	Satori::load(const string& iBaseFolder)
 {
 	Sender::initialize();
 
+	setlocale(LC_ALL, "Japanese");
+
 	mBaseFolder = iBaseFolder;
 	sender << "¡SATORI::Load on " << mBaseFolder << "" << endl;
 
