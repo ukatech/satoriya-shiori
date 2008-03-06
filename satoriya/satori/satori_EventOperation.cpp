@@ -256,6 +256,8 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 				string	var_name = timer_name + "タイマ";
 
 				sender << var_name << "が発動。" << endl;
+
+				reset_speaked_status();
 				script=GetSentence(timer_name);
 				
 				timer.erase(timer_name);
@@ -280,7 +282,10 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 			if ( talk_interval>0 && --talk_interval_count<0 ) {
 				string	iEvent="OnTalk";
 				FindEventTalk(iEvent);
+
+				reset_speaked_status();
 				script=GetSentence(iEvent);
+
 				diet_script(script);
 				is_rnd_talk = true;
 			}

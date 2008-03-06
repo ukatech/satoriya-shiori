@@ -34,8 +34,7 @@ int		Satori::CreateResponse(strmap& oResponse)
 	string	result;
 
 	//喋り変換部初期化
-	speaked_speaker.clear(); // 少しでも喋ったかどうか
-	surface_changed_before_speak.clear(); // 会話前にサーフェス切り換え指示があったか
+	reset_speaked_status();
 
 	//実際の呼び出し開始
 	if ( mRequestID == "OnDirectSaoriCall" ) {
