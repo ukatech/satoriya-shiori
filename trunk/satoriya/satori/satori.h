@@ -196,6 +196,11 @@ private:
 	set<int>	speaked_speaker;		// 少しでも喋った？
 	bool	is_speaked(int n) { return speaked_speaker.find(n) != speaked_speaker.end(); }
 	bool	is_speaked_anybody() { return !speaked_speaker.empty(); }
+	void    reset_speaked_status() {
+		speaked_speaker.clear(); // 少しでも喋ったかどうか
+		surface_changed_before_speak.clear(); // 会話前にサーフェス切り換え指示があったか
+	}
+
 	int		characters;
 	int		question_num;
 
