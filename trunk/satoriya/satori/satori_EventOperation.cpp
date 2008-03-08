@@ -297,7 +297,7 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 
 	// scriptへの付与処理
 	if ( is_speaked_anybody() || is_rnd_talk ) {
-		script = surface_restore_string() + append_at_talk_start + script + append_at_talk_end;
+		script = append_at_talk_start + surface_restore_string() + script + append_at_talk_end;
 
 		// 喋りカウント初期化
 		int	dist = int(talk_interval*(talk_interval_random/100.0));
@@ -334,7 +334,7 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 
 //		string	iEvent="OnTalk";
 //		FindEventTalk(iEvent);
-//		script = surface_restore_string() + append_at_talk_start + GetSentence(iEvent) + append_at_talk_end + "\\e";
+//		script = append_at_talk_start + surface_restore_string() + GetSentence(iEvent) + append_at_talk_end + "\\e";
 
 
 
