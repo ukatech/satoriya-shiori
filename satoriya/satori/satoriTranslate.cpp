@@ -75,7 +75,10 @@ bool	Satori::Translate(string& ioScript) {
 						vec.push_back("");	// 
 					string	label=vec[0], id=vec[1];
 
-					if ( false == compare_head(id, "On") )
+					if ( false == compare_head(id, "On") &&
+						 false == compare_head(id, "http://") &&
+						 false == compare_head(id, "https://") 
+						)
 					{ 
 						// Onで始まるものはOnChoiceSelectを経由されないため、対象外とする
 
