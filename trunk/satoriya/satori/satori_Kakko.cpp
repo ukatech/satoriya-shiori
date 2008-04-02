@@ -938,6 +938,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	else if ( iName == "イベント名" ) { oResult=mRequestID; }
 	else if ( iName == "直前の選択肢名" ) { oResult=last_choice_name; }
 	else if ( iName == "pwd" ) { oResult=mBaseFolder; }
+	else if ( iName == "本体の所在" ) { oResult=mExeFolder; }
 	else if ( mRequestMap.find(iName) != mRequestMap.end() ) {
 		oResult = mRequestMap[iName];
 	}
