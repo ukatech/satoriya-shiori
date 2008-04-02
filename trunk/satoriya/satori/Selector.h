@@ -136,6 +136,7 @@ public:
 		else {
 			delete i_OC;
 		}
+		m_candidates.clear();
 		//cout << "                       m_OC:" << m_OC << ", this:" << this << endl;
 	}
 	
