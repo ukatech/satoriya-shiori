@@ -1,4 +1,7 @@
 #labels Featured
+=Mc142-1
+  * （本体の所在）追加。ベースウェアがインストールされているフォルダを取得 (ukiya)
+
 =Mc141-7=
   * http://ssp.shillest.net/bts/guest.cgi?project=ms&action=view_report&id=28
    * ID=28対応
