@@ -1,0 +1,186 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// 日本語 resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_JPN)
+#ifdef _WIN32
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+#pragma code_page(932)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_DIALOG DIALOG DISCARDABLE  0, 0, 361, 285
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "SODATE - setup"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "Tab1",IDC_TAB,"SysTabControl32",0x0,7,7,347,251
+    DEFPUSHBUTTON   "OK",IDOK,250,264,50,14
+    PUSHBUTTON      "キャンセル",IDCANCEL,304,264,50,14
+    PUSHBUTTON      "about",IDC_ABOUT,7,264,50,14
+    PUSHBUTTON      "犬",IDC_DOG,61,264,50,14
+END
+
+IDD_DIALOG1 DIALOG DISCARDABLE  0, 0, 123, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "SODATE"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    PUSHBUTTON      "FTPアップロード",IDOK2,7,7,86,14
+    PUSHBUTTON      "nar/zipアーカイブ作成",IDOK,7,29,86,14
+    PUSHBUTTON      "設定",IDOK4,7,50,87,14
+    PUSHBUTTON      "about",IDOK5,32,74,40,14
+    DEFPUSHBUTTON   "終了",IDOK3,76,74,40,14
+    PUSHBUTTON      "終了",IDCANCEL,7,33,9,10,NOT WS_VISIBLE
+END
+
+IDD_SHEET1 DIALOG DISCARDABLE  0, 0, 360, 285
+STYLE DS_CONTROL | WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "アップロードを行う",IDC_IS_UPLOAD,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,23,68,10
+    PUSHBUTTON      "？",IDC_FTP_HELP,154,17,10,12
+    EDITTEXT        IDC_HOST,57,45,101,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ID,57,66,53,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_PASSWORD,57,87,53,14,ES_PASSWORD | ES_AUTOHSCROLL
+    EDITTEXT        IDC_GHOSTROOT,57,120,102,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_TIMEDIFF,57,145,25,14,ES_AUTOHSCROLL
+    CONTROL         "作成する",IDC_IS_CREATE_ARCHIVE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,189,42,10
+    PUSHBUTTON      "？",IDC_ARCHIVE_HELP,154,186,10,12
+    EDITTEXT        IDC_ARCHIVE_FILENAME,13,213,149,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ARCHIVE_LOCAL_FOLDER,13,249,149,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "？",IDC_TARGET_HELP,332,17,10,12
+    EDITTEXT        IDC_ALLOW_FILES,183,31,160,125,ES_MULTILINE | 
+                    ES_AUTOHSCROLL | ES_WANTRETURN | WS_VSCROLL
+    EDITTEXT        IDC_DENY_FILES,183,177,160,72,ES_MULTILINE | 
+                    ES_AUTOHSCROLL | ES_WANTRETURN | WS_VSCROLL
+    GROUPBOX        "FTPアップロード",IDC_STATIC,7,7,162,160
+    GROUPBOX        "nar/zipアーカイブ",IDC_STATIC,7,175,162,103
+    GROUPBOX        "対象ファイル",IDC_STATIC,177,7,177,250
+    LTEXT           "ホスト名",IDC_STATIC,30,45,25,14,SS_CENTERIMAGE
+    LTEXT           "ID",IDC_STATIC,47,66,8,14,SS_CENTERIMAGE
+    LTEXT           "パスワード",IDC_STATIC,23,87,32,14,SS_CENTERIMAGE
+    LTEXT           "ゴーストのルートディレクトリ",IDC_STATIC,13,109,106,9,
+                    SS_CENTERIMAGE
+    LTEXT           "時差",IDC_STATIC,40,145,15,14,SS_CENTERIMAGE
+    LTEXT           "更新対象に含めるファイル",IDC_STATIC,183,21,140,8
+    LTEXT           "除外するファイル（上で指定したファイルの例外）",
+                    IDC_STATIC,183,165,160,10
+    LTEXT           "ファイル名",IDC_STATIC,13,203,31,8
+    LTEXT           "ディスク上の保存フォルダ",IDC_STATIC,13,237,76,8
+    CONTROL         "PASVモード",IDC_IS_PASSIVE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,112,149,49,10
+END
+
+IDD_SHEET2 DIALOG DISCARDABLE  0, 0, 187, 91
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ﾀﾞｲｱﾛｸﾞ"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,130,7,50,14
+    PUSHBUTTON      "ｷｬﾝｾﾙ",IDCANCEL,130,24,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 354
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 278
+    END
+
+    IDD_DIALOG1, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 116
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 88
+    END
+
+    IDD_SHEET1, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 353
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 278
+    END
+
+    IDD_SHEET2, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 180
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 84
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // 日本語 resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
