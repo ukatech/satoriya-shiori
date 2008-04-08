@@ -48,11 +48,11 @@ BOOL	UserDialog::OnInitDialog( HWND hwndFocus, LONG lInitParam ) {
 		HWND tab = toHWND(IDC_TAB);
 		TCITEM tc;
 		tc.mask = TCIF_TEXT;
-		tc.pszText = "Ç¢Ç–Ç–";
+		tc.pszText = "ê›íË";
 		TabCtrl_InsertItem(tab, 0, &tc);
-		tc.mask = TCIF_TEXT;
-		tc.pszText = "Ç§Ç”Ç”";
-		TabCtrl_InsertItem(tab, 1, &tc);
+		//tc.mask = TCIF_TEXT;
+		//tc.pszText = "Ç§Ç”Ç”";
+		//TabCtrl_InsertItem(tab, 1, &tc);
 
 		HWND sheet1 = 
 			::CreateDialog(m_hInstance, (LPCTSTR) IDD_SHEET1, m_hDlg, (DLGPROC) TabSheetProc);
