@@ -1,4 +1,6 @@
 #labels Featured
-=Phase 9=
+=Phase 10=
+  * コンソールを出し忘れていた（クセでWin32非コンソールアプリに書き換えてしまった）
 
+=Phase 9=
   * IE7で動くようにした
