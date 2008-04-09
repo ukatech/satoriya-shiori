@@ -112,7 +112,7 @@ BOOL	UserDialog::OnInitDialog( HWND hwndFocus, LONG lInitParam ) {
 		conf["morelog"] = "0";
 		conf["yeardiff"] = "0";
 		conf["dog"] = "1";
-		conf["is_passive"] = "0";
+		conf["is_passive"] = "1";
 	}
 
 	// confの内容をダイアログに設定

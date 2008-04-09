@@ -3,7 +3,7 @@
 
 
 
-int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,int nCmdShow)
+int main( int argc, char *argv[ ], char *envp[ ] )
 {
 	// 実行ファイルのあるフォルダ名を取得
 	TCHAR	szPath[MAX_PATH]="";
