@@ -20,6 +20,12 @@ https://satoriya-shiori.googlecode.com/svn/trunk/
 
 http://code.google.com/p/satoriya-shiori/source/list
 
+=コンパイルのしかた=
+
+里々のほうは特にやることはありません。素のVC++などで通るはずです。
+そだてについては、sodate / sodate_setupフォルダと同じ場所に、infozipという名前で、info-zip zipライブラリを置いてください。
+http://www.info-zip.org/Zip.html
+
 =開発方針=
 
 「やりたいほうだい」
