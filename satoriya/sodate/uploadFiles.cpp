@@ -136,7 +136,7 @@ bool	uploadFiles(const string& base_folder, list<string>& files) {
 	/* WININETÇÃèâä˙âª */
 	hInternet = ::InternetOpen(
 		"network_updater",
-		INTERNET_OPEN_TYPE_PROXY,//INTERNET_OPEN_TYPE_DIRECT,
+		INTERNET_OPEN_TYPE_PRECONFIG,//INTERNET_OPEN_TYPE_DIRECT,
 		NULL,
 		NULL,
 		0);
