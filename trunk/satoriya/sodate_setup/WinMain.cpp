@@ -40,35 +40,6 @@ public:
 
 
 BOOL	UserDialog::OnInitDialog( HWND hwndFocus, LONG lInitParam ) {
-
-	// コモンコントロールの初期化
-	// タブコントロールを使う場合は必須
-	::InitCommonControls();
-	{
-		HWND tab = toHWND(IDC_TAB);
-		TCITEM tc;
-		tc.mask = TCIF_TEXT;
-		tc.pszText = "設定";
-		TabCtrl_InsertItem(tab, 0, &tc);
-		//tc.mask = TCIF_TEXT;
-		//tc.pszText = "うふふ";
-		//TabCtrl_InsertItem(tab, 1, &tc);
-
-		HWND sheet1 = 
-			::CreateDialog(m_hInstance, (LPCTSTR) IDD_SHEET1, m_hDlg, (DLGPROC) TabSheetProc);
-
-		RECT rc;
-		::GetClientRect(tab, &rc);
-		TabCtrl_AdjustRect(tab, FALSE, &rc);
-		::MapWindowPoints(tab, m_hDlg, (POINT*)&rc, 2);
-		::MoveWindow(sheet1, rc.left, rc.top,
-			rc.right - rc.left, rc.bottom - rc.top, FALSE);
-	
-		// デフォルトで左側のタブを表示
-		::ShowWindow(sheet1, SW_SHOW);
-	}
-
-
 	if ( strmap_from_file(conf, base_folder+"\\"+conf_filename, byte_value_1) )
 	{
 		// 設定ファイルの読み込みに成功
@@ -272,14 +243,14 @@ BOOL	UserDialog::OnCommand( WORD wNotifyCode, WORD wID, HWND hwndCrl ) {
 			"sodate\n"
 			"\n"
 			"作者\t櫛ヶ浜やぎ\n"
-			"連絡先\thttp://www.geocities.co.jp/SiliconValley-Cupertino/8536/\n"
+			"連絡先\thttp://www.geocities.jp/poskoma/\n"
 			"\n"
 			"\n"
 			"ご意見等あればお寄せください。\n"
 			"今、上記ページを開きますか？\n"
 			,"about", MB_YESNO|MB_DEFBUTTON2 )) {
 
-			::ShellExecute(NULL, NULL, "http://www.geocities.co.jp/SiliconValley-Cupertino/8536/", NULL, NULL, SW_SHOW);
+			::ShellExecute(NULL, NULL, "http://www.geocities.jp/poskoma/", NULL, NULL, SW_SHOW);
 		}
 		break;
 
