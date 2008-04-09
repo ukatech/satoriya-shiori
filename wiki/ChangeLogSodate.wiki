@@ -1,3 +1,4 @@
+#labels Featured
 =Phase 9=
 
   * IE7で動くようにした
