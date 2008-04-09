@@ -16,5 +16,7 @@ string	base_folder;
 
 
 void	error(const string& str) {
+	cerr << "\nƒGƒ‰[F" << str << "\n";
+
 	::MessageBox(NULL, str.c_str(), "error - sodate", MB_OK);
 }
