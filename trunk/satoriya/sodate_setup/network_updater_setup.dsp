@@ -125,6 +125,10 @@ SOURCE=..\_\Win32.h
 # End Group
 # Begin Source File
 
+SOURCE=.\main2.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\script.rc
 # End Source File
 # Begin Source File
