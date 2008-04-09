@@ -10,6 +10,7 @@
 #define IDD_DIALOG1                     102
 #define IDD_SHEET1                      103
 #define IDD_SHEET2                      104
+#define IDI_MAIN                        105
 #define IDC_HOST                        1000
 #define IDC_ID                          1001
 #define IDC_PASSWORD                    1002
@@ -33,7 +34,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        105
+#define _APS_NEXT_RESOURCE_VALUE        106
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1031
 #define _APS_NEXT_SYMED_VALUE           101

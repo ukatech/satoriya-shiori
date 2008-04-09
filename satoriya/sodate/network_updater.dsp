@@ -26,6 +26,7 @@ CFG=network_updater - Win32 Debug
 # PROP Scc_ProjName ""
 # PROP Scc_LocalPath ""
 CPP=cl.exe
+MTL=midl.exe
 RSC=rc.exe
 
 !IF  "$(CFG)" == "network_updater - Win32 Release"
@@ -220,7 +221,15 @@ SOURCE=.\main.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\main.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\makeZip.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Script1.rc
 # End Source File
 # Begin Source File
 
