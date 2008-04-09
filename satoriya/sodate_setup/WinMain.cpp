@@ -73,23 +73,41 @@ BOOL	UserDialog::OnInitDialog( HWND hwndFocus, LONG lInitParam ) {
 		conf["archive_filename"]="myghost%year%month%day.nar";
 		conf["archive_local_folder"]=base_folder;
 		conf["allow_files"]=
+			"delete.txt\r\n"
+			"install.txt\r\n"
 			"readme.txt\r\n"
-			"thumbnail.png\r\n"
-			"ghost/master/*.txt\r\n"
+			"thumbnail.*\r\n"
 			"ghost/master/*.dll\r\n"
+			"ghost/master/saori/*.dll\r\n"
+			"ghost/master/*.txt\r\n"
 			"ghost/master/*.ico\r\n"
+			"ghost/master/*.png\r\n"
+			"ghost/master/*.sat\r\n"
+			"ghost/master/*.dic\r\n"
+			"ghost/master/*.ayc\r\n"
+			"ghost/master/openkeeps/*.kis\r\n"
+			"ghost/master/openkeeps/plugin/*.kis\r\n"
+			"ghost/master/template/*.kis\r\n"
+			"ghost/master/template/another/*.kis\r\n"
+			"ghost/master/*.kis\r\n"
+			"ghost/master/*.kaw\r\n"
 			"shell/master/*.txt\r\n"
+			"shell/master/*.dll\r\n"
+			"shell/master/*.ico\r\n"
 			"shell/master/*.png\r\n"
 			"";
 		conf["deny_files"]=
 			"ghost/master/satori_savedata.txt\r\n"
+			"ghost/master/satori_savebackup.txt\r\n"
 			"ghost/master/satorite.txt\r\n"
 			"ghost/master/nsconf.txt\r\n"
 			"ghost/master/Dict-KEEPSs.txt\r\n"
 			"ghost/master/Dict-Learned.txt\r\n"
 			"ghost/master/misaka_vars.txt\r\n"
-			"ghost/master/misaka_vars.txt\r\n"
 			"ghost/master/aya_variable.cfg\r\n"
+			"ghost/master/yaya_variable.cfg\r\n"
+			"ghost/master/ssp_shiori_log.txt\r\n"
+			"ghost/master/‚ê‚µ‚Î.txt\r\n"
 			"";
 		conf["morelog"] = "0";
 		conf["yeardiff"] = "0";
