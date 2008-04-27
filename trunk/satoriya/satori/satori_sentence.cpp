@@ -104,12 +104,25 @@ string	Satori::GetSentence(const string& name)
 
 
 // 自動挿入ウェイト
-#define	character_wait_clear	\
-	if ( mRequestID == "OnHeadlinesense.OnFind" ) { characters = 0;	} \
-	else if( characters > 0 ) { \
-		result += string("\\_w[") + itos( int(characters*basewait*rate_of_auto_insert_wait/100) ) + "]"; characters=0; \
-	} else NULL
+// 2=一般 1=里々 0=無効
+#define	character_wait_clear(wait_quantity)	\
+	if ( mRequestID == "OnHeadlinesense.OnFind" ) { chars_spoken = 0;	} \
+	else if( chars_spoken > 0 ) { \
+		if ( type_of_auto_insert_wait >= 2 ) { \
+			next_wait_value += (50*3+random(100))*(wait_quantity)*rate_of_auto_insert_wait/100; \
+		} \
+		else if ( type_of_auto_insert_wait == 1 ) { \
+			next_wait_value += chars_spoken*basewait*rate_of_auto_insert_wait/100; \
+		} \
+		chars_spoken = 0; \
+	}
 
+// 実際の挿入処理
+#define character_wait_exec \
+	if ( next_wait_value ) { \
+		result += "\\_w[" + itos(next_wait_value) + "]"; \
+		next_wait_value = 0; \
+	}
 
 
 string Satori::SentenceToSakuraScriptExec(const Talk& vec)
@@ -123,8 +136,9 @@ string Satori::SentenceToSakuraScriptExec(const Talk& vec)
 	//実行環境初期化
 	string allresult = "\\1";
 
-	question_num=0;	// 選択肢番号
-	characters = 0;	// 喋った字数
+	question_num = 0;	// 選択肢番号
+	chars_spoken = 0;	// 喋った字数
+	next_wait_value = 0; // ウェイト処理
 
 	int jumpcount = 0;
 
@@ -376,20 +390,20 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 			string	c=get_a_chr(p);	// 全角半角問わず一文字取得し、pを一文字すすめる
 
 			if ( c=="（" ) {	// 何かを取得・挿入
-				string	tmp = KakkoSection(p);
-				result += tmp;
+				character_wait_exec;
+				result += KakkoSection(p);
 			}
 			else if ( c=="\xff" ) {	//内部特殊表現
 				c=get_a_chr(p);
-				if ( c=="\x01" ) { //0xff0x01＝サーフェス切り替え　後に半角数値が1文字続く
+				if ( c=="\x01" ) { //0xff0x01＝スコープ切り替え　後に半角数値が1文字続く
 					c=get_a_chr(p);
 					int speaker_tmp = atoi(c.c_str());
 					if ( is_speaked(speaker) && speaker != speaker_tmp ) {
 						result += append_at_scope_change;
-						characters += 2;
+						chars_spoken += 2;
 					}
 					speaker = speaker_tmp;
-					character_wait_clear;
+					character_wait_clear(2);
 					if ( speaker == 0 ) {
 						result += "\\0";
 					}
@@ -404,10 +418,10 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 			else if ( c=="：" ) {	// スコープ切り替え - ここは二人を想定。
 				if ( is_speaked(speaker) ) {
 					result += append_at_scope_change;
-					characters += 2;
+					chars_spoken += 2;
 				}
 				speaker = (speaker==0) ? 1 : 0;
-				character_wait_clear;
+				character_wait_clear(2);
 				result += (speaker ? "\\1" : "\\0");
 			}
 			else if ( c=="\\" || c=="%" ) {	// さくらスクリプトの解釈、というか解釈のスキップ。
@@ -437,25 +451,29 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 
 				if ( cmd=="n" ) {
 					// 改行
-					character_wait_clear;
+					character_wait_clear(2);
 				}
 				else if ( ( (cmd=="0" || cmd=="h") && speaker==1) || ( (cmd=="1" || cmd=="u") && speaker==0) ) {
 					// スコープ切り替え
 					if ( is_speaked(speaker) ) {
 						result += append_at_scope_change_with_sakura_script;
-						characters += 2;
+						chars_spoken += 2;
 					}
 					speaker = stoi(cmd);
-					character_wait_clear;
+					character_wait_clear(2);
 				}
 				else if ( cmd=="p" && aredigits(opt) ) {
 					// スコープ切り替えonSSP/CROW
 					if ( is_speaked(speaker) ) {
 						result += append_at_scope_change_with_sakura_script;
-						characters += 2;
+						chars_spoken += 2;
 					}
 					speaker = stoi(opt);
-					character_wait_clear;
+					character_wait_clear(2);
+				}
+				else if ( cmd=="s" ) {
+					//サーフィス切り替えの前にウェイトは済ませておくこと
+					character_wait_exec;
 				}
 
 				if ( opt!="" ) {
@@ -470,15 +488,18 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 				//result += string(start, p-start);
 			}
 			else {	// 通常の一文字
+				character_wait_exec;
+
 				speaked_speaker.insert(speaker);
 				result += c;
-				characters += c.size();
-				if ( c=="。" || c=="、" )
-					character_wait_clear;
+				chars_spoken += c.size();
+				if ( c=="。" || c=="、" ) {
+					character_wait_clear(c=="、"?1:2);
+				}
 			}
 
 		}
-		character_wait_clear;
+		character_wait_clear(2);
 		result += "\\n";
 	}
 

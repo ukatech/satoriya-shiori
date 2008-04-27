@@ -16,7 +16,7 @@
 #endif
 ////////////////////////////////////////
 
-void	add_characters(const char* p, int& characters) {
+void	add_characters(const char* p, int& chars_spoken) {
 	// さくらスクリプトとそれ以外を分割して処理を加える
 	while (*p) {
 		if (*p=='\\'||*p=='%') {
@@ -36,7 +36,7 @@ void	add_characters(const char* p, int& characters) {
 		else {
 			int len = _ismbblead(*p) ? 2 : 1;
 			p += len;
-			characters += len;
+			chars_spoken += len;
 		}
 	}
 }
@@ -533,7 +533,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		if ( ! for_non_talk ) {
 			if ( oResult.size() ) {
 				speaked_speaker.insert(speaker);
-				add_characters(oResult.c_str(), characters);
+				add_characters(oResult.c_str(), chars_spoken);
 			}
 		}
 	}
@@ -945,7 +945,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	else {
 		// 見つからなかった。通常喋り？
 		speaked_speaker.insert(speaker);
-		characters += oResult.size();
+		chars_spoken += oResult.size();
 		sender << "（" << iName << "） not found." << endl;
 		return	false;
 	}

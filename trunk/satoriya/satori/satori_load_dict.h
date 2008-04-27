@@ -44,6 +44,7 @@ void	Satori::InitMembers() {
 	talk_interval_random=10;
 	talk_interval_count=0;
 	rate_of_auto_insert_wait=100;
+	type_of_auto_insert_wait = 1;
 
 	append_at_scope_change = "\\n[half]";
 	append_at_scope_change_with_sakura_script = "";

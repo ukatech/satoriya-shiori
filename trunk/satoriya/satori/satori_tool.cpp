@@ -522,6 +522,22 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 		return true;
 	}
 	
+	if ( key == "自動挿入ウェイトタイプ" ) {
+		if ( value == "一般" ) {
+			type_of_auto_insert_wait = 2;
+			variables["自動挿入ウェイトタイプ"] = "一般";
+		}
+		else if ( value == "無効" ) {
+			type_of_auto_insert_wait = 0;
+			variables["自動挿入ウェイトタイプ"] = "無効";
+		}
+		else /* if ( value == "里々" ) */ {
+			type_of_auto_insert_wait = 1;
+			variables["自動挿入ウェイトタイプ"] = "里々";
+		}
+		return true;
+	}
+	
 	if ( key == "辞書フォルダ" ) {
 		strvec	words;
 		split(value, ",",dic_folder);
