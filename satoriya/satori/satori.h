@@ -180,6 +180,8 @@ private:
 	int	talk_interval_count;
 	// 自動挿入ウェイトの倍率。省略時100。
 	int	rate_of_auto_insert_wait;
+	// 自動挿入処理のタイプ。省略時従来処理＝1。0で無効、2で一般的な処理。
+	int type_of_auto_insert_wait;
 	// 見切れてても喋る（OnTalkを呼び出す）かどうかフラグ
 	bool is_call_ontalk_at_mikire;
 
@@ -201,7 +203,8 @@ private:
 		surface_changed_before_speak.clear(); // 会話前にサーフェス切り換え指示があったか
 	}
 
-	int		characters;
+	int		chars_spoken;
+	int		next_wait_value;
 	int		question_num;
 
 	map<int,bool> surface_changed_before_speak;	// 会話前にサーフェスが切り替え指示があった？
