@@ -105,6 +105,8 @@ static const char   han_kana_2[] = "ｶﾞｷﾞｸﾞｹﾞｺﾞｻﾞｼﾞｽﾞｾﾞｿﾞﾀﾞﾁﾞﾂﾞﾃﾞﾄﾞﾊﾞﾋﾞﾌﾞﾍﾞﾎﾞﾊﾟﾋﾟ
 extern	bool calc(string& ioString);
 extern	bool calc_float(string& ioString);
 
+static string zen2han_internal(string &str,unsigned int flag = 0xffffU);
+
 #include	<sstream>
 
 // 半角/全角を同等に扱った上で文字長を返す
@@ -125,24 +127,25 @@ const char*	sjis_at(const char* p, int n) {
 	return	p;
 }
 
-bool	printf_format(const char*& p, deque<string>& iArguments, stringstream& os) {
+bool	printf_format(const char*& p, deque<string>& iArguments, stringstream& os)
+{
 	assert(*p=='%');
 	if ( iArguments.empty() )
 		return	false;	// 置き換え対象が無い
 
 	++p;
-	string	str = iArguments.front();
+	string	str = zen2han_internal(iArguments.front());
 	iArguments.pop_front();
 
 	// フラグ指定読み込み
-	bool	isLeft=false, isZeroFill=false, isSharp=false;
-	enum { MINUS_ONLY, MINUS_AND_PLUS, IF_PLUS_THEN_PUT_SPACE } SignMode = MINUS_ONLY;
+	bool isSharp=false;
+
 	while (true) {
-		if ( *p == '-' ) { isLeft=true; ++p; }
-		else if ( *p == '+' ) { SignMode=MINUS_AND_PLUS; ++p; }
-		else if ( *p == '0' ) { os.fill('0'); os<<internal; isZeroFill=true; ++p; }
-		else if ( *p == ' ' ) { os.fill(' '); os<<internal; SignMode=IF_PLUS_THEN_PUT_SPACE; ++p; }
-		else if ( *p == '#' ) { isLeft=true; ++p; }
+		if ( *p == '-' ) { os << left; ++p; }
+		else if ( *p == '+' ) { os << showpos; ++p; }
+		else if ( *p == '0' ) { os.fill('0'); os<<internal; ++p; }
+		else if ( *p == ' ' ) { os.fill(' '); os<<internal; ++p; }
+		else if ( *p == '#' ) { isSharp = true; ++p; }
 		else break;
 	}
 
@@ -161,7 +164,7 @@ bool	printf_format(const char*& p, deque<string>& iArguments, stringstream& os) 
 	}
 
 	// 精度指定読み込み
-	/*int	precision=0;
+	int	precision = 0;
 	if ( *p == '.' ) {
 		++p;
 		while ( *p>='0' && *p<='9' ) {
@@ -169,23 +172,97 @@ bool	printf_format(const char*& p, deque<string>& iArguments, stringstream& os) 
 			++p;
 		}
 		os.precision(precision);
-	}*/
+	}
 
-	// サイズ指定子は未対応
+	// フォーマット設定 - #フラグ
+	if ( isSharp ) {
+		switch (*p) {
+			case 'o':
+			case 'x':
+			case 'X':
+				os << showbase;
+				break;
+			case 'e':
+			case 'E':
+			case 'f':
+			case 'g':
+			case 'G':
+				os << showpoint;
+				break;
+		}
+	}
+	
 
 	// 変換文字に応じて挿入
-	int	n = atoi(str.c_str());
 	switch (*p) {
-	case 's': os << str; break;
-	case 'c': os << (char)n; break;
-	case 'C': os << (unsigned short)n; break;
-	case 'd': os << n; break;
-	case 'i': os << oct << n; break; 
-	case 'o': os << oct << n; break;
-	case 'u': os << (unsigned int)n; break;
-	case 'x': case 'X': break;
-	case 'f': break;
-	case 'e': case 'E': break;
+	case 's':
+	case 'S':
+		{
+			os << str;
+			break;
+		}
+	case 'c':
+	case 'C':
+		{
+			os << (char)atoi(str.c_str());
+			break;
+		}
+	case 'd':
+		{
+			os << atoi(str.c_str());
+			break;
+		}
+	case 'i':
+		{
+			os << oct << atoi(str.c_str());
+			break;
+		}
+	case 'o':
+		{
+			os << oct << strtoul(str.c_str(),NULL,10);
+			break;
+		}
+	case 'u':
+		{
+			os << strtoul(str.c_str(),NULL,10);
+			break;
+		}
+	case 'x':
+		{
+			os << hex << nouppercase << strtoul(str.c_str(),NULL,10);
+			break;
+		}
+	case 'X':
+		{
+			os << hex << uppercase << strtoul(str.c_str(),NULL,10);
+			break;
+		}
+	case 'e':
+		{
+			os << scientific << nouppercase << strtod(str.c_str(),NULL);
+			break;
+		}
+	case 'E':
+		{
+			os << scientific << uppercase << strtod(str.c_str(),NULL);
+			break;
+		}
+	case 'g':
+		{
+			os << scientific << fixed << nouppercase << strtod(str.c_str(),NULL);
+			break;
+		}
+	case 'G':
+		{
+			os << scientific << fixed << uppercase << strtod(str.c_str(),NULL);
+			break;
+		}
+	case 'f':
+		{
+			os << fixed << strtod(str.c_str(),NULL);
+			break;
+		}
+	case 'n': break;
 	case 'p': break;
 	default: return false;
 	}
@@ -199,8 +276,13 @@ string	sprintf(deque<string>& iArguments) {
 	iArguments.pop_front();
 	const char* p = str.c_str();
 	while ( *p!='\0' ) {
-		if ( *p=='%' && printf_format(p, iArguments, s) )
-			continue;
+		if ( *p=='%' ) {
+			stringstream sf;
+			if ( printf_format(p, iArguments, sf) ) {
+				s << sf.str();
+				continue;
+			}
+		}
 		if ( _ismbblead(*p) ) {
 			s << *p++; s << *p++;
 		} else {
@@ -519,9 +601,12 @@ SRV _zen2han(deque<string>& iArguments, deque<string>& oValues) {
 			flag |= 0x8;
 		}
 	}
+	return zen2han_internal(iArguments[0],flag);
+}
 
+string zen2han_internal(string &str,unsigned int flag)
+{
 	char	before[3]="　", after[2]=" ";
-	string&	str=iArguments[0];
 
 	if ( flag & 0x1 ) { //アルファベット
 		for (int n=0 ; n<sizeof(han_alpha) ; ++n) {
