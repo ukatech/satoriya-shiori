@@ -434,7 +434,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 				const char*	start=p;
 				string	cmd="",opt="";
 
-				while (!_ismbblead(*p) && (isalpha(*p)||isdigit(*p)||*p=='!'||*p=='*'||*p=='&'||*p=='?'||*p=='_'))
+				while (!_ismbblead(*p) && (isalpha(*p)||isdigit(*p)||*p=='!'||*p=='-'||*p=='*'||*p=='&'||*p=='?'||*p=='_'))
 					++p;
 				cmd.assign(start, p-start);
 
@@ -463,13 +463,16 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 					character_wait_clear(2);
 				}
 				else if ( cmd=="p" && aredigits(opt) ) {
-					// スコープ切り替えonSSP/CROW
-					if ( is_speaked(speaker) ) {
-						result += append_at_scope_change_with_sakura_script;
-						chars_spoken += 2;
+					int spktmp = stoi(opt);
+					if ( speaker != spktmp ) {
+						// スコープ切り替えonSSP/CROW
+						if ( is_speaked(speaker) ) {
+							result += append_at_scope_change_with_sakura_script;
+							chars_spoken += 2;
+						}
+						speaker = spktmp;
+						character_wait_clear(2);
 					}
-					speaker = stoi(opt);
-					character_wait_clear(2);
 				}
 				else if ( cmd=="s" ) {
 					//サーフィス切り替えの前にウェイトは済ませておくこと
