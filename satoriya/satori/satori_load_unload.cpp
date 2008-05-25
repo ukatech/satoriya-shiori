@@ -41,8 +41,11 @@ BOOL CALLBACK MonitorEnumFunc(HMONITOR hMonitor,HDC hdc,LPRECT rect,LPARAM lPara
     MONITORINFOEX MonitorInfoEx;
     MonitorInfoEx.cbSize=sizeof(MonitorInfoEx);
 
-	BOOL (WINAPI* pGetMonitorInfo)(HMONITOR,LPMONITORINFO);
-	(FARPROC&)pGetMonitorInfo = ::GetProcAddress(::GetModuleHandle("user32.dll"), "GetMonitorInfoA");
+	static BOOL (WINAPI* pGetMonitorInfo)(HMONITOR,LPMONITORINFO) = NULL;
+	if ( ! pGetMonitorInfo ) {
+		(FARPROC&)pGetMonitorInfo = ::GetProcAddress(::GetModuleHandle("user32.dll"), "GetMonitorInfoA");
+	}
+
 	if ( pGetMonitorInfo==NULL )
 		return	FALSE;
 	if ( !(*pGetMonitorInfo)(hMonitor,&MonitorInfoEx) ) {
@@ -50,11 +53,20 @@ BOOL CALLBACK MonitorEnumFunc(HMONITOR hMonitor,HDC hdc,LPRECT rect,LPARAM lPara
         return FALSE;
     }
 
-	sender << "モニタ: " << MonitorInfoEx.szDevice << " / (" << 
-		rect->left << "," << rect->top << "," << rect->right << "," << rect->bottom << ") / " <<
-		((MonitorInfoEx.dwFlags==MONITORINFOF_PRIMARY) ? "primary" : "extra") << endl;
 
-	RECT&	max_screen_rect = *((RECT*)lParam);
+	RECT* pRect = ((RECT*)lParam);
+
+	if ( MonitorInfoEx.dwFlags & MONITORINFOF_PRIMARY ) {
+		pRect[1] = *rect;
+		sender << "モニタ: " << MonitorInfoEx.szDevice << " / (" << 
+			rect->left << "," << rect->top << "," << rect->right << "," << rect->bottom << ") / primary" << endl;
+	}
+	else {
+		sender << "モニタ: " << MonitorInfoEx.szDevice << " / (" << 
+			rect->left << "," << rect->top << "," << rect->right << "," << rect->bottom << ") / extra" << endl;
+	}
+
+	RECT&	max_screen_rect = pRect[0];
 	if ( rect->left < max_screen_rect.left )
 		max_screen_rect.left = rect->left;
 	if ( rect->top < max_screen_rect.top )
@@ -163,8 +175,13 @@ bool	Satori::load(const string& iBaseFolder)
 			is_single_monitor = true;
 		}
 		else {
-			(*pEnumDisplayMonitors)(NULL,NULL,(MONITORENUMPROC)MonitorEnumFunc,(LPARAM)(&max_screen_rect));
-			::GetWindowRect(::GetDesktopWindow(), &desktop_rect);
+			RECT rectData[2];
+			memset(rectData,0,sizeof(rectData));
+			(*pEnumDisplayMonitors)(NULL,NULL,(MONITORENUMPROC)MonitorEnumFunc,(LPARAM)(rectData));
+
+			max_screen_rect = rectData[0];
+			desktop_rect = rectData[1];
+
 			RECT*	rect;
 			rect = &desktop_rect;
 			sender << "プライマリデスクトップ: (" << 
