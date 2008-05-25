@@ -31,6 +31,7 @@ using namespace std;
 static const string ARGUMENT="Argument";
 static const string VALUE="Value";
 
+#define SAORI_VERSION "httpc/7a"
 
 // c または文字列の終了まで p を進める。
 // 進んだ場所までの文字列を返す。
@@ -71,7 +72,7 @@ extern "C" __declspec(dllexport) HGLOBAL __cdecl request(HGLOBAL iData,long *ioL
 	string	first_line = getToken(p, '\x0a');	// 一行目
 	
 	if ( compare_head(first_line, "GET Version") ) {
-		char *pResult = "SAORI/1.0 200 OK\x0d\x0a\x0d\x0a";
+		char *pResult = "SAORI/1.0 200 OK\x0d\x0aResult: " SAORI_VERSION "\x0d\x0a\x0d\x0a";
 		
 		*ioLength = strlen(pResult);
 		HGLOBAL theData = ::GlobalAlloc(GMEM_FIXED, *ioLength + 1);

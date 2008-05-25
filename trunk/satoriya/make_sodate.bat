@@ -6,7 +6,6 @@ mkdir tmp\sodate\
 copy /B /Y .\sodate\Release\sodate.exe tmp\sodate\sodate.exe
 upx --best tmp\sodate\sodate.exe
 
-mkdir tmp\sodate\
 copy /B /Y .\sodate_setup\Release\sodate_setup.exe tmp\sodate\sodate_setup.exe
 upx --best tmp\sodate\sodate_setup.exe
 
