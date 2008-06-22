@@ -6,16 +6,17 @@
 #include	<fstream>
 #include	<strstream>
 #include	<cassert>
+#include    <algorithm>
 #include	"../_/Sender.h"
 #include	"../_/CriticalSection.h"
 #include	"dsstp.h"
+#include	"get_browser_info.h"
 
-CriticalSection	gCS;
+static CriticalSection	gCS;
+static CBrowserInfo *g_pBrowserInfo = NULL;
 
-bool	get_browser_info(string&,string&);
-
-int	gFrequency=0;
-int	gTimerEventID=0;
+static int	gFrequency=0;
+static int	gTimerEventID=0;
 
 #define	FREQ_RATE	4
 
@@ -33,7 +34,7 @@ VOID CALLBACK TimerProc(
 	static	set<string>	visitedURL;
 	++count;
 
-	if ( !get_browser_info(URL, Title) )
+	if ( !g_pBrowserInfo->Get(URL, Title) )
 		return;
 
 	if ( count==1 ) {	// 初回でブラウザ情報が取得できた場合、１回目の移動までは検出しない
@@ -96,6 +97,7 @@ bool	Saori::load(const string& iBaseFolder) {
 	//strvec::iterator i=vec.begin();
 
 	//read_dictionary(vec);
+	g_pBrowserInfo = new CBrowserInfo;
 
 	gTimerEventID = ::SetTimer(NULL, NULL, 1000/FREQ_RATE, TimerProc);
 	if ( gTimerEventID == 0 )
@@ -107,6 +109,9 @@ bool	Saori::unload() {
 	Locker	locker(gCS);
 	if ( gTimerEventID != 0 )
 		::KillTimer(NULL, gTimerEventID);
+
+	delete g_pBrowserInfo;
+
 	return true;
 }
 
@@ -117,24 +122,48 @@ int	Saori::request(deque<string>& iArguments, string& oResult, deque<string>& oV
 	if ( iArguments.empty() ) {
 		return	400;
 	}
-	else if ( iArguments[0]=="setEvent" && iArguments.size()==2 ) {
+	
+	std::string argCmd = iArguments[0];
+	std::transform(argCmd.begin(), argCmd.end(), argCmd.begin(), tolower);
+
+	if ( argCmd=="setEvent" && iArguments.size()==2 ) {
 		//gFrequency = stoi(iArguments[1]);
 	}
-	else if ( iArguments[0]=="setFrequency" && iArguments.size()==2 ) {
+	else if ( argCmd=="setfrequency" && iArguments.size()==2 ) {
 		gFrequency = stoi(iArguments[1])*FREQ_RATE;
 	}
-	else if ( iArguments[0]=="getFrequency" ) {
+	else if ( argCmd=="getfrequency" ) {
 		oResult = itos(gFrequency/FREQ_RATE);
 	}
-	else if ( iArguments[0]=="getURL" ) {
+	else if ( argCmd=="geturllist" ) {
+		std::vector< str_pair >	URL;
+		if ( !g_pBrowserInfo->GetMulti(URL) )
+			return	204;
+		oResult = URL[0].first;
+
+		for ( UINT i = 0 ; i < URL.size() ; ++i ) {
+			oValues.push_back(URL[i].first);
+		}
+	}
+	else if ( argCmd=="gettitlelist" ) {
+		std::vector< str_pair >	URL;
+		if ( !g_pBrowserInfo->GetMulti(URL) )
+			return	204;
+		oResult = URL[0].second;
+
+		for ( UINT i = 0 ; i < URL.size() ; ++i ) {
+			oValues.push_back(URL[i].second);
+		}
+	}
+	else if ( argCmd=="geturl" ) {
 		string	URL, Title;
-		if ( !get_browser_info(URL, Title) )
+		if ( !g_pBrowserInfo->Get(URL, Title) )
 			return	204;
 		oResult = URL;
 	}
-	else if ( iArguments[0]=="getTitle" ) {
+	else if ( argCmd=="gettitle" ) {
 		string	URL, Title;
-		if ( !get_browser_info(URL, Title) )
+		if ( !g_pBrowserInfo->Get(URL, Title) )
 			return	204;
 		oResult = Title;
 	}

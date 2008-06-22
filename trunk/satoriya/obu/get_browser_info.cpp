@@ -1,29 +1,18 @@
+#include <algorithm>
+
+#pragma warning( disable : 4786 ) //「デバッグ情報内での識別子切捨て」
+#pragma warning( disable : 4503 ) //「装飾された名前の長さが限界を越えました。名前は切り捨てられます。」
 
 /*--------------------------
 	include
 --------------------------*/
-#define _INC_OLE
-#include <windows.h>
-#undef  _INC_OLE
-#include <commctrl.h>
-#include <DDEML.H>
-
-//#include "resource.h"
-
-#include	<string>
-using namespace std;
+#include "get_browser_info.h"
 
 /*--------------------------
 	define
 --------------------------*/
-#define BUFSIZE				256
 #define MAXSIZE				65535
-
-#define BROWSE_CNT			500
-
-#define WM_GETBROUSERINFO	(WM_USER + 1)
-
-#define	CODEPAGE	CP_WINANSI
+#define	CODEPAGE			CP_WINANSI
 
 /*--------------------------
 	function
@@ -32,96 +21,32 @@ using namespace std;
 //DDE Callback
 HDDEDATA CALLBACK DDECallback(UINT uType, UINT uFmt, HCONV hcconv, HSZ hszTpc1, HSZ hszTpc2,
         HDDEDATA hdata, DWORD dwData1, DWORD dwData2)
-//
-//HDDEDATA CALLBACK DDECallback(WORD wType, WORD wFmt, HCONV hConv, HSZ hsz1, HSZ hsz2, HDDEDATA hData, DWORD lData1, DWORD lData2)
 {
 	return (HDDEDATA)0;
 }
 
-HCONV	DDE_Connect(DWORD iDDEID, const char* iDDE_ServerName) {
-	HSZ hszService=DdeCreateStringHandle(iDDEID, iDDE_ServerName, CODEPAGE);
-	HSZ hszTopic = DdeCreateStringHandle(iDDEID, "WWW_GetWindowInfo", CODEPAGE);
-	HCONV hConv = DdeConnect(iDDEID, hszService, hszTopic, NULL);
-	DdeFreeStringHandle(iDDEID, hszTopic);
-	DdeFreeStringHandle(iDDEID, hszService);
-	return	hConv;
-}
-
 //============================================================================
 
-//最後にアクティブだったブラウザの情報の取得
-BOOL DDE_GetActiveBrowseInfo(char *RetInfo, int RetInfoLen)
+CBrowserInfo::CBrowserInfo()
 {
-	HSZ hszParam;
-	HCONV hConv;
-	HDDEDATA hDDEData;
-	DWORD m_dwDDEID = 0;
+	m_first = true;
+	m_search_num = 0;
+	m_server_num = -1;
 
-	//DDEの初期化
-	if(DdeInitialize(&m_dwDDEID, 
-		//(PFNCALLBACK)MakeProcInstance((FARPROC)DDECallback,	//AfxGetInstanceHandle()),
-		DDECallback,
-		CBF_SKIP_ALLNOTIFICATIONS | APPCMD_CLIENTONLY, 
-		0L) != DMLERR_NO_ERROR){
-		//MessageBox(NULL, "DDEの初期化に失敗しました。","ブラウザ情報の取得", MB_ICONWARNING | MB_OK);
-		return FALSE;
-	}
+	m_dwDDEID = 0;
+	::DdeInitialize(&m_dwDDEID, DDECallback, CBF_SKIP_ALLNOTIFICATIONS | APPCMD_CLIENTONLY, 0L);
 
+	m_hszTopic = ::DdeCreateStringHandle(m_dwDDEID,"WWW_GetWindowInfo", CODEPAGE);
+	m_hszListWindows = ::DdeCreateStringHandle(m_dwDDEID,"WWW_ListWindows", CODEPAGE);
+}
 
-	static	bool	first = true;
-	static const char*	DDE_ServerNames[] = 
-		{"IEXPLORE", "Opera", "Firefox", "NETSCAPE", "Mozilla", "Netscape6", "Netscape Browser", 
-		"MBROWSER", "SLEIPNIR", "MDIBROWSER", "TaBrowser", "Donut", "fub", "Cuam" };
-	const int max = sizeof(DDE_ServerNames)/sizeof(DDE_ServerNames[0]);
-	static	int	server_num=-1;
-	static	int	search_num=0;
+CBrowserInfo::~CBrowserInfo()
+{
+	::DdeFreeStringHandle(m_dwDDEID, m_hszTopic);
+	::DdeFreeStringHandle(m_dwDDEID, m_hszListWindows);
 
-	if ( first ) {
-		first = false;
-		// 初回
-		for (server_num=0 ; server_num<max ; ++server_num)
-			if ( (hConv=DDE_Connect(m_dwDDEID, DDE_ServerNames[server_num])) != 0 )
-				break;
-	}
-	else if ( server_num==-1 ) {
-		if ( (hConv=DDE_Connect(m_dwDDEID, DDE_ServerNames[search_num])) != 0 )
-			server_num = search_num;
-		else
-			if ( ++search_num >= max )
-				search_num = 0;
-	}
-	else {
-		hConv=DDE_Connect(m_dwDDEID, DDE_ServerNames[search_num]);
-	}
-
-	if ( hConv==0 ) {
-		server_num = -1;
-		DdeUninitialize(m_dwDDEID);
-		return FALSE;
-	} 
-	
-	// 0xFFFFFFFF は最後にアクティブだったブラウザを指す。
-	// ブラウザのIDを指定するとそのブラウザの情報をもってくる。
-	hszParam = DdeCreateStringHandle(m_dwDDEID, "0xFFFFFFFF", CODEPAGE);
-	//Client Transaction
-	hDDEData = DdeClientTransaction(NULL, 0, hConv, hszParam, CF_TEXT, XTYP_REQUEST, 10000L, NULL);
-	DdeFreeStringHandle(m_dwDDEID, hszParam);
-	if(hDDEData == 0){
-		DdeDisconnect(hConv);
-		DdeUninitialize(m_dwDDEID);
-		return FALSE;
-	}
-	
-	//Get Data
-	DdeGetData(hDDEData, (LPBYTE)RetInfo, RetInfoLen, 0);
-	/*string	str(RetInfo, RetInfoLen);
-	::OutputDebugString(str.c_str());
-	::OutputDebugString("\n");*/
-
-	DdeFreeDataHandle(hDDEData);
-	DdeDisconnect(hConv);
-	DdeUninitialize(m_dwDDEID);
-	return TRUE;
+	::DdeUninitialize(m_dwDDEID);
+	m_dwDDEID = 0;
 }
 
 //============================================================================
@@ -129,11 +54,12 @@ BOOL DDE_GetActiveBrowseInfo(char *RetInfo, int RetInfoLen)
 #include	<mbctype.h>
 //DDEでブラウザから取得した情報を URL , Title , Frame に展開する
 //	"http://hoge.com/","hoge","Frame"
-void GetDDEStr(char *buf, string &URL, string &Title)
+static void __fastcall GetDDEStr(char *buf, std::string &URL, std::string &Title)
 {
 	char *p = (char *)buf;
 
 	URL.erase();
+	Title.erase();
 
 	//URL
 	if(*p == '\"'){
@@ -163,22 +89,158 @@ void GetDDEStr(char *buf, string &URL, string &Title)
 	}
 }
 
+//============================================================================
+
+static const char*	DDE_ServerNames[] = 
+	{"IEXPLORE", "Opera", "Firefox", "NETSCAPE", "Mozilla", "Netscape6", "Netscape Browser", 
+	"MBROWSER", "SLEIPNIR", "MDIBROWSER", "TaBrowser", "Donut", "fub", "fub.net", "Cuam" };
+static const int max_svr = sizeof(DDE_ServerNames)/sizeof(DDE_ServerNames[0]);
+
+bool CBrowserInfo::Get(std::string& URL, std::string& Title)
+{
+	if ( m_dwDDEID == 0 ) { return false; }
+
+	std::vector< str_pair > URLV;
+
+	if ( m_first ) {
+		m_first = false;
+		// 初回
+		for (m_server_num=0 ; m_server_num<max_svr ; ++m_server_num) {
+			if ( GetMultiImpl(DDE_ServerNames[m_server_num],URLV,true) ) {
+				break;
+			}
+		}
+	}
+	else if ( m_server_num < 0 ) {
+		// チェックするリストがでかくなってきたので3つずつぐらいチェック
+		for ( int dummycount = 0 ; dummycount < 3 ; ++dummycount ) {
+			if ( GetMultiImpl(DDE_ServerNames[m_search_num],URLV,true) ) {
+				m_server_num = m_search_num;
+				++m_search_num;
+				break;
+			}
+			else {
+				if ( ++m_search_num >= max_svr ) {
+					m_search_num = 0;
+				}
+			}
+		}
+	}
+	else {
+		GetMultiImpl(DDE_ServerNames[m_server_num],URLV,true);
+	}
+
+	if ( URLV.size() ) {
+		URL = URLV[0].first;
+		Title = URLV[0].second;
+		return true;
+	}
+	m_server_num = -1;
+	return false;
+}
 
 //============================================================================
 
-bool	get_browser_info(string& URL, string& Title) {
-	string Frame;
-	char InfoStr[MAXSIZE];
+struct str_pair_less {
+  bool operator()(const str_pair& x, const str_pair& y) const {
+    return x.first < y.first;
+  }
+};
 
-	if(DDE_GetActiveBrowseInfo(InfoStr, MAXSIZE-2) == FALSE) {
-		//MessageBox(NULL, "ブラウザが起動されていないか、ブラウザ情報の取得に失敗しました。",
-		//	"ブラウザ情報の取得", MB_ICONWARNING | MB_OK);
-		return	false;
+struct str_pair_equal {
+  bool operator()(const str_pair& x, const str_pair& y) const {
+    return x.first == y.first;
+  }
+};
+
+bool CBrowserInfo::GetMulti(std::vector< str_pair > & URLV )
+{
+	if ( m_dwDDEID == 0 ) { return false; }
+
+	URLV.clear();
+
+	for ( int i = 0 ; i < max_svr ; ++i ) {
+		GetMultiImpl(DDE_ServerNames[i],URLV,false);
 	}
-	//取得した文字列を展開する。
-	GetDDEStr(InfoStr, URL, Title);
 
-	return	true;
+	std::sort(URLV.begin(), URLV.end(), str_pair_less());
+	URLV.erase(std::unique(URLV.begin(), URLV.end(), str_pair_equal()), URLV.end());
+
+	return URLV.size() != 0;
 }
 
+//============================================================================
+
+bool CBrowserInfo::GetMultiImpl(const char *iDDE_ServerName,
+	std::vector< str_pair > & URLV,
+	bool isActiveOnly)
+{
+	if ( m_dwDDEID == 0 ) { return false; }
+
+	HSZ hszService = ::DdeCreateStringHandle(m_dwDDEID, iDDE_ServerName, CODEPAGE);
+
+	DWORD listWindows[100] = {0};
+	if ( ! isActiveOnly ) {
+		HCONV hConv = ::DdeConnect(m_dwDDEID, hszService, m_hszListWindows, NULL);
+		if ( hConv ) {
+			HDDEDATA hDDEData = ::DdeClientTransaction(NULL, 0, hConv, m_hszListWindows, CF_TEXT, XTYP_REQUEST, 10000L, NULL);
+			if ( hDDEData ) {
+				::DdeGetData(hDDEData, (LPBYTE)listWindows, sizeof(listWindows)-1, 0);
+				listWindows[99] = 0; //最悪の場合の終端設定
+				::DdeFreeDataHandle(hDDEData);
+			}
+			::DdeDisconnect(hConv);
+		}
+	}
+	if ( ! listWindows[0] ) {
+		listWindows[0] = 0xffffffffU;
+		listWindows[1] = 0;
+	}
+
+	//接続
+	HCONV hConv = ::DdeConnect(m_dwDDEID, hszService, m_hszTopic, NULL);
+	::DdeFreeStringHandle(m_dwDDEID, hszService);
+
+	if ( ! hConv ) {
+		return false;
+	}
+
+	std::string URL;
+	std::string Title;
+
+	HSZ hszParam;
+	UINT count = 0;
+	char num[32];
+
+	while ( listWindows[count] ) {
+		sprintf(num,"%#x",listWindows[count]);
+		hszParam = ::DdeCreateStringHandle(m_dwDDEID, num, CODEPAGE);
+
+		//Client Transaction
+		HDDEDATA hDDEData = ::DdeClientTransaction(NULL, 0, hConv, hszParam, CF_TEXT, XTYP_REQUEST, 10000L, NULL);
+
+		if ( hDDEData ) {
+			//Get Data
+			DWORD len = ::DdeGetData(hDDEData, NULL, 0, 0) + 1;
+			if ( len >= m_infoStrBuf.size() ) {
+				m_infoStrBuf.resize(len);
+			}
+			
+			len = ::DdeGetData(hDDEData, (LPBYTE)&m_infoStrBuf[0], len-1, 0);
+			m_infoStrBuf[len] = 0;
+
+			::DdeFreeDataHandle(hDDEData);
+
+			GetDDEStr(&m_infoStrBuf[0], URL, Title);
+			URLV.push_back(str_pair(URL,Title));
+		}
+
+		::DdeFreeStringHandle(m_dwDDEID, hszParam);
+		++count;
+	}
+
+	::DdeDisconnect(hConv);
+
+	return true;
+}
 

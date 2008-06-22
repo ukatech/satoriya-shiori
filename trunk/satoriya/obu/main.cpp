@@ -4,23 +4,30 @@
 #include <windows.h>
 using namespace std;
 
-bool	get_browser_info(string&,string&);
+#pragma warning( disable : 4786 ) //「デバッグ情報内での識別子切捨て」
+#pragma warning( disable : 4503 ) //「装飾された名前の長さが限界を越えました。名前は切り捨てられます。」
+
+#include "get_browser_info.h"
 
 int main()
 {
+	CBrowserInfo *pB = new CBrowserInfo;
+
 	while (true) {
-		string url, title;
-		if ( !get_browser_info(url, title) )
-		{
+		vector< str_pair >  url;
+		if ( !pB->GetMulti(url) ) {
 			cout << "(Error)" << endl;
 		}
-		else
-		{
-			//cout << url << "," << title << endl;
-			cout << url << endl;
+		else {
+			for ( int i = 0 ; i < url.size() ; ++i ) {
+				cout << url[i].first << " | " << url[i].second << endl;
+			}
 		}
-		Sleep(1000);
+		cout << "---------------" << endl;
+		Sleep(2000);
 	}
+
+	delete pB;
 
 	return 0;
 }
