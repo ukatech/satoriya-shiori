@@ -124,6 +124,10 @@ SOURCE=..\_\dsstp.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\get_browser_info.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\saori.h
 # End Source File
 # Begin Source File
