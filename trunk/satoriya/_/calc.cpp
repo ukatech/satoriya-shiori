@@ -284,44 +284,53 @@ bool calc(const char* iExpression, string& oResult) {
 }
 
 
-bool calc(string& ioString) {
-	erase(ioString, "Å@");
-	erase(ioString, " ");
-	erase(ioString, "\t");
+bool calc(string& ioString)
+{
+	string iString = ioString;
+
+	erase(iString, "Å@");
+	erase(iString, " ");
+	erase(iString, "\t");
 
 	// ∆Æ€ÇÕíPëÃÇ≈ââéZéqÇ…ÇÕÇµÇΩÇ≠Ç»Ç¢Å[
-	replace(ioString, "ÅÅÅ`", "=~");
-	replace(ioString, "ÅIÅ`", "!~");
+	replace(iString, "ÅÅÅ`", "=~");
+	replace(iString, "ÅIÅ`", "!~");
 
-	replace(ioString, "Å{", "+");
-	replace(ioString, "Å|", "-");
-	replace(ioString, "Åñ", "*");
-	replace(ioString, "Å~", "*");
-	replace(ioString, "Å^", "/");
-	replace(ioString, "ÅÄ", "/");
-	replace(ioString, "Åì", "%");
-	replace(ioString, "ÅO", "^");
-	replace(ioString, "ÅÉ", "<");
-	replace(ioString, "ÅÑ", ">");
-	replace(ioString, "ÅÅ", "=");
-	replace(ioString, "ÅI", "!");
-	replace(ioString, "Åï", "&");
-	replace(ioString, "Åb", "|");
-	replace(ioString, "Åi", "(");
-	replace(ioString, "Åj", ")");
-	replace(ioString, "ÇO", "0");
-	replace(ioString, "ÇP", "1");
-	replace(ioString, "ÇQ", "2");
-	replace(ioString, "ÇR", "3");
-	replace(ioString, "ÇS", "4");
-	replace(ioString, "ÇT", "5");
-	replace(ioString, "ÇU", "6");
-	replace(ioString, "ÇV", "7");
-	replace(ioString, "ÇW", "8");
-	replace(ioString, "ÇX", "9");
+	replace(iString, "Å{", "+");
+	replace(iString, "Å|", "-");
+	replace(iString, "Åñ", "*");
+	replace(iString, "Å~", "*");
+	replace(iString, "Å^", "/");
+	replace(iString, "ÅÄ", "/");
+	replace(iString, "Åì", "%");
+	replace(iString, "ÅO", "^");
+	replace(iString, "ÅÉ", "<");
+	replace(iString, "ÅÑ", ">");
+	replace(iString, "ÅÅ", "=");
+	replace(iString, "ÅI", "!");
+	replace(iString, "Åï", "&");
+	replace(iString, "Åb", "|");
+	replace(iString, "Åi", "(");
+	replace(iString, "Åj", ")");
+	replace(iString, "ÇO", "0");
+	replace(iString, "ÇP", "1");
+	replace(iString, "ÇQ", "2");
+	replace(iString, "ÇR", "3");
+	replace(iString, "ÇS", "4");
+	replace(iString, "ÇT", "5");
+	replace(iString, "ÇU", "6");
+	replace(iString, "ÇV", "7");
+	replace(iString, "ÇW", "8");
+	replace(iString, "ÇX", "9");
+
 	string	theResult;
-	if ( !calc(ioString.c_str(), theResult) )
+	if ( !calc(iString.c_str(), theResult) ) {
 		return	false;
-	ioString = theResult;
+	}
+
+	//ëSäpÅEîºäpÇ∆Ç©ÇÇﬁÇ‚Ç›Ç…ïœä∑ÇµÇ»Ç¢ÇÊÇ§Ç…ãCÇÇ¬ÇØÇÈ
+	if ( theResult != iString ) {
+		ioString = theResult;
+	}
 	return	true;
 }
