@@ -96,11 +96,9 @@ string	Satori::inc_call(
 
 	if ( iCallName=="set" ) {
 		if ( iArgv.size()==2 ) {
-			string	result;
-			string  key=zen2han(iArgv[0]);
-			string  value=iArgv[1];
+			string	result, key=iArgv[0], value=iArgv[1];
 
-			if ( aredigits(key) ) {
+			if ( aredigits(zen2han(key)) ) {
 				sender << "＄" << key << "　数字のみの変数名は扱えません." << endl;
 				erase_var(key);	// 存在抹消
 			}
@@ -522,7 +520,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	const Word* w;
 	string hankaku=zen2han(iName);
 	bool isSysValue;
-	string *pstr = GetValue(hankaku,isSysValue);
+	string *pstr = GetValue(iName,isSysValue);
 
 	if ( _pre_called_ ) {
 		// 前段階ですでに対応カッコ展開済み
@@ -584,13 +582,13 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 			oResult = "※　乱数の指定が変です　※";
 		}
 		else {
-			string v0 = zen2han(vec[0]);
-			int	bottom = stoi(v0);
+			string vec0 = zen2han(vec[0]);
+			int	bottom = stoi(vec0);
 			int	top = stoi(zen2han(vec[1]));
 			if ( bottom > top )
 				Swap(&bottom, &top);
 
-			if ( v0 != vec[0] ) { //全角
+			if ( vec0 != vec[0] ) {
 				if ( bottom == top )
 					oResult = int2zen(top);
 				else 
@@ -598,9 +596,9 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 			}
 			else {
 				if ( bottom == top )
-					oResult = int2han(top);
+					oResult = itos(top);
 				else 
-					oResult = int2han( random(top-bottom+1) + bottom );
+					oResult = itos( random(top-bottom+1) + bottom );
 			}
 		}
 	}
@@ -800,7 +798,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 
 
 	else if ( compare_head(iName, "変数「") && compare_tail(iName, "」の存在") ) {
-		string	str = zen2han(string(iName, 6, iName.length()-6-8));
+		string	str(iName, 6, iName.length()-6-8);
 		bool isSysValue;
 		string *v = GetValue(str,isSysValue); //こっちはシステム変数かどうかどっちでもいい
 		oResult = v ? "1" : "0";

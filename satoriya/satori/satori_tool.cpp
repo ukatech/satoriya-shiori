@@ -155,12 +155,6 @@ string	zen2han(string str)
 	return	str;
 }
 
-string int2han(int i) {
-	char tmp[32];
-	sprintf(tmp,"%d",i);
-	return tmp;
-}
-
 string int2zen(int i) {
 	static const char*	ary[] = {"‚O","‚P","‚Q","‚R","‚S","‚T","‚U","‚V","‚W","‚X"};
 	

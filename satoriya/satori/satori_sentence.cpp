@@ -346,13 +346,13 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 			}
 
 			string	key(p, v-p);
-			key = zen2han(UnKakko(key.c_str(),false,true));
+			key = UnKakko(key.c_str(),false,true);
 
 			if ( key=="" ) {
 				result += ""; // ‚»‚Ì‚Ü‚Ü•\¦
 				speaked_speaker.insert(speaker);
 			}
-			else if ( aredigits(key) ) {
+			else if ( aredigits(zen2han(key)) ) {
 				sender << "" << key << "@”š‚Ì‚İ‚Ì•Ï”–¼‚Íˆµ‚¦‚Ü‚¹‚ñ." << endl;
 				erase_var(key);	// ‘¶İ–•Á
 			}
