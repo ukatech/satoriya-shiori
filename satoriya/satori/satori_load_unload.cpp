@@ -274,13 +274,13 @@ bool	Satori::load(const string& iBaseFolder)
 	reload_flag = false;
 
 	if ( variables.find("ゴースト起動時間累計ミリ秒") != variables.end() ) {
-		tick_count_total = stoi(variables["ゴースト起動時間累計ミリ秒"]);
+		tick_count_total = zen2int(variables["ゴースト起動時間累計ミリ秒"]);
 	}
 	else {
-		tick_count_total = stoi(variables["ゴースト起動時間累計(ms)"]);
+		tick_count_total = zen2int(variables["ゴースト起動時間累計(ms)"]);
 		variables.erase("ゴースト起動時間累計(ms)");
 	}
-	variables["起動回数"] = itos( stoi(variables["起動回数"])+1 );
+	variables["起動回数"] = itos( zen2int(variables["起動回数"])+1 );
 
 	// 「単語の追加」で登録された単語を覚えておく
 	const map< string, Family<Word> >& m = words.compatible();
@@ -366,7 +366,6 @@ bool	Satori::Save(bool isOnUnload) {
 
 	out << ENCODE(line) << endl;
 	for (strmap::const_iterator it=variables.begin() ; it!=variables.end() ; ++it) {
-		string	zen2han(string str);
 		string	str = zen2han(it->first);
 		if ( str[0]=='S' && aredigits(str.c_str()+1) )
 			continue;

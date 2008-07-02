@@ -395,7 +395,12 @@ public:
 
 //---------------------------------------------------------------------------
 string	int2zen(int i);
-string	zen2han(string str);
+int     zen2int(const string &s);
+int     zen2int(const char *str);
+
+string	zen2han(const string &s);
+string  zen2han(const char *str);
+
 bool	calc(string&);
 void	diet_script(string&);
 
