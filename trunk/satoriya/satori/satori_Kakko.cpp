@@ -62,7 +62,7 @@ string	Satori::inc_call(
 	if ( iCallName == "バイト値" ) {
 		if ( iArgv.size() ) {
 			char bytes[2] = {0,0};
-			bytes[0] = stoi(iArgv[0]);
+			bytes[0] = zen2int(iArgv[0]);
 			return bytes;
 		}
 		else {
@@ -124,16 +124,17 @@ string	Satori::inc_call(
 	
 	if ( iCallName=="loop" ) {
 		int	init=1, max=0, step=1, arg_size=iArgv.size();
-		if ( arg_size==2 )
-			max=stoi(iArgv[1]);
+		if ( arg_size==2 ) {
+			max=zen2int(iArgv[1]);
+		}
 		else if ( arg_size==3 ) {
-			init=stoi(iArgv[1]);
-			max=stoi(iArgv[2]);
+			init=zen2int(iArgv[1]);
+			max=zen2int(iArgv[2]);
 		}
 		else if ( arg_size==4 ) {
-			init=stoi(iArgv[1]);
-			max=stoi(iArgv[2]);
-			step=stoi(iArgv[3]);
+			init=zen2int(iArgv[1]);
+			max=zen2int(iArgv[2]);
+			step=zen2int(iArgv[3]);
 		}
 		else
 			return	"";
@@ -180,7 +181,7 @@ string	Satori::inc_call(
 	
 	if ( iCallName=="remember" ) {
 		if ( iArgv.size() == 1 ) {
-			int	n = stoi(iArgv[0]);
+			int	n = zen2int(iArgv[0]);
 			if ( mResponseHistory.size() > n ) {
 				return	mResponseHistory[n];
 			}
@@ -584,7 +585,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		else {
 			string vec0 = zen2han(vec[0]);
 			int	bottom = stoi(vec0);
-			int	top = stoi(zen2han(vec[1]));
+			int	top = zen2int(vec[1]);
 			if ( bottom > top )
 				Swap(&bottom, &top);
 
@@ -725,19 +726,19 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	else if ( iName == "単純累計秒" ) { oResult=int2zen( (::GetTickCount() - tick_count_at_load + tick_count_total)/1000 ); }
 	else if ( iName == "単純累計分" ) { oResult=int2zen( (::GetTickCount() - tick_count_at_load + tick_count_total)/1000/60 ); }
 #endif
-	else if ( iName == "time_t" ) { time_t tm; time(&tm); oResult=itos(tm); }
-	else if ( iName == "最終トークからの経過秒" ) { oResult=itos(second_from_last_talk); }
+	else if ( iName == "time_t" ) { time_t tm; time(&tm); oResult=int2zen(tm); }
+	else if ( iName == "最終トークからの経過秒" ) { oResult=int2zen(second_from_last_talk); }
 
 	else if ( compare_head(iName, "サーフェス") && aredigits(iName.c_str()+10) ) {
-		oResult=itos(cur_surface[ atoi(iName.c_str()+10) ]);
+		oResult=itos(cur_surface[ zen2int(iName.c_str()+10) ]);
 	}
 	else if ( compare_head(iName, "前回終了時サーフェス") && iName.length() > 20 ) {
-		oResult=itos(last_talk_exiting_surface[ stoi(zen2han(iName.c_str()+20)) ]);
+		oResult=itos(last_talk_exiting_surface[ zen2int(iName.c_str()+20) ]);
 	}
 
 #ifndef POSIX
 	else if ( compare_head(iName, "ウィンドウハンドル") && iName.length() > 18 ) {
-		int character = stoi(zen2han(iName.c_str()+18));
+		int character = zen2int(iName.c_str()+18);
 		map<int,HWND>::iterator found = characters_hwnd.find(character);
 		if ( found != characters_hwnd.end() ) {
 			oResult = uitos((unsigned int)characters_hwnd[character]);
@@ -751,7 +752,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	}
 	else if ( iName == "起動しているゴースト数" ) { 
 		updateGhostsInfo();	// ゴースト情報を更新
-		oResult = itos(ghosts_info.size()); 
+		oResult = int2zen(ghosts_info.size()); 
 	}
 	else if ( compare_head(iName, "isempty") && iName.size()>=8 ) {
 		const char* p = iName.c_str()+7;
@@ -792,7 +793,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 				count += f->size_of_element();
 			}
 
-			oResult = itos(count);
+			oResult = int2zen(count);
 		}
 	}
 
@@ -849,15 +850,15 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	else if ( compare_head(iName, "count") )
 	{
 		string	name(iName.c_str()+5);
-		if ( name=="Words" ) { oResult = itos( words.size_of_family() ); }
-		else if ( name=="Variable" ) { oResult = itos( variables.size() ); }
-		else if ( name=="Anchor" ) { oResult = itos( anchors.size() ); }
-		else if ( name=="Talk" ) { oResult = itos( talks.size_of_element() ); }
-		else if ( name=="Word" ) { oResult = itos( words.size_of_element() ); }
+		if ( name=="Words" ) { oResult = int2zen( words.size_of_family() ); }
+		else if ( name=="Variable" ) { oResult = int2zen( variables.size() ); }
+		else if ( name=="Anchor" ) { oResult = int2zen( anchors.size() ); }
+		else if ( name=="Talk" ) { oResult = int2zen( talks.size_of_element() ); }
+		else if ( name=="Word" ) { oResult = int2zen( words.size_of_element() ); }
 		else if ( name=="NoNameTalk" )
 		{
 			Family<Talk>* f = talks.get_family("");
-			oResult = itos( ( f==0 ) ? 0 : f->size_of_element() );
+			oResult = int2zen( ( f==0 ) ? 0 : f->size_of_element() );
 		}
 		else if ( name=="EventTalk" )
 		{
@@ -865,7 +866,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 			for ( map< string, Family<Talk> >::const_iterator it = talks.compatible().begin() ; it != talks.compatible().end() ; ++it )
 				if ( compare_head(it->first, "On") )
 					n += it->second.size_of_element();
-			oResult = itos(n);
+			oResult = int2zen(n);
 		}
 		else if ( name=="OtherTalk" )
 		{
@@ -873,7 +874,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 			for ( map< string, Family<Talk> >::const_iterator it = talks.compatible().begin() ; it != talks.compatible().end() ; ++it )
 				if ( !compare_head(it->first, "On") && !it->first.empty() )
 					n += it->second.size_of_element();
-			oResult = itos(n);
+			oResult = int2zen(n);
 		}
 		else if ( name=="Line" )
 		{
@@ -891,7 +892,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 			{
 				n += it->second.size_of_element();
 			}
-			oResult = itos(n);
+			oResult = int2zen(n);
 		}
 		else if ( name=="Parenthesis" )
 		{
@@ -917,7 +918,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 					n += count(**el_it, "（");
 				}
 			}
-			oResult = itos(n);
+			oResult = int2zen(n);
 		}
 	}
 	else if ( iName=="次のトーク" ) {
@@ -926,10 +927,11 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 			oResult = it->second;
 	}
 	else if ( compare_head(iName,"次から") && compare_tail(iName,"回目のトーク") ) {
-		int	count = stoi( zen2han( string(iName.c_str()+6, iName.length()-6-12) ) );
+		int	count = zen2int( string(iName.c_str()+6, iName.length()-6-12) );
 		map<int,string>::iterator it = reserved_talk.find(count);
-		if ( it != reserved_talk.end() ) 
+		if ( it != reserved_talk.end() ) {
 			oResult = it->second;
+		}
 	}
 	else if ( compare_head(iName, "トーク「") && compare_tail(iName, "」の予\x96\xf1有無") ) { // 「約」には\が含まれる。
 		string	str(iName, 8, iName.length()-8-12);
@@ -942,7 +944,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		}
 	}
 	else if ( iName == "予\x96\xf1トーク数" ) { // 「約」には\が含まれる。
-		oResult = itos( reserved_talk.size() );
+		oResult = int2zen( reserved_talk.size() );
 	}
 	else if ( iName == "イベント名" ) { oResult=mRequestID; }
 	else if ( iName == "直前の選択肢名" ) { oResult=last_choice_name; }

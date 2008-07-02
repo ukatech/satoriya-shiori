@@ -141,8 +141,15 @@ int	CompareTime(LPCSTR szL, LPCSTR szR) {
 #endif
 #endif
 
-string	zen2han(string str)
+string zen2han(const string &s)
 {
+	return zen2han(s.c_str()); 
+}
+
+string	zen2han(const char *s)
+{
+	string str(s);
+
 	static const char	before[] = "０１２３４５６７８９ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ－＋";
 	static const char	after[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-+";
 	char	buf1[3]="\0\0", buf2[2]="\0";
@@ -152,6 +159,7 @@ string	zen2han(string str)
 		buf2[0]=after[n];
 		replace(str, buf1, buf2);
 	}
+
 	return	str;
 }
 
@@ -172,6 +180,16 @@ string int2zen(int i) {
 		zen += ary[*p-'0'];
 	}
 	return	zen;
+}
+
+int zen2int(const string &s)
+{
+	return zen2int(s.c_str());
+}
+
+int zen2int(const char *str)
+{
+	return stoi(zen2han(str));
 }
 
 
@@ -361,7 +379,7 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 	// mapにしようよ。
 	
 	if ( key == "喋り間隔" ) {
-		talk_interval = stoi( zen2han(value) );
+		talk_interval = zen2int(value);
 		if ( talk_interval<3 ) talk_interval=0; // 3未満は喋らない
 		
 		// 喋りカウント初期化
@@ -372,7 +390,7 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 	}
 	
 	if ( key == "喋り間隔誤差" ) {
-		talk_interval_random = stoi( zen2han(value) );
+		talk_interval_random = zen2int(value);
 		if ( talk_interval_random>100 ) talk_interval_random=100;
 		if ( talk_interval_random<0 ) talk_interval_random=0;
 		
@@ -400,13 +418,13 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 	}
 
 	if ( key == "呼び出し回数制限" ) {
-		m_nest_limit = stoi( zen2han(value) );
+		m_nest_limit = zen2int(value);
 		if ( m_nest_limit < 0 ) { m_nest_limit = 0; }
 		return true;
 	}
 
 	if ( key == "ジャンプ回数制限" ) {
-		m_jump_limit = stoi( zen2han(value) );
+		m_jump_limit = zen2int(value);
 		if ( m_jump_limit < 0 ) { m_jump_limit = 0; }
 		return true;
 	}
@@ -456,10 +474,10 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 	
 	if ( compare_head(key,  "サーフェス加算値") && aredigits(key.c_str() + const_strlen("サーフェス加算値")) ) {
 		int n = atoi(key.c_str() + strlen("サーフェス加算値"));
-		surface_add_value[n]=stoi( zen2han(value) );
+		surface_add_value[n]= zen2int(value);
 		
 		variables[string()+"デフォルトサーフェス"+itos(n)] = value;
-		next_default_surface[n]=stoi( zen2han(value) );
+		next_default_surface[n] = zen2int(value);
 		if ( !is_speaked_anybody() )
 			default_surface[n]=next_default_surface[n];
 		return true;
@@ -467,7 +485,7 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 
 	if ( compare_head(key,  "デフォルトサーフェス") && aredigits(key.c_str() + const_strlen("デフォルトサーフェス")) ) {
 		int n = atoi(key.c_str() + strlen("デフォルトサーフェス"));
-		next_default_surface[n]=stoi( zen2han(value) );
+		next_default_surface[n]= zen2int(value);
 		if ( !is_speaked_anybody() )
 			default_surface[n]=next_default_surface[n];
 		return true;
@@ -486,12 +504,12 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 	}
 	
 	if ( key == "なでられ持続秒数") {
-		nade_valid_time_initializer = stoi( zen2han(value) );
+		nade_valid_time_initializer = zen2int(value);
 		return true;
 	}
 
 	if ( key == "なでられ反応回数") {
-		nade_sensitivity = stoi( zen2han(value) );
+		nade_sensitivity = zen2int(value);
 		return true;
 	}
 
@@ -516,9 +534,9 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 	}
 	
 	if ( key == "自動挿入ウェイトの倍率" ) {
-		rate_of_auto_insert_wait=stoi( zen2han(value) );
+		rate_of_auto_insert_wait= zen2int(value);
 		rate_of_auto_insert_wait = min(1000, max(0, rate_of_auto_insert_wait));
-		variables["自動挿入ウェイトの倍率"] = itos(rate_of_auto_insert_wait);
+		variables["自動挿入ウェイトの倍率"] = int2zen(rate_of_auto_insert_wait);
 		return true;
 	}
 	
@@ -574,7 +592,7 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 	
 	if ( compare_head(key,"次から") && compare_tail(key,"回目のトーク") ) {
 		variables.erase(key);
-		int	count = stoi( zen2han( string(key.c_str()+6, key.length()-6-12) ) );
+		int	count = zen2int( string(key.c_str()+6, key.length()-6-12) );
 		if ( count<=0 ) {
 			sender << "トーク予\x96\xf1、設定値がヘンです。" << endl;
 		}
@@ -624,7 +642,7 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 	}
 	
 	if ( key == "自動セーブ間隔" ) {
-		mAutoSaveInterval = stoi(zen2han(value));
+		mAutoSaveInterval = zen2int(value);
 		mAutoSaveCurrentCount = mAutoSaveInterval;
 		if ( mAutoSaveInterval > 0 )
 			sender << ""  << itos(mAutoSaveInterval) << "秒間隔で自動セーブを行います。" << endl;
@@ -656,7 +674,7 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 		// セーブデータ復帰時を考慮
 		}
 		else */{
-		int sec = stoi(zen2han(value));
+		int sec = zen2int(value);
 		if ( sec < 1 ) {
 			variables.erase(key);
 			if ( timer.find(name)!=timer.end() ) {
