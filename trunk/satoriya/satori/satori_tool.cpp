@@ -141,11 +141,6 @@ int	CompareTime(LPCSTR szL, LPCSTR szR) {
 #endif
 #endif
 
-string zen2han(const string &s)
-{
-	return zen2han(s.c_str()); 
-}
-
 string	zen2han(const char *s)
 {
 	string str(s);
@@ -180,11 +175,6 @@ string int2zen(int i) {
 		zen += ary[*p-'0'];
 	}
 	return	zen;
-}
-
-int zen2int(const string &s)
-{
-	return zen2int(s.c_str());
 }
 
 int zen2int(const char *str)
