@@ -15,6 +15,7 @@
 #include	<fstream>
 #include	<cassert>
 #include	<ctime>	// for randomize
+#include      <locale.h>
 
 #include	"../_/Utilities.h"
 #include     "../_/random.h"

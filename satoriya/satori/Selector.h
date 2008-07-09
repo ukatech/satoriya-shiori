@@ -2,6 +2,7 @@
 #include <list>
 #include <exception>
 #include <stdexcept>
+#include <typeinfo.h>
 using namespace std;
 
 #include "OverlapController.h"

@@ -6,6 +6,7 @@
 */
 
 #include	<iostream>
+#include      <stdio.h>
 using namespace std;
 
 #ifndef POSIX

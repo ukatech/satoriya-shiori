@@ -5,6 +5,7 @@
 #include	<commctrl.h>
 #include	<stdarg.h>
 #include	<stdio.h>
+#include	<string>
 
 // ダイアログボックスの基底クラス。
 // 使い方は下の方に。
@@ -57,23 +58,21 @@ public:
 	int		GetPos( LPARAM lParam ) { return ::SendMessage( (HWND)lParam, TBM_GETPOS, 0 ,0 ); }
 	void	SetPos( int id, int pos ) { ::SendMessage( toHWND(id), TBM_SETPOS, (WPARAM)TRUE , (LPARAM)pos ); }
 
-	int		GetTextLength(int id) { return ::SendMessage(toHWND(id), WM_GETTEXTLENGTH, 0, 0); }
-	void	GetText( int id, LPSTR str, int max ) { ::GetDlgItemText( m_hDlg, id, str, max ); }
-	void	SetText( int id, const char* format, ... );
-	void	SetSel( int id, int nStart, int nEnd ) { ::SendDlgItemMessage( m_hDlg, id, EM_SETSEL, (WPARAM)nStart, (LPARAM)nEnd ); }
-	void	SelAll( int id ) { SetSel( id, 0, -1 ); }
-
-#ifdef	_STRING_
-	void	GetText(int id, string& str) {
+	void	GetText(int id, std::string& str) {
 		int	len = GetTextLength(id);
 		char*	buf = new char[len+1];
 		GetText(id, buf, len+1); 
 		str=buf;
 		delete [] buf;
 	}
-	string	GetText(int id) { string str; GetText(id, str); return str; }
-	void	SetText(int id, const string& str) { ::SetDlgItemText(m_hDlg, id, str.c_str()); }
-#endif
+	std::string	GetText(int id) { std::string str; GetText(id, str); return str; }
+	void	SetText(int id, const std::string& str) { ::SetDlgItemText(m_hDlg, id, str.c_str()); }
+
+	int		GetTextLength(int id) { return ::SendMessage(toHWND(id), WM_GETTEXTLENGTH, 0, 0); }
+	void	GetText( int id, LPSTR str, int max ) { ::GetDlgItemText( m_hDlg, id, str, max ); }
+	void	SetText( int id, const char* format, ... );
+	void	SetSel( int id, int nStart, int nEnd ) { ::SendDlgItemMessage( m_hDlg, id, EM_SETSEL, (WPARAM)nStart, (LPARAM)nEnd ); }
+	void	SelAll( int id ) { SetSel( id, 0, -1 ); }
 
 	void	End( int nResult ) { ::EndDialog( m_hDlg, nResult ); }
 
