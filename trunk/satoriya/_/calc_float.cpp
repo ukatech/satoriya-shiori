@@ -1,6 +1,7 @@
 #include	"stltool.h"
 #include	"simple_stack.h"
 
+#include <ctype.h>
 
 
 typedef	double	VALUE_TYPE;

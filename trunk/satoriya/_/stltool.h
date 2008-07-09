@@ -23,6 +23,7 @@
 #include	<fstream>
 #include	<deque>
 #include	<cassert>
+#include    <stdio.h>
 using namespace std;
 
 
@@ -483,10 +484,19 @@ T	round(T num, const int figure=0) {
 	return	num;
 }
 
+string	int2zen(int i);
 
+int     zen2int(const char *str);
+inline int zen2int(const string &s)
+{
+	return zen2int(s.c_str());
+}
 
-
-
+string  zen2han(const char *str);
+inline string zen2han(const string &s)
+{
+	return zen2han(s.c_str()); 
+}
 
 // ディレクトリ区切り
 #ifdef POSIX

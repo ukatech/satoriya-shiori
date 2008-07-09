@@ -141,48 +141,6 @@ int	CompareTime(LPCSTR szL, LPCSTR szR) {
 #endif
 #endif
 
-string	zen2han(const char *s)
-{
-	string str(s);
-
-	static const char	before[] = "‚O‚P‚Q‚R‚S‚T‚U‚V‚W‚X‚`‚a‚b‚c‚d‚e‚f‚g‚h‚i‚j‚k‚l‚m‚n‚o‚p‚q‚r‚s‚t‚u‚v‚w‚x‚y‚‚‚‚ƒ‚„‚…‚†‚‡‚ˆ‚‰‚Š‚‹‚Œ‚‚‚‚‚‘‚’‚“‚”‚•‚–‚—‚˜‚™‚š|{";
-	static const char	after[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-+";
-	char	buf1[3]="\0\0", buf2[2]="\0";
-	for (int n=0 ; n<sizeof(after) ; ++n) {
-		buf1[0]=before[n*2];
-		buf1[1]=before[n*2+1];
-		buf2[0]=after[n];
-		replace(str, buf1, buf2);
-	}
-
-	return	str;
-}
-
-string int2zen(int i) {
-	static const char*	ary[] = {"‚O","‚P","‚Q","‚R","‚S","‚T","‚U","‚V","‚W","‚X"};
-	
-	string	zen;
-	if ( i<0 ) {
-		zen += "|";
-		i = -i; // INT_MIN‚Ì‚Í•„†‚ª”½“]‚µ‚È‚¢
-	}
-	string	han=itos(i);
-	const char* p=han.c_str();
-	if ( i==INT_MIN )
-		++p;
-	for (  ; *p != '\0' ; ++p ) {
-		assert(*p>='0' && *p<='9');
-		zen += ary[*p-'0'];
-	}
-	return	zen;
-}
-
-int zen2int(const char *str)
-{
-	return stoi(zen2han(str));
-}
-
-
 string	Satori::GetWord(const string& name) {
 	return "‚¢‚Ê";
 }

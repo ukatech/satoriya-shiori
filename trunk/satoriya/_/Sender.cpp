@@ -1,12 +1,13 @@
 #include	"Sender.h"
 #ifdef POSIX
 #  include      "Utilities.h"
-#  include      <stdio.h>
-#  include      <stdarg.h>
 #else
 #  include      "Utilities.h"
 //#  include	<mbctype.h>		// for _ismbblead()
 #endif
+#include      <locale.h>
+#include      <stdio.h>
+#include      <stdarg.h>
 
 //////////DEBUG/////////////////////////
 #ifdef _WINDOWS
