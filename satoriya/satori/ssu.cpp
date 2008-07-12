@@ -317,7 +317,7 @@ SRV _if(deque<string>& iArguments, deque<string>& oValues) {
 	string	exp = iArguments[0];
 	if ( !calc(exp) )
 		return	SRV(400, string()+"'"+iArguments[0]+"' 式が計算不\x94\x5cです。");
-	if ( exp!="0" )
+	if ( zen2int(exp) != 0 )
 		return	iArguments[1];	// 真
 	else
 		if ( iArguments.size()==3 )
@@ -332,7 +332,7 @@ SRV _unless(deque<string>& iArguments, deque<string>& oValues) {
 	string	exp = iArguments[0];
 	if ( !calc(exp) )
 		return	SRV(400, string()+"'"+iArguments[0]+"' 式が計算不\x94\x5cです。");
-	if ( exp=="0" )
+	if ( zen2int(exp) == 0 )
 		return	iArguments[1];	// 偽
 	else
 		if ( iArguments.size()==3 )
@@ -366,7 +366,7 @@ SRV _switch(deque<string>& iArguments, deque<string>& oValues) {
 		string	exp = string("(") + lhs + ")==(" + iArguments[i] + ")";
 		if ( !calc(exp) )
 			return	SRV(400, string()+"switchの"+itos((i-1)/2+1)+"個目、式 '"+exp+"' は計算不\x94\x5cでした。");
-		if ( exp!="0" )
+		if ( zen2int(exp) != 0 )
 			return	SRV(200, iArguments[i+1]);
 	}
 	return	SRV(204);
@@ -384,7 +384,7 @@ SRV _iflist(deque<string>& iArguments, deque<string>& oValues) {
 		string	exp = lhs + iArguments[i];
 		if ( !calc(exp) )
 			return	SRV(400, string()+"iflistの"+itos((i-1)/2+1)+"個目、式 '"+exp+"' は計算不\x94\x5cでした。");
-		if ( exp!="0" )
+		if ( zen2int(exp) != 0 )
 			return	SRV(200, iArguments[i+1]);
 	}
 	return	SRV(204);
