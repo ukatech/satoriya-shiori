@@ -300,7 +300,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 				string	r;
 				if ( !calculate(words[1], r) )
 					break;
-				if ( r=="0" || r=="‚O" ) {
+				if ( zen2int(r) == 0 ) {
 					sender << "–ŒvŽZŒ‹‰Ê‚ª‚O‚¾‚Á‚½‚½‚ßA‘±s‚µ‚Ü‚·B" << endl;
 					continue;
 				}
