@@ -59,9 +59,9 @@ int SaoriClient::request(
 		const string& key = i->first;
 		const string& value = i->second;
 
-		if ( compare_head(key, "Value") && isdigit(key[strlen("Value")]) )
+		if ( compare_head(key, "Value") && isdigit(key[const_strlen("Value")]) )
 		{
-			const int	pos = atoi(key.c_str() + strlen("Value"));
+			const int	pos = atoi(key.c_str() + const_strlen("Value"));
 			if ( pos<0 || pos>65536 )
 			{
 				continue;

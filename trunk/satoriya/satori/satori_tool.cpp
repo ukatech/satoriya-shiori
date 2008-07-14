@@ -421,7 +421,7 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 	}
 	
 	if ( compare_head(key,  "サーフェス加算値") && aredigits(key.c_str() + const_strlen("サーフェス加算値")) ) {
-		int n = atoi(key.c_str() + strlen("サーフェス加算値"));
+		int n = zen2int(key.c_str() + const_strlen("サーフェス加算値"));
 		surface_add_value[n]= zen2int(value);
 		
 		variables[string()+"デフォルトサーフェス"+itos(n)] = value;
@@ -432,7 +432,7 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 	}
 
 	if ( compare_head(key,  "デフォルトサーフェス") && aredigits(key.c_str() + const_strlen("デフォルトサーフェス")) ) {
-		int n = atoi(key.c_str() + strlen("デフォルトサーフェス"));
+		int n = zen2int(key.c_str() + const_strlen("デフォルトサーフェス"));
 		next_default_surface[n]= zen2int(value);
 		if ( !is_speaked_anybody() )
 			default_surface[n]=next_default_surface[n];
@@ -440,7 +440,7 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 	}
 
 	if ( compare_head(key,  "BalloonOffset") && aredigits(key.c_str() + const_strlen("BalloonOffset")) ) {
-		int n = atoi(key.c_str() + strlen("BalloonOffset"));
+		int n = stoi(key.c_str() + const_strlen("BalloonOffset"));
 		BalloonOffset[n] = value;
 		validBalloonOffset[n] = true;
 		return true;

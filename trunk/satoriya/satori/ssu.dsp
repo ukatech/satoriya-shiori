@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "ssu_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /MT /W3 /GR /GX /O2 /Oy- /I "..\_" /D "_WINDOWS" /D "_USRDLL" /D "ssu_EXPORTS" /D WINVER=0x400 /D _WIN32_IE=0 /D _WIN32_WINNT=0 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D _STLP_NEW_PLATFORM_SDK=1 /FD /Zm800 /GA /QI0f /c
+# ADD CPP /nologo /MT /W3 /GR /GX /O2 /Oy- /I "..\_" /D "_WINDOWS" /D "_USRDLL" /D "ssu_EXPORTS" /D WINVER=0x400 /D _WIN32_IE=0 /D _WIN32_WINNT=0 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D _STLP_NEW_PLATFORM_SDK=1 /FD /Zm200 /GA /QI0f /c
 # SUBTRACT CPP /YX
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
@@ -70,7 +70,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "ssu_EXPORTS" /YX /FD /GZ /c
-# ADD CPP /nologo /MTd /W3 /Gm /GR /GX /ZI /Od /I "..\_" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "ssu_EXPORTS" /D _STLP_NEW_PLATFORM_SDK=1 /FR /FD /Zm800 /GZ /c
+# ADD CPP /nologo /MTd /W3 /Gm /GR /GX /ZI /Od /I "..\_" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "ssu_EXPORTS" /D _STLP_NEW_PLATFORM_SDK=1 /FR /FD /Zm200 /GZ /c
 # SUBTRACT CPP /YX
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32

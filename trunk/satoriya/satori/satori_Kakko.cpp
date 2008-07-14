@@ -305,7 +305,7 @@ string* Satori::GetValue(const string &iName,bool &oIsSysValue,bool iIsExpand,bo
 				oIsSysValue = true;
 
 				// Event’Ê’m‚Ìˆø”æ“¾
-				int	ref=atoi(hankaku.c_str()+1);
+				int	ref=stoi(hankaku.c_str()+1);
 				if (ref>=0 && ref<mReferences.size()) {
 					return &(mReferences[ref]);
 				}
@@ -326,7 +326,7 @@ string* Satori::GetValue(const string &iName,bool &oIsSysValue,bool iIsExpand,bo
 
 				strvec&	khr = kakko_replace_history.top();
 
-				int	ref = atoi(hankaku.c_str() +1) - 1;
+				int	ref = stoi(hankaku.c_str() +1) - 1;
 				if ( ref>=0 && ref < khr.size() ) {
 					return &(khr[ref]);
 				}
@@ -340,7 +340,7 @@ string* Satori::GetValue(const string &iName,bool &oIsSysValue,bool iIsExpand,bo
 				if ( mCallStack.empty() ) { return NULL; }
 
 				// call‚É‚æ‚éŒÄ‚Ño‚µ‚Ìˆø”‚ğQÆS
-				int	ref = atoi(hankaku.c_str() +1);
+				int	ref = stoi(hankaku.c_str() +1);
 				strvec&	v = mCallStack.top();
 				if ( ref >= 0 && ref < v.size() ) {
 					return &(v[ref]);
@@ -353,7 +353,7 @@ string* Satori::GetValue(const string &iName,bool &oIsSysValue,bool iIsExpand,bo
 				oIsSysValue = true;
 
 				// SAORI‚È‚ÇƒR[ƒ‹‚ÌŒ‹‰Êˆ—
-				int	ref=atoi(hankaku.c_str()+1);
+				int	ref=stoi(hankaku.c_str()+1);
 				if (ref>=0 && ref<mKakkoCallResults.size()) {
 					return &(mKakkoCallResults[ref]);
 				}
@@ -677,17 +677,17 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	else if ( iName == "’Pƒ‹N“®•ª" ) { oResult=int2zen( (::GetTickCount()-tick_count_at_load)/1000/60 ); }
 #endif
 #ifdef POSIX
-	else if (iName == "‚n‚r‹N“®" || iName == "‚n‚r‹N“®•ª" || iName == "‚n‚r‹N“®•b" ||
-		 iName == "’Pƒ‚n‚r‹N“®•b" || iName == "’Pƒ‚n‚r‹N“®•ª") {
+	else if (hankaku == "OS‹N“®" || hankaku == "OS‹N“®•ª" || hankaku == "OS‹N“®•b" ||
+		 hankaku == "’PƒOS‹N“®•b" || hankaku == "’PƒOS‹N“®•ª") {
 	    // æ“¾‚·‚é•û–@‚ª–³‚¢B
 	    oResult = int2zen(0);
 	}
 #else
-	else if ( iName == "‚n‚r‹N“®" ) { oResult=int2zen(DwordToSystemTime(::GetTickCount()).wHour); }
-	else if ( iName == "‚n‚r‹N“®•ª" ) { oResult=int2zen(DwordToSystemTime(::GetTickCount()).wMinute); }
-	else if ( iName == "‚n‚r‹N“®•b" ) { oResult=int2zen(DwordToSystemTime(::GetTickCount()).wSecond); }
-	else if ( iName == "’Pƒ‚n‚r‹N“®•b" ) { oResult=int2zen( ::GetTickCount() / 1000 ); }
-	else if ( iName == "’Pƒ‚n‚r‹N“®•ª" ) { oResult=int2zen( ::GetTickCount() / 1000/60 ); }
+	else if ( hankaku == "OS‹N“®" ) { oResult=int2zen(DwordToSystemTime(::GetTickCount()).wHour); }
+	else if ( hankaku == "OS‹N“®•ª" ) { oResult=int2zen(DwordToSystemTime(::GetTickCount()).wMinute); }
+	else if ( hankaku == "OS‹N“®•b" ) { oResult=int2zen(DwordToSystemTime(::GetTickCount()).wSecond); }
+	else if ( hankaku == "’PƒOS‹N“®•b" ) { oResult=int2zen( ::GetTickCount() / 1000 ); }
+	else if ( hankaku == "’PƒOS‹N“®•ª" ) { oResult=int2zen( ::GetTickCount() / 1000/60 ); }
 #endif
 #ifdef POSIX
 	else if (iName == "—İŒv") {
@@ -726,7 +726,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	else if ( iName == "’Pƒ—İŒv•b" ) { oResult=int2zen( (::GetTickCount() - tick_count_at_load + tick_count_total)/1000 ); }
 	else if ( iName == "’Pƒ—İŒv•ª" ) { oResult=int2zen( (::GetTickCount() - tick_count_at_load + tick_count_total)/1000/60 ); }
 #endif
-	else if ( iName == "time_t" ) { time_t tm; time(&tm); oResult=int2zen(tm); }
+	else if ( hankaku == "time_t" ) { time_t tm; time(&tm); oResult=int2zen(tm); }
 	else if ( iName == "ÅIƒg[ƒN‚©‚ç‚ÌŒo‰ß•b" ) { oResult=int2zen(second_from_last_talk); }
 
 	else if ( compare_head(iName, "ƒT[ƒtƒFƒX") && aredigits(iName.c_str()+10) ) {
@@ -831,25 +831,25 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 			oResult = "-1";
 		}
 	}
-	else if ( compare_head(iName, "FMO") && iName.size()>4 ) { // FMO?head
+	else if ( compare_head(hankaku, "FMO") && hankaku.size()>4 ) { // FMO?head
 		updateGhostsInfo();	// ƒS[ƒXƒgî•ñ‚ğXV
 		unsigned int digit = 3;
-		while ( isdigit(iName[digit]) ) { ++digit; }
+		while ( isdigit(hankaku[digit]) ) { ++digit; }
 
 		if ( digit > 3 ) {
-			unsigned int index = strtoul(iName.c_str()+3,NULL,10);
+			unsigned int index = strtoul(hankaku.c_str()+3,NULL,10);
 			if ( index < ghosts_info.size() ) {
 				strmap&	m=ghosts_info[index];
-				string	value(iName.c_str()+digit);
+				string	value(hankaku.c_str()+digit);
 				if ( m.find(value) != m.end() ) {
 					oResult = m[value];
 				}
 			}
 		}
 	}
-	else if ( compare_head(iName, "count") )
+	else if ( compare_head(hankaku, "count") )
 	{
-		string	name(iName.c_str()+5);
+		string	name(hankaku.c_str()+5);
 		if ( name=="Words" ) { oResult = int2zen( words.size_of_family() ); }
 		else if ( name=="Variable" ) { oResult = int2zen( variables.size() ); }
 		else if ( name=="Anchor" ) { oResult = int2zen( anchors.size() ); }
@@ -948,7 +948,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	}
 	else if ( iName == "ƒCƒxƒ“ƒg–¼" ) { oResult=mRequestID; }
 	else if ( iName == "’¼‘O‚Ì‘I‘ğˆ–¼" ) { oResult=last_choice_name; }
-	else if ( iName == "pwd" ) { oResult=mBaseFolder; }
+	else if ( hankaku == "pwd" ) { oResult=mBaseFolder; }
 	else if ( iName == "–{‘Ì‚ÌŠİ" ) { oResult=mExeFolder; }
 	else if ( mRequestMap.find(iName) != mRequestMap.end() ) {
 		oResult = mRequestMap[iName];
