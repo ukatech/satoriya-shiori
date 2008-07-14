@@ -397,7 +397,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 				c=get_a_chr(p);
 				if ( c=="\x01" ) { //0xff0x01＝スコープ切り替え　後に半角数値が1文字続く
 					c=get_a_chr(p);
-					int speaker_tmp = atoi(c.c_str());
+					int speaker_tmp = stoi(c.c_str());
 					if ( is_speaked(speaker) && speaker != speaker_tmp ) {
 						result += append_at_scope_change;
 						chars_spoken += 2;
