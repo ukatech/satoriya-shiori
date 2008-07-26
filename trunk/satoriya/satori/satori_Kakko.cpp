@@ -496,9 +496,8 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 								continue;
 						}
 
-						bool calc(string&);	// declare
 						string	exp = *i;
-						if ( calc(exp) )
+						if ( calc(exp,true) )
 							*i=exp;
 					}
 				}

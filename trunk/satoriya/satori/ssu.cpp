@@ -102,7 +102,7 @@ static const char   han_kana_1[] = "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜ
 static const char   zen_kana_2[] = "ガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ";
 static const char   han_kana_2[] = "ｶﾞｷﾞｸﾞｹﾞｺﾞｻﾞｼﾞｽﾞｾﾞｿﾞﾀﾞﾁﾞﾂﾞﾃﾞﾄﾞﾊﾞﾋﾞﾌﾞﾍﾞﾎﾞﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟ";
 
-extern	bool calc(string& ioString);
+extern	bool calc(string& ioString,bool isStrict = false);
 extern	bool calc_float(string& ioString);
 
 static string zen2han_internal(string &str,unsigned int flag = 0xffffU);

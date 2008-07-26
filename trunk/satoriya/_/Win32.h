@@ -12,7 +12,7 @@
 // •¶š—ñ‚ğİ’è‚·‚éBhWnd‚ÍNULL‚Å‚à\‚í‚È‚¢B
 bool	SetClipBoard(HWND iWnd, const char* iFormat, ...);
 #ifdef	_STRING_
-string	GetClipBoard();
+std::string	GetClipBoard();
 #endif
 
 //----------------------------------------------------------

@@ -34,9 +34,9 @@
 // 文字列 !~ 文字列
 
 // 全て半角であること。空白等は認めない
-extern bool calc(const char* iExpression, string& oResult);
+extern bool calc(const char* iExpression, string& oResult,bool isStrict);
 // 半角全角スペースとタブ記号の消去、数字・記号の半角化まで全部やったげる
-extern	bool calc(string& ioString);
+extern	bool calc(string& ioString,bool isStrict = false);
 
 
 struct calc_element {
@@ -183,7 +183,7 @@ static bool	make_deque(const char*& p, deque<calc_element>& oDeque) {
 	}
 
 
-static bool	calc_polish(simple_stack<calc_element>& polish, string& oResult) {
+static bool	calc_polish(simple_stack<calc_element>& polish, string& oResult,bool isStrict) {
 	simple_stack<string>	stack;
 	for ( int n=0 ; n<polish.size()-1 ; n++ ) {
 		calc_element&	el=polish[n];
@@ -205,13 +205,14 @@ static bool	calc_polish(simple_stack<calc_element>& polish, string& oResult) {
 			string	rhs=stack.pop(), lhs=stack.pop();
 			if ( aredigits(lhs) && aredigits(rhs) ) {
 				stack.push(itos( stoi(lhs)*stoi(rhs) )); 
-			} else if ( aredigits(rhs) ) {
+			} else if ( aredigits(rhs) && ! isStrict ) {
 				int	num = stoi(rhs);
 				stack.push("");
 				for (int i=0;i<num;++i)
 					stack.top() += lhs;
-			} else 
+			} else {
 				return	false;
+			}
 		}
 		a_op_b(/)
 		a_op_b(%)
@@ -220,8 +221,10 @@ static bool	calc_polish(simple_stack<calc_element>& polish, string& oResult) {
 			string	rhs=stack.pop(), lhs=stack.pop();
 			if ( aredigits(lhs) && aredigits(rhs) ) {
 				stack.push(itos( stoi(lhs)+stoi(rhs) )); 
-			} else {
+			} else if ( ! isStrict ) {
 				stack.push(lhs+rhs); 
+			} else {
+				return false;
 			}
 		}
 		else if ( el.str == "-" ) {
@@ -229,9 +232,11 @@ static bool	calc_polish(simple_stack<calc_element>& polish, string& oResult) {
 			string	rhs=stack.pop(), lhs=stack.pop();
 			if ( aredigits(lhs) && aredigits(rhs) ) {
 				stack.push(itos( stoi(lhs)-stoi(rhs) )); 
-			} else {
+			} else if ( ! isStrict ) {
 				erase(lhs, rhs);
 				stack.push(lhs);
+			} else {
+				return false;
 			}
 		}
 		else if ( el.str == "=~" || el.str == "!~" ) {
@@ -258,7 +263,7 @@ static bool	calc_polish(simple_stack<calc_element>& polish, string& oResult) {
 	return	true;
 }
 
-bool calc(const char* iExpression, string& oResult) {
+bool calc(const char* iExpression, string& oResult,bool isStrict) {
 	deque<calc_element>	org;
 	if ( !make_deque(iExpression, org) )
 		return	false;
@@ -280,11 +285,11 @@ bool calc(const char* iExpression, string& oResult) {
 		polish.push(stack.pop());
 
 	// 計算
-	return	calc_polish(polish, oResult);
+	return	calc_polish(polish, oResult,isStrict);
 }
 
 
-bool calc(string& ioString)
+bool calc(string& ioString,bool isStrict)
 {
 	string iString = ioString;
 
@@ -324,7 +329,7 @@ bool calc(string& ioString)
 	replace(iString, "９", "9");
 
 	string	theResult;
-	if ( !calc(iString.c_str(), theResult) ) {
+	if ( !calc(iString.c_str(), theResult, isStrict) ) {
 		return	false;
 	}
 
