@@ -219,47 +219,47 @@ bool	printf_format(const char*& p, deque<string>& iArguments, stringstream& os)
 		}
 	case 'o':
 		{
-			os << oct << strtoul(zen2han(str).c_str(),NULL,10);
+			os << oct << strtoul(zen2han_internal(str).c_str(),NULL,10);
 			break;
 		}
 	case 'u':
 		{
-			os << strtoul(zen2han(str).c_str(),NULL,10);
+			os << strtoul(zen2han_internal(str).c_str(),NULL,10);
 			break;
 		}
 	case 'x':
 		{
-			os << hex << nouppercase << strtoul(zen2han(str).c_str(),NULL,10);
+			os << hex << nouppercase << strtoul(zen2han_internal(str).c_str(),NULL,10);
 			break;
 		}
 	case 'X':
 		{
-			os << hex << uppercase << strtoul(zen2han(str).c_str(),NULL,10);
+			os << hex << uppercase << strtoul(zen2han_internal(str).c_str(),NULL,10);
 			break;
 		}
 	case 'e':
 		{
-			os << scientific << nouppercase << strtod(zen2han(str).c_str(),NULL);
+			os << scientific << nouppercase << strtod(zen2han_internal(str).c_str(),NULL);
 			break;
 		}
 	case 'E':
 		{
-			os << scientific << uppercase << strtod(zen2han(str).c_str(),NULL);
+			os << scientific << uppercase << strtod(zen2han_internal(str).c_str(),NULL);
 			break;
 		}
 	case 'g':
 		{
-			os << scientific << fixed << nouppercase << strtod(zen2han(str).c_str(),NULL);
+			os << scientific << fixed << nouppercase << strtod(zen2han_internal(str).c_str(),NULL);
 			break;
 		}
 	case 'G':
 		{
-			os << scientific << fixed << uppercase << strtod(zen2han(str).c_str(),NULL);
+			os << scientific << fixed << uppercase << strtod(zen2han_internal(str).c_str(),NULL);
 			break;
 		}
 	case 'f':
 		{
-			os << fixed << strtod(zen2han(str).c_str(),NULL);
+			os << fixed << strtod(zen2han_internal(str).c_str(),NULL);
 			break;
 		}
 	case 'n': break;
@@ -497,19 +497,19 @@ SRV _count(deque<string>& iArguments, deque<string>& oValues) {
 SRV _compare(deque<string>& iArguments, deque<string>& oValues) {
 	if ( iArguments.size()!=2 )
 		return	SRV(400, "ˆø”‚ÌŒÂ”‚ª³‚µ‚­‚ ‚è‚Ü‚¹‚ñB");
-	return	(strcmp(iArguments[0].c_str(), iArguments[1].c_str())==0) ? "1" : "0";
+	return	(stricmp(zen2han_internal(iArguments[0]).c_str(), zen2han_internal(iArguments[1]).c_str())==0) ? "1" : "0";
 }
 
 SRV _compare_head(deque<string>& iArguments, deque<string>& oValues) {
 	if ( iArguments.size()!=2 )
 		return	SRV(400, "ˆø”‚ÌŒÂ”‚ª³‚µ‚­‚ ‚è‚Ü‚¹‚ñB");
-	return	compare_head(iArguments[0], iArguments[1]) ? "1" : "0";
+	return	compare_head(zen2han_internal(iArguments[0]), zen2han_internal(iArguments[1])) ? "1" : "0";
 }
 
 SRV _compare_tail(deque<string>& iArguments, deque<string>& oValues) {
 	if ( iArguments.size()!=2 )
 		return	SRV(400, "ˆø”‚ÌŒÂ”‚ª³‚µ‚­‚ ‚è‚Ü‚¹‚ñB");
-	return	compare_tail(iArguments[0], iArguments[1]) ? "1" : "0";
+	return	compare_tail(zen2han_internal(iArguments[0]), zen2han_internal(iArguments[1])) ? "1" : "0";
 }
 
 SRV _length(deque<string>& iArguments, deque<string>& oValues) {
