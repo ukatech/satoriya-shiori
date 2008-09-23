@@ -21,7 +21,7 @@ bool	Satori::Translate(string& ioScript) {
 		return	false;
 
 	const bool is_OnTranslate = (mRequestID=="OnTranslate");
-	const bool is_AnchorEnable = is_OnTranslate ? false : mRequestID.compare(0,2,"On") == 0;
+	const bool is_AnchorEnable = mRequestID.empty() || (mRequestID.compare(0,2,"On") == 0); //reqidがempty＝さとりてcall
 
 	// さくらスクリプトとそれ以外を分割して処理を加える
 	vector<string>	vec;
@@ -147,7 +147,7 @@ bool	Satori::Translate(string& ioScript) {
 			// さくらスクリプト以外の文への処理
 
 			// アンカー挿入
-			if ( is_AnchorEnable ) {
+			if ( is_AnchorEnable && !is_OnTranslate ) {
 				string::size_type n = i->size();
 				for ( string::size_type c=0 ; c<n ; ++c ) {
 					for ( vector<string>::iterator j=anchors.begin() ; j!=anchors.end() ; ++j ) {
@@ -177,9 +177,11 @@ bool	Satori::Translate(string& ioScript) {
 
 
 	// 事後置き換え辞書を適用
-	if ( !is_OnTranslate )
-		for ( strmap::iterator di=replace_after_dic.begin() ; di!=replace_after_dic.end() ; ++di )
+	if ( !is_OnTranslate ) {
+		for ( strmap::iterator di=replace_after_dic.begin() ; di!=replace_after_dic.end() ; ++di ) {
 			replace(ioScript, di->first, di->second);
+		}
+	}
 
 	diet_script(ioScript);	// ラストダイエット
 
