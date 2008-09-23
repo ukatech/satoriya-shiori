@@ -21,10 +21,11 @@ bool direct_sstp(
 
 	string request = string() +
 		"SEND SSTP/1.1" + CRLF +
-		"Script: " + i_script + CRLF +
 		"Sender: " + i_client_name + CRLF +
 		"HWnd: " + itos((int)i_client_window) + CRLF +
 		"Charset: Shift_JIS" + CRLF +
+		"Script: " + i_script + CRLF +
+		"Option: notranslate" + CRLF +
 		CRLF;
 
 	COPYDATASTRUCT cds;

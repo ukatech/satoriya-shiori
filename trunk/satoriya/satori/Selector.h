@@ -127,7 +127,7 @@ public:
 	void attach_OC(OverlapController<T>* i_OC)
 	{
 		//cout << "Selector::attach_OC(), m_OC:" << m_OC << ", this:" << this << endl;
-		if ( m_OC == NULL || typeid(*m_OC) != typeid(*i_OC) ) {
+		if ( m_OC == NULL || m_OC->type() != i_OC->type() ) {
 			if ( m_OC != NULL ) {
 				delete m_OC;
 			}

@@ -145,8 +145,10 @@ string	Do(const string& str, bool like_dict, bool satori, HWND hwnd)
 	string	script;
 	if ( !satori )
 	{
-		for ( strvec::iterator i=vec.begin() ; i!=vec.end() ; ++i )
+		for ( strvec::iterator i=vec.begin() ; i!=vec.end() ; ++i ) {
 			script += *i;
+		}
+		pSatori->Translate(script);
 	}
 	else if ( like_dict ) 
 	{
@@ -184,9 +186,8 @@ string	Do(const string& str, bool like_dict, bool satori, HWND hwnd)
 	} else {
 		// さくらスクリプト変換
 		script = pSatori->SentenceToSakuraScriptExec_with_PreProcess(vec) + "\\e";
+		pSatori->Translate(script);
 	}
-	if ( !pSatori->Translate(script) )
-		script="";
 
 	direct_sstp(script, "Satorite", hwnd);
 	return	script;
