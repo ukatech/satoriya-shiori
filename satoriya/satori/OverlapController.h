@@ -26,6 +26,8 @@ public:
 	// 候補は一つ以上あることが保証されている。
 	virtual T select(const list<T>&) =0;
 
+	virtual int type(void) = 0;
+
 
 	// イベント通知ハンドラ
 
@@ -43,6 +45,11 @@ template<typename T>
 class OC_Random : public OverlapController<T>
 {
 public:
+	//コントローラタイプ：あたらしいのを追加するときは必ず別IDにすること！typeidの遅い処理対策。
+	virtual int type(void) {
+		return 100;
+	}
+
 	// 候補から一つを選択
 	virtual T select(const list<T>& i_candidates)
 	{
@@ -63,6 +70,11 @@ class OC_NonOverlap : public OverlapController<T>
 
 public:
 	OC_NonOverlap() : m_last(INVALID_VALUE) {}
+
+	//コントローラタイプ：あたらしいのを追加するときは必ず別IDにすること！typeidの遅い処理対策。
+	virtual int type(void) {
+		return 200;
+	}
 
 	// 候補から一つを選択
 	virtual T select(const list<T>&)
@@ -129,6 +141,11 @@ class OC_NonDual : public OverlapController<T>
 public:
 	OC_NonDual() : m_last(INVALID_VALUE) {}
 
+	//コントローラタイプ：あたらしいのを追加するときは必ず別IDにすること！typeidの遅い処理対策。
+	virtual int type(void) {
+		return 300;
+	}
+
 	// 候補から一つを選択
 	virtual T select(const list<T>& i_candidates)
 	{
@@ -182,6 +199,11 @@ class OC_Sequential : public OverlapController<T>
 public:
 	OC_Sequential() : m_last(INVALID_VALUE) {}
 
+	//コントローラタイプ：あたらしいのを追加するときは必ず別IDにすること！typeidの遅い処理対策。
+	virtual int type(void) {
+		return 400;
+	}
+
 	// 候補から一つを選択
 	virtual T select(const list<T>& i_candidates)
 	{
@@ -231,6 +253,11 @@ class OC_SequentialDesc : public OverlapController<T>
 	T m_last;
 public:
 	OC_SequentialDesc() : m_last(INVALID_VALUE) {}
+
+	//コントローラタイプ：あたらしいのを追加するときは必ず別IDにすること！typeidの遅い処理対策。
+	virtual int type(void) {
+		return 500;
+	}
 
 	// 候補から一つを選択
 	virtual T select(const list<T>& i_candidates)
