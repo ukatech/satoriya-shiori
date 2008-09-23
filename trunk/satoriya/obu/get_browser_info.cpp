@@ -92,7 +92,7 @@ static void __fastcall GetDDEStr(char *buf, std::string &URL, std::string &Title
 //============================================================================
 
 static const char*	DDE_ServerNames[] = 
-	{"IEXPLORE", "Opera", "Firefox", "NETSCAPE", "Mozilla", "Netscape6", "Netscape Browser", 
+	{"IEXPLORE", "Opera", "Firefox", "NETSCAPE", "Mozilla", "Netscape6", "Netscape Browser", "chrome",
 	"MBROWSER", "SLEIPNIR", "MDIBROWSER", "TaBrowser", "Donut", "fub", "fub.net", "Cuam" };
 static const int max_svr = sizeof(DDE_ServerNames)/sizeof(DDE_ServerNames[0]);
 
