@@ -1,5 +1,10 @@
 #labels Featured
-=Mc143-10/R2=
+=Mc143-11 (r150,r151) =
+  * さとりてでアンカー処理が二重適用される問題修正
+  * さとりてから送るSSTPにnotranslateをつけた
+  * 高速化
+
+=Mc143-10/Rev2 (r148) =
   * ssu.dllのみ：compare系を半角全角無視
 
 =Mc143-10=
