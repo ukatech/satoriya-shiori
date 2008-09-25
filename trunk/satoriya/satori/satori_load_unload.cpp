@@ -14,7 +14,6 @@
 
 #include	<fstream>
 #include	<cassert>
-#include	<ctime>	// for randomize
 #include      <locale.h>
 
 #include	"../_/Utilities.h"
@@ -225,7 +224,7 @@ bool	Satori::load(const string& iBaseFolder)
 	//	cout << j->first << ": " << j->second << endl;
 
 	// ランダマイズ
-	randomize(time(NULL));
+	randomize();
 
 
 	//------------------------------------------
