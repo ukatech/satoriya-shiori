@@ -11,7 +11,7 @@
 class ssu : public SaoriHost {
 public:
 	ssu() {
-		randomize(time(NULL));
+		randomize();
 	}
 	virtual SRV		request(deque<string>& iArguments, deque<string>& oValues);
 };
