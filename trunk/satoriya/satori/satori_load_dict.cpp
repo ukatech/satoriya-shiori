@@ -275,8 +275,7 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName)
 	if ( false == pre_process(file_vec, preprocessed_vec, m_escaper, replace_before_dic) )
 	{
 #ifdef POSIX
-	        // MessageBoxなんて無い！
-	        std::cerr <<
+	     errsender <<
 		    "syntax error - SATORI : " << iFileName << std::endl <<
 		    std::endl <<
 		    "There are some mismatched parenthesis." << std::endl <<
@@ -285,14 +284,12 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName)
 		    "If you want to display parenthesis independently," << std::endl <<
 		    "use \"phi\" symbol to escape it." << std::endl;
 #else
-		::MessageBox(NULL, 
-			(string() + iFileName + "\n\n"
+		errsender << iFileName + "\n\n"
 			"\n"
 			"カッコの対応関係が正しくない部分があります。" "\n"
 			"辞書は正しく読み込まれていません。" "\n"
 			"\n"
-			"カッコを単独で表示する場合は　φ（　と記述してください。").c_str(),
-			"syntax error - SATORI", MB_OK|MB_SYSTEMMODAL);
+			"カッコを単独で表示する場合は　φ（　と記述してください。" << std::endl;
 #endif
 	}
 

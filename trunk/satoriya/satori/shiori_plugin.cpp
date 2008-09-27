@@ -27,16 +27,6 @@ using namespace std;
 ////////////////////////////////////////
 
 
-// どうにかしたい
-void	PluginError(const string& str)
-{
-#ifdef POSIX
-        cerr << "error - SAORI : " << str << endl;
-#else
-	::MessageBox(NULL, str.c_str(), "error - SAORI", MB_OK|MB_SYSTEMMODAL);
-#endif
-}
-
 #ifdef POSIX
 // dllサーチパス関連。
 // POSIX上では、ある特定の場所にDLLと同名のライブラリを置く事でSAORIに対応する。
@@ -99,11 +89,11 @@ bool ShioriPlugins::load_a_plugin(const string& iPluginLine)
 	strvec	vec;
 	split(iPluginLine, ",", vec);	// カンマ区切りで分割
 	if ( vec.size()<2 || vec[0].size()==0 ) {	// 呼び出し名と相対パスが必須
-		PluginError(iPluginLine + ": 設定ファイルの書式が正しくありません。");
+		errsender << iPluginLine + ": 設定ファイルの書式が正しくありません。" << std::endl;
 		return	false;
 	}
 	if ( mCallData.find(vec[0]) != mCallData.end() ) {
-		PluginError(vec[0] + ": 同じ呼び出し名が複数定義されています。");
+		errsender << vec[0] + ": 同じ呼び出し名が複数定義されています。" << std::endl;
 		return	false;
 	}
 
@@ -143,9 +133,9 @@ bool ShioriPlugins::load_a_plugin(const string& iPluginLine)
 		if ( fp == NULL )
 		{
 #ifdef POSIX
-            PluginError(fullpath + ": failed to open");
+            errsender << fullpath + ": failed to open" << std::endl;
 #else
-			PluginError(fullpath + ": プラグインが存在しません。");
+			errsender << fullpath + ": プラグインが存在しません。" << std::endl;
 #endif
 			return	false;
 		}
@@ -209,10 +199,13 @@ bool ShioriPlugins::load_a_plugin(const string& iPluginLine)
 			string fallback_path =
 			    (cstr_path == NULL ?
 			     "(environment variable `SAORI_FALLBACK_PATH' is empty)" : cstr_path);
-			PluginError(
+			
+			errsender <<
 			    fullpath+": This is not usable in this platform.\n"+
-			    "Fallback library `"+filename+"."+extention+"' doesn't exist: "+fallback_path);
+			    "Fallback library `"+filename+"."+extention+"' doesn't exist: "+fallback_path) << std::endl;
+			
 			mDllData.erase(fullpath);
+
 			return false;
 		    }
 		    else {
@@ -245,7 +238,7 @@ bool ShioriPlugins::load_a_plugin(const string& iPluginLine)
 			string ver = mDllData[fullpath].mSaoriClient.get_version("Local");
 			if ( ver != "SAORI/1.0" )
 			{
-				PluginError(fullpath + ": SAORI/1.0のdllではありません。GET Versionの戻り値が未対応のものでした。(" + ver + ")");
+				errsender << fullpath + ": SAORI/1.0のdllではありません。GET Versionの戻り値が未対応のものでした。(" + ver + ")" << std::endl;
 				mDllData.erase(fullpath);
 				return	false;
 			}
@@ -283,7 +276,7 @@ void	ShioriPlugins::unload()
 string	ShioriPlugins::request(const string& iCallName, const strvec& iArguments, strvec& oResults, const string& iSecurityLevel) {
 
 	if ( mCallData.find(iCallName) == mCallData.end() ) {
-		PluginError(iCallName + ": この呼び出し名は定義されていません。");
+		errsender << iCallName + ": この呼び出し名は定義されていません。" << std::endl;
 		return	"";
 	}
 	CallData&	theCallData = mCallData[iCallName];
@@ -312,7 +305,7 @@ string	ShioriPlugins::request(const string& iCallName, const strvec& iArguments,
 		if ( r != "" )
 		{
 			// エラー
-			PluginError(iCallName + ": " + r);
+			errsender << iCallName + ": " + r << std::endl;
 			return "";
 		}
 		else
@@ -353,13 +346,13 @@ string	ShioriPlugins::request(const string& iCallName, const strvec& iArguments,
 		case 204:
 			break;
 		case 400:
-			PluginError(theCallData.mDllPath + " - " + iCallName + " : 400 Bad Request / 呼び出しの不備");
+			errsender << theCallData.mDllPath + " - " + iCallName + " : 400 Bad Request / 呼び出しの不備" << std::endl;
 			break;
 		case 500:
-			PluginError(theCallData.mDllPath + " - " + iCallName + " : 500 Internal Server Error / saori内でのエラー");
+			errsender << theCallData.mDllPath + " - " + iCallName + " : 500 Internal Server Error / saori内でのエラー" << std::endl;
 			break;
 		default:
-			PluginError(theCallData.mDllPath + " - " + iCallName + " : " + itos(return_code) + "? / 定義されていないステータスを返しました。");
+			errsender << theCallData.mDllPath + " - " + iCallName + " : " + itos(return_code) + "? / 定義されていないステータスを返しました。" << std::endl;
 			break;
 		}
 

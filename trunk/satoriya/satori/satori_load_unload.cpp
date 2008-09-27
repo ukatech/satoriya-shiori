@@ -242,10 +242,10 @@ bool	Satori::load(const string& iBaseFolder)
 		vector<const Word*> els;
 		f->get_elements_pointers(els);
 
-		mShioriPlugins.load(mBaseFolder);
+		mShioriPlugins->load(mBaseFolder);
 		for ( vector<const Word*>::const_iterator i=els.begin(); i!=els.end() ; ++i)
 		{
-			if ( (*i)->size()>0 && !mShioriPlugins.load_a_plugin(**i) )
+			if ( (*i)->size()>0 && !mShioriPlugins->load_a_plugin(**i) )
 			{
 				sender << "SAORI読み込み中にエラーが発生: " << **i << endl;
 			}
@@ -434,7 +434,7 @@ bool	Satori::unload() {
 	is_dic_loaded = false;
 
 	// プラグイン解放
-	mShioriPlugins.unload();
+	mShioriPlugins->unload();
 
 	sender << "■SATORI::Unload ---------------------" << endl;
 	return	true;

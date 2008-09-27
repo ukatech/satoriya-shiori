@@ -13,7 +13,7 @@ const char* gSatoriName = "Satori";
 const char* gSatoriNameW = "ó¢ÅX";
 const char* gSatoriCraftman = "Yagi Kushigahama/The Maintenance Shop";
 const char* gSatoriCraftmanW = "ã˘ÉñïlÇ‚Ç¨/êÆîıî«";
-const char* gSatoriVersion = "phase Mc143-12";
+const char* gSatoriVersion = "phase Mc144-1";
 const char* gShioriVersion = "3.0";
 const char* gSaoriVersion = "1.0";
 
@@ -77,4 +77,13 @@ bool Satori::evalcate_to_bool(const Condition& i_cond)
 		return false;
 	}
 	return  ( zen2int(r) != 0 );
+}
+
+Satori::Satori()
+{
+	mShioriPlugins = new ShioriPlugins(this);
+}
+
+Satori::~Satori() {
+	delete mShioriPlugins;
 }

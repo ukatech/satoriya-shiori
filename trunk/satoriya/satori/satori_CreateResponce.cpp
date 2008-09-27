@@ -29,6 +29,15 @@ int		Satori::CreateResponse(strmap& oResponse)
 			}
 #endif
 		}
+		else if ( mRequestID=="capability" ) {
+			bool isErrorHeader = false;
+			for ( strvec::const_iterator it = mReferences.begin() ; it != mReferences.end(); ++it ) {
+				if ( *it == "response.errorlevel" ) {
+					isErrorHeader = true;
+				}
+			}
+			errsender.set_log_mode(isErrorHeader);
+		}
 	}
 
 	string	result;

@@ -18,9 +18,11 @@
 #endif
 ////////////////////////////////////////
 
+#pragma warning( disable : 4786 ) //「デバッグ情報内での識別子切捨て」
 
 // グローバルオブジェクト
 Sender::sender_stream	sender;
+Sender::error_stream	errsender;
 
 // staticメンバ
 bool Sender::sm_sender_flag = true;
@@ -138,6 +140,52 @@ int Sender::sender_buf::overflow(int c)
 				pos = 1;
 			} else {
 				send("%s", line);
+				line[0]='\0';
+				pos = 0;
+			}
+		}
+	}
+	return	c;
+}
+
+void Sender::error_buf::send(const std::string &line)
+{
+	if ( ! line.length() ) { return; }
+	if ( log_mode ) {
+		log_data.push_back(line);
+	}
+	else {
+#ifdef POSIX
+        cerr << "error - SATORI : " << line << endl;
+#else
+        ::MessageBox(NULL, line.c_str(), "error - SATORI", MB_OK|MB_SYSTEMMODAL);
+#endif
+	}
+}
+
+int Sender::error_buf::overflow(int c)
+{
+	if ( c=='\n' || c=='\0' || c==EOF )
+	{
+		send(line);
+		line[0]='\0';
+		pos = 0;
+	} 
+	else
+	{
+		// バッファにためる
+		line[pos++] = c;
+		line[pos] = '\0';
+
+		if ( pos+1>=MAX ) {
+			if ( _ismbblead(c) ) {
+				line[pos-1]='\0';
+				send(line);
+				line[0]=c;
+				line[1]='\0';
+				pos = 1;
+			} else {
+				send(line);
 				line[0]='\0';
 				pos = 0;
 			}
