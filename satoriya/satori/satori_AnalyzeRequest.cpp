@@ -254,6 +254,31 @@ int	Satori::request(
 		o_data.push_back( strpair(key, value) );
 	}
 
+	if ( errsender.get_log_mode() ) {
+		const std::vector<string> &errlog = errsender.get_log();
+
+		std::string errmsg;
+		std::string errlevel;
+
+		for ( std::vector<string>::const_iterator itr = errlog.begin() ; itr != errlog.end(); ++itr ) {
+			errmsg += "SATORI - ";
+			errmsg += mRequestID;
+			errmsg += " > ";
+			errmsg += *itr;
+			errmsg += "\1";
+			errlevel += "critical\1";
+		}
+
+		if ( errmsg.length() ) {
+			errmsg.erase(errmsg.end()-1,errmsg.end());
+			errlevel.erase(errlevel.end()-1,errlevel.end());
+
+			o_data.push_back( strpair("ErrorLevel",errlevel) );
+			o_data.push_back( strpair("ErrorDescription",errmsg) );
+		}
+		errsender.clear_log();
+	}
+
 	Sender::validate();
 	if(fResponseLog && logmode)
 	{

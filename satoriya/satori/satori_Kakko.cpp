@@ -419,7 +419,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		const char* p = NULL;
 		enum { NO_CALL, SAORI_CALL, INC_CALL } state = NO_CALL;
 
-		if ( mShioriPlugins.find(iName) ) {
+		if ( mShioriPlugins->find(iName) ) {
 			thePluginName=iName;
 			state = SAORI_CALL;
 		} else {
@@ -446,7 +446,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 				if ( p==NULL )
 					continue;
 				string	str(iName.c_str(), p-iName.c_str());
-				if ( mShioriPlugins.find(str) ) {	// 存在確認
+				if ( mShioriPlugins->find(str) ) {	// 存在確認
 					thePluginName=str;
 					theDelimiter=i;
 					state = SAORI_CALL;
@@ -508,7 +508,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 				for ( strvec::iterator i=theArguments.begin() ; i!=theArguments.end() ; ++i ) {
 					m_escaper.unescape(*i);
 				}
-				oResult = mShioriPlugins.request(thePluginName, theArguments, mKakkoCallResults, secure_flag ? "Local" : "External" );
+				oResult = mShioriPlugins->request(thePluginName, theArguments, mKakkoCallResults, secure_flag ? "Local" : "External" );
 			}
 			else {
 				oResult = inc_call(thePluginName, theArguments, mKakkoCallResults, secure_flag);

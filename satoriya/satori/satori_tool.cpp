@@ -672,12 +672,12 @@ bool	Satori::calculate(const string& iExpression, string& oResult) {
 	bool r = calc(oResult);
 	if ( !r ) {
 #ifdef POSIX
-		std::cerr <<
+		errsender <<
 			"error on Satori::calculate" << std::endl <<
 			"Error in expression: " << iExpression << std::endl;
 #else
 		// もうちょっと抽象化を……
-		::MessageBox(NULL, (string() + "式が計算不能です。\n" + iExpression).c_str(), "error on Satori::calculate" , MB_OK);
+		errsender << string() + "式が計算不能です。\n" + iExpression << std::endl;
 #endif
 	}
 	return	r;

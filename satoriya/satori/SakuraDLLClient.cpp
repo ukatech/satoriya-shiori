@@ -17,9 +17,6 @@
 #endif
 ////////////////////////////////////////
 
-
-extern void	PluginError(const string& str);
-
 SakuraDLLClient::SakuraDLLClient()
 {
 	mModule = NULL;
@@ -37,7 +34,7 @@ string	SakuraDLLClient::request(const string& iRequestString)
 {
 	if ( mRequest==NULL )
 	{
-		PluginError("SakuraDLLClient::request: ロードしていないライブラリにrequestしようとしました。");
+		errsender << "SakuraDLLClient::request: ロードしていないライブラリにrequestしようとしました。" << endl;
 		return	"";
 	}
 
@@ -156,14 +153,14 @@ bool	SakuraDLLClient::load(
 	mModule = dlopen(dll_fullpath.c_str(), RTLD_LAZY);
 	if (mModule == NULL) {
 	    sender << "failed." << endl;
-	    PluginError(dlerror());
+	    errsender << dlerror() << endl;
 	    return false;
 	}
 #else
 	mModule = ::LoadLibraryEx(dll_fullpath.c_str(),NULL,LOAD_WITH_ALTERED_SEARCH_PATH);
 	if ( mModule==NULL ) {
 		sender << "failed." << endl;
-		PluginError(dll_fullpath + ": LoadLibraryで失敗。");
+		errsender << dll_fullpath + ": LoadLibraryで失敗。" << endl;
 		return	false;
 	}
 #endif
@@ -193,7 +190,7 @@ bool	SakuraDLLClient::load(
 	{
 		sender << "failed." << endl;
 		unload();
-		PluginError(dll_fullpath + ": requestがエクスポートされていません。");
+		errsender << dll_fullpath + ": requestがエクスポートされていません。" << endl;
 		return	false;
 	}
 	if ( mLoad!=NULL )
@@ -209,7 +206,7 @@ bool	SakuraDLLClient::load(
 		{
 			sender << "failed." << endl;
 			unload();
-			PluginError(dll_fullpath + ": load()がFALSEを返しました。");
+			errsender << dll_fullpath + ": load()がFALSEを返しました。" << endl;
 			return	false;
 		}
 	}

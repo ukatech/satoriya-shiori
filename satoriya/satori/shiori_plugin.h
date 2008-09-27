@@ -5,8 +5,10 @@
 
 #include "SaoriClient.h"
 
+class Satori;
+
 // プラグインの総合管理
-class	ShioriPlugins {
+class ShioriPlugins {
 
 	struct CallData {	// 呼び出し名ごとの情報
 		string	mDllPath;
@@ -22,7 +24,14 @@ class	ShioriPlugins {
 
 	string	mBaseFolder;
 
+	Satori *pSatori;
+
+	ShioriPlugins(void) { }
+
 public:
+	ShioriPlugins(Satori *pSat) : pSatori(pSat) {
+	}
+
 	bool	load(const string& iBaseFolder);
 	bool	load_a_plugin(const string& iPluginLine);
 

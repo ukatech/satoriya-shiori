@@ -1,11 +1,10 @@
 #ifndef	SENDER_H
 #define	SENDER_H
 
-/*
-	ログアプリケーション「れしば」にメッセージを送信。
-*/
+/*ログ関連一式*/
 
 #include	<iostream>
+#include	<vector>
 #include      <stdio.h>
 using namespace std;
 
@@ -34,6 +33,32 @@ class Sender
 		char	line[MAX+1];
 		int		pos;
 	};
+
+	class error_buf : public streambuf
+	{
+	public:
+		error_buf() { line[0]='\0'; pos=0; log_mode=false; }
+		virtual int overflow(int c=EOF);
+
+		void set_log_mode(bool is_log) { log_mode = is_log; }
+		bool get_log_mode(void) { return log_mode; }
+
+		const std::vector<string> & get_log(void) { return log_data; }
+		void clear_log(void) { log_data.clear(); }
+
+		enum const_value {
+			MAX=8191
+		};
+	private:
+		void send(const std::string &str);
+
+		char	line[MAX+1];
+		int		pos;
+
+		bool    log_mode;
+		std::vector<string> log_data;
+	};
+
 	static bool	sm_sender_flag;		// 動作有効可否
 
 	Sender();
@@ -44,6 +69,19 @@ public:
 		sender_buf	buf;
 	public:
 		sender_stream() : ostream(&buf) {}
+	};
+
+	class error_stream : public ostream
+	{
+		error_buf	buf;
+	public:
+		error_stream() : ostream(&buf) {}
+
+		void set_log_mode(bool is_log) { buf.set_log_mode(is_log); }
+		bool get_log_mode(void) { return buf.get_log_mode(); }
+
+		const std::vector<string> & get_log(void) { return buf.get_log(); }
+		void clear_log(void) { buf.clear_log(); }
 	};
 
 	// このクラスのインスタンスのライフタイムに合わせ、ログ表示の際にネストを行う
@@ -66,6 +104,7 @@ public:
 };
 
 // ログ出力ストリーム
-extern	Sender::sender_stream	sender;	
+extern	Sender::sender_stream	sender;
+extern  Sender::error_stream    errsender;
 
 #endif	// SENDER_H

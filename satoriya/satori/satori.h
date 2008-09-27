@@ -278,7 +278,7 @@ private:
 	string	on_unloading_script;
 
 	// 栞プラグイン
-	ShioriPlugins	mShioriPlugins;
+	ShioriPlugins	*mShioriPlugins;
 	string	inc_call(const string&, const strvec&, strvec&, bool is_secure);
 
 	// 安全？
@@ -357,8 +357,8 @@ private:
 
 public:
 
-	Satori() {}
-	virtual ~Satori() {}
+	Satori();
+	virtual ~Satori();
 
 	// SHIORI/3.0インタフェース
 	virtual bool load(const string& i_base_folder);
