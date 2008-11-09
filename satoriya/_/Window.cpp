@@ -20,7 +20,7 @@ LRESULT	Window::WindowProcedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 	sprintf(buf, "0x%x : ", hWnd);
 	OutputDebugString(buf);
 	*/
-	PutWindowMessage(message, wParam, lParam);
+	//PutWindowMessage(message, wParam, lParam);
 #endif
 
 	if ( message==WM_CREATE )

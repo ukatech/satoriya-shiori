@@ -438,6 +438,25 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 					++p;
 				cmd.assign(start, p-start);
 
+				if ( cmd == "_?" || cmd == "_!" ) { //エスケープ処理 この間に自動タグ挿入はしない
+					const char* e1 = strstr(p,"\\_?");
+					if ( ! e1 ) { e1 = strstr(p,"\\_!"); }
+
+					if ( e1 ) {
+						character_wait_exec;
+						result += c;
+						result += cmd;
+
+						opt.assign(p,e1-p+3);
+						opt = UnKakko(opt.c_str());
+
+						p = e1 + 3; //endtag
+
+						result += opt;
+						continue;
+					}
+				}
+
 				if (*p=='[') {
 					const char* opt_start = ++p;
 					while (*p!=']') {
