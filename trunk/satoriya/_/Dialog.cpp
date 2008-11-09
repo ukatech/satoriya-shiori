@@ -49,9 +49,9 @@ Dialog::SetText( int id, const char* format, ... ) {
 BOOL	
 Dialog::DialogProcedure( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam ) {
 
-#ifdef	_DEBUG
-	PutWindowMessage( message, wParam, lParam );
-#endif
+//#ifdef	_DEBUG
+//	PutWindowMessage( message, wParam, lParam );
+//#endif
 
 	switch ( message ) {
 
