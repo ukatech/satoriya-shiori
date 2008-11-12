@@ -1,56 +1,37 @@
 #ifndef	SIMPLE_STACK_H
 #define	SIMPLE_STACK_H
 
-#include	<deque>
+#include	<vector>
 #include	<cassert>
 using namespace std;
 
 template<class T>
-class simple_stack {
-
-	deque<T>	mDeque;
-
+class simple_stack : public std::vector<T>
+{
 public:
 
 	void	push(const T& iT) {
-		mDeque.push_back(iT);
+		push_back(iT);
 	}
 	T	pop() {
-		assert(mDeque.size()>0);
-		T	theT = mDeque.back();
-		mDeque.pop_back();
+		assert(size()>0);
+		T	theT = back();
+		pop_back();
 		return	theT;
 	}
 	void	pop(int num) {
-		assert(num>=0 && num<=mDeque.size());
-		while ( num-- > 0 )
-			mDeque.pop_back();
+		assert(num>=0 && num<=size());
+		while ( num-- > 0 ) {
+			pop_back();
+		}
 	}
 	T&	top() {
-		return	mDeque.back();
+		return	back();
 	}
 	T&	from_top(int len) {
-		assert(len>=0 && len<mDeque.size());
-		return	mDeque[mDeque.size()-1-len];
+		assert(len>=0 && len<size());
+		return	(*this)[size()-1-len];
 	}
-	int	size() { 
-		return	mDeque.size();
-	}
-	bool	empty() {
-		return	mDeque.size()==0;
-	}
-	void	clear() {
-		mDeque.clear();
-	}
-	T&	operator[](int n) {
-		assert(n>=0 && n<mDeque.size());
-		return	mDeque[n];
-	}
-
-
-	typedef	typename deque<T>::iterator	iterator;
-	iterator	begin() { return mDeque.begin(); }
-	iterator	end() { return mDeque.end(); }
 };
 
 #ifdef	_OSTREAM_

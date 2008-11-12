@@ -23,19 +23,19 @@ struct calc_element {
 	calc_element() : str(), priority(0) {}
 };
 
-static bool	make_deque(const char*& p, deque<calc_element>& oDeque) {
+static bool	make_array(const char*& p, std::vector<calc_element>& oData) {
 
 	while (true) {
 
 		// 被演算子または単項演算子を取得
 
 		if ( *p == '(' ) {
-			oDeque.push_back( calc_element("(", 110) );
-			if ( !make_deque(++p, oDeque) )	// カッコ内を再帰処理
+			oData.push_back( calc_element("(", 110) );
+			if ( !make_array(++p, oData) )	// カッコ内を再帰処理
 				return	false;	// エラーはトップまで伝える
 			if ( *p++ !=')' )
 				return	false;
-			oDeque.push_back( calc_element(")", 10) );
+			oData.push_back( calc_element(")", 10) );
 		}
 		else {
 			if ( !isdigit(*p) && (*p)!='.') {
@@ -45,7 +45,7 @@ static bool	make_deque(const char*& p, deque<calc_element>& oDeque) {
 				else if ( *p=='-' ) str="-";
 				else return false;	// 単項演算子じゃない、順番が変
 				++p;
-				oDeque.push_back( calc_element(str, 90) );
+				oData.push_back( calc_element(str, 90) );
 				continue;
 			}
 
@@ -55,7 +55,7 @@ static bool	make_deque(const char*& p, deque<calc_element>& oDeque) {
 			string	str(p,len);
 			if ( count(str,".")>=2 )
 				return	false;	// 小数点が２個以上ある
-			oDeque.push_back( calc_element(str, 100) );
+			oData.push_back( calc_element(str, 100) );
 			p+=len;
 		}
 
@@ -92,7 +92,7 @@ static bool	make_deque(const char*& p, deque<calc_element>& oDeque) {
 		else if ( str=="||" ) { priority=35; }
 		else return	false;
 
-		oDeque.push_back( calc_element(str, priority) );
+		oData.push_back( calc_element(str, priority) );
 	}
 }
 
@@ -146,8 +146,8 @@ static VALUE_TYPE	calc_polish(simple_stack<calc_element>& polish) {
 }
 
 bool calc_float(const char* iExpression, VALUE_TYPE* oResult) {
-	deque<calc_element>	org;
-	if ( !make_deque(iExpression, org) )
+	std::vector<calc_element>	org;
+	if ( !make_array(iExpression, org) )
 		return	false;
 	if ( *iExpression!='\0' )
 		return	false;	// なんかゴミが残ってた？
@@ -155,7 +155,7 @@ bool calc_float(const char* iExpression, VALUE_TYPE* oResult) {
 	simple_stack<calc_element>	stack,polish;
 	stack.push(calc_element("Guard", 0));	// 番兵
 
-	deque<calc_element>::const_iterator i;
+	std::vector<calc_element>::const_iterator i;
 	for ( i=org.begin() ; i!=org.end() ; ++i ) {
 		while ( i->priority <= stack.top().priority && stack.top().str != "(" )
 			polish.push(stack.pop());
