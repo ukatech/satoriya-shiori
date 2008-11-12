@@ -86,7 +86,7 @@ inline int check_number(const char* start_pos) {
 }
 
 
-static bool	make_deque(const char*& p, deque<calc_element>& oDeque) {
+static bool	make_array(const char*& p, std::vector<calc_element>& oData) {
 
 
 	while (true) {
@@ -95,19 +95,19 @@ static bool	make_deque(const char*& p, deque<calc_element>& oDeque) {
 		int	len;
 
 		if ( *p == '(' ) {
-			oDeque.push_back( calc_element("(", 110) );
-			if ( !make_deque(++p, oDeque) )	// カッコ内を再帰処理
+			oData.push_back( calc_element("(", 110) );
+			if ( !make_array(++p, oData) )	// カッコ内を再帰処理
 				return	false;	// エラーはトップまで伝える
 			if ( *p++ !=')' )
 				return	false;
-			oDeque.push_back( calc_element(")", 10) );
+			oData.push_back( calc_element(")", 10) );
 		}
 		else if (*p=='!' || *p=='+' || *p=='-') {	// 単項演算子
-			oDeque.push_back( calc_element(string(p++, 1), 90) );
+			oData.push_back( calc_element(string(p++, 1), 90) );
 			continue;
 		}
 		else if ( (len=check_number(p))!=0 ) {	// 被演算子（数値）
-			oDeque.push_back( calc_element(string(p,len), 100) );
+			oData.push_back( calc_element(string(p,len), 100) );
 			p+=len;
 		}
 		else {	// 被演算子（文字列）
@@ -125,7 +125,7 @@ static bool	make_deque(const char*& p, deque<calc_element>& oDeque) {
 			if (p==start)
 				return	false;	// 被演算子が必要なのに、ない。
 
-			oDeque.push_back( calc_element(string(start,p-start), 100) );
+			oData.push_back( calc_element(string(start,p-start), 100) );
 		}
 
 		// 項の終了。被演算子の後であるこの場所でのみ正常脱出
@@ -150,7 +150,7 @@ static bool	make_deque(const char*& p, deque<calc_element>& oDeque) {
 		else if ( str=="||" ) { priority=35; }
 		else return	false;
 
-		oDeque.push_back( calc_element(str, priority) );
+		oData.push_back( calc_element(str, priority) );
 	}
 }
 
@@ -264,8 +264,8 @@ static bool	calc_polish(simple_stack<calc_element>& polish, string& oResult,bool
 }
 
 bool calc(const char* iExpression, string& oResult,bool isStrict) {
-	deque<calc_element>	org;
-	if ( !make_deque(iExpression, org) )
+	std::vector<calc_element>	org;
+	if ( !make_array(iExpression, org) )
 		return	false;
 	if ( *iExpression!='\0' )
 		return	false;	// なんかゴミが残ってた？
@@ -273,7 +273,7 @@ bool calc(const char* iExpression, string& oResult,bool isStrict) {
 	simple_stack<calc_element>	stack,polish;
 	stack.push(calc_element("Guard", 0));	// 番兵
 
-	deque<calc_element>::const_iterator i;
+	std::vector<calc_element>::const_iterator i;
 	for ( i=org.begin() ; i!=org.end() ; ++i ) {
 		while ( i->priority <= stack.top().priority && stack.top().str != "(" )
 			polish.push(stack.pop());
