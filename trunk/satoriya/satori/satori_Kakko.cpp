@@ -407,7 +407,7 @@ bool	Satori::Call(const string& iName, string& oResult, bool for_calc, bool for_
 
 bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool for_non_talk)
 {
-	strvec*	p_kakko_replace_history = kakko_replace_history.empty() ? NULL : &(kakko_replace_history.top());
+	simple_stack<strvec>::size_type stack_size_before_call = kakko_replace_history.size();
 
 	bool	_pre_called_=false;
 
@@ -960,8 +960,9 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		return	false;
 	}
 
-	if ( p_kakko_replace_history!=NULL )
-		p_kakko_replace_history->push_back(oResult);
+	if ( stack_size_before_call != 0 && stack_size_before_call <= kakko_replace_history.size() ) {
+		kakko_replace_history[stack_size_before_call-1].push_back(oResult);
+	}
 	sender << "i" << iName << "j¨" << oResult << "" << endl;
 	return	true;
 }
