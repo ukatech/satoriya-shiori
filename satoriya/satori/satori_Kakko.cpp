@@ -497,8 +497,14 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 						}
 
 						string	exp = *i;
-						if ( calc(exp,true) )
-							*i=exp;
+						if ( calc(exp,true) ) {
+							if ( state==SAORI_CALL && aredigits(zen2han(exp)) ) {
+								*i = zen2han(exp);
+							}
+							else {
+								*i=exp;
+							}
+						}
 					}
 				}
 			}
