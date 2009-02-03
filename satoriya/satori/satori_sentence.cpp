@@ -245,6 +245,8 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 						break;
 					}
 				}
+
+				
 				if ( i==ghosts_info.end() ) {	// “Á’è‚µ‚È‚©‚Á‚½ê‡
 					// ƒ‰ƒ“ƒ_ƒ€
 					//int n = random(ghosts_info.size()-1))+1;

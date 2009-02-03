@@ -249,6 +249,36 @@ strmap*	Satori::find_ghost_info(string name) {
 }
 
 
+string	Satori::special_call(
+	const string& iCallName,
+	const strvec& iArgv,
+	bool for_calc,
+	bool for_non_talk,
+	bool iIsSecure)
+{
+	if ( iCallName == "when" ) {
+		if ( iArgv.size()<2 || iArgv.size()>3 ) {
+			return "引数の個数が正しくありません。";
+		}
+		string	exp = UnKakko(iArgv[0].c_str(), true, for_non_talk);
+		if ( !calc(exp) ) {
+			return "' 式が計算不\x94\x5cです。";
+		}
+		if ( zen2int(exp) != 0 ) {
+			return	UnKakko(iArgv[1].c_str(), for_calc, for_non_talk);	// 真
+		}
+		else if ( iArgv.size()==3 ) {
+			return	UnKakko(iArgv[2].c_str(), for_calc, for_non_talk);	// 偽
+		}
+		else {
+			return	"";	// 偽でelseなし
+		}
+	}
+	
+	assert(0);
+	return "";
+}
+
 
 
 // 文章の中で （ を見つけた場合、pが （ の次の位置まで進められた上でこれが実行される。
@@ -256,32 +286,81 @@ strmap*	Satori::find_ghost_info(string name) {
 // 返値はカッコの解釈結果。
 string	Satori::KakkoSection(const char*& p,bool for_calc,bool for_non_talk)
 {
+	string	thePluginName = "";
+	string  theDelimiter = "";
+	bool specialFlag = false;
+	const char *pp=0;
+	strvec	theArguments;
+	string	kakko_str;
+
 	if ( for_calc ) {
 		for_non_talk = true;
 	}
-
-	string	kakko_str;
-	while (true) {
-		if ( p[0] == '\0' )
-			return	string("（") + kakko_str;	// 閉じカッコが無かった
-		
-		string c = get_a_chr(p);
-		if ( c=="）" )
-			break;
-		else if ( c=="（" ) {
-			kakko_str += KakkoSection(p,false,for_non_talk); //内側の括弧は0に置き換えしない
+	for ( set<string>::iterator it = special_commands.begin(); it != special_commands.end(); ++it) {
+		if( strncmp(p, it->c_str(), it->size()) == 0 ){
+			pp = p + it->size();
+			string c = get_a_chr(pp);
+			//引数がない場合はスペシャルフォームにする必要はない。
+			if ( mDelimiters.find(c) != mDelimiters.end() ){
+				specialFlag = true;
+				theDelimiter = c;
+				thePluginName = it->c_str();
+				break;
+			}
 		}
-		else
-			kakko_str += c;
 	}
-	
-	string	result;
-	if ( Call(kakko_str, result, for_calc, for_non_talk) )
-		return	result;
-	if ( for_calc )
-		return	string("０");
-	else
-		return	string("（") + kakko_str + "）";
+
+	if( specialFlag ) {
+		assert(pp);
+		int level = 0;
+		const char *p_start = pp;
+		while( true ){
+			if ( *pp == '\0' ){
+				return string("（"); // 閉じカッコが無かった
+			}
+			string c = get_a_chr(pp);
+			if ( c == "（" ) {
+				level++;
+			}
+			if ( c == "）" ) {
+				level--;
+			}
+			if ( level < 0 ) {
+				theArguments.push_back( string(p_start, pp-p_start-2) );
+				break;
+			}
+			if ( level == 0 ) {
+				if ( c == theDelimiter ) {
+					theArguments.push_back( string(p_start, pp-p_start-c.size()) );
+					p_start = (char *)pp;
+				}
+			}
+		}
+		p = pp;
+		return special_call(thePluginName, theArguments, for_calc, for_non_talk, secure_flag);
+	}
+	else {
+		while (true) {
+			if ( p[0] == '\0' )
+				return	string("（") + kakko_str;	// 閉じカッコが無かった
+			
+			string c = get_a_chr(p);
+			if ( c=="）" )
+				break;
+			else if ( c=="（" ) {
+				kakko_str += KakkoSection(p,false,for_non_talk); //内側の括弧は0に置き換えしない
+			}
+			else
+				kakko_str += c;
+		}	
+		string	result;
+		if ( Call(kakko_str, result, for_calc, for_non_talk) )
+			return	result;
+		if ( for_calc )
+			return	string("０");
+		else
+			return	string("（") + kakko_str + "）";
+	}
 }
 
 string	Satori::UnKakko(const char* p,bool for_calc,bool for_non_talk)
