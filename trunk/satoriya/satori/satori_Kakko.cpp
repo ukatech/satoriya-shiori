@@ -81,7 +81,12 @@ string	Satori::inc_call(
 			for ( strvec::const_iterator it = iArgv.begin() ; it != iArgv.end() ; ++it ) {
 				words.select_all(*it,*this,vt);
 			}
-			return *(vt[random(vt.size())]);
+			if ( vt.size() ) {
+				return *(vt[random(vt.size())]);
+			}
+			else {
+				return "";
+			}
 		}
 		else {
 			sender << "error: '合成単語群' : 引数が不正です。" << endl;
@@ -417,7 +422,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		set<string>::const_iterator theDelimiter = mDelimiters.end();
 
 		const char* p = NULL;
-		enum { NO_CALL, SAORI_CALL, INC_CALL } state = NO_CALL;
+		enum { NO_CALL, SAORI_CALL, INC_CALL, SPECIAL_CALL } state = NO_CALL;
 
 		if ( mShioriPlugins->find(iName) ) {
 			thePluginName=iName;
@@ -452,6 +457,12 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 					state = SAORI_CALL;
 					break;
 				}
+				else if ( special_commands.find(str)!=special_commands.end()){
+					thePluginName=str;
+					theDelimiter=i;
+					state = SPECIAL_CALL;
+					break;
+				}
 				else if ( inner_commands.find(str)!=inner_commands.end() ) {
 					thePluginName=str;
 					theDelimiter=i;
@@ -472,37 +483,66 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 			if ( p!=NULL )// 引数があるなら
 			{
 				assert(theDelimiter != mDelimiters.end());
-				string argstr = UnKakko(p,false,true);
 
-				while (true)
-				{
-					p += theDelimiter->size();
-					const char* pdlmt = strstr_hz(p, theDelimiter->c_str());
-					if ( pdlmt==NULL ) {
-						theArguments.push_back(p);
-						break;
-					}
-					theArguments.push_back( string(p,pdlmt-p) );
-					p = pdlmt;
-				}
-
-				if ( mSaoriArgumentCalcMode!=SACM_OFF ) {
-					for ( strvec::iterator i=theArguments.begin() ; i!=theArguments.end() ; ++i ) {
-						if ( i->size()==0 )
-							continue;
-						if ( mSaoriArgumentCalcMode==SACM_AUTO ) {
-							int	c = zen2han(*i).at(0);
-							if ( c!='+' && c!='-' && !(c>='0' && c<='9') )
-								continue;
+				if ( state == SPECIAL_CALL ) {
+					int level = 0;
+					get_a_chr(p);
+					const char *p_start = p;
+					while( true ){
+						if ( *p == '\0' ){
+							theArguments.push_back( string(p_start, p-p_start) );
+							break;
 						}
-
-						string	exp = *i;
-						if ( calc(exp,true) ) {
-							if ( state==SAORI_CALL && aredigits(zen2han(exp)) ) {
-								*i = zen2han(exp);
+						string c = get_a_chr(p);
+						if ( c == "（" ) {
+							level++;
+						}
+						if ( c == "）" ) {
+							level--;
+						}
+						if ( level < 0 ) {
+							theArguments.push_back( string(p_start, p-p_start-2) );
+							break;
+						}
+						if ( level == 0 ) {
+							if ( c == *theDelimiter ) {
+								theArguments.push_back( string(p_start, p-p_start-c.size()) );
+								p_start = (char *)p;
 							}
-							else {
-								*i=exp;
+						}
+					}
+				}else{
+					string argstr = UnKakko(p,false,true);
+					while (true)
+					{
+						p += theDelimiter->size();
+						const char* pdlmt = strstr_hz(p, theDelimiter->c_str());
+						if ( pdlmt==NULL ) {
+							theArguments.push_back(p);
+							break;
+						}
+						theArguments.push_back( string(p,pdlmt-p) );
+						p = pdlmt;
+					}
+
+					if ( mSaoriArgumentCalcMode!=SACM_OFF ) {
+						for ( strvec::iterator i=theArguments.begin() ; i!=theArguments.end() ; ++i ) {
+							if ( i->size()==0 )
+								continue;
+							if ( mSaoriArgumentCalcMode==SACM_AUTO ) {
+								int	c = zen2han(*i).at(0);
+								if ( c!='+' && c!='-' && !(c>='0' && c<='9') )
+									continue;
+							}
+
+							string	exp = *i;
+							if ( calc(exp,true) ) {
+								if ( state==SAORI_CALL && aredigits(zen2han(exp)) ) {
+									*i = zen2han(exp);
+								}
+								else {
+									*i=exp;
+								}
 							}
 						}
 					}
@@ -515,6 +555,9 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 					m_escaper.unescape(*i);
 				}
 				oResult = mShioriPlugins->request(thePluginName, theArguments, mKakkoCallResults, secure_flag ? "Local" : "External" );
+			}
+			else if ( state==SPECIAL_CALL ) {
+				oResult = special_call(thePluginName, theArguments, false, true, secure_flag);
 			}
 			else {
 				oResult = inc_call(thePluginName, theArguments, mKakkoCallResults, secure_flag);

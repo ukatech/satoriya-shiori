@@ -280,6 +280,8 @@ private:
 	// 栞プラグイン
 	ShioriPlugins	*mShioriPlugins;
 	string	inc_call(const string&, const strvec&, strvec&, bool is_secure);
+	string	special_call(const string&, const strvec&, bool for_calc, bool for_non_talk, bool is_secure);
+	set<string> special_commands;
 
 	// 安全？
 	bool	secure_flag;
