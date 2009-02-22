@@ -121,6 +121,11 @@ void	Satori::InitMembers() {
 	mKakkoCallResults.clear();
 
 	special_commands.insert("when");
+	special_commands.insert("times");
+	special_commands.insert("while");
+	special_commands.insert("for");
+
+	mLoopCounters.clear();
 
 #ifndef POSIX
 	is_single_monitor = true;

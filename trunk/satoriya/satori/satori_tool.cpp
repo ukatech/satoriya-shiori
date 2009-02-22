@@ -249,6 +249,16 @@ strmap*	Satori::find_ghost_info(string name) {
 }
 
 
+bool Satori::calc_argument(const string &iExpression, int &oResult, bool for_non_talk)
+{
+	string exp = UnKakko(iExpression.c_str(), true, for_non_talk);
+	if ( !calc(exp) ){
+		return false;
+	}
+	oResult = zen2int(exp);
+	return true;
+}
+
 string	Satori::special_call(
 	const string& iCallName,
 	const strvec& iArgv,
@@ -257,14 +267,12 @@ string	Satori::special_call(
 	bool iIsSecure)
 {
 	if ( iCallName == "when" ) {
-		if ( iArgv.size()<2 || iArgv.size()>3 ) {
+		int result;
+		if ( iArgv.size() < 2 || 3 < iArgv.size() ) {
 			return "引数の個数が正しくありません。";
 		}
-		string	exp = UnKakko(iArgv[0].c_str(), true, for_non_talk);
-		if ( !calc(exp) ) {
-			return "' 式が計算不\x94\x5cです。";
-		}
-		if ( zen2int(exp) != 0 ) {
+		if ( !calc_argument(iArgv[0], result, for_non_talk) ) return "' 式が計算不\x94\x5cです。";
+		if ( result != 0 ) {
 			return	UnKakko(iArgv[1].c_str(), for_calc, for_non_talk);	// 真
 		}
 		else if ( iArgv.size()==3 ) {
@@ -274,7 +282,139 @@ string	Satori::special_call(
 			return	"";	// 偽でelseなし
 		}
 	}
-	
+
+	if ( iCallName == "times" ) {
+		int count;
+		int max;
+		int body;
+		string ret="";
+		char buf[21]; //64bit
+		mLoopCounters.push("0");
+		try{
+			if ( iArgv.size() == 2 ){
+				if ( !calc_argument(iArgv[0], max, for_non_talk) ) throw("' 式が計算不\x94\x5cです。");
+				count = 0;
+				sprintf(buf, "%d", count);
+				mLoopCounters.top() = buf;
+				body = 1;
+			}
+			else if( iArgv.size() == 3 ){
+				if ( !calc_argument(iArgv[1], count, for_non_talk) ) throw("' 式が計算不\x94\x5cです。");
+				sprintf(buf, "%d", count);
+				mLoopCounters.top() = buf;
+				if ( !calc_argument(iArgv[0], max, for_non_talk) ) throw("' 式が計算不\x94\x5cです。");
+				max += count;
+				body = 2;
+			}
+			else{
+				throw("引数の個数が正しくありません。");
+			}
+			for(int i=count; i<max; i++){
+				sprintf(buf, "%d", i);
+				mLoopCounters.top() = buf;
+				ret += UnKakko(iArgv[body].c_str(), for_calc, for_non_talk);
+			}
+		}
+		catch( const char *str ){
+			ret = str;
+		}
+		mLoopCounters.pop();
+		return ret;
+	}
+
+	if ( iCallName == "while" ) {
+		int count;
+		int result;
+		int expression;
+		int body;
+		string ret="";
+		char buf[21]; //64bit
+		mLoopCounters.push("0");
+		try {
+			if ( iArgv.size() == 2 ){
+				expression = 0;
+				count = 0;
+				body = 1;
+			}
+			else if( iArgv.size() == 3 ){
+				expression = 0;
+				if ( !calc_argument(iArgv[1], count, for_non_talk) ) throw("' 式が計算不\x94\x5cです。");
+				body = 2;
+			}
+			else{
+				throw("引数の個数が正しくありません。");
+			}
+			for(int i=count; i<INT_MAX; i++){
+				sprintf(buf, "%d", i);
+				mLoopCounters.top() = buf;
+				if ( !calc_argument(iArgv[expression], result, for_non_talk) ) throw("' 式が計算不\x94\x5cです。");
+				if ( result == 0 ) {
+					break;
+				}
+				ret += UnKakko(iArgv[body].c_str(), for_calc, for_non_talk);
+			}
+		}
+		catch(const char * str){
+			ret = str;
+		}
+		mLoopCounters.pop();
+		return ret;
+	}
+
+	if ( iCallName == "for" ) {
+		int start;
+		int end;
+		int step;
+		int body;
+		char buf[21]; //64bit
+		string ret="";
+		mLoopCounters.push("0");
+		try{
+			if ( iArgv.size() == 3 ){
+				if ( !calc_argument(iArgv[0], start, for_non_talk) ) throw("' 式が計算不\x94\x5cです。");
+				sprintf(buf, "%d", start);
+				mLoopCounters.top() = buf;
+				if ( !calc_argument(iArgv[1], end, for_non_talk) ) throw("' 式が計算不\x94\x5cです。");
+				step = 1;
+				body = 2;
+			}
+			else if ( iArgv.size() == 4 ) {
+				if ( !calc_argument(iArgv[0], start, for_non_talk) ) throw("' 式が計算不\x94\x5cです。");
+				sprintf(buf, "%d", start);
+				mLoopCounters.top() = buf;
+				if ( !calc_argument(iArgv[1], end, for_non_talk) ) throw("' 式が計算不\x94\x5cです。");
+				if ( !calc_argument(iArgv[2], step, for_non_talk) ) throw("' 式が計算不\x94\x5cです。");
+				body = 3;
+			}
+			else {
+				throw("引数の個数が正しくありません。");
+			}
+			if ( step == 0 ) {
+				throw("forの増分に0が指定されました。");
+			}
+			step = abs(step);
+			if ( start <= end ) {
+				for(int i=start; i<=end; i+=step) {
+					sprintf(buf, "%d", i);
+					mLoopCounters.top() = buf;
+					ret += UnKakko(iArgv[body].c_str(), for_calc, for_non_talk);
+				}
+			}
+			else {
+				for(int i=start; end<=i; i-=step) {
+					sprintf(buf, "%d", i);
+					mLoopCounters.top() = buf;
+					ret += UnKakko(iArgv[body].c_str(), for_calc, for_non_talk);
+				}
+			}
+		}
+		catch(const char *str){
+			ret = str;
+		}
+		mLoopCounters.pop();
+		return ret;
+	}
+
 	assert(0);
 	return "";
 }
@@ -297,7 +437,7 @@ string	Satori::KakkoSection(const char*& p,bool for_calc,bool for_non_talk)
 		for_non_talk = true;
 	}
 	for ( set<string>::iterator it = special_commands.begin(); it != special_commands.end(); ++it) {
-		if( strncmp(p, it->c_str(), it->size()) == 0 ){
+		if ( strncmp(it->c_str(), p, it->size()) == 0 ) {
 			pp = p + it->size();
 			string c = get_a_chr(pp);
 			//引数がない場合はスペシャルフォームにする必要はない。

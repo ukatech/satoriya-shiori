@@ -281,6 +281,7 @@ private:
 	ShioriPlugins	*mShioriPlugins;
 	string	inc_call(const string&, const strvec&, strvec&, bool is_secure);
 	string	special_call(const string&, const strvec&, bool for_calc, bool for_non_talk, bool is_secure);
+	bool calc_argument(const string &iExpression, int &oResult, bool for_non_talk);
 	set<string> special_commands;
 
 	// 安全？
@@ -316,6 +317,9 @@ private:
 	RECT	max_screen_rect;
 	map<int, HWND>	characters_hwnd;
 #endif
+
+	// ループ時のカウンタ参照用
+	simple_stack<string> mLoopCounters; //バグを誘発させそうなのでstring
 
 	// メンバ関数
 
