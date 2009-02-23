@@ -1,4 +1,9 @@
 #labels Featured
+=Mc146-1 (r168) =
+  * BTS #52のパッチ取り込み。
+   * http://emily.shillest.net/specwiki/index.php?bugyo%2F%E9%87%8C%E3%80%85%E6%8B%A1%E5%BC%B5%E6%A1%88
+   * http://ssp.shillest.net/bts/guest.cgi?action=view_report&id=52&project=ms
+
 =Mc145-1 (r166) =
   * when文 （カッコ内を後で計算するif） 追加
    * http://ssp.shillest.net/bts/guest.cgi?project=ms&action=view_report&id=51
