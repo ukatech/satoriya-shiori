@@ -299,9 +299,10 @@ string* Satori::GetValue(const string &iName,bool &oIsSysValue,bool iIsExpand,bo
 		return &(variables[iName]);
 	}
 
-	if ( ((iName[0]=='R' || iName[0]=='H' || iName[0]=='A' || iName[0]=='S') && iName.size() >= 2) ||
+	if ( ((iName[0]=='R' || iName[0]=='H' || iName[0]=='A' || iName[0]=='S' || iName[0]=='C') && iName.size() >= 2) ||
 		((iName.compare(0,2,"‚q") == 0 || iName.compare(0,2,"‚g") == 0 ||
-		iName.compare(0,2,"‚`") == 0 || iName.compare(0,2,"‚r") == 0) && iName.size() >= 3) ) {
+		iName.compare(0,2,"‚`") == 0 || iName.compare(0,2,"‚r") == 0 ||
+		iName.compare(0,2,"‚b") == 0) && iName.size() >= 3) ) {
 
 		string hankaku=zen2han(iName);
 		if ( aredigits(hankaku.c_str()+1) ) {
@@ -368,6 +369,17 @@ string* Satori::GetValue(const string &iName,bool &oIsSysValue,bool iIsExpand,bo
 						if ( oIsExpanded ) { *oIsExpanded = true; }
 						return &(mKakkoCallResults[ref]);
 					}
+					return NULL;
+				}
+			}
+			else if ( hankaku[0]=='C' ) {
+				oIsSysValue = true;
+
+				int ref=stoi(hankaku.c_str()+1);
+				if ( 0 <= ref && ref < mLoopCounters.size() ) {
+					return &(mLoopCounters.from_top(ref));
+				}
+				else {
 					return NULL;
 				}
 			}
