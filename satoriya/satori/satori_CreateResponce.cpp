@@ -86,11 +86,7 @@ int		Satori::CreateResponse(strmap& oResponse)
 		result = gSatoriCraftmanW;
 	else if ( mRequestID == "name" )
 		result = gSatoriName;
-	else if ( 
-		mRequestID=="sakura.recommendsites" || 
-		mRequestID=="kero.recommendsites" ||
-		mRequestID=="sakura.portalsites" ) 
-	{
+	else if ( mRequestID.find(".recommendsites") != string::npos || mRequestID=="sakura.portalsites" ) {
 		if ( !GetURLList(mRequestID, result) )	// URLƒŠƒXƒg‚ÌŽæ“¾
 			return	204;
 	} 
