@@ -183,14 +183,47 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 	}
 	else if ( iEvent=="OnRecommendsiteChoice" )
 	{
-		if ( GetRecommendsiteSentence("sakura.recommendsites", script) )
-			NULL;
-		else if ( GetRecommendsiteSentence("kero.recommendsites", script) )
-			NULL;
-		else if ( GetRecommendsiteSentence("sakura.portalsites", script) )
-			NULL;
-		else
-			script="";
+		if ( mReferences[3] != "" && mReferences[4] != "" ) {
+			if ( mReferences[3] == "portal" ) {
+				if ( ! GetRecommendsiteSentence("sakura.portalsites", script) ) {
+					script = "";
+				}
+			}
+			else {
+				bool found = false;
+				if ( mReferences[4] == "0" ) {
+					if ( GetRecommendsiteSentence("sakura.recommendsites", script) ) {
+						found = true;
+					}
+				}
+				else if ( mReferences[4] == "0" ) {
+					if ( GetRecommendsiteSentence("kero.recommendsites", script) ) {
+						found = true;
+					}
+				}
+
+				if ( ! found ) {
+					string req = string("char") + mReferences[4] + ".recommendsites";
+					if ( ! GetRecommendsiteSentence(req.c_str(), script) ) {
+						script = "";
+					}
+				}
+			}
+		}
+		else {
+			if ( GetRecommendsiteSentence("sakura.recommendsites", script) ) {
+				NULL;
+			}
+			else if ( GetRecommendsiteSentence("kero.recommendsites", script) ) {
+				NULL;
+			}
+			else if ( GetRecommendsiteSentence("sakura.portalsites", script) ) {
+				NULL;
+			}
+			else {
+				script="";
+			}
+		}
 	}
 	else if ( iEvent=="OnCommunicate" ) {	// ˜b‚µŠ|‚¯‚ç‚ê‚½
 
