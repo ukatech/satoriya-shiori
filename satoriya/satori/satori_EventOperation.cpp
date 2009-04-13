@@ -191,12 +191,12 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 			}
 			else {
 				bool found = false;
-				if ( mReferences[4] == "0" ) {
+				if ( zen2int(mReferences[4]) == 0 ) {
 					if ( GetRecommendsiteSentence("sakura.recommendsites", script) ) {
 						found = true;
 					}
 				}
-				else if ( mReferences[4] == "0" ) {
+				else if ( zen2int(mReferences[4]) == 1 ) {
 					if ( GetRecommendsiteSentence("kero.recommendsites", script) ) {
 						found = true;
 					}
