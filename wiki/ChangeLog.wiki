@@ -1,4 +1,7 @@
 #labels Featured
+=Mc146-3 (r173,r174) =
+  * \p[2]以降用のrecommendsitesがちゃんと使えない問題を修正 (char2.recommendsites以降)
+
 =Mc146-2 (r170,r171) =
   * BTS #52の追加パッチ取り込み。
    * http://ssp.shillest.net/bts/guest.cgi?action=view_report&id=52&project=ms
