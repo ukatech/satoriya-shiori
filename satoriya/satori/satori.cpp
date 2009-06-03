@@ -19,13 +19,13 @@ const char* gSaoriVersion = "1.0";
 
 
 
-#ifdef SATORI_DLL
+//#ifdef SATORI_DLL
 	// Satoriの唯一の実体
 	Satori gSatori;
 	SakuraDLLHost* SakuraDLLHost::m_dll = &gSatori;
-#else
-	SakuraDLLHost* SakuraDLLHost::m_dll = NULL;
-#endif // SATORI_DLL
+//#else
+//	SakuraDLLHost* SakuraDLLHost::m_dll = NULL;
+//#endif // SATORI_DLL
 
 
 // エスケープ文字列
