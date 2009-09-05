@@ -43,8 +43,9 @@ int	Satori::request(
 	o_protocol = "SHIORI";
 	o_protocol_version = "3.0";
 
-	// 返り値抑止
+	// 喋るごとに初期化する変数
 	return_empty = false;
+	is_quick_section = false;
 
 	// スクリプトヘッダ
 	header_script = "";

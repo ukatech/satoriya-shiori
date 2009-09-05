@@ -107,7 +107,10 @@ void	Satori::InitMembers() {
 
 	second_from_last_talk=0;
 
+	//’‚é‚²‚Æ‚É‰Šú‰»‚·‚é•Ï”
 	return_empty = false;
+	is_quick_section = false;
+
 	is_dic_loaded = false;
 	is_call_ontalk_at_mikire = false;
 
