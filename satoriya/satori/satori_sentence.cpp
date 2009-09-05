@@ -108,11 +108,13 @@ string	Satori::GetSentence(const string& name)
 #define	character_wait_clear(wait_quantity)	\
 	if ( mRequestID == "OnHeadlinesense.OnFind" ) { chars_spoken = 0;	} \
 	else if( chars_spoken > 0 ) { \
-		if ( type_of_auto_insert_wait >= 2 ) { \
-			next_wait_value += (50*3+random(100))*(wait_quantity)*rate_of_auto_insert_wait/100; \
-		} \
-		else if ( type_of_auto_insert_wait == 1 ) { \
-			next_wait_value += chars_spoken*basewait*rate_of_auto_insert_wait/100; \
+		if ( ! is_quick_section ) { \
+			if ( type_of_auto_insert_wait >= 2 ) { \
+				next_wait_value += (50*3+random(100))*(wait_quantity)*rate_of_auto_insert_wait/100; \
+			} \
+			else if ( type_of_auto_insert_wait == 1 ) { \
+				next_wait_value += chars_spoken*basewait*rate_of_auto_insert_wait/100; \
+			} \
 		} \
 		chars_spoken = 0; \
 	}
@@ -498,6 +500,12 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 				else if ( cmd=="s" ) {
 					//サーフィス切り替えの前にウェイトは済ませておくこと
 					character_wait_exec;
+				}
+				else if ( cmd=="_q" ) {
+					if ( ! is_quick_section ) { //これからクイックセクションなのでウエイトを全部消化
+						character_wait_exec;
+					}
+					is_quick_section = ! is_quick_section;
 				}
 
 				if ( opt!="" ) {

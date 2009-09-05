@@ -223,6 +223,9 @@ private:
 	// 返り値抑止
 	bool return_empty;
 
+	//クイックセクションかどうか
+	bool is_quick_section;
+
 	// スクリプトヘッダ
 	string header_script;
 
