@@ -314,12 +314,18 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName)
 	        while (i->body.size() > 0 && i->body[i->body.size()-1].length() == 0) {
 		        i->body.pop_back();
 		}
+
+		m_escaper.unescape(i->name);
 		
 		if ( i->typemark == "–" )
 		{
 			// ƒg[ƒN‚Ìê‡
 			if ( is_for_anchor ) { anchors.push_back(i->name); }
 			talks.add_element(i->name, i->body, i->condition);
+
+#ifdef _DEBUG
+			sender << "–" << i->name << " " << i->condition << endl;
+#endif
 		}
 		else
 		{
@@ -329,6 +335,10 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName)
 			{
 				words.add_element(i->name, *j, i->condition);
 			}
+
+#ifdef _DEBUG
+			sender << "—" << i->name << " " << i->condition << endl;
+#endif
 		}
 
 	}
