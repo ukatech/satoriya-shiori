@@ -437,6 +437,7 @@ string	decode(const string& in) {
 }
 */
 
+//SJIS”»’è‚Â‚«strstr
 const char*	strstr_hz(const char* target, const char* find) {
 	int	len=strlen(find);
 	const char* p=target;
@@ -449,6 +450,19 @@ const char*	strstr_hz(const char* target, const char* find) {
 			++p;
 	}
 	return	NULL;
+}
+
+//STLƒXƒ^ƒCƒ‹‚Ìstrstr_hz
+std::string::size_type find_hz(const char* str, const char* target, std::string::size_type find_pos)
+{
+	const char *p = strstr_hz(str+find_pos, target);
+	if ( p == NULL ) {
+		return string::npos;
+	}
+	else {
+		p -= find_pos;
+		return p - str;
+	}
 }
 
 bool	compare_tail(const string& str, const string& tail)

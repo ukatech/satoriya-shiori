@@ -178,7 +178,7 @@ public:
 
 		vector<const_iterator> elem_vector;
 
-		std::string::size_type sentenceNamePos = iSentence.find("「");
+		std::string::size_type sentenceNamePos = find_hz(iSentence,"「");
 
 		bool isComNameMode = sentenceNamePos != string::npos;
 		if ( isComNameMode ) {
@@ -228,7 +228,7 @@ public:
 
 			for ( ; wds_it!=words.end() ; ++wds_it )
 			{
-				if ( iSentence.find(*wds_it,sentenceNamePos) != string::npos )
+				if ( find_hz(iSentence,*wds_it,sentenceNamePos) != string::npos )
 				{
 					if ( (!isComNameMode) && compare_tail(*wds_it, "「") )	// 末尾が 「 であるものだけの場合はヒットと見なさないように。
 						hit_point += 4;

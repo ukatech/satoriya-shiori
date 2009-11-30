@@ -131,11 +131,16 @@ int	erase(string& str, const string& before);
 // ‘ÎÛŒê‹å‚Ì”‚ğ”‚¦‚é
 int	count(const string& str, const string& target);
 // ‘ÎÛŒê‹å‚Ì‘¶İŠm”F
-inline bool find(const string& str, const string& target) { return	strstr_hz(str.c_str(), target.c_str())!=NULL; }
-inline bool find(const char* str, const string& target) { return	strstr_hz(str, target.c_str())!=NULL; }
-inline bool find(const string& str, const char* target) { return	strstr_hz(str.c_str(), target)!=NULL; }
-inline bool find(const char* str, const char* target) { return	strstr_hz(str, target)!=NULL; }
-
+std::string::size_type find_hz(const char* str, const char* target, std::string::size_type find_pos = 0);
+inline std::string::size_type find_hz(const string& str, const string& target,std::string::size_type find_pos = 0) {
+	return	find_hz(str.c_str(), target.c_str(), find_pos);
+}
+inline std::string::size_type find_hz(const char* str, const string& target,std::string::size_type find_pos = 0) {
+	return	find_hz(str, target.c_str(), find_pos);
+}
+inline std::string::size_type find_hz(const string& str, const char* target,std::string::size_type find_pos = 0)   {
+	return	find_hz(str.c_str(), target, find_pos);
+}
 
 // deque‚ÌŒã‚ë‚©‚ç n ŒÂ–Ú‚ğQÆ‚·‚é
 template<class T>
