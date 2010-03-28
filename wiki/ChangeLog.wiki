@@ -1,4 +1,8 @@
 #labels Featured
+=Mc147-3=
+  * ShioriEchoでSecurityLevel: local以外を蹴り忘れていたとんでもない問題を修正
+  * ShioriEchoをオーバーライド可能にした
+
 =Mc147-2=
   * コミュニケート反応探索でマルチバイト文字を考慮するのを忘れていた問題を修正
 
