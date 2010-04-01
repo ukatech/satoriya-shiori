@@ -1,4 +1,9 @@
 #labels Featured
+=Mc147-4=
+  * そもそも ＄デバッグ＝有効　にしないとShioriEchoが動作しないようにした
+  * ShioriEchoの結果に最低限の危険タグフィルタを追加
+  * 上記の対応でいろいろ解決したので再びShioriEchoをオーバーライド不可に戻した
+
 =Mc147-3=
   * ShioriEchoでSecurityLevel: local以外を蹴り忘れていたとんでもない問題を修正
   * ShioriEchoをオーバーライド可能にした
