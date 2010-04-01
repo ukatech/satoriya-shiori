@@ -84,6 +84,8 @@ void	Satori::InitMembers() {
 	fOperationLog = true;
 	fResponseLog = true;
 
+	fDebugMode = false;
+
 	reload_flag = false;
 	dic_folder.clear();
 

@@ -186,10 +186,32 @@ int	Satori::request(
 	sender << "--- Operation ---" << endl;
 
 	int status_code;
-	if ( mRequestID=="ShioriEcho" && ! words.is_exist("ShioriEcho") && ! talks.is_exist("ShioriEcho") ) {
-		if ( secure_flag ) {
+	if ( mRequestID=="ShioriEcho" ) {
+		// ShioriEcho実装
+		if ( fDebugMode && secure_flag ) {
 			string result = SentenceToSakuraScriptExec_with_PreProcess(mReferences);
 			if ( result.length() ) {
+				static const char* const dangerous_tag[] = {"\\![updatebymyself]",
+					"\\![vanishbymyself]",
+					"\\![enter,passivemode]",
+					"\\![enter,inductionmode]",
+					"\\![leave,passivemode]",
+					"\\![leave,inductionmode]",
+					"\\![lock,repaint]",
+					"\\![unlock,repaint]",
+					"\\![biff]",
+					"\\![open,browser",
+					"\\![open,mailer",
+					"\\![raise",
+					"\\j["};
+
+				std::string replace_to;
+				for ( int i = 0 ; i < (sizeof(dangerous_tag)/sizeof(dangerous_tag[0])) ; ++i ) {
+					replace_to = "￥［";
+					replace_to += dangerous_tag[i]+2; //\をヌキ
+					replace(result,dangerous_tag[i],replace_to);
+				}
+
 				//Translate(result); - Translateは後でかかる
 				mResponseMap["Value"] = result;
 				status_code = 200;
@@ -199,8 +221,17 @@ int	Satori::request(
 			}
 		}
 		else {
-			sender << "local/Localでないので蹴りました: ShioriEcho" << endl;
-			status_code = 403;
+			if ( fDebugMode ) {
+				sender << "local/Localでないので蹴りました: ShioriEcho" << endl;
+				status_code = 403;
+			}
+			else {
+				static const std::string dbgmsg = "デバッグモードが無効です。使用するためには＄デバッグ＝有効にしてください。: ShioriEcho";
+				sender << dbgmsg << endl;
+
+				mResponseMap["Value"] = "\\0" + dbgmsg + "\\e";
+				status_code = 200;
+			}
 		}
 	}
 	else {

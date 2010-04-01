@@ -680,6 +680,11 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 		return true;
 	}
 
+	if ( key == "デバッグ" ) {
+		fDebugMode = (value=="有効");
+		return true;
+	}
+
 	if ( key == "Log" ) {
 		Sender::validate(value=="有効");
 		return true;
