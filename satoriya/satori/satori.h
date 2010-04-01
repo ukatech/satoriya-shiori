@@ -259,6 +259,9 @@ private:
 	string	mCommunicateFor;	// 話しかけ対象ゴースト。→で設定されresponseにToをつける
 	set<string>	mCommunicateLog;	// 会話ログ。繰り返しがあった場合は会話打ち切り
 
+	// でばぐもーど
+	bool    fDebugMode;
+
 	// 各セクションのログ吐き有無。
 	bool	fRequestLog, fOperationLog, fResponseLog;
 
