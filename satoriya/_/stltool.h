@@ -176,7 +176,7 @@ inline int split(const string& i, T& o) {
 
 // 単語単位に分割 max_wordsは最大切り出し単語数。0なら制限しない。
 template<class T>
-int	split(const char* p, const char* dp, T& o, int max_words=0)
+int	split(const char* p, const char* dp, T& o, int max_words=0, bool split_one=false)
 {
 	set<string>	dlmt_set;
 	while ( *dp != '\0' )
@@ -194,32 +194,37 @@ int	split(const char* p, const char* dp, T& o, int max_words=0)
 	while ( *p != '\0' ) {
 		string	c = get_a_chr(p);
 		if ( dlmt_set.find(c) != dlmt_set.end() ) {
-			if ( word.size() > 0 ) {
+			if ( word.size() > 0 || split_one ) {
 				o.push_back(word);
 
 				if ( max_words>0 && static_cast<int>(o.size()+1) >= max_words ) {	// 単語数制限
 					word = p;
 					break;
-				} else
+				}
+				else {
 					word="";
+				}
 			}
-		} else
+		}
+		else {
 			word += c;
+		}
 	}
-	if ( word.size() > 0 )
+	if ( word.size() > 0 ) { //split_oneがフラグONでも最後のゴミは無視
 		o.push_back(word);
+	}
 
 	return	o.size();
 }
 
 template<class T>
-inline int split(const string& i, const string& dlmt, T& o, int max_words=0) { return split(i.c_str(),dlmt.c_str(),o,max_words); }
+inline int split(const string& i, const string& dlmt, T& o, int max_words=0, bool split_one=false) { return split(i.c_str(),dlmt.c_str(),o,max_words,split_one); }
 
 template<class T>
-inline int split(const char* p, const string& dlmt, T& o, int max_words=0) { return split(p,dlmt.c_str(),o,max_words); }
+inline int split(const char* p, const string& dlmt, T& o, int max_words=0, bool split_one=false) { return split(p,dlmt.c_str(),o,max_words,split_one); }
 
 template<class T>
-inline int split(const string& i, const char* dp, T& o, int max_words=0) { return split(i.c_str(),dp,o,max_words); }
+inline int split(const string& i, const char* dp, T& o, int max_words=0, bool split_one=false) { return split(i.c_str(),dp,o,max_words,split_one); }
 
 
 
