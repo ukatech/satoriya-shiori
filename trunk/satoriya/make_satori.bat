@@ -17,6 +17,6 @@ copy /B /Y .\satori\satori_license.txt tmp\satori\satori_license.txt
 del /F /S /Q tmp\satori.zip
 
 chdir tmp\satori\
-zip -r -9 -q ..\satori.zip *
+7z a -y -tzip -mx=9 -mmt=on "..\satori.zip" *
 chdir ..\..
 

@@ -431,18 +431,25 @@ SRV _substr(deque<string>& iArguments, deque<string>& oValues) {
 }
 
 SRV _split(deque<string>& iArguments, deque<string>& oValues) {
-	if ( iArguments.size()<1 || iArguments.size()>3 )
+	if ( iArguments.size() < 1 )
 		return	SRV(400, "ˆø”‚ÌŒÂ”‚ª³‚µ‚­‚ ‚è‚Ü‚¹‚ñB");
 
 	strvec	vec;
 	if ( iArguments.size()==1 ) {
 		split(iArguments[0],vec);
 	}
-	else if ( iArguments.size()==2 ) {
-		split(iArguments[0],iArguments[1],vec);
-	}
 	else {
-		split(iArguments[0],iArguments[1],vec,zen2int(iArguments[2]));
+		int max_words = 0;
+		if ( iArguments.size() > 2 ) {
+			max_words = zen2int(iArguments[2]);
+		}
+
+		bool split_one = false;
+		if ( iArguments.size() > 3 ) {
+			split_one = zen2int(iArguments[3]) != 0;
+		}
+
+		split(iArguments[0].c_str(),iArguments[1].c_str(),vec,max_words,split_one);
 	}
 
 	for ( strvec::iterator i=vec.begin() ; i!=vec.end() ; ++i )
