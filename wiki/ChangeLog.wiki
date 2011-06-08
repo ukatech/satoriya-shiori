@@ -1,8 +1,11 @@
 #labels Featured
+=Mc147-5r2=
+  * ssu is_digitの第二引数に「整数」または「integer」と指定すると、小数点を無効扱いするようにした。例：（is_digit、9801、整数） (TW:avery_goya)
+
 =Mc147-5=
   * 重複回避「起動中」が効かない問題をなおした気がする (BTS:MS:82)
   * calc,calc_floatの優先順位問題修正 (BTS:MS:72 Patch Merged)
-  * is_digitで小数点1回まで許容するようにした (BTS:OTHER:15)
+  * ssu is_digitで小数点1回まで許容するようにした (BTS:OTHER:15)
 
 =Mc147-4r2=
   * ssu.dllのsplitの第四パラメータに「区切り文字が連続していても1文字ずつ認識して分割」フラグを追加
