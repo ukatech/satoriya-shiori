@@ -552,6 +552,9 @@ SRV _is_digit(deque<string>& iArguments, deque<string>& oValues) {
 
 	if ( *p == 0 ) { return "0"; }
 
+	static const char dot_pm[] = "ÅD";
+	int dot_count = 0;
+
 	for ( ; *p ; p += step ) {
 		for ( i=0 ; i<20 ; i+=2) {
 			if ( p[0]==zen_digit[i] && p[1]==zen_digit[i+1] ) {
@@ -571,6 +574,22 @@ SRV _is_digit(deque<string>& iArguments, deque<string>& oValues) {
 		if ( i<10 ) {
 			step = 1;
 			continue;
+		}
+
+		if ( p[0]==dot_pm[0] && p[1]==dot_pm[1] ) {
+			if ( dot_count == 0 ) {
+				dot_count += 1;
+				step = 2;
+				continue;
+			}
+		}
+
+		if ( p[0]=='.' ) {
+			if ( dot_count == 0 ) {
+				dot_count += 1;
+				step = 1;
+				continue;
+			}
 		}
 
 		return	"0";

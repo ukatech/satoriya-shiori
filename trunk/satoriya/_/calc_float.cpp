@@ -86,7 +86,7 @@ static bool	make_array(const char*& p, std::vector<calc_element>& oData) {
 		else */if ( str=="^" ) { priority=80; }
 		else if ( str=="*" || str=="/" || str=="%" ) { priority=70; }
 		else if ( str=="+" || str=="-" ) { priority=60; }
-		else if ( str=="<" || str==">" || str=="<=" || str==">=" ) { priority=80; }
+		else if ( str=="<" || str==">" || str=="<=" || str==">=" ) { priority=50; }
 		else if ( str=="==" || str=="!=" ) { priority=45; }
 		else if ( str=="&&" ) { priority=40; }
 		else if ( str=="||" ) { priority=35; }

@@ -163,7 +163,7 @@ public:
 			if ( span == "トーク中" )
 				m_clearOC_at_talk_end.insert(it->first);
 			else if ( span == "起動中")
-				NULL;
+				m_clearOC_at_talk_end.erase(it->first);
 			else
 				sender << "重複回避の期間'" << method << "' は定義されていません。" << endl;
 			
