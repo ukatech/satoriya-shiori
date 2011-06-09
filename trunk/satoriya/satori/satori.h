@@ -59,6 +59,7 @@ extern const char* gSaoriVersion;
 static const int RESPONSE_HISTORY_SIZE=64;
 
 enum SurfaceRestoreMode {
+	SR_INVALID = -1,
 	SR_NONE = 0,
 	SR_NORMAL,
 	SR_FORCE,
@@ -215,6 +216,8 @@ private:
 
 	// 会話時サーフェス戻し・＄変数
 	enum SurfaceRestoreMode	surface_restore_at_talk;
+	enum SurfaceRestoreMode	surface_restore_at_talk_onetime;
+
 	map<int, int>	default_surface;
 	map<int, int>	surface_add_value;
 	map<int, int>	next_default_surface; // 途中でdef_surfaceを切り換えても、そのrequestでは使わない

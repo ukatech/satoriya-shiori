@@ -45,6 +45,7 @@ int	Satori::request(
 
 	// 喋るごとに初期化する変数
 	return_empty = false;
+	surface_restore_at_talk_onetime = SR_INVALID;
 	is_quick_section = false;
 
 	// スクリプトヘッダ

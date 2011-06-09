@@ -56,6 +56,8 @@ void	Satori::InitMembers() {
 	assert(kakko_replace_history.size()==0);
 
 	surface_restore_at_talk=SR_NORMAL;
+	surface_restore_at_talk_onetime=SR_INVALID;
+
 	surface_add_value.clear();
 	last_talk_exiting_surface.clear();
 	next_default_surface.clear();
@@ -112,6 +114,7 @@ void	Satori::InitMembers() {
 	//’‚é‚²‚Æ‚É‰Šú‰»‚·‚é•Ï”
 	return_empty = false;
 	is_quick_section = false;
+	surface_restore_at_talk_onetime = SR_INVALID;
 
 	is_dic_loaded = false;
 	is_call_ontalk_at_mikire = false;
