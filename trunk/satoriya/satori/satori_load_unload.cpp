@@ -19,8 +19,9 @@
 #include	"../_/Utilities.h"
 #include     "../_/random.h"
 
-#ifdef POSIX
 #include "posix_utils.h"
+
+#ifdef POSIX
 #include <unistd.h>
 #endif
 
@@ -273,12 +274,14 @@ bool	Satori::load(const string& iBaseFolder)
 	
 	reload_flag = false;
 
-	if ( variables.find("ゴースト起動時間累計ミリ秒") != variables.end() ) {
-		tick_count_total = zen2int(variables["ゴースト起動時間累計ミリ秒"]);
+	if ( variables.find("ゴースト起動時間累計秒") != variables.end() ) {
+		sec_count_total = zen2int(variables["ゴースト起動時間累計秒"]);
+	}
+	else if ( variables.find("ゴースト起動時間累計ミリ秒") != variables.end() ) {
+		sec_count_total = zen2int(variables["ゴースト起動時間累計ミリ秒"]) / 1000;
 	}
 	else {
-		tick_count_total = zen2int(variables["ゴースト起動時間累計(ms)"]);
-		variables.erase("ゴースト起動時間累計(ms)");
+		sec_count_total = zen2int(variables["ゴースト起動時間累計(ms)"]) / 1000;
 	}
 	variables["起動回数"] = itos( zen2int(variables["起動回数"])+1 );
 
@@ -335,13 +338,15 @@ bool	Satori::Save(bool isOnUnload) {
 	// メンバ変数を里々変数化
 	for (map<int, string>::iterator it=reserved_talk.begin(); it!=reserved_talk.end() ; ++it)
 		variables[string("次から")+itos(it->first)+"回目のトーク"] = it->second;
+
 	// 起動時間累計を設定
-#ifdef POSIX
+	variables["ゴースト起動時間累計秒"] =
+	    itos(posix_get_current_sec() - sec_count_at_load + sec_count_total);
+	// (互換用)
 	variables["ゴースト起動時間累計ミリ秒"] =
-	    itos(posix_get_current_millis() - tick_count_at_load + tick_count_total);
-#else
-	variables["ゴースト起動時間累計ミリ秒"] = itos( ::GetTickCount() - tick_count_at_load + tick_count_total );
-#endif
+	    itos((posix_get_current_sec() - sec_count_at_load + sec_count_total)*1000);
+	variables["ゴースト起動時間累計(ms)"] =
+	    itos((posix_get_current_sec() - sec_count_at_load + sec_count_total)*1000);
 
 	if ( isOnUnload ) {
 		secure_flag = true;

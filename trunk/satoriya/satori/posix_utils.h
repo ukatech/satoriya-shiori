@@ -1,17 +1,28 @@
 /*
   POSIX環境で必要になるマクロやインライン関数類。
 */
-#if !defined(_POSIX_UTILS_H_INCLUDED_) && defined(POSIX)
+#ifndef _POSIX_UTILS_H_INCLUDED_
 #define _POSIX_UTILS_H_INCLUDED_
-#include <sys/time.h>
 
-inline long posix_get_current_millis() {
-    struct timeval tv;
-    struct timezone tz;
-    gettimeofday(&tv, &tz);
-    // tv_usecはエポックからのマイクロ秒では*ない*!
-    // tv_secからの追加マイクロ秒である。
-    return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+#ifdef POSIX
+#include <time.h>
+
+inline time_t posix_get_current_sec() {
+    struct timespec ts;
+#ifdef CLOCK_UPTIME
+	clock_gettime(CLOCK_UPTIME, &ts);
+#else
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+#endif
+	return ts.tv_sec;
 }
 
-#endif
+#else  //POSIX
+
+inline time_t posix_get_current_sec() {
+    return ::GetTickCount() / 1000;
+}
+
+#endif //POSIX
+
+#endif //_POSIX_UTILS_H_INCLUDED_
