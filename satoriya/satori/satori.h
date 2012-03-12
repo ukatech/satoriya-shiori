@@ -242,7 +242,7 @@ private:
 	map<int, string>	BalloonOffset;
 
 	// 時間系情報取得用
-	unsigned long tick_count_at_load, tick_count_total;
+	unsigned long sec_count_at_load, sec_count_total;
 
 	// サーフェス
 	map<int, int>	cur_surface;

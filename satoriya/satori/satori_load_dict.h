@@ -1,6 +1,4 @@
-#ifdef POSIX
-#  include "posix_utils.h"
-#endif
+#include "posix_utils.h"
 
 void	Satori::InitMembers() {
 
@@ -69,14 +67,8 @@ void	Satori::InitMembers() {
 	BalloonOffset[0] = BalloonOffset[1] = "0,0";
 	validBalloonOffset.clear();
 
-#ifdef POSIX
-	// GetTickCount()はWindows起動後の経過ミリ秒…らしい。
-	// それを取得することは出来ないので、エポックミリ秒で代用！
-	tick_count_at_load = posix_get_current_millis();
-#else
-	tick_count_at_load = ::GetTickCount();
-#endif
-	tick_count_total = 0;
+	sec_count_at_load = posix_get_current_sec();
+	sec_count_total = 0;
 
 	ghosts_info.clear();
 	mCommunicateFor="";
