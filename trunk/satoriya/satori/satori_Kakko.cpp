@@ -731,19 +731,19 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	    oResult = int2zen(sec / 60 / 60);
 	}
 	//OS起動
-	else if (iName == "OS起動時") {
+	else if (iName == "OS起動時" || iName == "ＯＳ起動時") {
 	    time_t sec = posix_get_current_sec();
 	    time_t hour = sec / 60 / 60;
 	    oResult = int2zen(hour);
 	}
-	else if (iName == "OS起動分" ) {
+	else if (iName == "OS起動分" || iName == "ＯＳ起動分" ) {
 	    time_t sec = posix_get_current_sec();
 	    time_t hour = sec / 60 / 60;
 	    sec -= hour * 60 * 60;
 	    time_t minute = sec / 60;
 	    oResult = int2zen(minute);
 	}
-	else if (iName == "OS起動秒") {
+	else if (iName == "OS起動秒" || iName == "ＯＳ起動秒") {
 	    time_t sec = posix_get_current_sec();
 	    time_t hour = sec / 60 / 60;
 	    sec -= hour * 60 * 60;
@@ -751,15 +751,15 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	    sec -= minute * 60;
 	    oResult = int2zen(sec);
 	}
-	else if (iName == "単純OS起動秒") {
+	else if (iName == "単純OS起動秒" || iName == "単純ＯＳ起動秒") {
 	    time_t sec = posix_get_current_sec();
 	    oResult = int2zen(sec);
 	}
-	else if (iName == "単純OS起動分") {
+	else if (iName == "単純OS起動分" || iName == "単純ＯＳ起動分") {
 	    time_t sec = posix_get_current_sec();
 	    oResult = int2zen(sec / 60);
 	}
-	else if (iName == "単純OS起動時") {
+	else if (iName == "単純OS起動時" || iName == "単純ＯＳ起動時") {
 	    time_t sec = posix_get_current_sec();
 	    oResult = int2zen(sec / 60 / 60);
 	}
