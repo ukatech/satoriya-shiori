@@ -535,8 +535,17 @@ SRV _is_empty(deque<string>& iArguments, deque<string>& oValues) {
 }
 
 SRV _is_digit(deque<string>& iArguments, deque<string>& oValues) {
-	if ( iArguments.size()<1 || iArguments[0].empty() )
+	if ( iArguments.size()<1 || iArguments[0].empty() ) {
 		return	"0";
+	}
+
+	int dot_count = 0;
+	if ( iArguments.size()>=2 ) {
+		if ( strstr(iArguments[1].c_str(),"êÆêî") || strcmp(iArguments[1].c_str(),"int") ) {
+			dot_count = 1;
+		}
+	}
+
 	int	i;
 	const char* p = iArguments[0].c_str();
 	int step = 1;
@@ -553,7 +562,6 @@ SRV _is_digit(deque<string>& iArguments, deque<string>& oValues) {
 	if ( *p == 0 ) { return "0"; }
 
 	static const char dot_pm[] = "ÅD";
-	int dot_count = 0;
 
 	for ( ; *p ; p += step ) {
 		for ( i=0 ; i<20 ; i+=2) {
