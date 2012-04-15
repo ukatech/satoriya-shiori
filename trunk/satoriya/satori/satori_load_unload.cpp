@@ -372,8 +372,12 @@ bool	Satori::Save(bool isOnUnload) {
 	out << ENCODE(line) << endl;
 	for (strmap::const_iterator it=variables.begin() ; it!=variables.end() ; ++it) {
 		string	str = zen2han(it->first);
-		if ( str[0]=='S' && aredigits(str.c_str()+1) )
+		if ( str[0]=='S' && aredigits(str.c_str()+1) ) {
 			continue;
+		}
+		if ( str == "今回は喋らない" || str == "今回は会話時サーフェス戻し" || str == "今回は会話時サーフィス戻し" || str == "今回は自動アンカー" ) {
+			continue;
+		}
 
 		data = it->second;
 		

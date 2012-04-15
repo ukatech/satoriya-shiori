@@ -147,27 +147,29 @@ bool	Satori::Translate(string& ioScript) {
 			// さくらスクリプト以外の文への処理
 
 			// アンカー挿入
-			if ( is_AnchorEnable && !is_OnTranslate ) {
-				string::size_type n = i->size();
-				for ( string::size_type c=0 ; c<n ; ++c ) {
-					for ( vector<string>::iterator j=anchors.begin() ; j!=anchors.end() ; ++j ) {
-						if ( n - c >= j->size() ) {
-							if ( i->compare(c,j->size(),*j) == 0 ) {
-								repstr = "\\_a[";
-								repstr += *j;
-								repstr += "]";
-								repstr += *j;
-								repstr += "\\_a";
+			if ( auto_anchor_enable_onetime ) { //onetimeとの比較だけでよい
+				if ( is_AnchorEnable && !is_OnTranslate ) {
+					string::size_type n = i->size();
+					for ( string::size_type c=0 ; c<n ; ++c ) {
+						for ( vector<string>::iterator j=anchors.begin() ; j!=anchors.end() ; ++j ) {
+							if ( n - c >= j->size() ) {
+								if ( i->compare(c,j->size(),*j) == 0 ) {
+									repstr = "\\_a[";
+									repstr += *j;
+									repstr += "]";
+									repstr += *j;
+									repstr += "\\_a";
 
-								i->replace(c,j->size(),repstr);
-								c += repstr.size();
-								n = i->size();
-								break;
+									i->replace(c,j->size(),repstr);
+									c += repstr.size();
+									n = i->size();
+									break;
+								}
 							}
 						}
-					}
-					if ( c < n && _ismbblead(i->at(c)) ) {
-						++c;
+						if ( c < n && _ismbblead(i->at(c)) ) {
+							++c;
+						}
 					}
 				}
 			}
