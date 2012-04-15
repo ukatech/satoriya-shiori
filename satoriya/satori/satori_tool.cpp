@@ -659,6 +659,28 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 		return true;
 	}
 	
+	if ( key == "自動アンカー" ) {
+		if ( value == "有効" ) {
+			auto_anchor_enable = true;
+			auto_anchor_enable_onetime = auto_anchor_enable;
+		}
+		else {
+			auto_anchor_enable = false;
+			auto_anchor_enable_onetime = auto_anchor_enable;
+		}
+		return true;
+	}
+
+	if ( key == "今回は自動アンカー" ) {
+		if ( value == "有効" ) {
+			auto_anchor_enable_onetime = true;
+		}
+		else {
+			auto_anchor_enable_onetime = false;
+		}
+		return true;
+	}
+	
 	if ( compare_head(key,  "サーフェス加算値") && aredigits(key.c_str() + const_strlen("サーフェス加算値")) ) {
 		int n = zen2int(key.c_str() + const_strlen("サーフェス加算値"));
 		surface_add_value[n]= zen2int(value);

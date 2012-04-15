@@ -218,6 +218,9 @@ private:
 	enum SurfaceRestoreMode	surface_restore_at_talk;
 	enum SurfaceRestoreMode	surface_restore_at_talk_onetime;
 
+	bool auto_anchor_enable;
+	bool auto_anchor_enable_onetime;
+
 	map<int, int>	default_surface;
 	map<int, int>	surface_add_value;
 	map<int, int>	next_default_surface; // “r’†‚Ådef_surface‚ğØ‚èŠ·‚¦‚Ä‚àA‚»‚Ìrequest‚Å‚Íg‚í‚È‚¢
