@@ -172,8 +172,8 @@ BOOL sendDirectSSTP_for_NOTIFY(string client, string id, deque<string>& refs)
 	for(it = vec.begin(); it != vec.end(); it++)
 	{
 		// WM_COPYDATA ÇÕîƒópÇ»ÇÃÇ≈ÅAHWND_BROADCAST ÇµÇƒÇÕÇ¢ÇØÇ‹ÇπÇÒÅB
-		SendMessageTimeout(*it, WM_COPYDATA, (WPARAM)hParentWnd, (LPARAM)&cds,
-			SMTO_ABORTIFHUNG, 1000, &dwRet);
+		::SendMessageTimeout(*it, WM_COPYDATA, (WPARAM)hParentWnd, (LPARAM)&cds,
+			SMTO_ABORTIFHUNG|SMTO_BLOCK, 1000, &dwRet);
 	}
 
 	return TRUE;
