@@ -184,7 +184,7 @@ string	Satori::inc_call(
 	
 	if ( iCallName=="remember" ) {
 		if ( iArgv.size() == 1 ) {
-			int	n = zen2int(iArgv[0]);
+			unsigned int n = zen2int(iArgv[0]);
 			if ( mResponseHistory.size() > n ) {
 				return	mResponseHistory[n];
 			}
@@ -196,7 +196,7 @@ string	Satori::inc_call(
 		if ( iArgv.size() >= 1 ) {
 			mCallStack.push( strvec() );
 			strvec&	v = mCallStack.top();
-			for ( int i=1 ; i<iArgv.size() ; ++i )
+			for ( unsigned int i=1 ; i<iArgv.size() ; ++i )
 				v.push_back( iArgv[i] );
 			string	r;
 			Call(iArgv[0],r);
@@ -309,7 +309,7 @@ string* Satori::GetValue(const string &iName,bool &oIsSysValue,bool iIsExpand,bo
 				oIsSysValue = true;
 
 				// Event通知時の引数取得
-				int	ref=stoi(hankaku.c_str()+1);
+				unsigned int ref=stoui(hankaku.c_str()+1);
 				if (ref>=0 && ref<mReferences.size()) {
 					return &(mReferences[ref]);
 				}
@@ -330,7 +330,7 @@ string* Satori::GetValue(const string &iName,bool &oIsSysValue,bool iIsExpand,bo
 
 				strvec&	khr = kakko_replace_history.top();
 
-				int	ref = stoi(hankaku.c_str() +1) - 1;
+				unsigned int ref = stoui(hankaku.c_str() +1) - 1;
 				if ( ref>=0 && ref < khr.size() ) {
 					return &(khr[ref]);
 				}
@@ -344,7 +344,7 @@ string* Satori::GetValue(const string &iName,bool &oIsSysValue,bool iIsExpand,bo
 				if ( mCallStack.empty() ) { return NULL; }
 
 				// callによる呼び出しの引数を参照S
-				int	ref = stoi(hankaku.c_str() +1);
+				unsigned int ref = stoui(hankaku.c_str() +1);
 				strvec&	v = mCallStack.top();
 				if ( ref >= 0 && ref < v.size() ) {
 					return &(v[ref]);
@@ -357,7 +357,7 @@ string* Satori::GetValue(const string &iName,bool &oIsSysValue,bool iIsExpand,bo
 				oIsSysValue = true;
 
 				// SAORIなどコール時の結果処理
-				int	ref=stoi(hankaku.c_str()+1);
+				unsigned int ref=stoui(hankaku.c_str()+1);
 				if (ref>=0 && ref<mKakkoCallResults.size()) {
 					return &(mKakkoCallResults[ref]);
 				}
@@ -373,7 +373,7 @@ string* Satori::GetValue(const string &iName,bool &oIsSysValue,bool iIsExpand,bo
 			else if ( hankaku[0]=='C' ) {
 				oIsSysValue = true;
 
-				int ref=stoi(hankaku.c_str()+1);
+				unsigned int ref=stoui(hankaku.c_str()+1);
 				if ( 0 <= ref && ref < mLoopCounters.size() ) {
 					return &(mLoopCounters.from_top(ref));
 				}

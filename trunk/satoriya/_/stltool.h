@@ -87,11 +87,13 @@ bool	getline(istream& i, string& o, int delimtier='\n');
 bool	getline(istream& i, int& o, int delimtier='\n');
 
 // int‚Æ‚Ì‘ŠŒİ•ÏŠ·
-inline int	stoi(const string& s) { return atoi(s.c_str()); }
-inline int  stoi(const char* s) { return atoi(s); }
+inline long stoi(const string& s) { return strtol(s.c_str(),NULL,10); }
+inline long stoi(const char* s) { return strtol(s,NULL,10); }
+inline unsigned long stoui(const string& s) { return strtoul(s.c_str(),NULL,10); }
+inline unsigned long stoui(const char* s) { return strtoul(s,NULL,10); }
 
-inline string	itos(int i, const char* iFormat="%d") { char buf[32]; sprintf(buf,iFormat,i); return buf; }
-inline string	uitos(unsigned int i, const char* iFormat="%u") { char buf[32]; sprintf(buf,iFormat,i); return buf; }
+inline string	itos(long i, const char* iFormat="%d") { char buf[32]; sprintf(buf,iFormat,i); return buf; }
+inline string	uitos(unsigned long i, const char* iFormat="%u") { char buf[32]; sprintf(buf,iFormat,i); return buf; }
 
 // ‚»‚ê‚Ä‚È‚ÉB
 bool	aredigits(const char* p);

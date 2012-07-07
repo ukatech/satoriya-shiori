@@ -49,7 +49,7 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 			sender << "¡FMO‚©‚çhwnd‚ðŽæ“¾‚µ‚Ü‚µ‚½B" << endl;
 
 			strmap &ghost = ghosts_info[0];
-			strmap::iterator it = ghost.find("hwnd");
+			strmap::const_iterator it = ghost.find("hwnd");
 			if ( it != ghost.end() ) {
 				characters_hwnd[0] = (HWND)(stoi(it->second));
 			}
@@ -144,7 +144,8 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 				HWND	hwnd = (HWND)(stoi(hwnd_str));
 				if ( hwnd!=NULL ) {
 					UINT	WM_SAKURAAPI = RegisterWindowMessage("Sakura");
-					ret = ::SendMessage(hwnd, WM_SAKURAAPI, 140, 0);
+					DWORD ret_dword = 0;
+					ret = ::SendMessageTimeout(hwnd, WM_SAKURAAPI, 140, 0,SMTO_BLOCK|SMTO_ABORTIFHUNG,5000,&ret_dword);
 				}
 			}
 #endif

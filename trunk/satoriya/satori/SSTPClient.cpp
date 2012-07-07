@@ -40,8 +40,9 @@ bool direct_sstp(
 		{
 			continue;
 		}
-
-		::SendMessage(host_window, WM_COPYDATA, (WPARAM)i_client_window, (LPARAM)&cds);
+		
+		DWORD ret_dword = 0;
+		::SendMessageTimeout(host_window, WM_COPYDATA, (WPARAM)i_client_window, (LPARAM)&cds,SMTO_BLOCK|SMTO_ABORTIFHUNG,5000,&ret_dword);
 	}
 	return true;
 }

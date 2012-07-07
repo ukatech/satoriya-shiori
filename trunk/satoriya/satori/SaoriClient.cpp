@@ -61,7 +61,7 @@ int SaoriClient::request(
 
 		if ( compare_head(key, "Value") && isdigit(key[const_strlen("Value")]) )
 		{
-			const int	pos = atoi(key.c_str() + const_strlen("Value"));
+			const unsigned int pos = stoui(key.c_str() + const_strlen("Value"));
 			if ( pos<0 || pos>65536 )
 			{
 				continue;
@@ -72,7 +72,7 @@ int SaoriClient::request(
 				o_value.resize(pos+1);
 			}
 			o_value[pos] = value;
-			if ( maxValueSize < pos ) {
+			if ( maxValueSize < static_cast<int>(pos) ) {
 				maxValueSize = pos;
 			}
 		}
