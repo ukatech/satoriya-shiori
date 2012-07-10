@@ -49,7 +49,7 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 			sender << "¡FMO‚©‚çhwnd‚ðŽæ“¾‚µ‚Ü‚µ‚½B" << endl;
 
 			strmap &ghost = ghosts_info[0];
-			strmap::\iterator it = ghost.find("hwnd");
+			strmap::iterator it = ghost.find("hwnd");
 			if ( it != ghost.end() ) {
 				characters_hwnd[0] = (HWND)(stoi(it->second));
 			}
