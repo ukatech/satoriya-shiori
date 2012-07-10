@@ -87,7 +87,7 @@ bool	Satori::Translate(string& ioScript) {
 
 						// ƒ‰ƒxƒ‹‚h‚c‚É‘‚«–ß‚µ
 						opt = label+","+id+byte1_dlmt+label+byte1_dlmt+itos(count);
-						for (unsigned int i=2;i<vec.size();++i)
+						for (int i=2;i<vec.size();++i)
 							opt += string(",") + vec[i];
 					}
 				}

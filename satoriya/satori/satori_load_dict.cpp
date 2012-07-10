@@ -123,7 +123,7 @@ static bool pre_process(
 {
 	int	kakko_nest_count=0;	// "（" のネスト数。1以上の場合は改行を無効化する。
 	string	accumulater="";	// 行あきゅむれーた
-	size_t line_number=1;
+	int	line_number=1;
 	for ( strvec::const_iterator fi=in.begin() ; fi!=in.end() ; ++fi, ++line_number )
 	{
 		const char* p=fi->c_str();

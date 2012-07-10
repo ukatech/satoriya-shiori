@@ -185,7 +185,7 @@ static bool	make_array(const char*& p, std::vector<calc_element>& oData) {
 
 static bool	calc_polish(simple_stack<calc_element>& polish, string& oResult,bool isStrict) {
 	simple_stack<string>	stack;
-	for ( unsigned int n=0 ; n<polish.size()-1 ; n++ ) {
+	for ( int n=0 ; n<polish.size()-1 ; n++ ) {
 		calc_element&	el=polish[n];
 		if ( el.priority==100 ) { // ”í‰‰ŽZŽq
 			stack.push(el.str);
