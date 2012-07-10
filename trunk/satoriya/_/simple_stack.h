@@ -19,8 +19,8 @@ public:
 		pop_back();
 		return	theT;
 	}
-	void	pop(unsigned int num) {
-		assert(num<=size());
+	void	pop(int num) {
+		assert(num>=0 && num<=size());
 		while ( num-- > 0 ) {
 			pop_back();
 		}
@@ -28,8 +28,8 @@ public:
 	T&	top() {
 		return	back();
 	}
-	T&	from_top(unsigned int len) {
-		assert(len<size());
+	T&	from_top(int len) {
+		assert(len>=0 && len<size());
 		return	(*this)[size()-1-len];
 	}
 };

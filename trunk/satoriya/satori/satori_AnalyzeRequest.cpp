@@ -117,7 +117,7 @@ int	Satori::request(
 
 		mRequestMap[key] = value;
 		if ( compare_head(key, "Reference") ) {
-			size_t n = stoui(key.c_str()+9);
+			int	n = stoi(key.c_str()+9);
 			if ( n>=0 && n<65536 ) {
 				if ( n>=mReferences.size() )
 					mReferences.resize(n+1);
@@ -173,7 +173,7 @@ int	Satori::request(
 	if(fRequestLog && logmode)
 	{
 		sender << "--- Request ---" << endl << mStatusLine << endl; // << iRequest << endl;
-		for(strmap::const_iterator i=mRequestMap.begin() ; i!=mRequestMap.end() ; ++i)
+		for(strmap::iterator i=mRequestMap.begin() ; i!=mRequestMap.end() ; ++i)
 			if ( !i->first.empty() && !i->second.empty()
 				&& i->first!="SecurityLevel" 
 				&& i->first!="Sender" 
