@@ -867,7 +867,7 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 	
 	if ( key == "全タイマ解除" && value=="実行") {
 		variables.erase(key);
-		for (strintmap::iterator i=timer.begin();i!=timer.end();++i)
+		for (strintmap::const_iterator i=timer.begin();i!=timer.end();++i)
 			variables.erase(i->first + "タイマ");
 		timer.clear();
 		return true;

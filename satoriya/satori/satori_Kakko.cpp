@@ -809,9 +809,9 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 #ifndef POSIX
 	else if ( compare_head(iName, "ウィンドウハンドル") && iName.length() > 18 ) {
 		int character = zen2int(iName.c_str()+18);
-		map<int,HWND>::iterator found = characters_hwnd.find(character);
+		map<int,HWND>::const_iterator found = characters_hwnd.find(character);
 		if ( found != characters_hwnd.end() ) {
-			oResult = uitos((unsigned int)characters_hwnd[character]);
+			oResult = uitos((unsigned int)found->second);
 		}
 	}
 #endif
@@ -992,13 +992,13 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		}
 	}
 	else if ( iName=="次のトーク" ) {
-		map<int,string>::iterator it = reserved_talk.find(1);
+		map<int,string>::const_iterator it = reserved_talk.find(1);
 		if ( it != reserved_talk.end() ) 
 			oResult = it->second;
 	}
 	else if ( compare_head(iName,"次から") && compare_tail(iName,"回目のトーク") ) {
 		int	count = zen2int( string(iName.c_str()+6, iName.length()-6-12) );
-		map<int,string>::iterator it = reserved_talk.find(count);
+		map<int,string>::const_iterator it = reserved_talk.find(count);
 		if ( it != reserved_talk.end() ) {
 			oResult = it->second;
 		}
@@ -1006,7 +1006,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	else if ( compare_head(iName, "トーク「") && compare_tail(iName, "」の予\x96\xf1有無") ) { // 「約」には\が含まれる。
 		string	str(iName, 8, iName.length()-8-12);
 		oResult = "0";
-		for (map<int, string>::iterator it=reserved_talk.begin(); it!=reserved_talk.end() ; ++it) {
+		for (map<int, string>::const_iterator it=reserved_talk.begin(); it!=reserved_talk.end() ; ++it) {
 			if ( str == it->second ) {
 				oResult = "1";
 				break;

@@ -103,6 +103,7 @@ private:
 	string	mRequestType;		// SHIORI / SAORI / MAKOTO
 	string	mRequestVersion;	// 1.0, 2.x, 3.0
 	bool	mIsMateria;	// まてりあは特殊処理が要る
+	bool    mIsStatusHeaderExist; //ステータスヘッダ対応してるかどうか
 	strvec	mReferences;
 	strvec  mKakkoCallResults;
 	enum { SAORI, SHIORI2, SHIORI3, MAKOTO2, UNKNOWN } mRequestMode;

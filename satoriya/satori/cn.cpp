@@ -25,9 +25,10 @@ static SRV	call_cn(string iCommand, deque<string>& iArguments, deque<string>& oV
 	}
 
 	// 命令の存在を確認
-	map<string, Command>::iterator i = theMap.find(iCommand);
-	if ( i==theMap.end() )
+	map<string, Command>::const_iterator i = theMap.find(iCommand);
+	if ( i==theMap.end() ) {
 		return SRV(400, string()+"Error: '"+iCommand+"'という名前の命令は定義されていません。");
+	}
 
 	// 実際に呼ぶ
 	return	i->second(iArguments, oValues);

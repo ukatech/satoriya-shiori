@@ -184,10 +184,10 @@ string SakuraDLLHost::request(const string& i_request_string)
 
 	// Charset‚ª–³‚¯‚ê‚Î•t‚¯‚éB
 	bool charset_exists = false;
-	for (strpairvec::iterator ite = r_data.begin(); ite != r_data.end(); ite++) {
+	for (strpairvec::const_iterator ite = r_data.begin(); ite != r_data.end(); ite++) {
 	    if (ite->first == "Charset") {
-		charset_exists = true;
-		break;
+			charset_exists = true;
+			break;
 	    }
 	}
 	if (!charset_exists) {
