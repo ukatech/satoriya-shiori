@@ -133,7 +133,7 @@ int	Satori::request(
 
 	mRequestID = mRequestMap["ID"];
 	mIsMateria = ( mRequestMap["Sender"] == "embryo" );
-
+	mIsStatusHeaderExist = ( mRequestMap["Sender"] == "SSP" );
 
 	//-------------------------------------------------
 	// リクエストを解釈
@@ -173,12 +173,13 @@ int	Satori::request(
 	if(fRequestLog && logmode)
 	{
 		sender << "--- Request ---" << endl << mStatusLine << endl; // << iRequest << endl;
-		for(strmap::iterator i=mRequestMap.begin() ; i!=mRequestMap.end() ; ++i)
+		for(strmap::const_iterator i=mRequestMap.begin() ; i!=mRequestMap.end() ; ++i)
 			if ( !i->first.empty() && !i->second.empty()
 				&& i->first!="SecurityLevel" 
 				&& i->first!="Sender" 
-				&& i->first!="Charset" )
+				&& i->first!="Charset" ) {
 				sender << i->first << ": " << i->second << endl;
+			}
 	}
 
 	// せきゅあ？

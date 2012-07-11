@@ -291,7 +291,7 @@ bool	Satori::load(const string& iBaseFolder)
 	{
 		vector<const Word*> v;
 		it->second.get_elements_pointers(v);
-		for ( vector<const Word*>::iterator itx = v.begin() ; itx < v.end() ; ++itx ) {
+		for ( vector<const Word*>::const_iterator itx = v.begin() ; itx < v.end() ; ++itx ) {
 			mAppendedWords[it->first].push_back(**itx);
 		}
 	}

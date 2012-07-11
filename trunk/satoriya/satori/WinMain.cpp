@@ -145,7 +145,7 @@ string	Do(const string& str, bool like_dict, bool satori, HWND hwnd)
 	string	script;
 	if ( !satori )
 	{
-		for ( strvec::iterator i=vec.begin() ; i!=vec.end() ; ++i ) {
+		for ( strvec::const_iterator i=vec.begin() ; i!=vec.end() ; ++i ) {
 			script += *i;
 		}
 		pSatori->Translate(script);
@@ -175,7 +175,7 @@ string	Do(const string& str, bool like_dict, bool satori, HWND hwnd)
 		data.push_back( strpair("SecurityLevel", "Local") );
 		pSatori->request("SAORI", "1.0", "EXECUTE", data, protocol, protcol_version, r_data); /**/
 		sender << r_data << endl;
-		for ( strpairvec::iterator it = r_data.begin() ; it != r_data.end() ; ++it )
+		for ( strpairvec::const_iterator it = r_data.begin() ; it != r_data.end() ; ++it )
 		{
 			if ( it->first == "Value" || it->first == "Result" )
 			{

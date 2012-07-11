@@ -49,7 +49,7 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 			sender << "■FMOからhwndを取得しました。" << endl;
 
 			strmap &ghost = ghosts_info[0];
-			strmap::iterator it = ghost.find("hwnd");
+			strmap::const_iterator it = ghost.find("hwnd");
 			if ( it != ghost.end() ) {
 				characters_hwnd[0] = (HWND)(stoi(it->second));
 			}
@@ -136,16 +136,38 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 		int&	cur_nede_count = nade_count[ mReferences[4] ];
 		if ( ++cur_nede_count >= nade_sensitivity ) {
 #ifdef POSIX
-		        int ret = 0;
+		    int ret = 0;
 #else
-		        LRESULT	ret = 0;
-			if ( !insert_nade_talk_at_other_talk && updateGhostsInfo() ) {
-				string	hwnd_str = (ghosts_info[0])["hwnd"];
-				HWND	hwnd = (HWND)(stoi(hwnd_str));
-				if ( hwnd!=NULL ) {
-					UINT	WM_SAKURAAPI = RegisterWindowMessage("Sakura");
-					DWORD ret_dword = 0;
-					ret = ::SendMessageTimeout(hwnd, WM_SAKURAAPI, 140, 0,SMTO_BLOCK|SMTO_ABORTIFHUNG,5000,&ret_dword);
+		    LRESULT	ret = 0;
+
+			if ( mIsStatusHeaderExist ) {
+				strmap::const_iterator it = mRequestMap.find("Status");
+				if ( it != mRequestMap.end() && (!insert_nade_talk_at_other_talk) ) {
+					if ( strstr(it->second.c_str(),"talking") ) {
+						ret = 1;
+					}
+					if ( strstr(it->second.c_str(),"induction") ) {
+						ret = 1;
+					}
+					if ( strstr(it->second.c_str(),"passive") ) {
+						ret = 1;
+					}
+					if ( strstr(it->second.c_str(),"timecritical") ) {
+						ret = 1;
+					}
+				}
+			}
+			else {
+				if ( !insert_nade_talk_at_other_talk && updateGhostsInfo() ) {
+					string	hwnd_str = (ghosts_info[0])["hwnd"];
+					HWND	hwnd = (HWND)(stoi(hwnd_str));
+					if ( hwnd!=NULL ) {
+						UINT	WM_SAKURAAPI = RegisterWindowMessage("Sakura");
+						DWORD ret_dword = 0;
+						if ( ::SendMessageTimeout(hwnd, WM_SAKURAAPI, 140, 0,SMTO_BLOCK|SMTO_ABORTIFHUNG,5000,&ret_dword) ) { //GETGHOSTSTATE
+							ret = ret_dword;
+						}
+					}
 				}
 			}
 #endif
@@ -282,7 +304,7 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 	if ( is_empty_script(script) && can_talk_flag && iEvent=="OnSecondChange" ) {
 
 		// タイマ予約発話
-		for (strintmap::iterator i=timer.begin();i!=timer.end();++i) {
+		for (strintmap::const_iterator i=timer.begin();i!=timer.end();++i) {
 			if ( i->second < 1 ) {
 				//GetSentence実行後にtimerのイテレータは状態変化しているかもしれないので
 				//いったん保存しておく
