@@ -1,4 +1,8 @@
 #labels Featured
+=Mc150-1=
+  * ssu compare_head・compare_tailも大文字小文字無視するようにした。
+  * 大文字小文字判定が要る人向けに、compare_case・compare_head_case・compare_tail_caseを用意した
+
 =Mc149-4=
   * 実は差し戻しコードはまったく関係なくトーク中判定にエンバグがあった問題を修正
 
