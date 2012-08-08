@@ -320,17 +320,54 @@ string	combine(const T& in, const string& dlmt="", bool add_dlmt_on_final=false)
 bool	is_exist_file(const string& iFileName);
 
 // str‚Ìæ“ª‚ªhead‚Å‚ ‚ê‚Îtrue
+bool	compare_head_s(const char* str, const char* head);
+
 inline bool	compare_head(const string& str, const string& head) {
-	if ( str.size() == 0 || head.size() == 0 ) { return false; }
-	return str.compare(0, head.size(), head)==0;
+	return compare_head_s(str.c_str(),head.c_str());
+}
+inline bool	compare_head(const string& str, const char* head) {
+	return compare_head_s(str.c_str(),head);
 }
 inline bool	compare_head(const char* str, const char* head) {
-	if ( ! str || ! head || str[0] == 0 || head[0] == 0 ) { return false; }
-	return strncmp(str, head, strlen(head))==0;
+	return compare_head_s(str,head);
 }
+
+bool	compare_head_nocase_s(const char* str, const char* head);
+
+inline bool	compare_head_nocase(const string& str, const string& head) {
+	return compare_head_nocase_s(str.c_str(),head.c_str());
+}
+inline bool	compare_head_nocase(const string& str, const char* head) {
+	return compare_head_nocase_s(str.c_str(),head);
+}
+inline bool	compare_head_nocase(const char* str, const char* head) {
+	return compare_head_nocase_s(str,head);
+}
+
 // str‚Ì––”ö‚ªtail‚Å‚ ‚ê‚Îtrue
-bool	compare_tail(const string& str, const string& tail);	
-bool	compare_tail(const string& str, const char* tail);	
+bool	compare_tail_s(const char* str, const char* tail);
+
+inline bool compare_tail(const string& str, const string& tail) {
+	return compare_tail_s(str.c_str(),tail.c_str());
+}	
+inline bool compare_tail(const string& str, const char* tail) {
+	return compare_tail_s(str.c_str(),tail);
+}	
+inline bool compare_tail(const char* str, const char* tail) {
+	return compare_tail_s(str,tail);
+}	
+
+bool	compare_tail_nocase_s(const char* str, const char* tail);
+	
+inline bool compare_tail_nocase(const string& str, const string& tail) {
+	return compare_tail_nocase_s(str.c_str(),tail.c_str());
+}	
+inline bool compare_tail_nocase(const string& str, const char* tail) {
+	return compare_tail_nocase_s(str.c_str(),tail);
+}	
+inline bool compare_tail_nocase(const char* str, const char* tail) {
+	return compare_tail_nocase_s(str,tail);
+}	
 
 // target’†‚ÌÅ‰‚Éfind•¶š—ñ‚ªoŒ»‚·‚éˆÊ’u‚ğ•Ô‚·B”¼Šp‘SŠp—¼‘Î‰
 const char*	strstr_hz(const char* target, const char* find);

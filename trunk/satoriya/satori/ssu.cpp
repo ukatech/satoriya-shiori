@@ -33,8 +33,10 @@ static SRV	call_ssu(string iCommand, deque<string>& iArguments, deque<string>& o
 		d(calc);			d(calc_float);		d(if);				d(unless);
 		d(nswitch);			d(switch);			d(iflist);			d(substr);
 		d(split);			d(join);			d(replace);			d(replace_first);	d(erase);
-		d(erase_first);		d(count);			d(compare);			d(compare_head);
-		d(compare_tail);	d(length);			d(is_empty);		d(is_digit);
+		d(erase_first);		d(count);
+		d(compare);				d(compare_head);			d(compare_tail);
+		d(compare_case);		d(compare_head_case);		d(compare_tail_case);
+		d(length);			d(is_empty);		d(is_digit);
 		d(is_alpha);		d(zen2han);			d(han2zen);			d(hira2kata);
 		d(kata2hira);		d(sprintf);			d(reverse);			d(at);
 		d(choice);
@@ -501,22 +503,40 @@ SRV _count(deque<string>& iArguments, deque<string>& oValues) {
 	return	itos( count(iArguments[0], iArguments[1]) );
 }
 
+SRV _compare_case(deque<string>& iArguments, deque<string>& oValues) {
+	if ( iArguments.size()!=2 )
+		return	SRV(400, "引数の個数が正しくありません。");
+	return	(strcmp(zen2han_internal(iArguments[0]).c_str(), zen2han_internal(iArguments[1]).c_str())==0) ? "1" : "0";
+}
+
 SRV _compare(deque<string>& iArguments, deque<string>& oValues) {
 	if ( iArguments.size()!=2 )
 		return	SRV(400, "引数の個数が正しくありません。");
 	return	(stricmp(zen2han_internal(iArguments[0]).c_str(), zen2han_internal(iArguments[1]).c_str())==0) ? "1" : "0";
 }
 
-SRV _compare_head(deque<string>& iArguments, deque<string>& oValues) {
+SRV _compare_head_case(deque<string>& iArguments, deque<string>& oValues) {
 	if ( iArguments.size()!=2 )
 		return	SRV(400, "引数の個数が正しくありません。");
 	return	compare_head(zen2han_internal(iArguments[0]), zen2han_internal(iArguments[1])) ? "1" : "0";
 }
 
-SRV _compare_tail(deque<string>& iArguments, deque<string>& oValues) {
+SRV _compare_head(deque<string>& iArguments, deque<string>& oValues) {
+	if ( iArguments.size()!=2 )
+		return	SRV(400, "引数の個数が正しくありません。");
+	return	compare_head_nocase(zen2han_internal(iArguments[0]), zen2han_internal(iArguments[1])) ? "1" : "0";
+}
+
+SRV _compare_tail_case(deque<string>& iArguments, deque<string>& oValues) {
 	if ( iArguments.size()!=2 )
 		return	SRV(400, "引数の個数が正しくありません。");
 	return	compare_tail(zen2han_internal(iArguments[0]), zen2han_internal(iArguments[1])) ? "1" : "0";
+}
+
+SRV _compare_tail(deque<string>& iArguments, deque<string>& oValues) {
+	if ( iArguments.size()!=2 )
+		return	SRV(400, "引数の個数が正しくありません。");
+	return	compare_tail_nocase(zen2han_internal(iArguments[0]), zen2han_internal(iArguments[1])) ? "1" : "0";
 }
 
 SRV _length(deque<string>& iArguments, deque<string>& oValues) {
