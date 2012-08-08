@@ -465,21 +465,46 @@ std::string::size_type find_hz(const char* str, const char* target, std::string:
 	}
 }
 
-bool	compare_tail(const string& str, const string& tail)
+bool	compare_head_s(const char* str, const char* head)
 {
-	const int diff = str.size()-tail.size();
-	if ( diff < 0 )
-		return	false;
-	return	tail.compare(str.c_str()+diff)==0;
+	if ( ! str || ! head || str[0] == 0 || head[0] == 0 ) { return false; }
+	return strncmp(str, head, strlen(head))==0;
 }
 
-bool	compare_tail(const string& str, const char* tail)
+bool	compare_head_nocase_s(const char* str, const char* head)
+{
+	if ( ! str || ! head || str[0] == 0 || head[0] == 0 ) { return false; }
+#ifdef _MSC_VER 
+	return _strnicmp(str, head, strlen(head))==0;
+#else
+	return strnicmp(str, head, strlen(head))==0;
+#endif
+}
+
+bool	compare_tail_s(const char* str, const char* tail)
 {
 	size_t len = strlen(tail);
-	const int diff = str.size()-len;
-	if ( diff < 0 )
+	size_t str_len = strlen(str);
+
+	const int diff = str_len-len;
+	if ( diff < 0 ) {
 		return	false;
-	return str.compare(diff,len,tail)==0;
+	}
+
+	return strcmp(str+diff, tail)==0;
+}
+
+bool	compare_tail_nocase_s(const char* str, const char* tail)
+{
+	size_t len = strlen(tail);
+	size_t str_len = strlen(str);
+
+	const int diff = str_len-len;
+	if ( diff < 0 ) {
+		return	false;
+	}
+
+	return stricmp(str+diff, tail)==0;
 }
 
 inline int charactor_to_binary(char c) {
