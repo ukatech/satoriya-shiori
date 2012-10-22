@@ -2,6 +2,7 @@
 #include <algorithm>
 
 #include "random.h"
+#include "posix_utils.h"
 
 //////////DEBUG/////////////////////////
 #ifdef _WINDOWS
@@ -83,6 +84,44 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 			sender << "■見切れ判定結果: " << mReferences[1] << endl;*/
 		}
 #endif
+		//ホールド
+		if ( mousedown_reference_array.size() > 0 && mousedown_exec_complete == false ) {
+			if ( (posix_get_current_tick() - mousedown_time) > 1000 ) {
+				string	str = mousedown_reference_array[3]+mousedown_reference_array[4]+"ホールド";
+
+				mousedown_exec_complete = true;
+				if ( talks.is_exist(str) ) {
+					script=GetSentence(str);
+				}
+			}
+		}
+
+		//ホールド終了
+		bool talking = false;
+		if ( mIsStatusHeaderExist ) {
+			strmap::const_iterator it = mRequestMap.find("Status");
+			if ( it != mRequestMap.end() ) {
+				if ( strstr(it->second.c_str(),"talking") ) {
+					talking = true;
+				}
+			}
+		}
+
+		if ( ! talking ) {
+			if ( mousedown_secchange_delay_exec ) {
+				if ( (posix_get_current_tick() - mousedown_secchange_delay_time) > 1000 ) {
+					mousedown_secchange_delay_exec = false;
+					mousedown_secchange_delay_time = 0;
+
+					string	str = mousedown_reference_array[3]+mousedown_reference_array[4]+"ホールド終了";
+					if ( talks.is_exist(str) ) {
+						script=GetSentence(str);
+					}
+					mousedown_reference_array.clear();
+					mousedown_time = 0;
+				}
+			}
+		}
 
 		mikire_flag = stoi(mReferences[1])!=0;
 		kasanari_flag = stoi(mReferences[2])!=0;
@@ -201,6 +240,72 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 			if ( talks.is_exist(str) ) {
 				script=GetSentence(str);
 				koro_count.clear();
+			}
+		}
+	}
+	else if ( iEvent=="OnMouseDragStart" ) {
+		if ( ! mousedown_exec_complete ) {
+			mousedown_reference_array.clear();
+			mousedown_time = 0;
+		}
+	}
+	else if ( iEvent=="OnMouseDragEnd" ) {
+		if ( mousedown_exec_complete ) {
+			bool talking = false;
+			if ( mIsStatusHeaderExist ) {
+				strmap::const_iterator it = mRequestMap.find("Status");
+				if ( it != mRequestMap.end() ) {
+					if ( strstr(it->second.c_str(),"talking") ) {
+						talking = true;
+					}
+				}
+			}
+			
+			if ( talking ) {
+				mousedown_secchange_delay_exec = true;
+				mousedown_secchange_delay_time = posix_get_current_tick();
+			}
+			else {
+				string	str = mousedown_reference_array[3]+mousedown_reference_array[4]+"ホールド終了";
+				if ( talks.is_exist(str) ) {
+					script=GetSentence(str);
+				}
+				mousedown_reference_array.clear();
+				mousedown_time = 0;
+			}
+		}
+	}
+	else if ( iEvent=="OnMouseDown" ) {
+		if ( atoi(mReferences[5].c_str()) == 0 ) {
+			//ホールド計測開始
+			mousedown_reference_array = mReferences;
+			mousedown_time = posix_get_current_tick();
+			mousedown_exec_complete = false;
+		}
+	}
+	else if ( iEvent=="OnMouseUp" ) {
+		if ( mousedown_exec_complete ) {
+			bool talking = false;
+			if ( mIsStatusHeaderExist ) {
+				strmap::const_iterator it = mRequestMap.find("Status");
+				if ( it != mRequestMap.end() ) {
+					if ( strstr(it->second.c_str(),"talking") ) {
+						talking = true;
+					}
+				}
+			}
+			
+			if ( talking ) {
+				mousedown_secchange_delay_exec = true;
+				mousedown_secchange_delay_time = posix_get_current_tick();
+			}
+			else {
+				string	str = mousedown_reference_array[3]+mousedown_reference_array[4]+"ホールド終了";
+				if ( talks.is_exist(str) ) {
+					script=GetSentence(str);
+				}
+				mousedown_reference_array.clear();
+				mousedown_time = 0;
 			}
 		}
 	}

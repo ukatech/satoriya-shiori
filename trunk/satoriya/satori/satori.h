@@ -170,6 +170,12 @@ private:
 	int		nade_valid_time_initializer;	// なでられ持続秒数（なでセッションの期限）
 	int		nade_sensitivity;				// なでられ我慢回数（発動までの回数）
 
+	unsigned int mousedown_time;
+	strvec mousedown_reference_array;
+	bool mousedown_exec_complete;
+
+	bool mousedown_secchange_delay_exec;
+	unsigned int mousedown_secchange_delay_time;
 
 	strintmap	koro_count;	// ころころ回数
 	int	koro_valid_time;	// ころころ有効期間
