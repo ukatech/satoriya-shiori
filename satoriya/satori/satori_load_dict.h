@@ -106,6 +106,11 @@ void	Satori::InitMembers() {
 
 	second_from_last_talk=0;
 
+	mousedown_time = 0;
+	mousedown_exec_complete = false;
+	mousedown_secchange_delay_exec = false;
+	mousedown_secchange_delay_time = 0;
+
 	//’‚é‚²‚Æ‚É‰Šú‰»‚·‚é•Ï”
 	return_empty = false;
 	is_quick_section = false;
