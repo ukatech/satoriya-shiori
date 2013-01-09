@@ -112,6 +112,9 @@ bool	Satori::load(const string& iBaseFolder)
 	Sender::initialize();
 
 	setlocale(LC_ALL, "Japanese");
+#ifdef _WINDOWS
+	_setmbcp(_MB_CP_LOCALE);
+#endif
 
 	mBaseFolder = iBaseFolder;
 	sender << "¡SATORI::Load on " << mBaseFolder << "" << endl;

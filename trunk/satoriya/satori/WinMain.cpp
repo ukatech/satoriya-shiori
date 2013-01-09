@@ -336,6 +336,9 @@ WinMain(
 	LPSTR lpszCmdParam,
 	int iShowCmd) 
 {
+	setlocale(LC_ALL, "Japanese");
+	_setmbcp(_MB_CP_LOCALE);
+
 	gInstance = hInstance;
 
 	HANDLE	hMutex = ::CreateMutex( NULL, FALSE, "SATORITE_MUTEX_OBJECT" );
