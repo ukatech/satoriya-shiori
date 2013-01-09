@@ -8,10 +8,21 @@
 #include	<algorithm>
 #include	<time.h>
 
+#ifdef _WINDOWS
+#include <mbctype.h>
+#endif
+
 class ssu : public SaoriHost {
 public:
 	ssu() {
 		randomize();
+	}
+	virtual bool	load(const string& i_base_folder) {
+		setlocale(LC_ALL, "Japanese");
+	#ifdef _WINDOWS
+		_setmbcp(_MB_CP_LOCALE);
+	#endif
+		return true;
 	}
 	virtual SRV		request(deque<string>& iArguments, deque<string>& oValues);
 };
@@ -72,7 +83,6 @@ SRV	ssu::request(deque<string>& iArguments, deque<string>& oValues) {
 #  include <sys/types.h>
 #else
 #  include	<windows.h>
-#  include	<mbctype.h>
 #endif
 #include	"../_/stltool.h"
 
