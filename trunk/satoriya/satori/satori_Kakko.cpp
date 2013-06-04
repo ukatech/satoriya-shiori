@@ -24,11 +24,15 @@ void	add_characters(const char* p, int& chars_spoken) {
 			while (!_ismbblead(*p) && (isalpha(*p)||isdigit(*p)||*p=='!'||*p=='*'||*p=='&'||*p=='?'||*p=='_'))
 				++p;
 			if (*p=='[') {
-				for (++p ; *p!=']' ;)
-					if (p[0]=='\\' && p[1]==']')	// エスケープされた]
+				p += 1;
+				while ( *p && *p!=']' ) {
+					if (p[0]=='\\' && p[1]==']') {	// エスケープされた]
 						++p;
-					else
+					}
+					else {
 						p += _ismbblead(*p) ? 2 : 1;
+					}
+				}
 			}
 		}
 		else {
