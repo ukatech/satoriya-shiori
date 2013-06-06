@@ -544,8 +544,16 @@ void	Satori::erase_var(const string& key)
 	else if ( key == "‘I‘ğˆI—¹" ) {
 		append_at_choice_end = "";
 	}
-
-	variables.erase(key);
+	else {
+		bool isSysValue = false;
+		string *str = GetValue(key,isSysValue);
+		if ( str ) {
+			*str = "";	
+			if ( ! isSysValue ) {
+				variables.erase(key);
+			}
+		}
+	}
 }
 
 bool	Satori::system_variable_operation(string key, string value, string* result)
