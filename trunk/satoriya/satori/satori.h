@@ -374,6 +374,7 @@ private:
 	bool	CallReal(const string& word, string& result, bool for_calc, bool for_non_talk);
 
 	string* GetValue(const string &key,bool &oIsSysValue,bool iIsExpand = false,bool *oIsExpanded = NULL,const char *pDefault = "");
+	bool IsArrayValue(const string &iName,int &ref,char &firstChar);
 
 	void surface_restore_string_addfunc(string &str,map<int, int>::const_iterator &i);
 

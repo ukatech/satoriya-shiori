@@ -545,13 +545,60 @@ void	Satori::erase_var(const string& key)
 		append_at_choice_end = "";
 	}
 	else {
-		bool isSysValue = false;
-		string *str = GetValue(key,isSysValue);
-		if ( str ) {
-			*str = "";	
-			if ( ! isSysValue ) {
-				variables.erase(key);
+		int ref;
+		char firstChar;
+
+		if ( IsArrayValue(key,ref,firstChar) ) {
+			if ( firstChar=='R' ) {
+				// Event通知時の引数取得
+				if (ref>=0 && ref<mReferences.size()) {
+					mReferences[ref] = "";
+					if ( ref == (mReferences.size()-1) ) {
+						mReferences.pop_back();
+					}
+				}
 			}
+			else if ( firstChar=='H' ) {
+				// 過去の置き換え履歴を参照
+				if ( kakko_replace_history.empty() ) { return; }
+
+				strvec&	khr = kakko_replace_history.top();
+
+				ref -= 1; //いっこまえでないと履歴にならん！
+
+				if ( ref>=0 && ref < khr.size() ) {
+					khr[ref] = "";
+					if ( ref == (khr.size()-1) ) {
+						khr.pop_back();
+					}
+				}
+			}
+			else if ( firstChar=='A' ) {
+				if ( mCallStack.empty() ) { return; }
+
+				// callによる呼び出しの引数を参照S
+				strvec&	v = mCallStack.top();
+				if ( ref >= 0 && ref < v.size() ) {
+					v[ref] = "";
+					if ( ref == (v.size()-1) ) {
+						v.pop_back();
+					}
+				}
+			}
+			else if ( firstChar=='S' ) {
+				// SAORIなどコール時の結果処理
+				if (ref>=0 && ref<mKakkoCallResults.size()) {
+					mKakkoCallResults[ref] = "";
+					if ( ref == (mKakkoCallResults.size()-1) ) {
+						mKakkoCallResults.pop_back();
+					}
+				}
+			}
+			//else if ( firstChar=='C' ) {
+			//}
+		}
+		else {
+			variables.erase(key);
 		}
 	}
 }
