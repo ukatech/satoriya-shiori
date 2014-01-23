@@ -134,8 +134,8 @@ public:
 		
 		strvec argv;
 		const int n = split(i_value, "、,", argv);
-		const string method = (n>=1) ? argv[0] : "無効";
-		const string span = (n>=2) ? argv[1] : "起動中";
+		const string method = (argv.size()>=1) ? argv[0] : "無効";
+		const string span = (argv.size()>=2) ? argv[1] : "起動中";
 		
 		for ( iterator it = st; it != ed ; ++it )
 		{
@@ -145,9 +145,7 @@ public:
 				continue;
 			}
 			
-			if (0)
-				NULL;
-			else if ( method=="直前" )
+			if ( method=="直前" )
 				family.set_OC(new OC_NonDual<const T*>);
 			else if ( method=="降順" || method=="正順" )
 				family.set_OC(new OC_Sequential<const T*>);

@@ -115,7 +115,7 @@ static bool	make_array(const char*& p, std::vector<calc_element>& oData) {
 
 			// ‰‰ZqorI—¹‚Ü‚Å‘S‚Ä‚ğ•¶š—ñ‚ÆŒ©‚È‚·
 			const char*	start=p;
-			while (*p!='\0') {
+			while (*p!='\0' && *p!=')') {
 				if (*p=='!' || *p=='+' || *p=='-' )
 					break;
 				if ( check_operator(p) )
