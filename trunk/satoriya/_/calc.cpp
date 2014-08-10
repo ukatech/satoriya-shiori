@@ -154,10 +154,16 @@ static bool	make_array(const char*& p, std::vector<calc_element>& oData) {
 	}
 }
 
+#ifdef NDEBUG
+#define assert_special(a) if ( !(a) ) { return false; }
+#else
+#define assert_special(a) assert(a)
+#endif
+
 // ２項演算（数値のみ用）
 #define	a_op_b(op)	\
 	else if ( el.str == #op ) {	\
-		assert(stack.size()>=2); \
+		assert_special(stack.size()>=2); \
 		if ( !aredigits(stack.from_top(0)) || !aredigits(stack.from_top(1)) ){ return false; }\
 		int	result = stoi(stack.from_top(1)) op stoi(stack.from_top(0)); \
 		stack.pop(2); stack.push(itos(result)); }
@@ -165,14 +171,14 @@ static bool	make_array(const char*& p, std::vector<calc_element>& oData) {
 // ２項演算（stringとして扱う != と == 用）
 #define	even_a_op_b(op)	\
 	else if ( el.str == #op ) {	\
-		assert(stack.size()>=2); \
+		assert_special(stack.size()>=2); \
 		int	result = stack.from_top(1) op stack.from_top(0); \
 		stack.pop(2); stack.push(itos(result)); }
 
 // ２項演算（stringとして扱う != と == 用）
 #define	length_a_op_b(op)	\
 	else if ( el.str == #op ) {	\
-		assert(stack.size()>=2); \
+		assert_special(stack.size()>=2); \
 		if ( aredigits(stack.from_top(0)) && aredigits(stack.from_top(1)) ){\
 			int	result = stoi(stack.from_top(1)) op stoi(stack.from_top(0)); \
 			stack.pop(2); stack.push(itos(result)); \
@@ -191,17 +197,17 @@ static bool	calc_polish(simple_stack<calc_element>& polish, string& oResult,bool
 			stack.push(el.str);
 		}
 		else if ( el.priority==90 ) {	// 単項演算子
-			assert(stack.size()>=1);
+			assert_special(stack.size()>=1);
 			if ( !aredigits(stack.top()) )
 				return	false;
 			if ( el.str=="!" ) stack.push( itos(!stoi(stack.pop())) );
 			else if ( el.str=="+" ) NULL;
 			else if ( el.str=="-" ) stack.push( itos(-stoi(stack.pop())) );
-			else assert(0);
+			else assert_special(0);
 		}
 		a_op_b(^)
 		else if ( el.str == "*" ) {
-			assert(stack.size()>=2);
+			assert_special(stack.size()>=2);
 			string	rhs=stack.pop(), lhs=stack.pop();
 			if ( aredigits(lhs) && aredigits(rhs) ) {
 				stack.push(itos( stoi(lhs)*stoi(rhs) )); 
@@ -217,7 +223,7 @@ static bool	calc_polish(simple_stack<calc_element>& polish, string& oResult,bool
 		a_op_b(/)
 		a_op_b(%)
 		else if ( el.str == "+" ) {
-			assert(stack.size()>=2);
+			assert_special(stack.size()>=2);
 			string	rhs=stack.pop(), lhs=stack.pop();
 			if ( aredigits(lhs) && aredigits(rhs) ) {
 				stack.push(itos( stoi(lhs)+stoi(rhs) )); 
@@ -228,7 +234,7 @@ static bool	calc_polish(simple_stack<calc_element>& polish, string& oResult,bool
 			}
 		}
 		else if ( el.str == "-" ) {
-			assert(stack.size()>=2);
+			assert_special(stack.size()>=2);
 			string	rhs=stack.pop(), lhs=stack.pop();
 			if ( aredigits(lhs) && aredigits(rhs) ) {
 				stack.push(itos( stoi(lhs)-stoi(rhs) )); 
@@ -241,7 +247,7 @@ static bool	calc_polish(simple_stack<calc_element>& polish, string& oResult,bool
 		}
 		else if ( el.str == "=~" || el.str == "!~" ) {
 			// パターンマッチ
-			assert(stack.size()>=2);
+			assert_special(stack.size()>=2);
 			string	target=stack.pop(), re=stack.pop();
 
 			stack.push("0");
@@ -255,13 +261,14 @@ static bool	calc_polish(simple_stack<calc_element>& polish, string& oResult,bool
 		a_op_b(&&)
 		a_op_b(||)
 		else 
-			assert(0);
+			assert_special(0);
 
 	}
-	assert(stack.size()==1);
+	assert_special(stack.size()==1);
 	oResult = stack.pop();
 	return	true;
 }
+
 
 bool calc(const char* iExpression, string& oResult,bool isStrict) {
 	std::vector<calc_element>	org;
