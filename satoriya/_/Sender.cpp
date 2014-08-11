@@ -26,13 +26,14 @@ Sender::error_stream	errsender;
 
 // staticメンバ
 bool Sender::sm_sender_flag = true;
+bool Sender::is_do_auto_initialize = false;
 int Sender::nest_object::sm_nest = 0;
 #ifndef POSIX
 HWND Sender::sm_receiver_window = NULL;
 #endif
 
 
-bool	Sender::initialize()
+bool Sender::initialize()
 {
 #ifdef POSIX
 	return true;
@@ -41,6 +42,21 @@ bool	Sender::initialize()
 #endif
 }
 
+bool Sender::reinit(bool isEnable)
+{
+	if(isEnable)
+	{
+		//フラグを下ろして次に再スキャン
+		is_do_auto_initialize = false;
+	}
+	else
+	{
+		//フラグを立ててNULLにすれば無効
+		is_do_auto_initialize = true;
+		sm_receiver_window = NULL;
+	}
+	return true;
+}
 
 // レシーバウィンドウにメッセージを送信
 bool	Sender::send(const char* iFormat, ...)
@@ -68,7 +84,6 @@ bool	Sender::send(const char* iFormat, ...)
 	if ( sm_receiver_window==NULL )
 	{
 		// 初回のみ自動検索。毎回FindWindowは無駄すぎる
-		static bool is_do_auto_initialize = false;
 		if ( !is_do_auto_initialize )
 		{
 			bool b = initialize();

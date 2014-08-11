@@ -191,7 +191,26 @@ int	Satori::request(
 	sender << "--- Operation ---" << endl;
 
 	int status_code;
-	if ( mRequestID=="ShioriEcho" ) {
+	if ( mRequestID=="enable_log" || mRequestID=="enable_debug" ) {
+		if ( secure_flag ) {
+			bool flag = false;
+			if ( mReferences.size() > 0 ) {
+				flag = atoi(mReferences[0].c_str()) != 0;
+			}
+
+			if ( mRequestID=="enable_debug" ) {
+				fDebugMode = flag;
+			}
+			else {
+				Sender::validate(flag);
+			}
+		}
+		else {
+			sender << "local/Local‚Å‚È‚¢‚Ì‚ÅR‚è‚Ü‚µ‚½: ShioriEcho" << endl;
+			status_code = 403;
+		}
+	}
+	else if ( mRequestID=="ShioriEcho" ) {
 		// ShioriEchoŽÀ‘•
 		if ( fDebugMode && secure_flag ) {
 			string result = SentenceToSakuraScriptExec_with_PreProcess(mReferences);
