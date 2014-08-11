@@ -60,6 +60,7 @@ class Sender
 	};
 
 	static bool	sm_sender_flag;		// “®ì—LŒø‰Â”Û
+	static bool is_do_auto_initialize;
 
 	Sender();
 public:
@@ -97,6 +98,7 @@ public:
 
 
 	static bool initialize();
+	static bool reinit(bool isEnable);
 	static bool send(const char* iFormat, ...);
 
 	static void validate(bool i_flag=true) { sm_sender_flag = i_flag; }

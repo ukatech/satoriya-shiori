@@ -802,14 +802,14 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 		return true;
 	}
 	
-	if ( key == "自動挿入ウェイトの倍率" ) {
+	if ( key == "自動挿入ウェイトの倍率" || key == "自動挿入ウエイトの倍率" ) {
 		rate_of_auto_insert_wait= zen2int(value);
 		rate_of_auto_insert_wait = min(1000, max(0, rate_of_auto_insert_wait));
 		variables["自動挿入ウェイトの倍率"] = int2zen(rate_of_auto_insert_wait);
 		return true;
 	}
 	
-	if ( key == "自動挿入ウェイトタイプ" ) {
+	if ( key == "自動挿入ウェイトタイプ" || key == "自動挿入ウエイトタイプ"  ) {
 		if ( value == "一般" ) {
 			type_of_auto_insert_wait = 2;
 			variables["自動挿入ウェイトタイプ"] = "一般";
@@ -899,6 +899,12 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 	if ( key == "辞書リロード" && value=="実行") {
 		variables.erase(key);
 		reload_flag=true;
+		return true;
+	}
+	
+	if ( key == "れしば送信") {
+		variables.erase(key);
+		Sender::reinit(value=="有効");
 		return true;
 	}
 	
