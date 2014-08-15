@@ -105,7 +105,7 @@ static void lines_to_units(
 			i->body.pop_back();
 		}
 
-		//sender << *i << endl;
+		//GetSender().sender() << *i << endl;
 	}
 }
 
@@ -178,7 +178,7 @@ static bool pre_process(
 
 			// 一行追加
 			out.push_back(accumulater);
-			//sender << line_number << " [" << accumulater << "]" << endl;
+			//GetSender().sender() << line_number << " [" << accumulater << "]" << endl;
 			accumulater="";
 		}
 		else if ( line_number == in.size() ) 
@@ -217,7 +217,7 @@ static bool select_dict_and_load_to_vector(const string& iFileName, strvec& oFil
 		}
 		else {
 			if ( warnFileName ) {
-				sender << "  " << satfile << "is not exist.";
+				GetSender().sender() << "  " << satfile << "is not exist.";
 			}
 			file = txtfile;
 		}
@@ -228,17 +228,17 @@ static bool select_dict_and_load_to_vector(const string& iFileName, strvec& oFil
 		}
 		else {
 			if ( warnFileName ) {
-				sender << "  " << txtfile << "is not exist.";
+				GetSender().sender() << "  " << txtfile << "is not exist.";
 			}
 			file = satfile;
 			decodeMe = true;
 		}
 	}
 
-	sender << "  loading " << get_file_name(file);
+	GetSender().sender() << "  loading " << get_file_name(file);
 	if ( !strvec_from_file(oFileBody, file) )
 	{
-		sender << "... failed." << endl;
+		GetSender().sender() << "... failed." << endl;
 		return	false;
 	}
 
@@ -275,7 +275,7 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName)
 	if ( false == pre_process(file_vec, preprocessed_vec, m_escaper, replace_before_dic) )
 	{
 #ifdef POSIX
-	     errsender <<
+	     GetSender().errsender() <<
 		    "syntax error - SATORI : " << iFileName << std::endl <<
 		    std::endl <<
 		    "There are some mismatched parenthesis." << std::endl <<
@@ -284,7 +284,7 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName)
 		    "If you want to display parenthesis independently," << std::endl <<
 		    "use \"phi\" symbol to escape it." << std::endl;
 #else
-		errsender << iFileName + "\n\n"
+		GetSender().errsender() << iFileName + "\n\n"
 			"\n"
 			"カッコの対応関係が正しくない部分があります。" "\n"
 			"辞書は正しく読み込まれていません。" "\n"
@@ -324,7 +324,7 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName)
 			talks.add_element(i->name, i->body, i->condition);
 
 #ifdef _DEBUG
-			sender << "＊" << i->name << " " << i->condition << endl;
+			GetSender().sender() << "＊" << i->name << " " << i->condition << endl;
 #endif
 		}
 		else
@@ -337,7 +337,7 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName)
 			}
 
 #ifdef _DEBUG
-			sender << "＠" << i->name << " " << i->condition << endl;
+			GetSender().sender() << "＠" << i->name << " " << i->condition << endl;
 #endif
 		}
 
@@ -347,8 +347,8 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName)
 		sort(anchors.begin(),anchors.end(),satori_anchor_compare);
 	}
 
-	//sender << "　　　talk:" << talks.count_all() << ", word:" << words.count_all() << endl;
-	sender << "... ok." << endl;
+	//GetSender().sender() << "　　　talk:" << talks.count_all() << ", word:" << words.count_all() << endl;
+	GetSender().sender() << "... ok." << endl;
 	return	true;
 }
 
@@ -365,7 +365,7 @@ void list_files(string i_path, vector<string>& o_files)
 	DIR* dh = opendir(i_path.c_str());
 	if (dh == NULL)
 	{
-	    sender << "file not found." << endl;
+	    GetSender().sender() << "file not found." << endl;
 	}
 	while (1) {
 	    struct dirent* ent = readdir(dh);
@@ -387,7 +387,7 @@ void list_files(string i_path, vector<string>& o_files)
 	hFIND = ::FindFirstFile((i_path+"*.*").c_str(), &fdFOUND);
 	if ( hFIND == INVALID_HANDLE_VALUE )
 	{
-		sender << "file not found." << endl;
+		GetSender().sender() << "file not found." << endl;
 	}
 
 	do
@@ -404,7 +404,7 @@ void list_files(string i_path, vector<string>& o_files)
 
 int Satori::LoadDicFolder(const string& i_base_folder)
 {
-	sender << "LoadDicFolder(" << i_base_folder << ")" << endl;
+	GetSender().sender() << "LoadDicFolder(" << i_base_folder << ")" << endl;
 	vector<string> files;
 	list_files(i_base_folder, files);
 
@@ -422,6 +422,6 @@ int Satori::LoadDicFolder(const string& i_base_folder)
 		}
 	}
 
-	sender << "ok." << endl;
+	GetSender().sender() << "ok." << endl;
 	return count;
 }

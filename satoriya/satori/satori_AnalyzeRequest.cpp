@@ -172,13 +172,13 @@ int	Satori::request(
 
 	if(fRequestLog && logmode)
 	{
-		sender << "--- Request ---" << endl << mStatusLine << endl; // << iRequest << endl;
+		GetSender().sender() << "--- Request ---" << endl << mStatusLine << endl; // << iRequest << endl;
 		for(strmap::const_iterator i=mRequestMap.begin() ; i!=mRequestMap.end() ; ++i)
 			if ( !i->first.empty() && !i->second.empty()
 				&& i->first!="SecurityLevel" 
 				&& i->first!="Sender" 
 				&& i->first!="Charset" ) {
-				sender << i->first << ": " << i->second << endl;
+				GetSender().sender() << i->first << ": " << i->second << endl;
 			}
 	}
 
@@ -187,8 +187,8 @@ int	Satori::request(
 	secure_flag = ( it!=mRequestMap.end() && stricmp(it->second.c_str(), "local")==0 );
 
 	// メイン処理
-	Sender::validate( fOperationLog && logmode );
-	sender << "--- Operation ---" << endl;
+	GetSender().validate( fOperationLog && logmode );
+	GetSender().sender() << "--- Operation ---" << endl;
 
 	int status_code;
 	if ( mRequestID=="enable_log" || mRequestID=="enable_debug" ) {
@@ -202,11 +202,11 @@ int	Satori::request(
 				fDebugMode = flag;
 			}
 			else {
-				Sender::validate(flag);
+				GetSender().validate(flag);
 			}
 		}
 		else {
-			sender << "local/Localでないので蹴りました: ShioriEcho" << endl;
+			GetSender().sender() << "local/Localでないので蹴りました: ShioriEcho" << endl;
 			status_code = 403;
 		}
 	}
@@ -246,12 +246,12 @@ int	Satori::request(
 		}
 		else {
 			if ( fDebugMode ) {
-				sender << "local/Localでないので蹴りました: ShioriEcho" << endl;
+				GetSender().sender() << "local/Localでないので蹴りました: ShioriEcho" << endl;
 				status_code = 403;
 			}
 			else {
 				static const std::string dbgmsg = "デバッグモードが無効です。使用するためには＄デバッグ＝有効にしてください。: ShioriEcho";
-				sender << dbgmsg << endl;
+				GetSender().sender() << dbgmsg << endl;
 
 				mResponseMap["Value"] = "\\0" + dbgmsg + "\\e";
 				status_code = 200;
@@ -292,7 +292,7 @@ int	Satori::request(
 		}
 	}
 
-	sender << "status code : " << itos(status_code) << endl;
+	GetSender().sender() << "status code : " << itos(status_code) << endl;
 
 	//--------------------------------------------------------------------
 
@@ -331,8 +331,8 @@ int	Satori::request(
 		o_data.push_back( strpair(key, value) );
 	}
 
-	if ( errsender.get_log_mode() ) {
-		const std::vector<string> &errlog = errsender.get_log();
+	if ( GetSender().errsender().get_log_mode() ) {
+		const std::vector<string> &errlog = GetSender().errsender().get_log();
 
 		std::string errmsg;
 		std::string errlevel;
@@ -353,13 +353,13 @@ int	Satori::request(
 			o_data.push_back( strpair("ErrorLevel",errlevel) );
 			o_data.push_back( strpair("ErrorDescription",errmsg) );
 		}
-		errsender.clear_log();
+		GetSender().errsender().clear_log();
 	}
 
-	Sender::validate();
+	GetSender().validate();
 	if(fResponseLog && logmode)
 	{
-		sender << "--- Response ---" << endl << mResponseMap << endl;
+		GetSender().sender() << "--- Response ---" << endl << mResponseMap << endl;
 	}
 	mResponseMap.clear();
 
@@ -370,10 +370,10 @@ int	Satori::request(
 	{
 		reload_flag = false;
 		string	tmp = mBaseFolder;
-		sender << "■■reloading." << endl;
+		GetSender().sender() << "■■reloading." << endl;
 		unload();
 		load(tmp);
-		sender << "■■reloaded." << endl;
+		GetSender().sender() << "■■reloaded." << endl;
 	}
 
 	return	status_code;

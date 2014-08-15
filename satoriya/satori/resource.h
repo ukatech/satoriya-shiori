@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Developer Studio generated include file.
-// Used by Script1.rc
+// Used by resource.rc
 //
 #define ID_READCLIPBOARD                3
 #define ID_READCLIPBOARD_SYNC           5

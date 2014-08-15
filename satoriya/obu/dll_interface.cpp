@@ -132,7 +132,7 @@ extern "C" __declspec(dllexport) HGLOBAL __cdecl request(HGLOBAL iData,long *ioL
 	HGLOBAL theData = ::GlobalAlloc(GMEM_FIXED, *ioLength);
 	::CopyMemory(theData, theResponce.c_str(), *ioLength);
 	
-	/*sender << "obu ¥¥¥¥¥¥¥¥¥¥¥¥¥¥¥¥¥¥" << endl
+	/*GetSender().sender() << "obu ¥¥¥¥¥¥¥¥¥¥¥¥¥¥¥¥¥¥" << endl
 		<< theRequest
 		<< "||||||||||||||||||" << endl
 		<< theResponce

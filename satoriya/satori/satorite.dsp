@@ -374,7 +374,7 @@ SOURCE=.\icon1.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\Script1.rc
+SOURCE=.\resource.rc
 # End Source File
 # End Group
 # Begin Source File

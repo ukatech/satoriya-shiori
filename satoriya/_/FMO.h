@@ -57,7 +57,7 @@ private:
 
 		LPVOID	pfm = fmo.Map();
 		if ( pfm==NULL ) {
-			sender << "FMO can't mapping." << endl;
+			GetSender().sender() << "FMO can't mapping." << endl;
 			return	false;
 		}
 

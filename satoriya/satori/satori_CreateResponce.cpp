@@ -25,7 +25,7 @@ int		Satori::CreateResponse(strmap& oResponse)
 			}
 			for (int n=0 ; n<max ; ++n) {
 				characters_hwnd[n] = (HWND)(stoi(vec[n]));
-				sender << "—¢X‚Í id:" << n << " ‚ÌhWnd‚ðŽæ“¾‚µ‚Ü‚µ‚½B" << endl;
+				GetSender().sender() << "—¢X‚Í id:" << n << " ‚ÌhWnd‚ðŽæ“¾‚µ‚Ü‚µ‚½B" << endl;
 			}
 #endif
 		}
@@ -36,7 +36,7 @@ int		Satori::CreateResponse(strmap& oResponse)
 					isErrorHeader = true;
 				}
 			}
-			errsender.set_log_mode(isErrorHeader);
+			GetSender().errsender().set_log_mode(isErrorHeader);
 		}
 	}
 
@@ -64,12 +64,12 @@ int		Satori::CreateResponse(strmap& oResponse)
 		//	str.assign( str.substr(0, str.size()-2)+"]" );
 		string	temp;
 		if ( secure_flag ) {
-			sender << "[DirectCall]" << endl;
+			GetSender().sender() << "[DirectCall]" << endl;
 			Call(str, temp);
 			return	204;
 		}
 		else {
-			sender << "local/Local‚Å‚È‚¢‚Ì‚ÅR‚è‚Ü‚µ‚½: " << str << endl;
+			GetSender().sender() << "local/Local‚Å‚È‚¢‚Ì‚ÅR‚è‚Ü‚µ‚½: " << str << endl;
 			return	204;
 		}
 	}

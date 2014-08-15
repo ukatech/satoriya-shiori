@@ -89,11 +89,11 @@ bool ShioriPlugins::load_a_plugin(const string& iPluginLine)
 	strvec	vec;
 	split(iPluginLine, ",", vec);	// カンマ区切りで分割
 	if ( vec.size()<2 || vec[0].size()==0 ) {	// 呼び出し名と相対パスが必須
-		errsender << iPluginLine + ": 設定ファイルの書式が正しくありません。" << std::endl;
+		GetSender().errsender() << iPluginLine + ": 設定ファイルの書式が正しくありません。" << std::endl;
 		return	false;
 	}
 	if ( mCallData.find(vec[0]) != mCallData.end() ) {
-		errsender << vec[0] + ": 同じ呼び出し名が複数定義されています。" << std::endl;
+		GetSender().errsender() << vec[0] + ": 同じ呼び出し名が複数定義されています。" << std::endl;
 		return	false;
 	}
 
@@ -133,9 +133,9 @@ bool ShioriPlugins::load_a_plugin(const string& iPluginLine)
 		if ( fp == NULL )
 		{
 #ifdef POSIX
-            errsender << fullpath + ": failed to open" << std::endl;
+            GetSender().errsender() << fullpath + ": failed to open" << std::endl;
 #else
-			errsender << fullpath + ": プラグインが存在しません。" << std::endl;
+			GetSender().errsender() << fullpath + ": プラグインが存在しません。" << std::endl;
 #endif
 			return	false;
 		}
@@ -200,7 +200,7 @@ bool ShioriPlugins::load_a_plugin(const string& iPluginLine)
 			    (cstr_path == NULL ?
 			     "(environment variable `SAORI_FALLBACK_PATH' is empty)" : cstr_path);
 			
-			errsender <<
+			GetSender().errsender() <<
 			    fullpath+": This is not usable in this platform.\n"+
 			    "Fallback library `"+filename+"."+extention+"' doesn't exist: "+fallback_path) << std::endl;
 			
@@ -238,7 +238,7 @@ bool ShioriPlugins::load_a_plugin(const string& iPluginLine)
 			string ver = mDllData[fullpath].mSaoriClient.get_version("Local");
 			if ( ver != "SAORI/1.0" )
 			{
-				errsender << fullpath + ": SAORI/1.0のdllではありません。GET Versionの戻り値が未対応のものでした。(" + ver + ")" << std::endl;
+				GetSender().errsender() << fullpath + ": SAORI/1.0のdllではありません。GET Versionの戻り値が未対応のものでした。(" + ver + ")" << std::endl;
 				mDllData.erase(fullpath);
 				return	false;
 			}
@@ -276,7 +276,7 @@ void	ShioriPlugins::unload()
 string	ShioriPlugins::request(const string& iCallName, const strvec& iArguments, strvec& oResults, const string& iSecurityLevel) {
 
 	if ( mCallData.find(iCallName) == mCallData.end() ) {
-		errsender << iCallName + ": この呼び出し名は定義されていません。" << std::endl;
+		GetSender().errsender() << iCallName + ": この呼び出し名は定義されていません。" << std::endl;
 		return	"";
 	}
 	CallData&	theCallData = mCallData[iCallName];
@@ -305,7 +305,7 @@ string	ShioriPlugins::request(const string& iCallName, const strvec& iArguments,
 		if ( r != "" )
 		{
 			// エラー
-			errsender << iCallName + ": " + r << std::endl;
+			GetSender().errsender() << iCallName + ": " + r << std::endl;
 			return "";
 		}
 		else
@@ -346,13 +346,13 @@ string	ShioriPlugins::request(const string& iCallName, const strvec& iArguments,
 		case 204:
 			break;
 		case 400:
-			errsender << theCallData.mDllPath + " - " + iCallName + " : 400 Bad Request / 呼び出しの不備" << std::endl;
+			GetSender().errsender() << theCallData.mDllPath + " - " + iCallName + " : 400 Bad Request / 呼び出しの不備" << std::endl;
 			break;
 		case 500:
-			errsender << theCallData.mDllPath + " - " + iCallName + " : 500 Internal Server Error / saori内でのエラー" << std::endl;
+			GetSender().errsender() << theCallData.mDllPath + " - " + iCallName + " : 500 Internal Server Error / saori内でのエラー" << std::endl;
 			break;
 		default:
-			errsender << theCallData.mDllPath + " - " + iCallName + " : " + itos(return_code) + "? / 定義されていないステータスを返しました。" << std::endl;
+			GetSender().errsender() << theCallData.mDllPath + " - " + iCallName + " : " + itos(return_code) + "? / 定義されていないステータスを返しました。" << std::endl;
 			break;
 		}
 

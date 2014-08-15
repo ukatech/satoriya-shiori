@@ -783,7 +783,7 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 	}
 
 	if ( key == "Log" ) {
-		Sender::validate(value=="有効");
+		GetSender().validate(value=="有効");
 		return true;
 	}
 
@@ -855,7 +855,7 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 		while ( reserved_talk.find(count) != reserved_talk.end() )
 			++count;
 		reserved_talk[count] = value;
-		sender << "次回のランダムトークが「" << value << "」に予\x96\xf1されました。" << endl;
+		GetSender().sender() << "次回のランダムトークが「" << value << "」に予\x96\xf1されました。" << endl;
 		return true;
 	}
 	
@@ -863,13 +863,13 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 		variables.erase(key);
 		int	count = zen2int( string(key.c_str()+6, key.length()-6-12) );
 		if ( count<=0 ) {
-			sender << "トーク予\x96\xf1、設定値がヘンです。" << endl;
+			GetSender().sender() << "トーク予\x96\xf1、設定値がヘンです。" << endl;
 		}
 		else {
 			while ( reserved_talk.find(count) != reserved_talk.end() )
 				++count;
 			reserved_talk[count] = value;
-			sender << count << "回後のランダムトークが「" << value << "」に予\x96\xf1されました。" << endl;
+			GetSender().sender() << count << "回後のランダムトークが「" << value << "」に予\x96\xf1されました。" << endl;
 		}
 		return true;
 	}
@@ -904,7 +904,7 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 	
 	if ( key == "れしば送信") {
 		variables.erase(key);
-		Sender::reinit(value=="有効");
+		GetSender().reinit(value=="有効");
 		return true;
 	}
 	
@@ -920,9 +920,9 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 		mAutoSaveInterval = zen2int(value);
 		mAutoSaveCurrentCount = mAutoSaveInterval;
 		if ( mAutoSaveInterval > 0 )
-			sender << ""  << itos(mAutoSaveInterval) << "秒間隔で自動セーブを行います。" << endl;
+			GetSender().sender() << ""  << itos(mAutoSaveInterval) << "秒間隔で自動セーブを行います。" << endl;
 		else
-			sender << "自動セーブは行いません。" << endl;
+			GetSender().sender() << "自動セーブは行いません。" << endl;
 		return true;
 	}
 	
@@ -954,12 +954,12 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 			variables.erase(key);
 			if ( timer.find(name)!=timer.end() ) {
 				timer.erase(name);
-				sender << "タイマ「"  << name << "」の予\x96\xf1がキャンセルされました。" << endl;
+				GetSender().sender() << "タイマ「"  << name << "」の予\x96\xf1がキャンセルされました。" << endl;
 			} else
-				sender << "タイマ「"  << name << "」は元から予\x96\xf1されていません。" << endl;
+				GetSender().sender() << "タイマ「"  << name << "」は元から予\x96\xf1されていません。" << endl;
 		} else {
 			timer[name] = sec;
-			sender << "タイマ「"  << name << "」が" << sec << "秒後に予\x96\xf1されました。" << endl;
+			GetSender().sender() << "タイマ「"  << name << "」が" << sec << "秒後に予\x96\xf1されました。" << endl;
 		}
 		}
 		return true;
@@ -999,12 +999,12 @@ bool	Satori::calculate(const string& iExpression, string& oResult) {
 	bool r = calc(oResult);
 	if ( !r ) {
 #ifdef POSIX
-		errsender <<
+		GetSender().errsender() <<
 			"error on Satori::calculate" << std::endl <<
 			"Error in expression: " << iExpression << std::endl;
 #else
 		// もうちょっと抽象化を……
-		errsender << string() + "式が計算不能です。\n" + iExpression << std::endl;
+		GetSender().errsender() << string() + "式が計算不能です。\n" + iExpression << std::endl;
 #endif
 	}
 	return	r;

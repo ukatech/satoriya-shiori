@@ -26,10 +26,10 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL,DWORD fdwReason,LPVOID lpvReserved)
 
 #ifdef POSIX
 extern "C" int load(char* i_data, long i_data_len) {
-	Sender::initialize();
+	GetSender().initialize();
     string the_base_folder(i_data, i_data_len);
     free(i_data);
-    sender << the_base_folder << endl;
+    GetSender().sender() << the_base_folder << endl;
     return SakuraDLLHost::I()->load(the_base_folder);
 }
 #else
@@ -37,7 +37,7 @@ extern "C" __declspec(dllexport) BOOL __cdecl load(HGLOBAL i_data, long i_data_l
 {
 	string the_base_folder((char*)::GlobalLock(i_data), i_data_len);
 	::GlobalFree(i_data);
-	sender << the_base_folder << endl;
+	GetSender().sender() << the_base_folder << endl;
 	return SakuraDLLHost::I()->load(the_base_folder);
 }
 #endif
@@ -123,7 +123,7 @@ extern "C" __declspec(dllexport) HGLOBAL __cdecl getversionlist(HGLOBAL i_data, 
 
 string SakuraDLLHost::request(const string& i_request_string)
 {
-	//sender << "--- Request ---" << endl << i_request_string << endl;
+	//GetSender().sender() << "--- Request ---" << endl << i_request_string << endl;
 
 	// HTTP‚à‚Ç‚«Œ`Ž®‚Ì—v‹•¶Žš—ñ‚ð‰ðÍ‚·‚é
 
@@ -200,7 +200,7 @@ string SakuraDLLHost::request(const string& i_request_string)
 	}
 	response += CRLF;
 
-	//sender << "--- Response ---" << endl << response << endl;
+	//GetSender().sender() << "--- Response ---" << endl << response << endl;
 	return response;
 }
 

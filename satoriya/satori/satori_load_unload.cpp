@@ -50,7 +50,7 @@ BOOL CALLBACK MonitorEnumFunc(HMONITOR hMonitor,HDC hdc,LPRECT rect,LPARAM lPara
 	if ( pGetMonitorInfo==NULL )
 		return	FALSE;
 	if ( !(*pGetMonitorInfo)(hMonitor,&MonitorInfoEx) ) {
-		sender << "'GetMonitorInfo' was failed." << endl;
+		GetSender().sender() << "'GetMonitorInfo' was failed." << endl;
         return FALSE;
     }
 
@@ -59,11 +59,11 @@ BOOL CALLBACK MonitorEnumFunc(HMONITOR hMonitor,HDC hdc,LPRECT rect,LPARAM lPara
 
 	if ( MonitorInfoEx.dwFlags & MONITORINFOF_PRIMARY ) {
 		pRect[1] = *rect;
-		sender << "モニタ: " << MonitorInfoEx.szDevice << " / (" << 
+		GetSender().sender() << "モニタ: " << MonitorInfoEx.szDevice << " / (" << 
 			rect->left << "," << rect->top << "," << rect->right << "," << rect->bottom << ") / primary" << endl;
 	}
 	else {
-		sender << "モニタ: " << MonitorInfoEx.szDevice << " / (" << 
+		GetSender().sender() << "モニタ: " << MonitorInfoEx.szDevice << " / (" << 
 			rect->left << "," << rect->top << "," << rect->right << "," << rect->bottom << ") / extra" << endl;
 	}
 
@@ -109,15 +109,13 @@ string	Satori::getversionlist(const string& iBaseFolder)
 
 bool	Satori::load(const string& iBaseFolder)
 {
-	Sender::initialize();
-
 	setlocale(LC_ALL, "Japanese");
 #ifdef _WINDOWS
 	_setmbcp(_MB_CP_LOCALE);
 #endif
 
 	mBaseFolder = iBaseFolder;
-	sender << "■SATORI::Load on " << mBaseFolder << "" << endl;
+	GetSender().sender() << "■SATORI::Load on " << mBaseFolder << "" << endl;
 
 #if POSIX
 	// 「/」で終わっていなければ付ける。
@@ -145,7 +143,7 @@ bool	Satori::load(const string& iBaseFolder)
 			mExeFolder = buf;
 		}
 	}
-	sender << "本体の所在: " << mExeFolder << "" << endl;
+	GetSender().sender() << "本体の所在: " << mExeFolder << "" << endl;
 #endif // _MSC_VER
 
 	// メンバ初期化
@@ -169,7 +167,7 @@ bool	Satori::load(const string& iBaseFolder)
 		}
 		else { mOSType = WINXP; os="Windows XP or later"; }
 	}
-	sender << "ＯＳ種別: " << os << endl;
+	GetSender().sender() << "ＯＳ種別: " << os << endl;
 	if ( mOSType==WIN95 ) {
 		is_single_monitor = true;
 	} else {
@@ -188,13 +186,13 @@ bool	Satori::load(const string& iBaseFolder)
 
 			RECT*	rect;
 			rect = &desktop_rect;
-			sender << "プライマリデスクトップ: (" << 
+			GetSender().sender() << "プライマリデスクトップ: (" << 
 				rect->left << "," << rect->top << "," << rect->right << "," << rect->bottom << ")" << endl;
 			rect = &max_screen_rect;
-			sender << "仮想デスクトップ: (" << 
+			GetSender().sender() << "仮想デスクトップ: (" << 
 				rect->left << "," << rect->top << "," << rect->right << "," << rect->bottom << ")" << endl;
 			is_single_monitor = ( ::EqualRect(&max_screen_rect, &desktop_rect)!=FALSE );
-			sender << (is_single_monitor ? 
+			GetSender().sender() << (is_single_monitor ? 
 				"モニタは一つだけと判断、見切れ判定を呼び出し元に任せます。" : 
 				"複数のモニタが接続されていると判断、見切れ判定は里々が行います。") << endl;
 		}
@@ -251,7 +249,7 @@ bool	Satori::load(const string& iBaseFolder)
 		{
 			if ( (*i)->size()>0 && !mShioriPlugins->load_a_plugin(**i) )
 			{
-				sender << "SAORI読み込み中にエラーが発生: " << **i << endl;
+				GetSender().sender() << "SAORI読み込み中にエラーが発生: " << **i << endl;
 			}
 		}
 	}
@@ -325,7 +323,7 @@ bool	Satori::load(const string& iBaseFolder)
 	on_loaded_script = GetSentence("OnSatoriBoot");
 	diet_script(on_loaded_script);
 
-	sender << "loaded." << endl;
+	GetSender().sender() << "loaded." << endl;
 	return	true;
 }
 
@@ -359,13 +357,13 @@ bool	Satori::Save(bool isOnUnload) {
 	string	theFullPath = mBaseFolder + "satori_savedata.tmp";
 
 	ofstream	out(theFullPath.c_str());
-	bool	temp = Sender::is_validated();
-	Sender::validate();
-	sender << "saving " << theFullPath << "... " ;
-	Sender::validate(temp);
+	bool	temp = GetSender().is_validated();
+	GetSender().validate();
+	GetSender().sender() << "saving " << theFullPath << "... " ;
+	GetSender().validate(temp);
 	if ( !out.is_open() )
 	{
-		sender << "failed." << endl;
+		GetSender().sender() << "failed." << endl;
 		return	false;
 	}
 
@@ -407,7 +405,7 @@ bool	Satori::Save(bool isOnUnload) {
 	out.flush();
 	out.close();
 
-	sender << "ok." << endl;
+	GetSender().sender() << "ok." << endl;
 
 	//バックアップ
 	string	realFullPath = mBaseFolder + "satori_savedata." + (fEncodeSavedata?"sat":"txt");
@@ -448,7 +446,7 @@ bool	Satori::unload() {
 	// プラグイン解放
 	mShioriPlugins->unload();
 
-	sender << "■SATORI::Unload ---------------------" << endl;
+	GetSender().sender() << "■SATORI::Unload ---------------------" << endl;
 	return	true;
 }
 

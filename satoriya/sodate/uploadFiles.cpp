@@ -48,10 +48,10 @@ static bool	upload_a_dir(const string& base_folder, const string& dir_name, set<
 	// リモートのファイル情報を取得
 	string pwdtxt;
 	ftp.pwd(pwdtxt);
-	sender << pwdtxt << "内のファイル情報を取得中...";
+	GetSender().sender() << pwdtxt << "内のファイル情報を取得中...";
 	map<string, WIN32_FIND_DATA>	remoteFilesData;
 	ftp.ls(remoteFilesData);
-	sender << "完了" << endl << local_folder << "内のファイルとの更新時間照合を開始。" << endl;
+	GetSender().sender() << "完了" << endl << local_folder << "内のファイルとの更新時間照合を開始。" << endl;
 
 	// アップロード
 	for (set<string>::iterator i=dir_files.begin(); i!=dir_files.end() ; ++i) {
@@ -89,14 +89,14 @@ static bool	upload_a_dir(const string& base_folder, const string& dir_name, set<
 
 			if ( conf["morelog"]!="0" ) {
 				
-				sender << "Local  " 
+				GetSender().sender() << "Local  " 
 					<< stLocal.wYear << "/"
 					 << setfill('0') << setw(2)<< stLocal.wMonth << "/"
 					  << setfill('0') << setw(2)<< stLocal.wDay << " "
 					   << setfill('0') << setw(2)<< stLocal.wHour << ":"
 						<< setfill('0') << setw(2)<< stLocal.wMinute << ":"
 						 << setfill('0') << setw(2)<< stLocal.wSecond << endl;
-				sender << "Remote " 
+				GetSender().sender() << "Remote " 
 					<< stRemote.wYear << "/"
 					 << setfill('0') << setw(2)<< stRemote.wMonth << "/"
 					  << setfill('0') << setw(2)<< stRemote.wDay << " "
@@ -110,22 +110,22 @@ static bool	upload_a_dir(const string& base_folder, const string& dir_name, set<
 		}
 
 		if ( isUpload ) {
-			sender << "　" << *i << "をアップロード中...";
+			GetSender().sender() << "　" << *i << "をアップロード中...";
 			if ( !ftp.put(local_file_path, *i) ) {
-				sender << "失敗" << endl;
+				GetSender().sender() << "失敗" << endl;
 				error(local_file_path+"のアップロードに失敗");
 				return	false;
 			}
-			sender << "完了" << endl;
+			GetSender().sender() << "完了" << endl;
 		}
 		else {
-			sender << "　" << *i << "は更新されていません。" << endl;
+			GetSender().sender() << "　" << *i << "は更新されていません。" << endl;
 		}
 	}
 
-	/*sender << "ftp-dir: " << ftp.getCurrentDirectry() << endl;
-	sender << local_folder << dir_name << endl;
-	sender << remote_folder << dir_name << endl;*/
+	/*GetSender().sender() << "ftp-dir: " << ftp.getCurrentDirectry() << endl;
+	GetSender().sender() << local_folder << dir_name << endl;
+	GetSender().sender() << remote_folder << dir_name << endl;*/
 
 	return	true;
 }

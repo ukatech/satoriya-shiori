@@ -18,13 +18,13 @@ bool SakuraFMO::update()
 	{
 		FMO	fmo;
 		if ( !fmo.open(FILE_MAP_READ, FALSE, "Sakura") ) {
-			sender << "FMO can't open." << endl;
+			GetSender().sender() << "FMO can't open." << endl;
 			return	false;
 		}
 
 		LPVOID	p = fmo.map();
 		if ( p==NULL ) {
-			sender << "FMO can't mapping." << endl;
+			GetSender().sender() << "FMO can't mapping." << endl;
 			return	false;
 		}
 
@@ -35,7 +35,7 @@ bool SakuraFMO::update()
 		fmo.unmap(p);
 		fmo.close();
 
-		/*sender << 
+		/*GetSender().sender() << 
 			"SakuraFMO::update() - - -" << endl <<
 			string((char*)p,size) << endl <<
 			"- - - - - - - - - - - - -" << endl;*/
@@ -65,10 +65,10 @@ bool SakuraFMO::update()
 	for( const_iterator i=begin() ; i!=end() ; ++i )
 	{
 		const strmap&	m = i->second;
-		sender << i->first << endl;
+		GetSender().sender() << i->first << endl;
 		for( strmap::const_iterator j=m.begin() ; j!=m.end() ; ++j )
 		{
-			sender << "@" << j->first << ":" << j->second << endl;
+			GetSender().sender() << "@" << j->first << ":" << j->second << endl;
 		}
 	}
 	

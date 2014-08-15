@@ -59,7 +59,7 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 
 #ifndef POSIX
 		if ( characters_hwnd.empty() && updateGhostsInfo() && !ghosts_info.empty() ) {
-			sender << "■FMOからhwndを取得しました。" << endl;
+			GetSender().sender() << "■FMOからhwndを取得しました。" << endl;
 
 			strmap &ghost = ghosts_info[0];
 			strmap::const_iterator it = ghost.find("hwnd");
@@ -73,27 +73,27 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 		}
 
 		if ( is_single_monitor ) {
-			//sender << "■シングルモニタです。見切れの独自判定を行いません。" << endl;
+			//GetSender().sender() << "■シングルモニタです。見切れの独自判定を行いません。" << endl;
 		}
 		else if ( ! mIsMateria ) {
-			//sender << "■Materia以外では見切れの判定を処理系に任せます。" << endl;
+			//GetSender().sender() << "■Materia以外では見切れの判定を処理系に任せます。" << endl;
 		}
 		else if ( characters_hwnd.empty() ) {
-			//sender << "■マルチモニタですが、hwndが取得できていないため、見切れの独自判定を行いません。" << endl;
+			//GetSender().sender() << "■マルチモニタですが、hwndが取得できていないため、見切れの独自判定を行いません。" << endl;
 		}
 		else {
-		//	sender << "■見切れ判定処理" << endl;
+		//	GetSender().sender() << "■見切れ判定処理" << endl;
 			RECT	rc;
 			::GetWindowRect(characters_hwnd[0], &rc);
 			int	center = (rc.left + rc.right)/2;
 			mRequestMap["Reference1"] = mReferences[1] =
 				( center >= max_screen_rect.left && center <= max_screen_rect.right ) ? "0" : "1";
-			/*sender << "シェルの左端: " << rc.left << endl;
-			sender << "シェルの右端: " << rc.right << endl;
-			sender << "シェルの中央: " << center << endl;
-			sender << "デスクトップの左端: " << max_screen_rect.left << endl;
-			sender << "デスクトップの右端: " << max_screen_rect.right << endl;
-			sender << "■見切れ判定結果: " << mReferences[1] << endl;*/
+			/*GetSender().sender() << "シェルの左端: " << rc.left << endl;
+			GetSender().sender() << "シェルの右端: " << rc.right << endl;
+			GetSender().sender() << "シェルの中央: " << center << endl;
+			GetSender().sender() << "デスクトップの左端: " << max_screen_rect.left << endl;
+			GetSender().sender() << "デスクトップの右端: " << max_screen_rect.right << endl;
+			GetSender().sender() << "■見切れ判定結果: " << mReferences[1] << endl;*/
 		}
 #endif
 		//ホールド
@@ -263,7 +263,7 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 				string	str = mReferences[3]+mReferences[4]+"なでられ";
 				if ( talks.is_exist(str) )
 					script=GetSentence(str);
-				sender << "Talk: " << script << endl;
+				GetSender().sender() << "Talk: " << script << endl;
 			}
 			nade_count.clear();
 		}
@@ -346,22 +346,22 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 			script=GetSentence("COMMUNICATE該当なし");
 
 		if ( mCommunicateFor==""  ) {	// 手動打ち切り
-			sender << "里々COMMUNICATE、辞書に続行指示が無いことによる打ち切り" << endl;
+			GetSender().sender() << "里々COMMUNICATE、辞書に続行指示が無いことによる打ち切り" << endl;
 			mCommunicateLog.clear();
 		}
 		else if ( mCommunicateLog.find(script) != mCommunicateLog.end() ) {
-			sender << "里々COMMUNICATE、自分側ループにより打ち切り" << endl;
+			GetSender().sender() << "里々COMMUNICATE、自分側ループにより打ち切り" << endl;
 			script="";	// 何も言わない
 			mCommunicateLog.clear();
 			mCommunicateFor = "";
 		}
 		else  if ( mCommunicateLog.find(mReferences[1]) != mCommunicateLog.end() ) {
-			sender << "里々COMMUNICATE、相手側ループにより打ち切り" << endl;
+			GetSender().sender() << "里々COMMUNICATE、相手側ループにより打ち切り" << endl;
 			mCommunicateLog.clear();
 			mCommunicateFor = "";
 		} 
 		else {	// 続行
-			sender << "里々COMMUNICATE、続行" << endl;
+			GetSender().sender() << "里々COMMUNICATE、続行" << endl;
 			mCommunicateLog.insert(mReferences[1]);
 			mCommunicateLog.insert(script);
 		}
@@ -398,7 +398,7 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 				string  timer_name = i->first;
 				string	var_name = timer_name + "タイマ";
 
-				sender << var_name << "が発動。" << endl;
+				GetSender().sender() << var_name << "が発動。" << endl;
 
 				reset_speaked_status();
 				script=GetSentence(timer_name);
@@ -451,7 +451,7 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 
 
 	if ( !mCommunicateFor.empty() ) { // 話しかけの有無
-		sender << "里々COMMUNICATE、「" << mCommunicateFor << "」へ話し掛け" << endl;
+		GetSender().sender() << "里々COMMUNICATE、「" << mCommunicateFor << "」へ話し掛け" << endl;
 		oResponse["Reference0"] = mCommunicateFor;
 		oResponse["To"] = mCommunicateFor;
 		if ( iEvent!="OnCommunicate" )
@@ -491,7 +491,7 @@ bool	Satori::TalkSearch(const string& iSentence, string& oScript, bool iAndMode)
 	}
 
 	oScript = SentenceToSakuraScriptExec(*talk);
-	sender << oScript << endl;
+	GetSender().sender() << oScript << endl;
 	return	true;
 }
 
