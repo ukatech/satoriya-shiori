@@ -53,7 +53,7 @@ BEGIN
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "satori.dll\0"
             VALUE "PrivateBuild", "\0"
-            VALUE "ProductName", "Unauthorized copy satori\0"
+            VALUE "ProductName", "satori modified ver.\0"
             VALUE "ProductVersion", "1, 0, 0, 1\0"
             VALUE "SpecialBuild", "\0"
         END
