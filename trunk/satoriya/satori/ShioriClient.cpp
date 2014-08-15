@@ -55,7 +55,7 @@ int ShioriClient::request(
 		}
 		else if ( rdata[n].first == "Sender" )
 		{
-			//sender << rdata[n].second << endl;
+			//GetSender().sender() << rdata[n].second << endl;
 		}
 	}
 

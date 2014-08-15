@@ -126,7 +126,7 @@ public:
 			st = m_elements.find(i_name);
 			if ( st == m_elements.end() )
 			{
-				sender << "'" << i_name << "' は存在しません。" << endl;
+				GetSender().sender() << "'" << i_name << "' は存在しません。" << endl;
 				return;
 			}
 			++(ed = st);
@@ -156,23 +156,23 @@ public:
 			else if ( method=="無効" )
 				family.set_OC(new OC_Random<const T*>);
 			else
-				sender << "重複回避制御の方法'" << method << "' は定義されていません。" << endl;
+				GetSender().sender() << "重複回避制御の方法'" << method << "' は定義されていません。" << endl;
 			
 			if ( span == "トーク中" )
 				m_clearOC_at_talk_end.insert(it->first);
 			else if ( span == "起動中")
 				m_clearOC_at_talk_end.erase(it->first);
 			else
-				sender << "重複回避の期間'" << method << "' は定義されていません。" << endl;
+				GetSender().sender() << "重複回避の期間'" << method << "' は定義されていません。" << endl;
 			
 		}
 	}
 	
 	const Talk* communicate_search(const string& iSentence, bool iAndMode) const
 	{
-		sender << "文名の検索を開始" << endl;
-		sender << "　対象文字列: " << iSentence << endl;
-		sender << "　全単語一致モード: " << (iAndMode?"true":"false") << endl;
+		GetSender().sender() << "文名の検索を開始" << endl;
+		GetSender().sender() << "　対象文字列: " << iSentence << endl;
+		GetSender().sender() << "　全単語一致モード: " << (iAndMode?"true":"false") << endl;
 
 		vector<const_iterator> elem_vector;
 
@@ -180,7 +180,7 @@ public:
 
 		bool isComNameMode = sentenceNamePos != string::npos;
 		if ( isComNameMode ) {
-			sender << "　「発見、名前限定モードに移行" << endl;
+			GetSender().sender() << "　「発見、名前限定モードに移行" << endl;
 			for ( const_iterator it = m_elements.begin() ; it != m_elements.end() ; ++it )
 			{
 				if ( it->second.is_comname() ) {
@@ -197,7 +197,7 @@ public:
 			}
 		}
 		else {
-			sender << "　「なし、通常コミュ探索モードに移行" << endl;
+			GetSender().sender() << "　「なし、通常コミュ探索モードに移行" << endl;
 			for ( const_iterator it = m_elements.begin() ; it != m_elements.end() ; ++it )
 			{
 				if ( ! it->second.is_comname() ) {
@@ -208,7 +208,7 @@ public:
 		}
 
 		if ( elem_vector.size() <= 0 ) {
-			sender << "結果: 該当なし（そもそも候補なし）" << endl;
+			GetSender().sender() << "結果: 該当なし（そもそも候補なし）" << endl;
 			return	NULL;
 		}
 		
@@ -243,16 +243,16 @@ public:
 				continue;	// いっこも一致しない場合
 			}
 			
-			sender << "'" << (**it).first << "' : " << hit_point << "pt ,";
+			GetSender().sender() << "'" << (**it).first << "' : " << hit_point << "pt ,";
 			
 			if ( hit_point<max_hit_point) {
-				sender << "却下" << endl;
+				GetSender().sender() << "却下" << endl;
 				continue;
 			} else if ( hit_point == max_hit_point ) {
-				sender << "候補として追加" << endl;
+				GetSender().sender() << "候補として追加" << endl;
 			} else {
 				max_hit_point = hit_point;
-				sender << "単独で採用" << endl;
+				GetSender().sender() << "単独で採用" << endl;
 				result.clear();
 			}
 			
@@ -260,9 +260,9 @@ public:
 			(**it).second.get_elements_pointers(result);
 		}
 		
-		sender << "結果: ";
+		GetSender().sender() << "結果: ";
 		if ( result.size() <= 0 ) {
-			sender << "該当なし（検索候補あり、単語検索失敗）" << endl;
+			GetSender().sender() << "該当なし（検索候補あり、単語検索失敗）" << endl;
 			return	NULL;
 		}
 		

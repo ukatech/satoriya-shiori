@@ -167,6 +167,14 @@ SOURCE=.\SaoriHost.cpp
 SOURCE=.\SaoriHost.h
 # End Source File
 # End Group
+# Begin Group "Resource"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\resource.rc
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=.\ssu.cpp

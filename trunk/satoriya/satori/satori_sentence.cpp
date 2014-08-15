@@ -71,7 +71,7 @@ bool	Satori::FindEventTalk(string& ioevent) {
 			return	true;	// イベントが存在、それに決定
 		if ( replace_map.find(ioevent) == replace_map.end() )
 			return	false;	// 置き換え対象がもう無い
-		sender << "event replaced " << ioevent <<  " → " <<  replace_map[ioevent] << endl;
+		GetSender().sender() << "event replaced " << ioevent <<  " → " <<  replace_map[ioevent] << endl;
 		ioevent = replace_map[ioevent];
 	}
 }
@@ -86,7 +86,7 @@ string	Satori::GetSentence(const string& name)
 	/*++m_nest_count;
 
 	if ( m_nest_limit > 0 && m_nest_count > m_nest_limit ) {
-		sender << "呼び出し回数超過：" << name << endl;
+		GetSender().sender() << "呼び出し回数超過：" << name << endl;
 		--m_nest_count;
 		return string("（" + name + "）");
 	}*/
@@ -96,7 +96,7 @@ string	Satori::GetSentence(const string& name)
 	if ( pTalk ) {
 		Sender::nest_object smo(2); 
 		script = SentenceToSakuraScriptExec(*pTalk);
-		sender << "return: " << script << "" << endl;
+		GetSender().sender() << "return: " << script << "" << endl;
 	}
 	return	script;
 }
@@ -177,7 +177,7 @@ string Satori::SentenceToSakuraScriptExec(const Talk& vec)
 
 			const Talk* pTR = GetSentenceInternal(jump);
 			if ( ! pTR ) {
-				sender << "＞" << jump_to << " not found." << endl;
+				GetSender().sender() << "＞" << jump_to << " not found." << endl;
 			}
 			else {
 				pVec = pTR;
@@ -191,7 +191,7 @@ string Satori::SentenceToSakuraScriptExec(const Talk& vec)
 
 			const Talk* pTR = talks.communicate_search(jump, comAndMode);
 			if ( ! pTR ) {
-				sender << "≫" << jump_to << " not found." << endl;
+				GetSender().sender() << "≫" << jump_to << " not found." << endl;
 			}
 			else {
 				pVec = pTR;
@@ -202,7 +202,7 @@ string Satori::SentenceToSakuraScriptExec(const Talk& vec)
 		++jumpcount;
 
 		if ( m_jump_limit > 0 && jumpcount >= m_jump_limit ) {
-			sender << "ジャンプ回数超過" << endl;
+			GetSender().sender() << "ジャンプ回数超過" << endl;
 			break;
 		}
 	}
@@ -218,10 +218,10 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 	// 再帰管理
 	static	int nest_count=0;
 	++nest_count;
-	//DBG(sender << "enter SentenceToSakuraScriptInternal, nest-count: " << nest_count << ", vector_size: " << vec.size() << endl);
+	//DBG(GetSender().sender() << "enter SentenceToSakuraScriptInternal, nest-count: " << nest_count << ", vector_size: " << vec.size() << endl);
 
 	if ( m_nest_limit > 0 && nest_count > m_nest_limit ) {
-		sender << "呼び出し回数超過" << endl;
+		GetSender().sender() << "呼び出し回数超過" << endl;
 		--nest_count;
 		return 0;
 	}
@@ -233,7 +233,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 
 	for ( ; it != vec.end() ; ++it) {
 		const char*	p = it->c_str();
-		//DBG(sender << nest_count << " '" << p << "'" << endl);
+		//DBG(GetSender().sender() << nest_count << " '" << p << "'" << endl);
 
 		if ( it==vec.begin() && strncmp(p, "→", 2)==0 ) {
 			p+=2;
@@ -244,7 +244,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 				vector<strmap>::iterator i=ghosts_info.begin(); ++i; // 自分は飛ばす
 				for ( ; i!=ghosts_info.end() ; ++i ) { 
 					string	name = (*i)["name"];
-					sender << "ghost: " << name <<endl;
+					GetSender().sender() << "ghost: " << name <<endl;
 					if ( compare_head(temp, name) ) {// 相手を特定
 						mCommunicateFor = name;
 						p += mCommunicateFor.size();
@@ -309,7 +309,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 				if ( !calculate(words[1], r) )
 					break;
 				if ( zen2int(r) == 0 ) {
-					sender << "＊計算結果が０だったため、続行します。" << endl;
+					GetSender().sender() << "＊計算結果が０だったため、続行します。" << endl;
 					continue;
 				}
 			}
@@ -361,11 +361,11 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 				speaked_speaker.insert(speaker);
 			}
 			else if ( aredigits(zen2han(key)) ) {
-				sender << "＄" << key << "　数字のみの変数名は扱えません." << endl;
+				GetSender().sender() << "＄" << key << "　数字のみの変数名は扱えません." << endl;
 				erase_var(key);	// 存在抹消
 			}
 			else if ( value=="" ) {
-				sender << "＄" << key << "／cleared." << endl;
+				GetSender().sender() << "＄" << key << "／cleared." << endl;
 				erase_var(key);	// 存在抹消
 				system_variable_operation(key, "", &result);//存在抹消したものがシステム変数かも！
 			}
@@ -384,7 +384,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 					}
 				}
 
-				sender << "＄" << key << "＝" << value << "／" << 
+				GetSender().sender() << "＄" << key << "＝" << value << "／" << 
 					(isOverwritten ? "written." : "overwritten.")<< endl;
 
 				if ( pstr ) { *pstr = value; }
@@ -513,10 +513,10 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 				}
 
 				if ( opt!="" ) {
-					//sender << "ss_cmd: " << c << "," << cmd << "," << opt << endl;
+					//GetSender().sender() << "ss_cmd: " << c << "," << cmd << "," << opt << endl;
 					result += c + cmd + "[" + opt + "]";
 				} else {
-					//sender << "ss_cmd: " << c << "," << cmd << endl;
+					//GetSender().sender() << "ss_cmd: " << c << "," << cmd << endl;
 					result += c + cmd;
 				}
 
@@ -539,7 +539,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 		result += "\\n";
 	}
 
-	//DBG(sender << "leave SentenceToSakuraScriptInternal, nest-count: " << nest_count << endl);
+	//DBG(GetSender().sender() << "leave SentenceToSakuraScriptInternal, nest-count: " << nest_count << endl);
 	--nest_count;
 	return 0;
 }
@@ -601,15 +601,15 @@ const Talk* Satori::GetSentenceInternal(string& ioSentenceName)
 	}
 
 	// mapから指定名を持つトーク群を検索
-	sender << "＊" << ioSentenceName;
+	GetSender().sender() << "＊" << ioSentenceName;
 	const Talk* talk = talks.select(ioSentenceName, *this);
 	if ( talk == NULL )
 	{
-		sender << " not matched." << endl; // 条件に一致するものがなかった。
+		GetSender().sender() << " not matched." << endl; // 条件に一致するものがなかった。
 		--nest_count;
 		return NULL;
 	}
-	sender << endl;
+	GetSender().sender() << endl;
 	--nest_count;
 	return talk;
 }

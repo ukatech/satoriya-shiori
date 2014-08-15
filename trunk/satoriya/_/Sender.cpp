@@ -20,25 +20,51 @@
 
 #pragma warning( disable : 4786 ) //「デバッグ情報内での識別子切捨て」
 
-// グローバルオブジェクト
-Sender::sender_stream	sender;
-Sender::error_stream	errsender;
+static const char TAMA_CLASSNAME[] = "TamaWndClass";
+static const char RECV_CLASSNAME[] = "れしば";
 
-// staticメンバ
-bool Sender::sm_sender_flag = true;
-bool Sender::is_do_auto_initialize = false;
 int Sender::nest_object::sm_nest = 0;
-#ifndef POSIX
-HWND Sender::sm_receiver_window = NULL;
-#endif
 
+Sender& GetSender()
+{
+	static Sender send;
+	return send;
+}
+
+Sender::Sender()
+{
+	sm_sender_flag = true;
+	is_do_auto_initialize = false;
+	nest_object::sm_nest = 0;
+#ifndef POSIX
+	sm_receiver_window = NULL;
+	sm_receiver_mode = SenderConst::MODE_RECEIVER;
+#endif
+}
+
+Sender::~Sender()
+{
+	send_to_window(SenderConst::E_END,"");
+}
 
 bool Sender::initialize()
 {
 #ifdef POSIX
 	return true;
 #else
-	return (sm_receiver_window = ::FindWindow("れしば", "れしば")) != NULL;
+	sm_receiver_window = ::FindWindow(RECV_CLASSNAME, RECV_CLASSNAME);
+	sm_receiver_mode = SenderConst::MODE_RECEIVER;
+
+	if ( ! sm_receiver_window ) {
+		sm_receiver_window = ::FindWindow(TAMA_CLASSNAME, NULL);
+		sm_receiver_mode = SenderConst::MODE_TAMA;
+
+		if ( sm_receiver_window ) {
+			send_to_window(SenderConst::E_SJIS,"");
+		}
+	}
+
+	return sm_receiver_window != NULL;
 #endif
 }
 
@@ -58,28 +84,10 @@ bool Sender::reinit(bool isEnable)
 	return true;
 }
 
-// レシーバウィンドウにメッセージを送信
-bool	Sender::send(const char* iFormat, ...)
+// れしば自動探索
+bool Sender::auto_init()
 {
-	if ( !sm_sender_flag )
-	{
-		return	false;
-	}
-
-#ifdef POSIX
-	// とりあえず標準エラーにでも。
-	va_list theArgPtr;
-	va_start(theArgPtr, iFormat);
-	vfprintf(stderr, iFormat, theArgPtr);
-	va_end(theArgPtr);
-	fprintf(stderr, "\n");
-	return false;
-#else
-	char	theBuf[sender_buf::MAX+1];
-	va_list	theArgPtr;
-	va_start(theArgPtr, iFormat);
-	_vsnprintf(theBuf, sender_buf::MAX, iFormat, theArgPtr);
-	va_end(theArgPtr);
+	if ( !sm_sender_flag ) { return false; }
 
 	if ( sm_receiver_window==NULL )
 	{
@@ -99,20 +107,32 @@ bool	Sender::send(const char* iFormat, ...)
 		}
 	}
 
+	return true;
+}
+
+// レシーバウィンドウにメッセージを送信
+bool Sender::send(int mode,const char* iFormat, ...)
+{
+	if ( !auto_init() ) { return false; }
+
 	const int nest = nest_object::count();
-	DWORD ret_dword = 0;
+	char *theBuf = buffer_to_send;
 	
-	if ( nest>0 )
-	{
-		char*	buf = new char[nest+1];
-		int i;
-		for ( i=0 ; i<nest ; ++i )
-			buf[i]=' ';
-		buf[i]='\0';
-		COPYDATASTRUCT	cds = {1, nest+1, buf};
-		::SendMessageTimeout(sm_receiver_window, WM_COPYDATA, NULL, (LPARAM)(&cds),SMTO_BLOCK|SMTO_ABORTIFHUNG,5000,&ret_dword);
-		delete [] buf;
+	if ( nest>0 ) {
+		int nest_limited = nest;
+		if ( nest_limited > SenderConst::NEST_MAX ) {
+			nest_limited = SenderConst::NEST_MAX;
+		}
+		for ( int i = 0 ; i < nest_limited ; ++i ) {
+			buffer_to_send[i] = ' ';
+		}
+		theBuf += nest_limited;
 	}
+	
+	va_list	theArgPtr;
+	va_start(theArgPtr, iFormat);
+	_vsnprintf(theBuf, SenderConst::MAX, iFormat, theArgPtr);
+	va_end(theArgPtr);
 
 	// \\nを\r\nに置き換える
 	/*char* p = theBuf;
@@ -122,23 +142,68 @@ bool	Sender::send(const char* iFormat, ...)
 		*p++ = '\n';
 	}*/
 
-	COPYDATASTRUCT	cds = {0,  strlen(theBuf)+1, &theBuf};
-	::SendMessageTimeout(sm_receiver_window, WM_COPYDATA, NULL, (LPARAM)(&cds),SMTO_BLOCK|SMTO_ABORTIFHUNG,5000,&ret_dword);
+	send_to_window(mode,buffer_to_send);
 
 	//::OutputDebugString(theBuf);
 	//::OutputDebugString("\n");
 
 	return	false;
+}
+
+bool Sender::send_to_window(const int mode,const char* theBuf)
+{
+#ifdef POSIX
+	fprintf(stderr, theBuf);
+	fprintf(stderr, "\n");
+#else
+	if ( !auto_init() ) { return false; }
+	
+	COPYDATASTRUCT cds;
+	DWORD ret_dword = 0;
+
+	size_t theBuf_len = strlen(theBuf);
+
+	if ( sm_receiver_mode == SenderConst::MODE_RECEIVER ) {
+		cds.dwData = 0;
+		cds.cbData = theBuf_len+1;
+		cds.lpData = const_cast<char*>(theBuf);
+	}
+	else /*MODE_TAMA*/ {
+		cds.dwData = mode;
+
+		if ( theBuf_len == 0 ) {
+			if ( mode <= SenderConst::E_NO_EMPTY_LOG_ID_LIMIT ) {
+				return false;
+			}
+		}
+
+		int size = ::MultiByteToWideChar(932/*SJIS*/,0,theBuf,strlen(theBuf),buffer_to_sendw,sizeof(buffer_to_sendw) / sizeof(buffer_to_sendw[0]));
+		buffer_to_sendw[size] = 0;
+
+		if ( theBuf_len > 0 ) {
+			wcscat(buffer_to_sendw,L"\r\n");
+		}
+
+		cds.cbData = (wcslen(buffer_to_sendw)+1) * sizeof(wchar_t);
+		cds.lpData = buffer_to_sendw;
+	}
+
+	if ( ::SendMessageTimeout(sm_receiver_window, WM_COPYDATA, NULL, (LPARAM)(&cds),SMTO_BLOCK|SMTO_ABORTIFHUNG,5000,&ret_dword) == 0 ) {
+		if ( ::GetLastError() == ERROR_INVALID_WINDOW_HANDLE ) {
+			reinit(false);
+			return false;
+		}
+	}
+	return true;
 #endif
 }
 
-
-int Sender::sender_buf::overflow(int c)
+int sender_buf::overflow(int c)
 {
 	if ( c=='\n' || c=='\0' || c==EOF )
 	{
 		// 出力を行う
-		send("%s", line);
+		GetSender().send(SenderConst::E_I,line);
 		line[0]='\0';
 		pos = 0;
 	} 
@@ -148,15 +213,15 @@ int Sender::sender_buf::overflow(int c)
 		line[pos++] = c;
 		line[pos] = '\0';
 
-		if ( pos+1>=MAX ) {
+		if ( pos+1>=SenderConst::MAX ) {
 			if ( _ismbblead(c) ) {
 				line[pos-1]='\0';
-				send("%s", line);
+				GetSender().send(SenderConst::E_I,line);
 				line[0]=c;
 				line[1]='\0';
 				pos = 1;
 			} else {
-				send("%s", line);
+				GetSender().send(SenderConst::E_I,line);
 				line[0]='\0';
 				pos = 0;
 			}
@@ -165,7 +230,7 @@ int Sender::sender_buf::overflow(int c)
 	return	c;
 }
 
-void Sender::error_buf::send(const std::string &line)
+void error_buf::send(const std::string &line)
 {
 	if ( ! line.length() ) { return; }
 	if ( log_mode ) {
@@ -180,11 +245,11 @@ void Sender::error_buf::send(const std::string &line)
 	}
 }
 
-int Sender::error_buf::overflow(int c)
+int error_buf::overflow(int c)
 {
 	if ( c=='\n' || c=='\0' || c==EOF )
 	{
-		send(line);
+		GetSender().send(SenderConst::E_W,line);
 		line[0]='\0';
 		pos = 0;
 	} 
@@ -194,15 +259,15 @@ int Sender::error_buf::overflow(int c)
 		line[pos++] = c;
 		line[pos] = '\0';
 
-		if ( pos+1>=MAX ) {
+		if ( pos+1>=SenderConst::MAX ) {
 			if ( _ismbblead(c) ) {
 				line[pos-1]='\0';
-				send(line);
+				GetSender().send(SenderConst::E_W,line);
 				line[0]=c;
 				line[1]='\0';
 				pos = 1;
 			} else {
-				send(line);
+				GetSender().send(SenderConst::E_W,line);
 				line[0]='\0';
 				pos = 0;
 			}

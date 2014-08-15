@@ -139,8 +139,8 @@ string	Do(const string& str, bool like_dict, bool satori, HWND hwnd)
 	}
 	in.clear();
 
-	DBG(sender << "dialog input strlen(gBuffer): " << strlen(gBuffer) << endl);
-	DBG(sender << "dialog input vec.size(): " << vec.size() << endl);
+	DBG(GetSender().sender() << "dialog input strlen(gBuffer): " << strlen(gBuffer) << endl);
+	DBG(GetSender().sender() << "dialog input vec.size(): " << vec.size() << endl);
 
 	string	script;
 	if ( !satori )
@@ -174,7 +174,7 @@ string	Do(const string& str, bool like_dict, bool satori, HWND hwnd)
 		data.push_back( strpair("Sender", "Satorite") );
 		data.push_back( strpair("SecurityLevel", "Local") );
 		pSatori->request("SAORI", "1.0", "EXECUTE", data, protocol, protcol_version, r_data); /**/
-		sender << r_data << endl;
+		GetSender().sender() << r_data << endl;
 		for ( strpairvec::const_iterator it = r_data.begin() ; it != r_data.end() ; ++it )
 		{
 			if ( it->first == "Value" || it->first == "Result" )
@@ -363,7 +363,7 @@ WinMain(
 		return	FALSE;
 	}
 
-	Sender::validate();
+	GetSender().validate();
 
 	// ì‹ÆƒtƒHƒ‹ƒ_–¼‚ğì¬
 	::GetModuleFileName( NULL, base_folder, MAX_PATH );

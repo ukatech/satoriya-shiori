@@ -13,8 +13,8 @@ int main( int argc, char *argv[ ], char *envp[ ] )
 		return	1;
 	*p='\0';
 	base_folder = szPath;
-	sender << "[sodate]" << endl;
-	sender << "ディスク上の対象フォルダは " << base_folder << "です。" << endl;
+	GetSender().sender() << "[sodate]" << endl;
+	GetSender().sender() << "ディスク上の対象フォルダは " << base_folder << "です。" << endl;
 
 	::SetCurrentDirectory(base_folder.c_str());
 
@@ -29,7 +29,7 @@ int main( int argc, char *argv[ ], char *envp[ ] )
 	}
 
 	// 設定ファイルの読み込み
-	sender << "設定ファイル sodate.dat を読み込みます。" << endl;
+	GetSender().sender() << "設定ファイル sodate.dat を読み込みます。" << endl;
 	if ( !strmap_from_file(conf, base_folder+"\\sodate.dat", byte_value_1) ) {
 		error("先に sodate_setup.exe を実行してください。");
 		return	false;
@@ -84,7 +84,7 @@ int main( int argc, char *argv[ ], char *envp[ ] )
 		WIN32_FIND_DATA	fd;
 		HANDLE	h = ::FindFirstFile(full_path.c_str(), &fd);
 		if ( h == INVALID_HANDLE_VALUE ) {
-			sender << *i << "に該当するファイルがありません。" << endl;
+			GetSender().sender() << *i << "に該当するファイルがありません。" << endl;
 			continue;
 		}
 		
@@ -101,7 +101,7 @@ int main( int argc, char *argv[ ], char *envp[ ] )
 		::FindClose(h);
 
 		if ( n==0 ) {
-			sender << *i << "に該当するファイルがありません。" << endl;
+			GetSender().sender() << *i << "に該当するファイルがありません。" << endl;
 			continue;
 		}
 	}
@@ -156,19 +156,19 @@ int main( int argc, char *argv[ ], char *envp[ ] )
 
 
 
-	sender << "updates2.dauを作成中" << endl;
+	GetSender().sender() << "updates2.dauを作成中" << endl;
 	bool	makeUpdates2(string base_folder, const list<string>& files);
 	if ( !makeUpdates2(szPath, files) ) {
 		error("updates2.dauが作成できませんでした。");
 		return	1;
 	}
-	sender << "updates2.dauを作成完了" << endl;
+	GetSender().sender() << "updates2.dauを作成完了" << endl;
 	// 同じものをコピー
 	::CopyFile( (base_folder+"\\updates2.dau").c_str(), (base_folder+"\\ghost\\master\\updates2.dau").c_str(), FALSE );
 
 
 	if ( conf["is_create_archive"]!="0") {
-		sender << "zip/narアーカイブを作成中" << endl;
+		GetSender().sender() << "zip/narアーカイブを作成中" << endl;
 
 		if ( !is_exist_file(base_folder+"\\install.txt") ) {
 			error("zip/narアーカイブを作成するためには、ゴーストのルートフォルダにinstall.txtが必要です。");
@@ -232,7 +232,7 @@ int main( int argc, char *argv[ ], char *envp[ ] )
 			error("アーカイブファイル'"+archive_filename+"'が作成できませんでした。");
 		}
 		else {
-			sender << "zip/narアーカイブ '" << archive_filename << "' を作成完了" << endl;
+			GetSender().sender() << "zip/narアーカイブ '" << archive_filename << "' を作成完了" << endl;
 		}
 	}
 
@@ -291,7 +291,7 @@ bool	makeUpdates2(string base_folder, const list<string>& files) {
 		char	sep[2] = { 1, 0 };
 		o << (filename.c_str()+base_folder.size()+1) << sep << md5 << sep << endl;
 		if ( conf["morelog"]!="0" )
-			sender << (filename.c_str()+base_folder.size()+1) << " " << md5 << endl;
+			GetSender().sender() << (filename.c_str()+base_folder.size()+1) << " " << md5 << endl;
 	}
 	o.close();
 	

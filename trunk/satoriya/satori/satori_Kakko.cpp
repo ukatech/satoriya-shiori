@@ -68,7 +68,7 @@ string	Satori::inc_call(
 			return bytes;
 		}
 		else {
-			sender << "error: 'バイト値' : 引数が不正です。" << endl;
+			GetSender().sender() << "error: 'バイト値' : 引数が不正です。" << endl;
 			return "";
 		}
 	}
@@ -91,13 +91,13 @@ string	Satori::inc_call(
 			}
 		}
 		else {
-			sender << "error: '合成単語群' : 引数が不正です。" << endl;
+			GetSender().sender() << "error: '合成単語群' : 引数が不正です。" << endl;
 			return "";
 		}
 	}
 
 	if ( !iIsSecure ) {
-		sender << "local/Localでないので蹴りました: " << iCallName << endl;
+		GetSender().sender() << "local/Localでないので蹴りました: " << iCallName << endl;
 		return	"";
 	}
 
@@ -106,11 +106,11 @@ string	Satori::inc_call(
 			string	result, key=iArgv[0], value=iArgv[1];
 
 			if ( aredigits(zen2han(key)) ) {
-				sender << "＄" << key << "　数字のみの変数名は扱えません." << endl;
+				GetSender().sender() << "＄" << key << "　数字のみの変数名は扱えません." << endl;
 				erase_var(key);	// 存在抹消
 			}
 			else if ( value=="" ) {
-				sender << "＄" << key << "／cleared." << endl;
+				GetSender().sender() << "＄" << key << "／cleared." << endl;
 				erase_var(key);	// 存在抹消
 			}
 			else {
@@ -118,7 +118,7 @@ string	Satori::inc_call(
 				bool isSysValue;
 				string *pstr = GetValue(key,isSysValue,true,&isOverwritten);
 				
-				sender << "＄" << key << "＝" << value << "／" << 
+				GetSender().sender() << "＄" << key << "＝" << value << "／" << 
 					(isOverwritten ? "written." : "overwritten.")<< endl;
 
 				if ( pstr ) { *pstr = value; }
@@ -218,15 +218,15 @@ string	Satori::inc_call(
 			if ( f == NULL || false == f->is_exist_element(iArgv[1]) )
 			{
 				mAppendedWords[ iArgv[0] ].push_back( words.add_element(iArgv[0],iArgv[1],Condition()) );
-				sender << "単語群「" << iArgv[0] << "」に単語「" << iArgv[1] << "」が追加されました。" << endl;
+				GetSender().sender() << "単語群「" << iArgv[0] << "」に単語「" << iArgv[1] << "」が追加されました。" << endl;
 			}
 			else
 			{
-				sender << "単語群「" << iArgv[0] << "」に単語「" << iArgv[1] << "」は既に存在します。" << endl;
+				GetSender().sender() << "単語群「" << iArgv[0] << "」に単語「" << iArgv[1] << "」は既に存在します。" << endl;
 			}
 		}
 		else {
-			sender << "error: '単語の追加' : 引数が不正です。" << endl;
+			GetSender().sender() << "error: '単語の追加' : 引数が不正です。" << endl;
 		}
 		return	"";
 	}
@@ -248,7 +248,7 @@ string	Satori::inc_call(
 						if ( setword.empty() ) {
 							mAppendedWords.erase(it);
 						}
-						sender << "単語群「" << iArgv[0] << "」の単語「" << iArgv[1] << "」が削除されました。" << endl;
+						GetSender().sender() << "単語群「" << iArgv[0] << "」の単語「" << iArgv[1] << "」が削除されました。" << endl;
 						if ( f->empty() ) {
 							words.erase(iArgv[0]);
 						}
@@ -257,7 +257,7 @@ string	Satori::inc_call(
 			}
 		}
 		else {
-			sender << "error: '追加単語の削除' : 引数が不正です。" << endl;
+			GetSender().sender() << "error: '追加単語の削除' : 引数が不正です。" << endl;
 		}
 		return	"";
 	}
@@ -275,7 +275,7 @@ string	Satori::inc_call(
 					}
 					mAppendedWords.erase(it);
 
-					sender << "単語群「" << iArgv[0] << "」に追加された単語は全て削除されました。" << endl;
+					GetSender().sender() << "単語群「" << iArgv[0] << "」に追加された単語は全て削除されました。" << endl;
 				}
 				if ( f->empty() ) {
 					words.erase(iArgv[0]);
@@ -283,7 +283,7 @@ string	Satori::inc_call(
 			}
 		}
 		else {
-			sender << "error: '単語の削除' : 引数が不正です。" << endl;
+			GetSender().sender() << "error: '単語の削除' : 引数が不正です。" << endl;
 		}
 		return	"";
 	}
@@ -419,7 +419,7 @@ bool	Satori::Call(const string& iName, string& oResult, bool for_calc, bool for_
 	++m_nest_count;
 
 	if ( m_nest_limit > 0 && m_nest_count > m_nest_limit ) {
-		sender << "呼び出し回数超過：" << iName << endl;
+		GetSender().sender() << "呼び出し回数超過：" << iName << endl;
 		oResult = "（" + iName + "）";
 		--m_nest_count;
 		return false;
@@ -603,7 +603,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	else if ( (w = words.select(iName, *this)) != NULL )
 	{
 		// 単語を選択した
-		sender << "＠" << iName << endl;
+		GetSender().sender() << "＠" << iName << endl;
 		oResult = UnKakko( w->c_str() );
 		if ( ! for_non_talk ) {
 			if ( oResult.size() ) {
@@ -1043,13 +1043,13 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		// 見つからなかった。通常喋り？
 		speaked_speaker.insert(speaker);
 		chars_spoken += oResult.size();
-		sender << "（" << iName << "） not found." << endl;
+		GetSender().sender() << "（" << iName << "） not found." << endl;
 		return	false;
 	}
 
 	if ( stack_size_before_call != 0 && stack_size_before_call <= kakko_replace_history.size() ) {
 		kakko_replace_history[stack_size_before_call-1].push_back(oResult);
 	}
-	sender << "（" << iName << "）→" << oResult << "" << endl;
+	GetSender().sender() << "（" << iName << "）→" << oResult << "" << endl;
 	return	true;
 }

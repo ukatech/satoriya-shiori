@@ -34,7 +34,7 @@ string	SakuraDLLClient::request(const string& iRequestString)
 {
 	if ( mRequest==NULL )
 	{
-		errsender << "SakuraDLLClient::request: ロードしていないライブラリにrequestしようとしました。" << endl;
+		GetSender().errsender() << "SakuraDLLClient::request: ロードしていないライブラリにrequestしようとしました。" << endl;
 		return	"";
 	}
 
@@ -148,19 +148,19 @@ bool	SakuraDLLClient::load(
 	string work_folder = unify_dir_char(i_work_folder);
 	string dll_fullpath = unify_dir_char(i_dll_fullpath);
 
-	sender << "SakuraDLLClient::load '" << dll_fullpath << "' ...";
+	GetSender().sender() << "SakuraDLLClient::load '" << dll_fullpath << "' ...";
 #ifdef POSIX
 	mModule = dlopen(dll_fullpath.c_str(), RTLD_LAZY);
 	if (mModule == NULL) {
-	    sender << "failed." << endl;
-	    errsender << dlerror() << endl;
+	    GetSender().sender() << "failed." << endl;
+	    GetSender().errsender() << dlerror() << endl;
 	    return false;
 	}
 #else
 	mModule = ::LoadLibraryEx(dll_fullpath.c_str(),NULL,LOAD_WITH_ALTERED_SEARCH_PATH);
 	if ( mModule==NULL ) {
-		sender << "failed." << endl;
-		errsender << dll_fullpath + ": LoadLibraryで失敗。" << endl;
+		GetSender().sender() << "failed." << endl;
+		GetSender().errsender() << dll_fullpath + ": LoadLibraryで失敗。" << endl;
 		return	false;
 	}
 #endif
@@ -188,9 +188,9 @@ bool	SakuraDLLClient::load(
 #endif
 	if ( mRequest==NULL )
 	{
-		sender << "failed." << endl;
+		GetSender().sender() << "failed." << endl;
 		unload();
-		errsender << dll_fullpath + ": requestがエクスポートされていません。" << endl;
+		GetSender().errsender() << dll_fullpath + ": requestがエクスポートされていません。" << endl;
 		return	false;
 	}
 	if ( mLoad!=NULL )
@@ -204,14 +204,14 @@ bool	SakuraDLLClient::load(
 		memcpy(h, work_folder.c_str(), len + 1); //ZeroTermまで
 		if ( mLoad(h, len) == FALSE )
 		{
-			sender << "failed." << endl;
+			GetSender().sender() << "failed." << endl;
 			unload();
-			errsender << dll_fullpath + ": load()がFALSEを返しました。" << endl;
+			GetSender().errsender() << dll_fullpath + ": load()がFALSEを返しました。" << endl;
 			return	false;
 		}
 	}
 
-	sender << "succeed." << endl;
+	GetSender().sender() << "succeed." << endl;
 	return	true;
 }
 
