@@ -231,8 +231,12 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 	strvec::const_iterator it = vec.begin();
 	std::advance(it,ip);
 
+	string line;
+	string kakko_result;
+
 	for ( ; it != vec.end() ; ++it) {
-		const char*	p = it->c_str();
+		line = *it;
+		const char*	p = line.c_str();
 		//DBG(GetSender().sender() << nest_count << " '" << p << "'" << endl);
 
 		if ( it==vec.begin() && strncmp(p, "→", 2)==0 ) {
@@ -290,15 +294,6 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 			continue;
 		}
 
-		// ちょっと微妙な存在意義。
-		if ( strncmp(p, "\\s", 2)==0 ) {	
-			if ( !is_speaked(speaker) ) {
-				if ( surface_changed_before_speak.find(speaker) == surface_changed_before_speak.end() ) {
-					surface_changed_before_speak.insert(map<int,bool>::value_type(speaker,is_speaked_anybody()) );
-				}
-			}
-		}
-
 		// ジャンプ
 		if ( strncmp(p, "＞", 2)==0 || strncmp(p, "≫", 2)==0 ) {
 			strvec	words;
@@ -339,6 +334,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 			string	value;
 			bool	do_calc=false;
 			p+=2;
+
 			if ( (v=strstr_hz(p, "\t"))!=NULL ) { // 変数名と変数に設定する内容の区切り
 				value = UnKakko(v+1,false,true);
 			}
@@ -394,14 +390,35 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 		}
 
 		// 通常処理
+
+		// 括弧置換後の文字列に余分な処理（スコープ切り替え）を行わないようにするための細工
+		// このポインタより後ろは処理可
+		const char *p_do_not_process_end = p;
+
 		while ( p[0] != '\0' ) {
+			bool do_process = (p >= p_do_not_process_end);
+
 			string	c=get_a_chr(p);	// 全角半角問わず一文字取得し、pを一文字すすめる
 
-			if ( c=="（" ) {	// 何かを取得・挿入
+			if ( do_process && (c=="（") ) {	// 何かを取得・挿入
 				character_wait_exec;
-				result += KakkoSection(p);
+				const char *pe = p;
+				kakko_result = KakkoSection(pe);
+
+				//括弧分を引く
+				p -= 2;
+
+				//括弧位置を確認して置き換え
+				string::size_type index = p - line.c_str();
+				string::size_type size  = pe - p;
+
+				line.replace(index,size,kakko_result);
+
+				//ポインタ再初期化 (replaceで無効になってるよ)
+				p = line.c_str() + index;
+				p_do_not_process_end = p + size;
 			}
-			else if ( c=="\xff" ) {	//内部特殊表現
+			else if ( do_process && (c=="\xff") ) {	//内部特殊表現
 				c=get_a_chr(p);
 				if ( c=="\x01" ) { //0xff0x01＝スコープ切り替え　後に半角数値が1文字続く
 					c=get_a_chr(p);
@@ -423,7 +440,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 					}
 				}
 			}
-			else if ( c=="：" ) {	// スコープ切り替え - ここは二人を想定。
+			else if ( do_process && (c=="：") ) {	// スコープ切り替え - ここは二人を想定。
 				if ( is_speaked(speaker) ) {
 					result += append_at_scope_change;
 					chars_spoken += 2;
@@ -504,6 +521,12 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 				else if ( cmd=="s" ) {
 					//サーフィス切り替えの前にウェイトは済ませておくこと
 					character_wait_exec;
+					//トーク前喋りチェック
+					if ( !is_speaked(speaker) ) {
+						if ( surface_changed_before_speak.find(speaker) == surface_changed_before_speak.end() ) {
+							surface_changed_before_speak.insert(map<int,bool>::value_type(speaker,is_speaked_anybody()) );
+						}
+					}
 				}
 				else if ( cmd=="_q" ) {
 					if ( ! is_quick_section ) { //これからクイックセクションなのでウエイトを全部消化
