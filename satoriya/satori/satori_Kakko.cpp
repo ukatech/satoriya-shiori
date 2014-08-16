@@ -605,12 +605,13 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		// 単語を選択した
 		GetSender().sender() << "＠" << iName << endl;
 		oResult = UnKakko( w->c_str() );
-		if ( ! for_non_talk ) {
-			if ( oResult.size() ) {
-				speaked_speaker.insert(speaker);
-				add_characters(oResult.c_str(), chars_spoken);
-			}
-		}
+		//括弧展開後にチェックするようになったのでここは無効化
+		//if ( ! for_non_talk ) {
+		//	if ( oResult.size() ) {
+		//		speaked_speaker.insert(speaker);
+		//		add_characters(oResult.c_str(), chars_spoken);
+		//	}
+		//}
 	}
 	else if ( talks.is_exist(iName) ) {
 		// ＊に定義があれば文を取得
@@ -631,11 +632,12 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		if ( s != -1 ) // -1は「消し」なので特別扱い
 			s += surface_add_value[speaker];
 		oResult = string("\\s[") + itos(s) + "]";
+		/* 展開後に処理される
 		if ( !is_speaked(speaker) ) {
 			if ( surface_changed_before_speak.find(speaker) == surface_changed_before_speak.end() ) {
 				surface_changed_before_speak.insert(map<int,bool>::value_type(speaker,is_speaked_anybody()) );
 			}
-		}
+		}*/
 	}
 	else if ( hankaku=="Aの数" ) {
 		if ( ! mCallStack.empty() ) {
@@ -1041,8 +1043,9 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	}
 	else {
 		// 見つからなかった。通常喋り？
-		speaked_speaker.insert(speaker);
-		chars_spoken += oResult.size();
+		//括弧展開後にチェックするようになったのでここは無効化
+		//speaked_speaker.insert(speaker);
+		//chars_spoken += oResult.size();
 		GetSender().sender() << "（" << iName << "） not found." << endl;
 		return	false;
 	}
