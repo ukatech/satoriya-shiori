@@ -416,7 +416,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 
 				//ポインタ再初期化 (replaceで無効になってるよ)
 				p = line.c_str() + index;
-				p_do_not_process_end = p + size;
+				p_do_not_process_end = p + kakko_result.size();
 			}
 			else if ( do_process && (c=="\xff") ) {	//内部特殊表現
 				c=get_a_chr(p);
