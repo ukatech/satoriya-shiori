@@ -824,6 +824,17 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 		}
 		return true;
 	}
+
+	if ( key == "コミュニケートの検索方法"  ) {
+		if ( value == "合計文字数" ) {
+			type_of_communicate_search = COMSEARCH_LENGTH;
+			variables["コミュニケートの検索方法"] = "合計文字数";
+		}
+		else /* if ( value == "里々" ) */ {
+			type_of_communicate_search = COMSEARCH_DEFAULT;
+			variables["コミュニケートの検索方法"] = "里々";
+		}
+	}
 	
 	if ( key == "辞書フォルダ" ) {
 		strvec	words;

@@ -484,7 +484,7 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 // Communicate形式検索。該当ありならそのスクリプトを取得、該当なしならfalse。
 bool	Satori::TalkSearch(const string& iSentence, string& oScript, bool iAndMode)
 {
-	const Talk* talk = talks.communicate_search(iSentence, iAndMode);
+	const Talk* talk = talks.communicate_search(iSentence, iAndMode,type_of_communicate_search);
 	if ( talk == NULL )
 	{
 		return false;

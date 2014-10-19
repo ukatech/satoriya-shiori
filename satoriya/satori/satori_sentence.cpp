@@ -189,7 +189,7 @@ string Satori::SentenceToSakuraScriptExec(const Talk& vec)
 			string jump = jump_to;
 			m_escaper.unescape(jump);
 
-			const Talk* pTR = talks.communicate_search(jump, comAndMode);
+			const Talk* pTR = talks.communicate_search(jump, comAndMode,type_of_communicate_search);
 			if ( ! pTR ) {
 				GetSender().sender() << "â" << jump_to << " not found." << endl;
 			}
