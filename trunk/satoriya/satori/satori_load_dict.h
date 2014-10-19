@@ -44,6 +44,8 @@ void	Satori::InitMembers() {
 	rate_of_auto_insert_wait=100;
 	type_of_auto_insert_wait = 1;
 
+	type_of_communicate_search = COMSEARCH_DEFAULT;
+
 	append_at_scope_change = "\\n[half]";
 	append_at_scope_change_with_sakura_script = "";
 	append_at_talk_start = "";

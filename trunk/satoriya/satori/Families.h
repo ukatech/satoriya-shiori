@@ -9,6 +9,11 @@
 // Familiesは名前により特定されるFamilyの集合。
 // ほぼ map< string, Family<T> > だがpublic継承はせず、インタフェースを限定する
 
+typedef enum {
+	COMSEARCH_DEFAULT,
+	COMSEARCH_LENGTH,
+} FamilyComSearchType;
+
 template<typename T>
 class Families
 {
@@ -168,7 +173,7 @@ public:
 		}
 	}
 	
-	const Talk* communicate_search(const string& iSentence, bool iAndMode) const
+	const Talk* communicate_search(const string& iSentence, bool iAndMode, FamilyComSearchType type) const
 	{
 		GetSender().sender() << "文名の検索を開始" << endl;
 		GetSender().sender() << "　対象文字列: " << iSentence << endl;
@@ -219,7 +224,7 @@ public:
 			// 語群を全角スペースで区切る
 			const strvec &words = (**it).second.get_namevec();
 			
-			// いくつの単語がヒットしたか。単語１つで10てん、長さ１もじで1てん
+			// いくつの単語がヒットしたか。単語１つで10点＋α、長さ１文字で1点。一致した部分文字列が長いほどボーナスあり。
 			int	hit_point=0;
 			strvec::const_iterator wds_it=words.begin();
 			if ( isComNameMode ) { wds_it += 1; }; //ひとつめは名前（すでに抽出済）
@@ -228,10 +233,18 @@ public:
 			{
 				if ( find_hz(iSentence,*wds_it,sentenceNamePos) != string::npos )
 				{
-					if ( (!isComNameMode) && compare_tail(*wds_it, "「") )	// 末尾が 「 であるものだけの場合はヒットと見なさないように。
+					if ( (!isComNameMode) && compare_tail(*wds_it, "「") ) { // 末尾が 「 であるものだけの場合はヒットと見なさないように。
 						hit_point += 4;
-					else
-						hit_point += 10+(wds_it->size()/4);	// 一致した単語。
+					}
+					else {
+						//単語一致。点数計算。
+						if ( type == COMSEARCH_LENGTH ) {
+							hit_point += 10*wds_it->size();
+						}
+						else {
+							hit_point += 10+(wds_it->size()/4);
+						}
+					}
 				}
 				else
 				{

@@ -192,6 +192,8 @@ private:
 	int type_of_auto_insert_wait;
 	// 見切れてても喋る（OnTalkを呼び出す）かどうかフラグ
 	bool is_call_ontalk_at_mikire;
+	// コミュニケート検索のタイプ
+	FamilyComSearchType type_of_communicate_search;
 
 	// 付加文字列
 	string	append_at_scope_change;
