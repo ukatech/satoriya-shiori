@@ -1,0 +1,188 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Satori">
+      <UniqueIdentifier>{4005696c-7341-4118-9253-618ab0f51303}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Satori\Base">
+      <UniqueIdentifier>{b950374f-4093-4b94-9d46-6e41bd1089e5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Satori\phase0">
+      <UniqueIdentifier>{812689a1-31af-488b-96a9-b13b64227a59}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Satori\Phase1">
+      <UniqueIdentifier>{9a2594e2-c8c1-403f-9c1f-e720796dd39f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Satori\Phase2">
+      <UniqueIdentifier>{5a78a997-0b44-4637-8cad-8d9e750b721e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Satori\phase3">
+      <UniqueIdentifier>{2311fd56-6226-41b1-8b7a-25e3e4e49b0b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Independent">
+      <UniqueIdentifier>{88b882de-448e-48ff-8798-1f870069d700}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Independent\Structure">
+      <UniqueIdentifier>{a13e7c08-8592-4459-b31b-3540f0e29d38}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Independent\SakuraCS">
+      <UniqueIdentifier>{448f9938-1bd7-4993-9184-b64e19950b1d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_">
+      <UniqueIdentifier>{fd7094d7-2a39-4063-b4cd-1c249d0c3093}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource">
+      <UniqueIdentifier>{7150f942-9c61-451a-9dc7-1c8bda1b04ef}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="satori.cpp">
+      <Filter>Satori\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="satori_AnalyzeRequest.cpp">
+      <Filter>Satori\phase0</Filter>
+    </ClCompile>
+    <ClCompile Include="satori_load_dict.cpp">
+      <Filter>Satori\phase0</Filter>
+    </ClCompile>
+    <ClCompile Include="satori_load_unload.cpp">
+      <Filter>Satori\phase0</Filter>
+    </ClCompile>
+    <ClCompile Include="satori_CreateResponce.cpp">
+      <Filter>Satori\Phase1</Filter>
+    </ClCompile>
+    <ClCompile Include="satori_EventOperation.cpp">
+      <Filter>Satori\Phase1</Filter>
+    </ClCompile>
+    <ClCompile Include="satori_Kakko.cpp">
+      <Filter>Satori\Phase2</Filter>
+    </ClCompile>
+    <ClCompile Include="satori_sentence.cpp">
+      <Filter>Satori\Phase2</Filter>
+    </ClCompile>
+    <ClCompile Include="satori_tool.cpp">
+      <Filter>Satori\Phase2</Filter>
+    </ClCompile>
+    <ClCompile Include="satoriFMO.cpp">
+      <Filter>Satori\Phase2</Filter>
+    </ClCompile>
+    <ClCompile Include="satoriTranslate.cpp">
+      <Filter>Satori\phase3</Filter>
+    </ClCompile>
+    <ClCompile Include="SakuraClient.cpp">
+      <Filter>Independent\SakuraCS</Filter>
+    </ClCompile>
+    <ClCompile Include="SakuraCS.cpp">
+      <Filter>Independent\SakuraCS</Filter>
+    </ClCompile>
+    <ClCompile Include="SakuraDLLClient.cpp">
+      <Filter>Independent\SakuraCS</Filter>
+    </ClCompile>
+    <ClCompile Include="SakuraDLLHost.cpp">
+      <Filter>Independent\SakuraCS</Filter>
+    </ClCompile>
+    <ClCompile Include="SakuraFMO.cpp">
+      <Filter>Independent\SakuraCS</Filter>
+    </ClCompile>
+    <ClCompile Include="SaoriClient.cpp">
+      <Filter>Independent\SakuraCS</Filter>
+    </ClCompile>
+    <ClCompile Include="shiori_plugin.cpp">
+      <Filter>Independent\SakuraCS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\_\calc.cpp">
+      <Filter>_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\_\mt19937ar.cpp">
+      <Filter>_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\_\random.cpp">
+      <Filter>_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\_\Sender.cpp">
+      <Filter>_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\_\stltool.cpp">
+      <Filter>_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\_\Utilities.cpp">
+      <Filter>_</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="satori.h">
+      <Filter>Satori\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="satori_load_dict.h">
+      <Filter>Satori\phase0</Filter>
+    </ClInclude>
+    <ClInclude Include="Families.h">
+      <Filter>Independent\Structure</Filter>
+    </ClInclude>
+    <ClInclude Include="Family.h">
+      <Filter>Independent\Structure</Filter>
+    </ClInclude>
+    <ClInclude Include="OverlapController.h">
+      <Filter>Independent\Structure</Filter>
+    </ClInclude>
+    <ClInclude Include="Selector.h">
+      <Filter>Independent\Structure</Filter>
+    </ClInclude>
+    <ClInclude Include="console_application.h">
+      <Filter>Independent\SakuraCS</Filter>
+    </ClInclude>
+    <ClInclude Include="SakuraClient.h">
+      <Filter>Independent\SakuraCS</Filter>
+    </ClInclude>
+    <ClInclude Include="SakuraCS.h">
+      <Filter>Independent\SakuraCS</Filter>
+    </ClInclude>
+    <ClInclude Include="SakuraDLLClient.h">
+      <Filter>Independent\SakuraCS</Filter>
+    </ClInclude>
+    <ClInclude Include="SakuraDLLHost.h">
+      <Filter>Independent\SakuraCS</Filter>
+    </ClInclude>
+    <ClInclude Include="SaoriClient.h">
+      <Filter>Independent\SakuraCS</Filter>
+    </ClInclude>
+    <ClInclude Include="shiori_plugin.h">
+      <Filter>Independent\SakuraCS</Filter>
+    </ClInclude>
+    <ClInclude Include="ShioriClient.h">
+      <Filter>Independent\SakuraCS</Filter>
+    </ClInclude>
+    <ClInclude Include="..\_\FMO.h">
+      <Filter>_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\_\mt19937ar.h">
+      <Filter>_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\_\random.h">
+      <Filter>_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\_\Sender.h">
+      <Filter>_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\_\simple_stack.h">
+      <Filter>_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\_\stltool.h">
+      <Filter>_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\_\Utilities.h">
+      <Filter>_</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="resource.rc">
+      <Filter>Resource</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\satori_license.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="index.html" />
+  </ItemGroup>
+</Project>

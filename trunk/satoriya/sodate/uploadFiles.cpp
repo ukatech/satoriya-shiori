@@ -72,10 +72,10 @@ static bool	upload_a_dir(const string& base_folder, const string& dir_name, set<
 			FileTimeToSystemTime( &ftLocal, &stRemote);
 
 			if ( conf.find("yeardiff")!=conf.end() )
-				stRemote.wYear += stoi( conf["yeardiff"] );
+				stRemote.wYear += stoi_internal( conf["yeardiff"] );
 			if ( conf.find("timediff")!=conf.end() ) {
 				int	hour = stRemote.wHour;
-				hour += stoi( conf["timediff"] );
+				hour += stoi_internal( conf["timediff"] );
 				if ( hour>=24 ) {
 					stRemote.wDay++;
 					hour -= 24;

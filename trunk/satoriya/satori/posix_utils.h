@@ -6,15 +6,20 @@
 
 #ifdef POSIX
 #include <time.h>
+#include <sys/time.h>
 
 inline time_t posix_get_current_tick() {
-    struct timespec ts;
+	struct timeval ts;
+//	struct timespec {time_t tv_sec; long tv_nsec;} ts;
+//    struct timespec ts;
 #ifdef CLOCK_UPTIME
 	clock_gettime(CLOCK_UPTIME, &ts);
 #else
-	clock_gettime(CLOCK_MONOTONIC, &ts);
+	gettimeofday(&ts, NULL);
+//	clock_gettime(CLOCK_MONOTONIC, &ts);
 #endif
-	return (ts.tv_sec * 1000) + (ts.tv_nsec/1000/1000);
+	return (ts.tv_sec * 1000) + (ts.tv_usec/1000/1000);
+//	return (ts.tv_sec * 1000) + (ts.tv_nsec/1000/1000);
 }
 
 #else  //POSIX

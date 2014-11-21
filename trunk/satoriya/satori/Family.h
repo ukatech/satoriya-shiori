@@ -163,7 +163,7 @@ public:
 	// íœ
 	void delete_element(const T& i_t, const Condition& i_condition = Condition())
 	{
-		CondsMap::iterator it = m_conds_map.find(i_condition);
+		typename CondsMap::iterator it = m_conds_map.find(i_condition);
 		if ( it == m_conds_map.end() ) { return; }
 		Elements& lt = it->second;
 		lt.erase(remove(lt.begin(),lt.end(),i_t),lt.end());

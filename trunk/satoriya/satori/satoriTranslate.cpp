@@ -95,14 +95,14 @@ bool	Satori::Translate(string& ioScript) {
 			else if ( cmd=="0" || cmd=="h" ) { last_speaker=0; }
 			else if ( cmd=="1" || cmd=="u" ) { last_speaker=1; }
 			else if ( cmd=="p" && aredigits(opt) ) {
-				last_speaker=stoi(opt);
+				last_speaker=stoi_internal(opt);
 				if ( mIsMateria || last_speaker<=1 ) {
 					cmd = (opt=="0") ? "0" : "1";
 					opt = "";
 				}
 			}
 			else if ( cmd=="s" && !opt.empty() ) {
-				last_talk_exiting_surface[last_speaker]=stoi(opt);
+				last_talk_exiting_surface[last_speaker]=stoi_internal(opt);
 			}
 			else if ( cmd.size()==2 && cmd[0]=='s' && isdigit(cmd[1]) ) {
 				last_talk_exiting_surface[last_speaker]=cmd[1]-'0';

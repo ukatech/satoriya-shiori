@@ -96,7 +96,7 @@ int	Satori::request(
 		switch ( mRequestMode ) {
 		case SAORI:
 			if ( compare_head(key, "Argument") ) {
-				int	n = stoi(key.c_str()+8);
+				int	n = stoi_internal(key.c_str()+8);
 				if ( n==0 )
 					key = "ID";
 				else
@@ -117,7 +117,7 @@ int	Satori::request(
 
 		mRequestMap[key] = value;
 		if ( compare_head(key, "Reference") ) {
-			int	n = stoi(key.c_str()+9);
+			int	n = stoi_internal(key.c_str()+9);
 			if ( n>=0 && n<65536 ) {
 				if ( n>=mReferences.size() )
 					mReferences.resize(n+1);

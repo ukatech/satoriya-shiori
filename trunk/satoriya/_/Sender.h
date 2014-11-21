@@ -99,8 +99,8 @@ class Sender
 #ifndef POSIX
 	// 出力先ウィンドウ
 	HWND sm_receiver_window;
-	int  sm_receiver_mode;
 #endif
+	int  sm_receiver_mode;
 
 	sender_stream	send_stream;
 	error_stream	err_stream;

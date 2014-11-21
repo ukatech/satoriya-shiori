@@ -11,26 +11,26 @@ class simple_stack : public std::vector<T>
 public:
 
 	void	push(const T& iT) {
-		push_back(iT);
+		this->push_back(iT);
 	}
 	T	pop() {
-		assert(size()>0);
-		T	theT = back();
-		pop_back();
+		assert(this->size()>0);
+		T	theT = this->back();
+		this->pop_back();
 		return	theT;
 	}
 	void	pop(int num) {
-		assert(num>=0 && num<=size());
+		assert(num>=0 && num<=this->size());
 		while ( num-- > 0 ) {
-			pop_back();
+			this->pop_back();
 		}
 	}
 	T&	top() {
-		return	back();
+		return	this->back();
 	}
 	T&	from_top(int len) {
-		assert(len>=0 && len<size());
-		return	(*this)[size()-1-len];
+		assert(len>=0 && len<this->size());
+		return	(*this)[this->size()-1-len];
 	}
 };
 

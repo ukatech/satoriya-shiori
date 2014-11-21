@@ -200,7 +200,7 @@ bool ShioriPlugins::load_a_plugin(const string& iPluginLine)
 			    (cstr_path == NULL ?
 			     "(environment variable `SAORI_FALLBACK_PATH' is empty)" : cstr_path);
 			
-			GetSender().errsender() <<
+			GetSender().errsender() << (
 			    fullpath+": This is not usable in this platform.\n"+
 			    "Fallback library `"+filename+"."+extention+"' doesn't exist: "+fallback_path) << std::endl;
 			
