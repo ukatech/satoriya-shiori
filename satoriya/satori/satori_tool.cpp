@@ -756,7 +756,7 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 	}
 
 	if ( compare_head(key,  "BalloonOffset") && aredigits(key.c_str() + const_strlen("BalloonOffset")) ) {
-		int n = stoi(key.c_str() + const_strlen("BalloonOffset"));
+		int n = stoi_internal(key.c_str() + const_strlen("BalloonOffset"));
 		BalloonOffset[n] = value;
 		validBalloonOffset[n] = true;
 		return true;

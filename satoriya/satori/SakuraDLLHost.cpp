@@ -26,7 +26,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL,DWORD fdwReason,LPVOID lpvReserved)
 
 #ifdef POSIX
 extern "C" int load(char* i_data, long i_data_len) {
-	GetSender().initialize();
+//	GetSender().initialize();
     string the_base_folder(i_data, i_data_len);
     free(i_data);
     GetSender().sender() << the_base_folder << endl;
@@ -86,6 +86,7 @@ extern "C" __declspec(dllexport) HGLOBAL __cdecl request(HGLOBAL i_data, long* i
 
 
 #ifdef POSIX
+/*
 extern "C" char* getversionlist(HGLOBAL i_data, long* io_data_len) {
 	// ƒOƒ[ƒoƒ‹ƒƒ‚ƒŠ‚ðŽó‚¯‚Æ‚é
 	string the_req_str((char*)::GlobalLock(i_data), *io_data_len);
@@ -100,6 +101,7 @@ extern "C" char* getversionlist(HGLOBAL i_data, long* io_data_len) {
     memcpy(the_return_data, the_resp_str.c_str(), *io_data_len);
     return the_return_data;
 }
+*/
 #else
 extern "C" __declspec(dllexport) HGLOBAL __cdecl getversionlist(HGLOBAL i_data, long* io_data_len)
 {

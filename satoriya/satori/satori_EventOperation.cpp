@@ -64,11 +64,11 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 			strmap &ghost = ghosts_info[0];
 			strmap::const_iterator it = ghost.find("hwnd");
 			if ( it != ghost.end() ) {
-				characters_hwnd[0] = (HWND)(stoi(it->second));
+				characters_hwnd[0] = (HWND)(stoi_internal(it->second));
 			}
 			it = ghost.find("kerohwnd");
 			if ( it != ghost.end() ) {
-				characters_hwnd[1] = (HWND)(stoi(it->second));
+				characters_hwnd[1] = (HWND)(stoi_internal(it->second));
 			}
 		}
 
@@ -125,17 +125,17 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 			}
 		}
 
-		mikire_flag = stoi(mReferences[1])!=0;
-		kasanari_flag = stoi(mReferences[2])!=0;
+		mikire_flag = stoi_internal(mReferences[1])!=0;
+		kasanari_flag = stoi_internal(mReferences[2])!=0;
 		can_talk_flag = ( mReferences[3] != "0" );
 		if ( iEvent[2]=='S' )
 			++second_from_last_talk;
 	}
 	else if ( iEvent=="OnSurfaceChange" ) {
-		cur_surface[0]=stoi(mReferences[0]);
-		cur_surface[1]=stoi(mReferences[1]);
+		cur_surface[0]=stoi_internal(mReferences[0]);
+		cur_surface[1]=stoi_internal(mReferences[1]);
 	} else if ( iEvent=="OnUpdateReady" ) {
-		mReferences[0] = itos(stoi(mReferences[0])+1);
+		mReferences[0] = itos(stoi_internal(mReferences[0])+1);
 	}
 
 	bool hold_complete_exec = false;
@@ -247,7 +247,7 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 			else {
 				if ( !insert_nade_talk_at_other_talk && updateGhostsInfo() ) {
 					string	hwnd_str = (ghosts_info[0])["hwnd"];
-					HWND	hwnd = (HWND)(stoi(hwnd_str));
+					HWND	hwnd = (HWND)(stoi_internal(hwnd_str));
 					if ( hwnd!=NULL ) {
 						UINT	WM_SAKURAAPI = RegisterWindowMessage("Sakura");
 						DWORD ret_dword = 0;

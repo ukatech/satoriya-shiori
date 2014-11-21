@@ -49,7 +49,7 @@ istream& operator>>(istream& i, strmap& o) {
 istream& operator>>(istream& i, strintmap& o) {
 	string	key, value;
 	while ( getline(i, key, '=') && getline(i, value) )
-		o[key] = stoi(value);
+		o[key] = stoi_internal(value);
 	return	i;
 }
 
@@ -811,7 +811,7 @@ string int2zen(int i) {
 
 int zen2int(const char *str)
 {
-	return stoi(zen2han(str));
+	return stoi_internal(zen2han(str));
 }
 
 

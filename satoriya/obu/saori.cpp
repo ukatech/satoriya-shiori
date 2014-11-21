@@ -127,10 +127,10 @@ int	Saori::request(deque<string>& iArguments, string& oResult, deque<string>& oV
 	std::transform(argCmd.begin(), argCmd.end(), argCmd.begin(), tolower);
 
 	if ( argCmd=="setEvent" && iArguments.size()==2 ) {
-		//gFrequency = stoi(iArguments[1]);
+		//gFrequency = stoi_internal(iArguments[1]);
 	}
 	else if ( argCmd=="setfrequency" && iArguments.size()==2 ) {
-		gFrequency = stoi(iArguments[1])*FREQ_RATE;
+		gFrequency = stoi_internal(iArguments[1])*FREQ_RATE;
 	}
 	else if ( argCmd=="getfrequency" ) {
 		oResult = itos(gFrequency/FREQ_RATE);

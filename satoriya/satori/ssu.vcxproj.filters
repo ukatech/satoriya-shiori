@@ -1,0 +1,79 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="_">
+      <UniqueIdentifier>{525a6a33-b8cf-49b3-9f80-ed0373dfdab7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SakuraCS">
+      <UniqueIdentifier>{bae4179d-b6fd-4a08-b42d-c8463d39c103}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource">
+      <UniqueIdentifier>{72d9aa88-ae90-4013-9c6e-4ff0e3aaedae}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\_\calc.cpp">
+      <Filter>_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\_\calc_float.cpp">
+      <Filter>_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\_\mt19937ar.cpp">
+      <Filter>_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\_\random.cpp">
+      <Filter>_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\_\Sender.cpp">
+      <Filter>_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\_\stltool.cpp">
+      <Filter>_</Filter>
+    </ClCompile>
+    <ClCompile Include="..\_\Utilities.cpp">
+      <Filter>_</Filter>
+    </ClCompile>
+    <ClCompile Include="SakuraCS.cpp">
+      <Filter>SakuraCS</Filter>
+    </ClCompile>
+    <ClCompile Include="SakuraDLLHost.cpp">
+      <Filter>SakuraCS</Filter>
+    </ClCompile>
+    <ClCompile Include="SaoriHost.cpp">
+      <Filter>SakuraCS</Filter>
+    </ClCompile>
+    <ClCompile Include="ssu.cpp" />
+    <ClCompile Include="TimeCommands.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\_\mt19937ar.h">
+      <Filter>_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\_\random.h">
+      <Filter>_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\_\simple_stack.h">
+      <Filter>_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\_\stltool.h">
+      <Filter>_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\_\Utilities.h">
+      <Filter>_</Filter>
+    </ClInclude>
+    <ClInclude Include="SakuraCS.h">
+      <Filter>SakuraCS</Filter>
+    </ClInclude>
+    <ClInclude Include="SakuraDLLHost.h">
+      <Filter>SakuraCS</Filter>
+    </ClInclude>
+    <ClInclude Include="SaoriHost.h">
+      <Filter>SakuraCS</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="resource.rc">
+      <Filter>Resource</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

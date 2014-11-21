@@ -302,7 +302,7 @@ bool Satori::IsArrayValue(const string &iName,int &ref,char &firstChar)
 
 		if ( aredigits(hankaku.c_str()+1) ) {
 			firstChar = hankaku[0];
-			ref = stoi(hankaku.c_str()+1);
+			ref = stoi_internal(hankaku.c_str()+1);
 			return true;
 		}
 	}
@@ -628,7 +628,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	}
 	else if ( aredigits(hankaku) || (hankaku[0]=='-' && aredigits(hankaku.c_str()+1)) ) {
 		// サーフェス切り替え
-		int	s = stoi(hankaku);
+		int	s = stoi_internal(hankaku);
 		if ( s != -1 ) // -1は「消し」なので特別扱い
 			s += surface_add_value[speaker];
 		oResult = string("\\s[") + itos(s) + "]";
@@ -660,7 +660,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		}
 		else {
 			string vec0 = zen2han(vec[0]);
-			int	bottom = stoi(vec0);
+			int	bottom = stoi_internal(vec0);
 			int	top = zen2int(vec[1]);
 			if ( bottom > top )
 				Swap(&bottom, &top);

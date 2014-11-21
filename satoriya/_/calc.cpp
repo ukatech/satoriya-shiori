@@ -165,7 +165,7 @@ static bool	make_array(const char*& p, std::vector<calc_element>& oData) {
 	else if ( el.str == #op ) {	\
 		assert_special(stack.size()>=2); \
 		if ( !aredigits(stack.from_top(0)) || !aredigits(stack.from_top(1)) ){ return false; }\
-		int	result = stoi(stack.from_top(1)) op stoi(stack.from_top(0)); \
+		int	result = stoi_internal(stack.from_top(1)) op stoi_internal(stack.from_top(0)); \
 		stack.pop(2); stack.push(itos(result)); }
 
 // ÇQçÄââéZÅistringÇ∆ÇµÇƒàµÇ§ != Ç∆ == ópÅj
@@ -180,7 +180,7 @@ static bool	make_array(const char*& p, std::vector<calc_element>& oData) {
 	else if ( el.str == #op ) {	\
 		assert_special(stack.size()>=2); \
 		if ( aredigits(stack.from_top(0)) && aredigits(stack.from_top(1)) ){\
-			int	result = stoi(stack.from_top(1)) op stoi(stack.from_top(0)); \
+			int	result = stoi_internal(stack.from_top(1)) op stoi_internal(stack.from_top(0)); \
 			stack.pop(2); stack.push(itos(result)); \
 		} else {\
 			int	result = (stack.from_top(1)).size() op (stack.from_top(0)).size(); \
@@ -200,9 +200,9 @@ static bool	calc_polish(simple_stack<calc_element>& polish, string& oResult,bool
 			assert_special(stack.size()>=1);
 			if ( !aredigits(stack.top()) )
 				return	false;
-			if ( el.str=="!" ) stack.push( itos(!stoi(stack.pop())) );
+			if ( el.str=="!" ) stack.push( itos(!stoi_internal(stack.pop())) );
 			else if ( el.str=="+" ) NULL;
-			else if ( el.str=="-" ) stack.push( itos(-stoi(stack.pop())) );
+			else if ( el.str=="-" ) stack.push( itos(-stoi_internal(stack.pop())) );
 			else assert_special(0);
 		}
 		a_op_b(^)
@@ -210,9 +210,9 @@ static bool	calc_polish(simple_stack<calc_element>& polish, string& oResult,bool
 			assert_special(stack.size()>=2);
 			string	rhs=stack.pop(), lhs=stack.pop();
 			if ( aredigits(lhs) && aredigits(rhs) ) {
-				stack.push(itos( stoi(lhs)*stoi(rhs) )); 
+				stack.push(itos( stoi_internal(lhs)*stoi_internal(rhs) )); 
 			} else if ( aredigits(rhs) && ! isStrict ) {
-				int	num = stoi(rhs);
+				int	num = stoi_internal(rhs);
 				stack.push("");
 				for (int i=0;i<num;++i)
 					stack.top() += lhs;
@@ -226,7 +226,7 @@ static bool	calc_polish(simple_stack<calc_element>& polish, string& oResult,bool
 			assert_special(stack.size()>=2);
 			string	rhs=stack.pop(), lhs=stack.pop();
 			if ( aredigits(lhs) && aredigits(rhs) ) {
-				stack.push(itos( stoi(lhs)+stoi(rhs) )); 
+				stack.push(itos( stoi_internal(lhs)+stoi_internal(rhs) )); 
 			} else if ( ! isStrict ) {
 				stack.push(lhs+rhs); 
 			} else {
@@ -237,7 +237,7 @@ static bool	calc_polish(simple_stack<calc_element>& polish, string& oResult,bool
 			assert_special(stack.size()>=2);
 			string	rhs=stack.pop(), lhs=stack.pop();
 			if ( aredigits(lhs) && aredigits(rhs) ) {
-				stack.push(itos( stoi(lhs)-stoi(rhs) )); 
+				stack.push(itos( stoi_internal(lhs)-stoi_internal(rhs) )); 
 			} else if ( ! isStrict ) {
 				erase(lhs, rhs);
 				stack.push(lhs);

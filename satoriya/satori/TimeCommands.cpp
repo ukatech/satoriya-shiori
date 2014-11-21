@@ -10,13 +10,13 @@ string	TimeCommands(
 	if ( iCommand=="tm" ) {
 
 		SYSTEMTIME	st = {2002,1,2,1,0,0,0,0};
-		if ( iArguments.size()>=7 ) { st.wMilliseconds=stoi(iArguments[6]); }
-		if ( iArguments.size()>=6 ) { st.wSecond=stoi(iArguments[5]); }
-		if ( iArguments.size()>=5 ) { st.wMinute=stoi(iArguments[4]); }
-		if ( iArguments.size()>=4 ) { st.wHour=stoi(iArguments[3]); }
-		if ( iArguments.size()>=3 ) { st.wDay=stoi(iArguments[2]); }
-		if ( iArguments.size()>=2 ) { st.wMonth=stoi(iArguments[1]); }
-		if ( iArguments.size()>=1 ) { st.wYear=stoi(iArguments[0]) + ( iArguments[0].size() <= 2 ) ? 2000 : 0; }
+		if ( iArguments.size()>=7 ) { st.wMilliseconds=stoi_internal(iArguments[6]); }
+		if ( iArguments.size()>=6 ) { st.wSecond=stoi_internal(iArguments[5]); }
+		if ( iArguments.size()>=5 ) { st.wMinute=stoi_internal(iArguments[4]); }
+		if ( iArguments.size()>=4 ) { st.wHour=stoi_internal(iArguments[3]); }
+		if ( iArguments.size()>=3 ) { st.wDay=stoi_internal(iArguments[2]); }
+		if ( iArguments.size()>=2 ) { st.wMonth=stoi_internal(iArguments[1]); }
+		if ( iArguments.size()>=1 ) { st.wYear=stoi_internal(iArguments[0]) + ( iArguments[0].size() <= 2 ) ? 2000 : 0; }
 
 		TimePos	tp(st);
 
@@ -80,13 +80,13 @@ static	SYSTEMTIME	STFtoSYSTEMTIME(const string& stf) {
 	if ( vec[0]!=STF_HEADER )
 		return	st;
 
-	st.wYear = stoi(vec[1]);
-	st.wMonth = stoi(vec[2]);
-	st.wDay = stoi(vec[3]);
+	st.wYear = stoi_internal(vec[1]);
+	st.wMonth = stoi_internal(vec[2]);
+	st.wDay = stoi_internal(vec[3]);
 	st.wDayOfWeek = DayOfWeek(st.wYear, st.wMonth, st.wDay);
-	st.wHour = stoi(vec[4]);
-	st.wMinute = stoi(vec[5]);
-	st.wSecond = stoi(vec[6]);
+	st.wHour = stoi_internal(vec[4]);
+	st.wMinute = stoi_internal(vec[5]);
+	st.wSecond = stoi_internal(vec[6]);
 	st.wMilliseconds = 0;
 	return	st;
 }

@@ -376,7 +376,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 					if ( !calculate(value, value) )
 						break;
 					if ( aredigits(value) ) {
-						value = int2zen(stoi(value));
+						value = int2zen(stoi_internal(value));
 					}
 				}
 
@@ -422,7 +422,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 				c=get_a_chr(p);
 				if ( c=="\x01" ) { //0xff0x01＝スコープ切り替え　後に半角数値が1文字続く
 					c=get_a_chr(p);
-					int speaker_tmp = stoi(c.c_str());
+					int speaker_tmp = stoi_internal(c.c_str());
 					if ( is_speaked(speaker) && speaker != speaker_tmp ) {
 						result += append_at_scope_change;
 						chars_spoken += 2;
@@ -503,11 +503,11 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 						result += append_at_scope_change_with_sakura_script;
 						chars_spoken += 2;
 					}
-					speaker = stoi(cmd);
+					speaker = stoi_internal(cmd);
 					character_wait_clear(2);
 				}
 				else if ( cmd=="p" && aredigits(opt) ) {
-					int spktmp = stoi(opt);
+					int spktmp = stoi_internal(opt);
 					if ( speaker != spktmp ) {
 						// スコープ切り替えonSSP/CROW
 						if ( is_speaked(speaker) ) {

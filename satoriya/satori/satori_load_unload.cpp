@@ -156,19 +156,19 @@ bool	Satori::load(const string& iBaseFolder)
 	::GetVersionEx(&ovi);
 	string	os;
 	if ( ovi.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS ) {
-		if ( ovi.dwMinorVersion == 0 ) { mOSType=WIN95; os="Windows 95"; }
-		else if ( ovi.dwMinorVersion == 10 ) { mOSType=WIN98; os="Windows 98"; }
-		else if ( ovi.dwMinorVersion == 90 ) { mOSType=WINME; os="Windows Me"; }
-		else { mOSType = UNDEFINED; os="undefined"; }
+		if ( ovi.dwMinorVersion == 0 ) { mOSType=SATORI_OS_WIN95; os="Windows 95"; }
+		else if ( ovi.dwMinorVersion == 10 ) { mOSType=SATORI_OS_WIN98; os="Windows 98"; }
+		else if ( ovi.dwMinorVersion == 90 ) { mOSType=SATORI_OS_WINME; os="Windows Me"; }
+		else { mOSType = SATORI_OS_UNDEFINED; os="undefined"; }
 	} else {
 		if ( ovi.dwMinorVersion == 0 ) {
-			if ( ovi.dwMajorVersion == 4 ) { mOSType=WINNT; os="Windows NT"; }
-			else if ( ovi.dwMajorVersion == 5 ) { mOSType=WIN2K; os="Windows 2000"; }
+			if ( ovi.dwMajorVersion == 4 ) { mOSType=SATORI_OS_WINNT; os="Windows NT"; }
+			else if ( ovi.dwMajorVersion == 5 ) { mOSType=SATORI_OS_WIN2K; os="Windows 2000"; }
 		}
-		else { mOSType = WINXP; os="Windows XP or later"; }
+		else { mOSType = SATORI_OS_WINXP; os="Windows XP or later"; }
 	}
 	GetSender().sender() << "‚n‚rŽí•Ê: " << os << endl;
-	if ( mOSType==WIN95 ) {
+	if ( mOSType==SATORI_OS_WIN95 ) {
 		is_single_monitor = true;
 	} else {
 		BOOL (WINAPI* pEnumDisplayMonitors)(HDC,LPRECT,MONITORENUMPROC,LPARAM);

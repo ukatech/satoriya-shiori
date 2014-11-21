@@ -86,7 +86,7 @@ inline bool is_word_element(int c) { return isdigit(c)||isalpha(c)||c=='-'||c=='
 inline string itos(int n) { char buf[256]; sprintf(buf,"%d",n); return buf; }
 
 // stringを整数に変換
-inline int stoi(const string& s) { return atoi(s.c_str()); }
+// inline int stoi_internal(const string& s) { return atoi(s.c_str()); }
 
 // 指定文字列は、指定の判定関数でtrueを返す文字のみで構成されているか？
 template<typename Function>

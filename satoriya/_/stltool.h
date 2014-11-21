@@ -9,11 +9,20 @@
 #pragma warning( disable : 4786 ) //「デバッグ情報内での識別子切捨て」
 #pragma warning( disable : 4503 ) //「装飾された名前の長さが限界を越えました。名前は切り捨てられます。」
 // forスコープをANSI準拠させる
+#if _MSC_VER <= 1200
 #ifndef for
 #define for if(0);else for
 #endif	// for
+#endif
 #endif	// _MSC_VER
 
+#define TRUE 1
+#include	<climits>
+#include	<cstdlib>
+#include	<cstring>
+#define stricmp strcmp
+#define strnicmp strncmp
+#define strcasecmp strcmp
 #include	<iostream>
 #include	<string>
 #include	<map>
@@ -87,8 +96,8 @@ bool	getline(istream& i, string& o, int delimtier='\n');
 bool	getline(istream& i, int& o, int delimtier='\n');
 
 // intとの相互変換
-inline long stoi(const string& s) { return strtol(s.c_str(),NULL,10); }
-inline long stoi(const char* s) { return strtol(s,NULL,10); }
+inline long stoi_internal(const string& s) { return strtol(s.c_str(),NULL,10); }
+inline long stoi_internal(const char* s) { return strtol(s,NULL,10); }
 inline unsigned long stoui(const string& s) { return strtoul(s.c_str(),NULL,10); }
 inline unsigned long stoui(const char* s) { return strtoul(s,NULL,10); }
 
