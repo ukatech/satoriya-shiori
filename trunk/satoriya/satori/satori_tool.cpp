@@ -999,6 +999,11 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 		return true;
 	}
 
+	if (key == "NOTIFY‚ÌŽ©“®•Û‘¶" && value.size() > 0){
+		is_save_notify = (value == "—LŒø");
+		return true;
+	}
+
 	return	false;
 }
 

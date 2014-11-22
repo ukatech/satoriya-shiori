@@ -892,6 +892,72 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		string *v = GetValue(str,isSysValue); //こっちはシステム変数かどうかどっちでもいい
 		oResult = v ? "1" : "0";
 	}
+	else if (compare_head(iName, "導入済みゴースト「") && compare_tail(iName, "」の存在")){
+		string	str(iName, 18, iName.length() - 18 - 8);
+		oResult = installed_ghost_name.count(str) ? "1" : "0";
+	}
+	else if (compare_head(iName, "導入済みシェル「") && compare_tail(iName, "」の存在")){
+		string	str(iName, 16, iName.length() - 16 - 8);
+		oResult = installed_shell_name.count(str) ? "1" : "0";
+	}
+	else if (compare_head(iName, "導入済みバルーン「") && compare_tail(iName, "」の存在")){
+		string	str(iName, 18, iName.length() - 18 - 8);
+		oResult = installed_balloon_name.count(str) ? "1" : "0";
+	}
+	else if (compare_head(iName, "導入済みヘッドライセンサ「") && compare_tail(iName, "」の存在")){
+		string	str(iName, 26, iName.length() - 26 - 8);
+		oResult = installed_headline_name.count(str) ? "1" : "0";
+	}
+	else if (compare_head(iName, "導入済みフォント「") && compare_tail(iName, "」の存在")){
+		string	str(iName, 18, iName.length() - 18 - 8);
+		oResult = installed_font_name.count(str) ? "1" : "0";
+	}
+	else if (compare_head(iName, "導入済みプラグイン「") && compare_tail(iName, "」の存在")){
+		string	str(iName, 20, iName.length() - 20 - 8);
+		oResult = installed_plugin.count(str) ? "1" : "0";
+	}
+	else if (compare_head(iName, "導入済みプラグイン「") && compare_tail(iName, "」のID")){
+		string	str(iName, 20, iName.length() - 20 - 6);
+		if (installed_plugin.count(str)){
+			oResult = installed_plugin[str].plugin_id;
+		}
+	}
+	else if (compare_head(iName, "使ってるぞグラフ「") && compare_tail(iName, "」の本体側の名前")){
+		string	str(iName, 18, iName.length() - 18 - 16);
+		if (rate_of_use_graph.count(str)){
+			oResult = rate_of_use_graph[str].sakura_name;
+		}
+	}
+	else if (compare_head(iName, "使ってるぞグラフ「") && compare_tail(iName, "」の相方側の名前")){
+		string	str(iName, 18, iName.length() - 18 - 16);
+		if (rate_of_use_graph.count(str)){
+			oResult = rate_of_use_graph[str].kero_name;
+		}
+	}
+	else if (compare_head(iName, "使ってるぞグラフ「") && compare_tail(iName, "」の起動回数")){
+		string	str(iName, 18, iName.length() - 18 - 12);
+		if (rate_of_use_graph.count(str)){
+			oResult = rate_of_use_graph[str].boot_count;
+		}
+	}
+	else if (compare_head(iName, "使ってるぞグラフ「") && compare_tail(iName, "」の単純累計分")){
+		string	str(iName, 18, iName.length() - 18 - 14);
+		if (rate_of_use_graph.count(str)){
+			oResult = rate_of_use_graph[str].boot_minutes;
+		}
+	}
+	else if (compare_head(iName, "使ってるぞグラフ「") && compare_tail(iName, "」の起動割合")){
+		string	str(iName, 18, iName.length() - 18 - 12);
+		if (rate_of_use_graph.count(str)){
+			oResult = rate_of_use_graph[str].boot_percent;
+		}
+	}
+	else if (compare_head(iName, "使ってるぞグラフ「") && compare_tail(iName, "」の状態")){
+		string	str(iName, 18, iName.length() - 18 - 8);
+		if (rate_of_use_graph.count(str)){
+			oResult = rate_of_use_graph[str].status;
+		}
+	}
 
 	else if ( compare_tail(iName, "の存在") ) {
 		updateGhostsInfo();	// ゴースト情報を更新

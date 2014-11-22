@@ -9,6 +9,8 @@
 #endif
 ////////////////////////////////////////
 
+void CreateStringSet(const strvec& vec, set<string>& strset);
+
 int		Satori::CreateResponse(strmap& oResponse)
 {
 	// NOTIFYであれば値を保存
@@ -44,6 +46,61 @@ int		Satori::CreateResponse(strmap& oResponse)
 
 	//喋り変換部初期化
 	reset_speaked_status();
+
+	//notifyの保存しておく
+	if (is_save_notify){
+		
+		if (mRequestID == "installedghostname"){
+			//インストール済み情報
+			CreateStringSet(mReferences, installed_ghost_name);
+		}
+		else if (mRequestID == "installedshellname"){
+			CreateStringSet(mReferences, installed_shell_name);
+		}
+		else if (mRequestID == "installedballoonname"){
+			CreateStringSet(mReferences, installed_balloon_name);
+		}
+		else if (mRequestID == "installedheadlinename"){
+			CreateStringSet(mReferences, installed_headline_name);
+		}
+		else if (mRequestID == "OnNotifyFontInfo"){
+			CreateStringSet(mReferences, installed_font_name);
+		}
+		else if (mRequestID == "installedplugin"){
+			installed_plugin.clear();
+			const char dm[2] = { 1, 0 };//区切り文字
+			for (int i = 0; i < mReferences.size(); i++){
+				vector<string> plugins;
+				split(mReferences[i], dm, plugins);
+				if (plugins.size() == 2){
+					PluginInfo info;
+					info.plugin_name = plugins[0];
+					info.plugin_id = plugins[1];
+					installed_plugin.insert(map<string, PluginInfo>::value_type(info.plugin_name, info));
+				}
+			}
+		}
+		else if (mRequestID == "rateofusegraph")
+		{
+			rate_of_use_graph.clear();
+			const char dm[2] = { 1, 0 };//区切り文字
+			for (int i = 0; i < mReferences.size(); i++){
+				vector<string> rate;
+				split(mReferences[i], dm, rate);
+				if (rate.size() == 7){
+					RateOfUseGraph info;
+					info.ghost_name = rate[0];
+					info.sakura_name = rate[1];
+					info.kero_name = rate[2];
+					info.boot_count = rate[3];
+					info.boot_minutes = rate[4];
+					info.boot_percent = rate[5];
+					info.status = rate[6];
+					rate_of_use_graph.insert(map<string, RateOfUseGraph>::value_type(info.ghost_name, info));
+				}
+			}
+		}
+	}
 
 	//実際の呼び出し開始
 	if ( mRequestID == "OnDirectSaoriCall" ) {
@@ -101,4 +158,12 @@ int		Satori::CreateResponse(strmap& oResponse)
 
 	oResponse["Value"] = result;
 	return	200;
+}
+
+void CreateStringSet(const strvec& vec, set<string>& strset)
+{
+	strset.clear();
+	for (int i = 0; i < vec.size(); i++){
+		strset.insert(vec.at(i));
+	}
 }
