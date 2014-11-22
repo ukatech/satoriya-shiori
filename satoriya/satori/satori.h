@@ -88,6 +88,27 @@ public:
 };
 
 //---------------------------------------------------------------------------
+
+//プラグイン。（ShioriPluginじゃなくて、ベースウェアに関連付けられるPLUGIN）
+struct PluginInfo
+{
+	string plugin_name;
+	string plugin_id;
+};
+
+//使ってるぞグラフの情報。
+struct RateOfUseGraph
+{
+	string ghost_name;
+	string sakura_name;
+	string kero_name;
+	string boot_count;
+	string boot_minutes;
+	string boot_percent;
+	string status;
+};
+
+//---------------------------------------------------------------------------
 class Satori : public Evalcator, public SakuraDLLHost
 {
 
@@ -326,6 +347,19 @@ private:
 	// 辞書情報
 	int	numWord, numParentheres, numSurfaceChange,
 		numDictionary, numDictionarySize;
+
+	//Notifyの保存
+	set<string> installed_ghost_name;
+	set<string> installed_shell_name;
+	set<string> installed_balloon_name;
+	set<string> installed_headline_name;
+	set<string> installed_font_name;
+	map<string, PluginInfo> installed_plugin;
+	map<string, RateOfUseGraph> rate_of_use_graph;
+
+	//Notifyの収拾
+	bool is_save_notify;
+
 
 	// システム情報系 ----------
 

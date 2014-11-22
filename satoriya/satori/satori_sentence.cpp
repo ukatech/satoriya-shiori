@@ -624,7 +624,7 @@ const Talk* Satori::GetSentenceInternal(string& ioSentenceName)
 	}
 
 	// mapから指定名を持つトーク群を検索
-	GetSender().sender() << "＊" << ioSentenceName;
+	GetSender().sender() << "＊" << ioSentenceName << endl;
 	const Talk* talk = talks.select(ioSentenceName, *this);
 	if ( talk == NULL )
 	{

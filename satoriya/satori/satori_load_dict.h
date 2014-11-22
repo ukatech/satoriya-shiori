@@ -113,6 +113,8 @@ void	Satori::InitMembers() {
 	mousedown_secchange_delay_exec = false;
 	mousedown_secchange_delay_time = 0;
 
+	is_save_notify = false;
+
 	//’‚é‚²‚Æ‚É‰Šú‰»‚·‚é•Ï”
 	return_empty = false;
 	is_quick_section = false;
