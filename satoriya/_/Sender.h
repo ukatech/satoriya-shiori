@@ -97,7 +97,7 @@ extern Sender& GetSender();
 class Sender
 {
 #ifdef POSIX
-#define HWND int
+#	define HWND int
 #endif
 	// 出力先ウィンドウ
 	HWND sm_receiver_window;
