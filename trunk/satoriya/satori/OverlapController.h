@@ -19,8 +19,12 @@ template<typename T>
 class OverlapController
 {
 public:
-	OverlapController() {}
-	virtual ~OverlapController() {}
+	OverlapController() {
+		//
+	}
+	virtual ~OverlapController() {
+		//
+	}
 
 	// 候補から一つを選択
 	// 候補は一つ以上あることが保証されている。
@@ -208,16 +212,22 @@ public:
 	virtual T select(const list<T>& i_candidates)
 	{
 		typename list<T>::const_iterator it = i_candidates.begin();
+
 		if ( m_last != INVALID_VALUE )
 		{
 			while ( m_last != *it )
 			{
 				++it;
+				if ( it == i_candidates.end() ) { break; }
 			}
-			assert( m_last == *it );
+			// assert( m_last == *it );
 
-			// 直前のものより１つだけ進める
-			if ( ++it == i_candidates.end() )
+			// 直前のものより１つだけ進める 直前が無効か最後までいったら最初から
+			if ( it == i_candidates.end() )
+			{
+				it = i_candidates.begin();
+			}
+			else if ( ++it == i_candidates.end() )
 			{
 				it = i_candidates.begin();
 			}
@@ -268,11 +278,16 @@ public:
 			while ( m_last != *it )
 			{
 				++it;
+				if ( it == i_candidates.rend() ) { break; }
 			}
-			assert( m_last == *it );
+			//assert( m_last == *it );
 
-			// 直前のものより１つだけ進める
-			if ( ++it == i_candidates.rend() )
+			// 直前のものより１つだけ進める 直前が無効か最後までいったら最初から
+			if ( it == i_candidates.rend() )
+			{
+				it = i_candidates.rbegin();
+			}
+			else if ( ++it == i_candidates.rend() )
 			{
 				it = i_candidates.rbegin();
 			}
