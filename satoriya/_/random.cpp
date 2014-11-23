@@ -17,7 +17,7 @@ void randomize(void)
 
 #ifdef POSIX
 	struct timeval tv;
-	gettimeofday(&tv,NULL);
+	gettimeofday(&tv,nullptr);
 	dwSeed = tv.tv_usec;
 #else
 	dwSeed = ::GetTickCount();

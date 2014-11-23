@@ -96,10 +96,11 @@ extern Sender& GetSender();
 
 class Sender
 {
-#ifndef POSIX
+#ifdef POSIX
+#define HWND int
+#endif
 	// 出力先ウィンドウ
 	HWND sm_receiver_window;
-#endif
 	int  sm_receiver_mode;
 
 	sender_stream	send_stream;

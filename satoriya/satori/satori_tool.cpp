@@ -54,7 +54,7 @@ bool	GetLastWriteTime(LPCSTR iFileName, SYSTEMTIME& oSystemTime) {
 bool FileExist(const string& f)
 {
     struct stat s;
-    return ::stat(f.c_str(), &s) != 0;
+    return ::stat(f.c_str(), &s) == 0;
 }
 #else
 bool FileExist(const string& f)
