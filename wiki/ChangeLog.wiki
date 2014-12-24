@@ -1,4 +1,7 @@
 #labels Featured
+=Mc155-3=
+  * 辞書読み込みの高速化 (from id:bnfs_buy)
+
 =Mc155-2 (ponapalt)=
   * 重複回避が昇順か降順に設定した単語群で単語群に追加するとフリーズする問題を修正
 
