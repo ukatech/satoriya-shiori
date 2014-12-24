@@ -131,7 +131,7 @@ bool Sender::send(int mode,const char* iFormat, ...)
 	
 	va_list	theArgPtr;
 	va_start(theArgPtr, iFormat);
-#if _MSC_VER <= 1200
+#if (defined(_MSC_VER) && (_MSC_VER <= 1200))
 	_vsnprintf(theBuf, SenderConst::MAX, iFormat, theArgPtr);
 #else
 	vsnprintf(theBuf, SenderConst::MAX, iFormat, theArgPtr);

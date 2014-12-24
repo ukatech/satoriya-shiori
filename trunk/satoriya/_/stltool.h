@@ -9,7 +9,7 @@
 #pragma warning( disable : 4786 ) //「デバッグ情報内での識別子切捨て」
 #pragma warning( disable : 4503 ) //「装飾された名前の長さが限界を越えました。名前は切り捨てられます。」
 // forスコープをANSI準拠させる
-#if _MSC_VER <= 1200
+#if (defined(_MSC_VER) && (_MSC_VER <= 1200))
 #ifndef for
 #define for if(0);else for
 #endif	// for

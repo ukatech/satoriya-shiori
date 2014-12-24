@@ -243,6 +243,8 @@ bool	strvec_from_file(
 	strvec&	o,
 	const string& iFileName)
 {
+	o.reserve(1000);
+
 	assert(!iFileName.empty());
 	ifstream	in(iFileName.c_str());
 	if ( !in.is_open() )
