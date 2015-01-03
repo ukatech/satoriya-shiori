@@ -550,6 +550,12 @@ inline int zen2int(const string &s)
 	return zen2int(s.c_str());
 }
 
+unsigned long zen2ul(const char *str);
+inline unsigned long zen2ul(const string &s)
+{
+	return zen2ul(s.c_str());
+}
+
 string  zen2han(const char *str);
 inline string zen2han(const string &s)
 {

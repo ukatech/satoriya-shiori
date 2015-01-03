@@ -276,13 +276,13 @@ bool	Satori::load(const string& iBaseFolder)
 	reload_flag = false;
 
 	if ( variables.find("ゴースト起動時間累計秒") != variables.end() ) {
-		sec_count_total = zen2int(variables["ゴースト起動時間累計秒"]);
+		sec_count_total = zen2ul(variables["ゴースト起動時間累計秒"]);
 	}
 	else if ( variables.find("ゴースト起動時間累計ミリ秒") != variables.end() ) {
-		sec_count_total = zen2int(variables["ゴースト起動時間累計ミリ秒"]) / 1000;
+		sec_count_total = zen2ul(variables["ゴースト起動時間累計ミリ秒"]) / 1000;
 	}
 	else {
-		sec_count_total = zen2int(variables["ゴースト起動時間累計(ms)"]) / 1000;
+		sec_count_total = zen2ul(variables["ゴースト起動時間累計(ms)"]) / 1000;
 	}
 	variables["起動回数"] = itos( zen2int(variables["起動回数"])+1 );
 
@@ -342,12 +342,12 @@ bool	Satori::Save(bool isOnUnload) {
 
 	// 起動時間累計を設定
 	variables["ゴースト起動時間累計秒"] =
-	    itos(posix_get_current_sec() - sec_count_at_load + sec_count_total);
+	    uitos(posix_get_current_sec() - sec_count_at_load + sec_count_total,"%lu");
 	// (互換用)
 	variables["ゴースト起動時間累計ミリ秒"] =
-	    itos((posix_get_current_sec() - sec_count_at_load + sec_count_total)*1000);
+	    uitos((posix_get_current_sec() - sec_count_at_load + sec_count_total)*1000,"%lu");
 	variables["ゴースト起動時間累計(ms)"] =
-	    itos((posix_get_current_sec() - sec_count_at_load + sec_count_total)*1000);
+	    uitos((posix_get_current_sec() - sec_count_at_load + sec_count_total)*1000,"%lu");
 
 	if ( isOnUnload ) {
 		secure_flag = true;
