@@ -1,4 +1,7 @@
 #labels Featured
+=Mc155-4 (bnfs_buy)=
+  * 「ゴースト起動時間累計秒」などが異常値になる場合がある問題を修正
+
 =Mc155-3 (ponapalt)=
   * 辞書読み込みの高速化 (from id:bnfs_buy)
 
