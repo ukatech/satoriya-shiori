@@ -816,4 +816,9 @@ int zen2int(const char *str)
 	return stoi_internal(zen2han(str));
 }
 
+unsigned long zen2ul(const char *str)
+{
+	return stoui(zen2han(str));
+}
+
 
