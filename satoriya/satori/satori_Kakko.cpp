@@ -1107,6 +1107,14 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	else if ( mRequestMap.find(iName) != mRequestMap.end() ) {
 		oResult = mRequestMap[iName];
 	}
+	else if (iName == "全変数列挙"){
+		if (fDebugMode && secure_flag) {
+			oResult = "";
+			for (strmap::iterator i = variables.begin(); i != variables.end(); i++){
+				oResult += string("＄") + i->first + "\t" + i->second + "\\n";
+			}
+		}
+	}
 	else {
 		// 見つからなかった。通常喋り？
 		//括弧展開後にチェックするようになったのでここは無効化
