@@ -102,7 +102,7 @@ public:
 			{
 				m_OC->on_erase(OLD, old);
 				old = OLD.erase(old);
-				++old;
+//				++old;
 			}
 			else
 			{
