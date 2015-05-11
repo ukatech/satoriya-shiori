@@ -108,8 +108,8 @@ static const char	han_digit[] = "0123456789";
 static const char   zen_symbol[] = "　！”＃＄％＆’（）＝～｜‘｛＋＊｝＜＞？＿ー＾￥＠「；：」、。・÷×－，．［］";
 static const char   han_symbol[] = " !\"#$%&'()=~|`{+*}<>?_-^\\@[;:],.･/*-,.[]";
 
-static const char   zen_kana_1[] = "アイウエオカキクケコサシスセ\x83\x5cタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィゥェォャュョッ、。";
-static const char   han_kana_1[] = "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝｧｨｩｪｫｬｭｮｯ､｡";
+static const char   zen_kana_1[] = "アイウエオカキクケコサシスセ\x83\x5cタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィゥェォャュョッ、。ー";
+static const char   han_kana_1[] = "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝｧｨｩｪｫｬｭｮｯ､｡ｰ";
 
 static const char   zen_kana_2[] = "ガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ";
 static const char   han_kana_2[] = "ｶﾞｷﾞｸﾞｹﾞｺﾞｻﾞｼﾞｽﾞｾﾞｿﾞﾀﾞﾁﾞﾂﾞﾃﾞﾄﾞﾊﾞﾋﾞﾌﾞﾍﾞﾎﾞﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟ";
@@ -146,7 +146,7 @@ bool	printf_format(const char*& p, deque<string>& iArguments, stringstream& os)
 		return	false;	// 置き換え対象が無い
 
 	++p;
-	string	str = zen2han_internal(iArguments.front());
+	string	str = iArguments.front();
 	iArguments.pop_front();
 
 	// フラグ指定読み込み
