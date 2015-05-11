@@ -158,4 +158,15 @@ public:
 		
 		return m_OC->select(m_candidates);
 	}
+
+	// 現在の選択メソッドの種類を返す
+	int type()
+	{
+		if (m_OC == NULL)
+		{
+			m_OC = new OC_Random<T>;
+		}
+
+		return m_OC->type();
+	}
 };
