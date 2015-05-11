@@ -503,7 +503,12 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 						result += append_at_scope_change_with_sakura_script;
 						chars_spoken += 2;
 					}
-					speaker = stoi_internal(cmd);
+					if (cmd == "0" || cmd == "h"){
+						speaker = 0;
+					}
+					else{
+						speaker = 1;
+					}
 					character_wait_clear(2);
 				}
 				else if ( cmd=="p" && aredigits(opt) ) {
