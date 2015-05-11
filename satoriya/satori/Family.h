@@ -230,6 +230,12 @@ public:
 			return *candidates.begin();
 		}
 		else {
+			switch (m_selector.type()) {
+			case 200:
+			case 300:
+				candidates.sort();
+				break;
+			}
 			m_selector.update_candidates(candidates);
 			return	m_selector.select();
 		}
