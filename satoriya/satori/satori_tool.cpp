@@ -290,6 +290,28 @@ string	Satori::special_call(
 		}
 	}
 
+	if (iCallName == "whenlist") {
+		if (iArgv.size() < 2) {
+			return "引数の個数が正しくありません。";
+		}
+		const string lhs = UnKakko(iArgv[0].c_str(), for_calc, for_non_talk);
+		size_t max = iArgv.size();
+		for (size_t i = 1; i < max; i += 2) {
+			if (i == max - 1) {
+				return UnKakko(iArgv[i].c_str(), for_calc, for_non_talk);
+			}
+			string exp = lhs + UnKakko(iArgv[i].c_str(), for_calc, for_non_talk);
+			int result;
+			if (!calc_argument(exp, result, for_non_talk)) {
+				return "' whenlistの" + itos((i - 1) / 2 + 1) + "番目、式" + exp + "は計算不\x94\x5cでした。";
+			}
+			if (result != 0){
+				return	UnKakko(iArgv[i + 1].c_str(), for_calc, for_non_talk);
+			}
+		}
+		return "";
+	}
+
 	if ( iCallName == "times" ) {
 		int count;
 		int max;

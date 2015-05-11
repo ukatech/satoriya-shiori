@@ -135,6 +135,7 @@ void	Satori::InitMembers() {
 	mKakkoCallResults.clear();
 
 	special_commands.insert("when");
+	special_commands.insert("whenlist");
 	special_commands.insert("times");
 	special_commands.insert("while");
 	special_commands.insert("for");
