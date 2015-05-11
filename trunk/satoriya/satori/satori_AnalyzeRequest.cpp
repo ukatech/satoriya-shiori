@@ -258,6 +258,54 @@ int	Satori::request(
 			}
 		}
 	}
+	else if (mRequestID == "SatolistEcho"){
+		// さとりすとデバッガ実装
+		if (fDebugMode && secure_flag) {
+
+			//R0は除去される
+			strvec customRef;
+			for (int i = 1; i < mReferences.size(); i++){
+				customRef.push_back(mReferences[i]);
+			}
+
+			string result = SentenceToSakuraScriptExec_with_PreProcess(customRef);
+			if (result.length()) {
+				result = string("SSTP 200 OK\r\nCharset: Shift_JIS\r\nResult: ") + result + "\r\n\r\n";
+			}
+			else{
+				//情報なし
+				result = string("SSTP 204 No Content\r\nCharset: Shift_JIS\r\n\r\n");
+			}
+
+			char* copyData = new char[result.length() + 1];
+			strcpy(copyData, result.c_str());
+
+			COPYDATASTRUCT cds;
+			cds.dwData = 0;
+			cds.cbData = result.length() + 1;
+			cds.lpData = copyData;
+			DWORD ret;
+
+			SendMessageTimeout((HWND)stoi(mReferences[0]), WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds, 0, 1000, &ret);
+
+			//ここで204を返すと非対応時のエラーを出すので200で通知メッセージを表示する
+			status_code = 200;
+			mResponseMap["Value"] = "\\0\\_q■情報を送信しました。\\e";
+		}
+		else {
+			if (fDebugMode) {
+				GetSender().sender() << "local/Localでないので蹴りました: SatolistEcho" << endl;
+				status_code = 403;
+			}
+			else {
+				static const std::string dbgmsg = "デバッグモードが無効です。使用するためには＄デバッグ＝有効にしてください。: SatolistEcho";
+				GetSender().sender() << dbgmsg << endl;
+
+				mResponseMap["Value"] = "\\0" + dbgmsg + "\\e";
+				status_code = 200;
+			}
+		}
+	}
 	else {
 		status_code = CreateResponse(mResponseMap);
 	}
