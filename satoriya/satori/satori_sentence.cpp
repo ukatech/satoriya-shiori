@@ -459,7 +459,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 				const char*	start=p;
 				string	cmd="",opt="";
 
-				while (!_ismbblead(*p) && (isalpha(*p)||isdigit(*p)||*p=='!'||*p=='-'||*p=='*'||*p=='&'||*p=='?'||*p=='_'))
+				while (!_ismbblead(*p) && (isalpha(*p)||isdigit(*p)||*p=='!'||*p=='-'||*p=='*'||*p=='&'||*p=='?'||*p=='_'||*p=='+'))
 					++p;
 				cmd.assign(start, p-start);
 
