@@ -220,8 +220,26 @@ static bool	calc_polish(simple_stack<calc_element>& polish, string& oResult,bool
 				return	false;
 			}
 		}
-		a_op_b(/)
-		a_op_b(%)
+		else if (el.str == "/") {
+			assert_special(stack.size() >= 2);
+			string	rhs = stack.pop(), lhs = stack.pop();
+			if (aredigits(lhs) && aredigits(rhs) && stoi_internal(rhs) != 0) {
+				stack.push(itos(stoi_internal(lhs) / stoi_internal(rhs)));
+			}
+			else {
+				return false;
+			}
+		}
+		else if (el.str == "%") {
+			assert_special(stack.size() >= 2);
+			string	rhs = stack.pop(), lhs = stack.pop();
+			if (aredigits(lhs) && aredigits(rhs) && stoi_internal(rhs) != 0) {
+				stack.push(itos(stoi_internal(lhs) % stoi_internal(rhs)));
+			}
+			else {
+				return false;
+			}
+		}
 		else if ( el.str == "+" ) {
 			assert_special(stack.size()>=2);
 			string	rhs=stack.pop(), lhs=stack.pop();
