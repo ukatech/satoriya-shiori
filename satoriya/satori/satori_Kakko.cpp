@@ -209,6 +209,14 @@ string	Satori::inc_call(
 		}
 		return	"";
 	}
+
+	if (iCallName == "equal") {
+		if (iArgv.size() == 2) {
+			const string &lhs = iArgv[0], &rhs = iArgv[1];
+			return itos(lhs == rhs);
+		}
+		return	"";
+	}
 	
 	if ( iCallName == "単語の追加" ) {
 
@@ -464,6 +472,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 				inner_commands.insert("loop");
 				inner_commands.insert("remember");
 				inner_commands.insert("call");
+				inner_commands.insert("equal");
 				inner_commands.insert("バイト値");
 				inner_commands.insert("文の数");
 				inner_commands.insert("単語の追加");
