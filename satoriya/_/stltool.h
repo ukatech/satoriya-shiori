@@ -20,9 +20,11 @@
 #include	<climits>
 #include	<cstdlib>
 #include	<cstring>
+#ifdef _MSC_VER
 #define stricmp _stricmp
 #define strnicmp _strnicmp
 #define strcasecmp _stricmp
+#endif
 #include	<iostream>
 #include	<string>
 #include	<map>
