@@ -130,6 +130,11 @@ typedef	uchar	byte;
 typedef	ushort	word;
 typedef	ulong	dword;
 
+#ifdef POSIX
+#define stricmp strcasecmp
+#define strnicmp strncasecmp
+#endif
+
 // 第１引数の指定bitをon/offし、参照を返す。演算子的に用いる。
 template<class T>
 T& BitOn( T& t, int bit ) { assert( bit>=0 && bit<sizeof(T)*8 ); return t |= (1<<bit); }
