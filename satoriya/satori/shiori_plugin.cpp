@@ -284,7 +284,7 @@ void	ShioriPlugins::load_default_entry()
 	for ( vector<string>::const_iterator i = funclist.begin(); i != funclist.end() ; ++i ) {
 		if ( mCallData.find(*i) == mCallData.end() ) {
 			string func_line = *i;
-			func_line += ",ssu.dll,";
+			func_line += ",saori/ssu.dll,";
 			func_line += *i;
 
 			load_a_plugin(func_line);
