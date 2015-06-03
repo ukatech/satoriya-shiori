@@ -239,12 +239,13 @@ bool	Satori::load(const string& iBaseFolder)
 
 	// SAORIì«Ç›çûÇ›
 	Family<Word>* f = words.get_family("SAORI");
+
+	mShioriPlugins->load(mBaseFolder);
+	
 	if ( f != NULL )
 	{
 		vector<const Word*> els;
 		f->get_elements_pointers(els);
-
-		mShioriPlugins->load(mBaseFolder);
 
 		for ( vector<const Word*>::const_iterator i=els.begin(); i!=els.end() ; ++i)
 		{
@@ -254,8 +255,9 @@ bool	Satori::load(const string& iBaseFolder)
 			}
 		}
 
-		mShioriPlugins->load_default_entry();
 	}
+	mShioriPlugins->load_default_entry();
+
 	talks.clear();
 	words.clear();
 
