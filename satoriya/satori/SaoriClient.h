@@ -1,3 +1,5 @@
+#pragma once
+
 #include "SakuraDLLClient.h"
 
 // SAORI/1.0 -universal クライアント
@@ -8,13 +10,13 @@ public:
 	SaoriClient() {}
 	virtual ~SaoriClient() {}
 
-	bool load(
+	virtual bool load(
 		const string& i_sender,
 		const string& i_charset,
 		const string& i_work_folder,
 		const string& i_dll_fullpath);
 
-	int request(
+	virtual int request(
 		const vector<string>& i_argument,
 		bool i_is_secure,
 		string& o_result,

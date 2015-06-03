@@ -1,9 +1,10 @@
+#pragma once
+
 #include "SakuraClient.h"
 
 #ifndef POSIX
 #  include <windows.h> // HMODULE,BOOL,HGLOBALとか
 #endif
-
 
 // dllホルダー。dllをロードしてリクエストを送る
 class SakuraDLLClient : public SakuraClient

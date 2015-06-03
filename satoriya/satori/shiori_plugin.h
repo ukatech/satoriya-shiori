@@ -15,8 +15,17 @@ class ShioriPlugins {
 		strvec	mPreDefinedArguments;
 		bool	mIsBasic;
 	};
-	struct DllData {	// DLL‚²‚Æ‚Ìî•ñ
-		SaoriClient	mSaoriClient;
+	class DllData {	// DLL‚²‚Æ‚Ìî•ñ
+	public:
+		DllData() {
+			m_pSaoriClient = NULL;
+		}
+		~DllData() {
+			if ( m_pSaoriClient ) {
+				delete m_pSaoriClient;
+			}
+		}
+		SaoriClient	*m_pSaoriClient;
 		int	mRefCount;
 	};
 	map<string, CallData>	mCallData;	// ŒÄ‚Ño‚µ–¼GŒÄ‚Ño‚µ–¼‚²‚Æ‚Ìî•ñ
@@ -34,6 +43,7 @@ public:
 
 	bool	load(const string& iBaseFolder);
 	bool	load_a_plugin(const string& iPluginLine);
+	void	load_default_entry(void);
 
 	string	request(const string& iCallName, const strvec& iArguments, strvec& oResults, const string& iSecurityLevel);
 	void	unload();

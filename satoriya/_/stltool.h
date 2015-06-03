@@ -20,11 +20,13 @@
 #include	<climits>
 #include	<cstdlib>
 #include	<cstring>
-#ifdef _MSC_VER
+
+#if (defined(_MSC_VER) && (_MSC_VER >= 1200))
 #define stricmp _stricmp
 #define strnicmp _strnicmp
 #define strcasecmp _stricmp
 #endif
+
 #include	<iostream>
 #include	<string>
 #include	<map>

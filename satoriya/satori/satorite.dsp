@@ -98,6 +98,10 @@ SOURCE=..\_\calc.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\_\calc_float.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\_\Dialog.cpp
 # End Source File
 # Begin Source File
@@ -375,6 +379,18 @@ SOURCE=.\icon1.ico
 # Begin Source File
 
 SOURCE=.\resource.rc
+# End Source File
+# End Group
+# Begin Group "SSUDirect"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\ssu.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\ssu.h
 # End Source File
 # End Group
 # Begin Source File

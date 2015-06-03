@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "ssu_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /MT /W3 /GX /O2 /Oy- /Ob2 /I "..\_" /D "_WINDOWS" /D "_USRDLL" /D "ssu_EXPORTS" /D WINVER=0x400 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "STRICT" /FD /Zm800 /GA /QI0f /c
+# ADD CPP /nologo /MT /W3 /GX /O2 /Oy- /Ob2 /I "..\_" /D "_WINDOWS" /D "_USRDLL" /D "ssu_EXPORTS" /D WINVER=0x400 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "STRICT" /D "SSU_SAORI_CALL_INTERFACE" /FD /Zm800 /GA /QI0f /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x411 /d "NDEBUG"
@@ -69,7 +69,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "ssu_EXPORTS" /YX /FD /GZ /c
-# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I "..\_" /D "_WINDOWS" /D "_USRDLL" /D "ssu_EXPORTS" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "STRICT" /FR /FD /Zm800 /GZ /c
+# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I "..\_" /D "_WINDOWS" /D "_USRDLL" /D "ssu_EXPORTS" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "STRICT" /D "SSU_SAORI_CALL_INTERFACE" /FR /FD /Zm800 /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x411 /d "_DEBUG"
@@ -178,10 +178,6 @@ SOURCE=.\resource.rc
 # Begin Source File
 
 SOURCE=.\ssu.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\TimeCommands.cpp
 # End Source File
 # End Target
 # End Project

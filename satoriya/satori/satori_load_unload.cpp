@@ -245,6 +245,7 @@ bool	Satori::load(const string& iBaseFolder)
 		f->get_elements_pointers(els);
 
 		mShioriPlugins->load(mBaseFolder);
+
 		for ( vector<const Word*>::const_iterator i=els.begin(); i!=els.end() ; ++i)
 		{
 			if ( (*i)->size()>0 && !mShioriPlugins->load_a_plugin(**i) )
@@ -252,6 +253,8 @@ bool	Satori::load(const string& iBaseFolder)
 				GetSender().sender() << "SAORI“Ç‚Ýž‚Ý’†‚ÉƒGƒ‰[‚ª”­¶: " << **i << endl;
 			}
 		}
+
+		mShioriPlugins->load_default_entry();
 	}
 	talks.clear();
 	words.clear();

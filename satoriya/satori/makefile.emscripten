@@ -26,6 +26,7 @@ LIBSATORI_OBJ = \
 	../_/Sender.o \
 	../_/Utilities.o \
 	../_/calc.o \
+	../_/calc_float.o \
 	../_/stltool.o \
 	../_/random.o \
 	../_/mt19937ar.o \
@@ -45,39 +46,42 @@ LIBSATORI_OBJ = \
 	satori_sentence.o \
 	satori_tool.o \
 	shiori_plugin.o \
-	$(NULL)
-LIBSSU_OBJ = \
-	../_/Sender.o \
-	../_/Utilities.o \
-	../_/calc.o \
-	../_/calc_float.o \
-	../_/stltool.o \
-	../_/mt19937ar.o \
-	SakuraCS.o \
-	SakuraDLLHost.o \
-	SaoriHost.o \
 	ssu.o \
 	$(NULL)
+#LIBSSU_OBJ = \
+#	../_/Sender.o \
+#	../_/Utilities.o \
+#	../_/calc.o \
+#	../_/calc_float.o \
+#	../_/stltool.o \
+#	../_/mt19937ar.o \
+#	SakuraCS.o \
+#	SakuraDLLHost.o \
+#	SaoriHost.o \
+#	ssu.o \
+#	$(NULL)
 
 LIBSATORI = $(DYLIB_NAME_PREFIX)satori$(DYLIB_NAME_POSTFIX)
-LIBSSU = $(DYLIB_NAME_PREFIX)ssu$(DYLIB_NAME_POSTFIX)
+#LIBSSU = $(DYLIB_NAME_PREFIX)ssu$(DYLIB_NAME_POSTFIX)
 
-all: $(LIBSATORI) $(LIBSSU)
+#all: $(LIBSATORI) $(LIBSSU)
+all: $(LIBSATORI)
 
 depend:
-	mkdep $(CXXFLAGS) $(CXXFLAGS_ADD) $(LIBSATORI_OBJ:.o=.cpp) $(LIBSSU_OBJ:.o=.cpp)
+#	mkdep $(CXXFLAGS) $(CXXFLAGS_ADD) $(LIBSATORI_OBJ:.o=.cpp) $(LIBSSU_OBJ:.o=.cpp)
+	mkdep $(CXXFLAGS) $(CXXFLAGS_ADD) $(LIBSATORI_OBJ:.o=.cpp)
 
 clean:
 	rm -f $(LIBSATORI) $(LIBSATORI_OBJ)
-	rm -f $(LIBSSU) $(LIBSSU_OBJ)
+#	rm -f $(LIBSSU) $(LIBSSU_OBJ)
 
 $(LIBSATORI): $(LIBSATORI_OBJ)
 	$(LD) -o $@ $(LIBSATORI_OBJ) $(LDFLAGS)
 	$(STRIP) -x $@
 
-$(LIBSSU): $(LIBSSU_OBJ)
-	$(LD) -o $@ $(LIBSSU_OBJ) $(LDFLAGS)
-	$(STRIP) -x $@
+#$(LIBSSU): $(LIBSSU_OBJ)
+#	$(LD) -o $@ $(LIBSSU_OBJ) $(LDFLAGS)
+#	$(STRIP) -x $@
 
 .cpp.o:
 	$(CXX) $(CXXFLAGS) $(CXXFLAGS_ADD) -o $@ -c $<

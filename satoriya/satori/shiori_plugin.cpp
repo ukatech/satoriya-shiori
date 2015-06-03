@@ -14,6 +14,7 @@
 #include	"../_/Sender.h"
 #include	"shiori_plugin.h"
 #include	"console_application.h"
+#include	"ssu.h"
 #include	<sstream>
 using namespace std;
 
@@ -28,6 +29,7 @@ using namespace std;
 
 
 #ifdef POSIX
+
 // dllサーチパス関連。
 // POSIX上では、ある特定の場所にDLLと同名のライブラリを置く事でSAORIに対応する。
 // DLLと同名とは云っても、それはシンボリックリンクであるべきで、例えば次のようにである。
@@ -38,6 +40,7 @@ using namespace std;
 // lrwxr-xr-x x foo bar xxxxx 1 1 00:00 ssu.dll -> libssu.so
 //
 // パスは環境変数 SAORI_FALLBACK_PATH から取得する。これはコロン区切りの絶対パスである。
+
 static vector<string> posix_dll_search_path;
 static bool posix_dll_search_path_is_ready = false;
 static string posix_search_fallback_dll(const string& dllfile) {
@@ -110,137 +113,151 @@ bool ShioriPlugins::load_a_plugin(const string& iPluginLine)
 	{
 		// 未登録なら読み込む
 
-#ifndef POSIX
-		// ネットワーク更新時、SAORI.dllが上書きできずdl2として保存される問題に暫定対処
-		if ( compare_tail(fullpath, ".dll") )
-		{
-			string	dl2 = fullpath;
-			dl2[dl2.size()-1]='2';
-			FILE*	fp = fopen(dl2.c_str(), "rb");
-			if ( fp != NULL )
-			{
-				fclose(fp);
-				
-				// .dllを消して.dl2を.dllにリネームする。
-				::DeleteFile(fullpath.c_str());
-				::MoveFile(dl2.c_str(), fullpath.c_str());
-			}
-		}
-#endif
-		
-		// ファイルの存在を確認
-		FILE*	fp = fopen(fullpath.c_str(), "rb");
-		if ( fp == NULL )
-		{
+		//SSU Direct Call
 #ifdef POSIX
-            GetSender().errsender() << fullpath + ": failed to open" << std::endl;
+		if ( compare_tail(fullpath, "\\ssu") || compare_tail(fullpath, "/ssu") || compare_tail(fullpath, "\\ssu.dll") || compare_tail(fullpath, "/ssu.dll") )
 #else
-			GetSender().errsender() << fullpath + ": プラグインが存在しません。" << std::endl;
-#endif
-			return	false;
-		}
-		fclose(fp);
-
-		// ファイル名・フォルダ名・拡張子を分離
-		const char*	lastyen = NULL;
-		const char*	lastdot = NULL;
-		const char*	p = fullpath.c_str();
-		while (*p != '\0') {
-			if (*p == DIR_CHAR)
-				lastyen=p;
-			else if (*p == '.')
-				lastdot=p;
-			p += _ismbblead(*p) ? 2 : 1; 
-		}
-		if ( lastyen==NULL || lastdot==NULL )
-		{
-			return false;
-		}
-
-		string  dll_full_path(fullpath);
-		string	foldername(fullpath.c_str(), lastyen - fullpath.c_str());
-		string	filename(lastyen+1, strlen(lastyen)-strlen(lastdot)-1);
-		string	extention(lastdot+1);
-
-#ifdef POSIX
-		// 環境変数 SAORI_FALLBACK_ALWAYS が定義されていて、且つ
-		// 空でも"0"でもなければ、このdllファイルを開いてみる事は
-		// 初めからやらない。そうでなければ、試しにdlopenしてみる。
-		char* env_fallback_always = getenv("SAORI_FALLBACK_ALWAYS");
-		bool fallback_always = false;
-		if (env_fallback_always != NULL) {
-		    string str_fallback_always(env_fallback_always);
-		    if (str_fallback_always.length() > 0 &&
-			str_fallback_always != "0") {
-			fallback_always = true;
-		    }
-		}
-		bool do_fallback = true;
-		if (!fallback_always) {
-		    void* handle = dlopen(fullpath.c_str(), RTLD_LAZY);
-		    if (handle != NULL) {
-			// load, unload, requestを取出してみる。
-			void* sym_load = dlsym(handle, "load");
-			void* sym_unload = dlsym(handle, "unload");
-			void* sym_request = dlsym(handle, "request");
-			if (sym_load != NULL && sym_unload != NULL && sym_request != NULL) {
-			    // なんと正常に読めてしまった。実験目的で作った環境だろうか。
-			    do_fallback = false;
-			}
-		    }
-		    dlclose(handle);
-		}
-		if (do_fallback) {
-		    // 代替ライブラリを探す。
-		    string fallback_lib = posix_search_fallback_dll(filename+"."+extention);
-		    if (fallback_lib.length() == 0) {
-			// 無い。
-			char* cstr_path = getenv("SAORI_FALLBACK_PATH");
-			string fallback_path =
-			    (cstr_path == NULL ?
-			     "(environment variable `SAORI_FALLBACK_PATH' is empty)" : cstr_path);
-			
-			GetSender().errsender() << (
-			    fullpath+": This is not usable in this platform.\n"+
-			    "Fallback library `"+filename+"."+extention+"' doesn't exist: "+fallback_path) << std::endl;
-			
-			mDllData.erase(fullpath);
-
-			return false;
-		    }
-		    else {
-			cerr << "SAORI: using " << fallback_lib << " instead of " << fullpath << endl;
-		    }
-
-		    // 参照カウントに使うため、fullpathは書換えない。
-		    // dll_full_pathのみ。
-		    dll_full_path = fallback_lib;
-		}
-#endif
-
-		// POSIX環境では、ライブラリ名に*.dll以外も許す。
-#ifdef POSIX
-		if ( 1 )
-#else
-		if ( compare_tail(fullpath, ".dll") )
+		if ( compare_tail(fullpath, "\\ssu.dll") || compare_tail(fullpath, "/ssu.dll") )
 #endif
 		{
 			// プラグインDLLをロード
 			mDllData[fullpath].mRefCount=1;
-			extern const char* gSatoriName;
-			if ( !(mDllData[fullpath].mSaoriClient.load(gSatoriName, "Shift_JIS", foldername+DIR_CHAR, dll_full_path)) )
+			mDllData[fullpath].m_pSaoriClient=new ssu();
+		}
+		else {
+	#ifndef POSIX
+			// ネットワーク更新時、SAORI.dllが上書きできずdl2として保存される問題に暫定対処
+			if ( compare_tail(fullpath, ".dll") )
 			{
-				mDllData.erase(fullpath);
+				string	dl2 = fullpath;
+				dl2[dl2.size()-1]='2';
+				FILE*	fp = fopen(dl2.c_str(), "rb");
+				if ( fp != NULL )
+				{
+					fclose(fp);
+					
+					// .dllを消して.dl2を.dllにリネームする。
+					::DeleteFile(fullpath.c_str());
+					::MoveFile(dl2.c_str(), fullpath.c_str());
+				}
+			}
+	#endif
+			
+			// ファイルの存在を確認
+			FILE*	fp = fopen(fullpath.c_str(), "rb");
+			if ( fp == NULL )
+			{
+	#ifdef POSIX
+				GetSender().errsender() << fullpath + ": failed to open" << std::endl;
+	#else
+				GetSender().errsender() << fullpath + ": プラグインが存在しません。" << std::endl;
+	#endif
 				return	false;
 			}
+			fclose(fp);
 
-			// バージョン確認
-			string ver = mDllData[fullpath].mSaoriClient.get_version("Local");
-			if ( ver != "SAORI/1.0" )
+			// ファイル名・フォルダ名・拡張子を分離
+			const char*	lastyen = NULL;
+			const char*	lastdot = NULL;
+			const char*	p = fullpath.c_str();
+			while (*p != '\0') {
+				if (*p == DIR_CHAR)
+					lastyen=p;
+				else if (*p == '.')
+					lastdot=p;
+				p += _ismbblead(*p) ? 2 : 1; 
+			}
+			if ( lastyen==NULL || lastdot==NULL )
 			{
-				GetSender().errsender() << fullpath + ": SAORI/1.0のdllではありません。GET Versionの戻り値が未対応のものでした。(" + ver + ")" << std::endl;
+				return false;
+			}
+
+			string  dll_full_path(fullpath);
+			string	foldername(fullpath.c_str(), lastyen - fullpath.c_str());
+			string	filename(lastyen+1, strlen(lastyen)-strlen(lastdot)-1);
+			string	extention(lastdot+1);
+
+	#ifdef POSIX
+			// 環境変数 SAORI_FALLBACK_ALWAYS が定義されていて、且つ
+			// 空でも"0"でもなければ、このdllファイルを開いてみる事は
+			// 初めからやらない。そうでなければ、試しにdlopenしてみる。
+			char* env_fallback_always = getenv("SAORI_FALLBACK_ALWAYS");
+			bool fallback_always = false;
+			if (env_fallback_always != NULL) {
+				string str_fallback_always(env_fallback_always);
+				if (str_fallback_always.length() > 0 &&
+				str_fallback_always != "0") {
+				fallback_always = true;
+				}
+			}
+			bool do_fallback = true;
+			if (!fallback_always) {
+				void* handle = dlopen(fullpath.c_str(), RTLD_LAZY);
+				if (handle != NULL) {
+				// load, unload, requestを取出してみる。
+				void* sym_load = dlsym(handle, "load");
+				void* sym_unload = dlsym(handle, "unload");
+				void* sym_request = dlsym(handle, "request");
+				if (sym_load != NULL && sym_unload != NULL && sym_request != NULL) {
+					// なんと正常に読めてしまった。実験目的で作った環境だろうか。
+					do_fallback = false;
+				}
+				}
+				dlclose(handle);
+			}
+			if (do_fallback) {
+				// 代替ライブラリを探す。
+				string fallback_lib = posix_search_fallback_dll(filename+"."+extention);
+				if (fallback_lib.length() == 0) {
+				// 無い。
+				char* cstr_path = getenv("SAORI_FALLBACK_PATH");
+				string fallback_path =
+					(cstr_path == NULL ?
+					 "(environment variable `SAORI_FALLBACK_PATH' is empty)" : cstr_path);
+				
+				GetSender().errsender() << (
+					fullpath+": This is not usable in this platform.\n"+
+					"Fallback library `"+filename+"."+extention+"' doesn't exist: "+fallback_path) << std::endl;
+				
 				mDllData.erase(fullpath);
-				return	false;
+
+				return false;
+				}
+				else {
+				cerr << "SAORI: using " << fallback_lib << " instead of " << fullpath << endl;
+				}
+
+				// 参照カウントに使うため、fullpathは書換えない。
+				// dll_full_pathのみ。
+				dll_full_path = fallback_lib;
+			}
+	#endif
+
+			// POSIX環境では、ライブラリ名に*.dll以外も許す。
+	#ifdef POSIX
+			if ( 1 )
+	#else
+			if ( compare_tail(fullpath, ".dll") )
+	#endif
+			{
+				// プラグインDLLをロード
+				mDllData[fullpath].mRefCount=1;
+				mDllData[fullpath].m_pSaoriClient=new SaoriClient();
+				extern const char* gSatoriName;
+				if ( !(mDllData[fullpath].m_pSaoriClient->load(gSatoriName, "Shift_JIS", foldername+DIR_CHAR, dll_full_path)) )
+				{
+					mDllData.erase(fullpath);
+					return	false;
+				}
+
+				// バージョン確認
+				string ver = mDllData[fullpath].m_pSaoriClient->get_version("Local");
+				if ( ver != "SAORI/1.0" )
+				{
+					GetSender().errsender() << fullpath + ": SAORI/1.0のdllではありません。GET Versionの戻り値が未対応のものでした。(" + ver + ")" << std::endl;
+					mDllData.erase(fullpath);
+					return	false;
+				}
 			}
 		}
 	}
@@ -259,6 +276,22 @@ bool ShioriPlugins::load_a_plugin(const string& iPluginLine)
 	return	true;
 }
 
+void	ShioriPlugins::load_default_entry()
+{
+	vector<string> funclist;
+	get_ssu_funclist(funclist);
+
+	for ( vector<string>::const_iterator i = funclist.begin(); i != funclist.end() ; ++i ) {
+		if ( mCallData.find(*i) == mCallData.end() ) {
+			string func_line = *i;
+			func_line += ",ssu.dll,";
+			func_line += *i;
+
+			load_a_plugin(func_line);
+		}
+	}
+}
+
 void	ShioriPlugins::unload()
 {
 	for ( map<string, CallData>::iterator i=mCallData.begin() ; i!=mCallData.end() ; ++i ) {
@@ -266,7 +299,7 @@ void	ShioriPlugins::unload()
 			continue;
 		DllData&	ddat = mDllData[i->second.mDllPath];
 		if ( --ddat.mRefCount == 0 ) {
-			ddat.mSaoriClient.unload();
+			ddat.m_pSaoriClient->unload();
 			mDllData.erase(i->second.mDllPath);
 		}
 	}
@@ -331,7 +364,7 @@ string	ShioriPlugins::request(const string& iCallName, const strvec& iArguments,
 		assert( mDllData.find(theCallData.mDllPath) != mDllData.end() );
 
 		string result;
-		int return_code = mDllData[ theCallData.mDllPath ].mSaoriClient.request(
+		int return_code = mDllData[ theCallData.mDllPath ].m_pSaoriClient->request(
 			 req,
 			 ( iSecurityLevel == "local" || iSecurityLevel == "Local" ),
 			 result,

@@ -2,8 +2,8 @@
 //
 //	里々同梱ユーティリティライブラリ　ssu.dll
 //
-#include	"SaoriHost.h"
 #include    "random.h"
+#include    "ssu.h"
 #include	<map>
 #include	<algorithm>
 #include	<time.h>
@@ -11,6 +11,77 @@
 #ifdef _WINDOWS
 #include <mbctype.h>
 #endif
+
+//================================================================================================
+
+#include	"SaoriHost.h"
+
+static SRV	call_ssu(string iCommand, deque<string>& iArguments, deque<string>& oValues);
+
+#ifndef SSU_SAORI_CALL_INTERFACE
+
+//SaoriClientに直結するインターフェース
+
+//要らないインターフェースは潰しておく
+bool ssu::load(
+	const string& i_sender,
+	const string& i_charset,
+	const string& i_work_folder,
+	const string& i_dll_fullpath)
+{
+	return true;
+}
+void ssu::unload()
+{
+	//NOOP
+}
+string ssu::request(const string& i_request_string)
+{
+	return "";
+}
+string ssu::get_version(const string& i_security_level)
+{
+	return "SAORI/1.0";
+}
+
+int ssu::request(
+		const vector<string>& i_argument,
+		bool i_is_secure,
+		string& o_result,
+		vector<string>& o_value)
+{
+	if ( i_argument.size()<1 ) {
+		o_result = "命令が指定されていません";
+		return 400;
+	}
+
+	// 最初の引数は命令名として扱う
+	vector<string>::const_iterator i_arg = i_argument.begin();
+	string theCommand = *i_arg;
+	++i_arg;
+
+	std::deque<string> iArguments;
+	for ( ; i_arg != i_argument.end() ; ++i_arg ) {
+		iArguments.push_back(*i_arg);
+	}
+
+	std::deque<string> oValues;
+
+	SRV result = call_ssu(theCommand, iArguments, oValues);
+	o_result = result.mResultString;
+
+	o_value.clear();
+	for ( deque<string>::const_iterator o_val = oValues.begin() ; o_val != oValues.end() ; ++o_val ) {
+		o_value.push_back(*o_val);
+	}
+
+	return result.mReturnCode;
+}
+
+#else
+
+//通常のSSU(SAORI版)
+//ビルド時 SSU_SAORI_CALL_INTERFACE を定義すると有効になる。SSU単独ビルド時に定義すること。
 
 class ssu : public SaoriHost {
 public:
@@ -28,11 +99,25 @@ public:
 };
 SakuraDLLHost* SakuraDLLHost::m_dll = new ssu;
 
+SRV	ssu::request(deque<string>& iArguments, deque<string>& oValues) {
+	if ( iArguments.size()<1 )
+		return	SRV(400, "命令が指定されていません");
 
-static SRV	call_ssu(string iCommand, deque<string>& iArguments, deque<string>& oValues)
+	// 最初の引数は命令名として扱う
+	string	theCommand = iArguments.front();
+	iArguments.pop_front();
+	return	call_ssu(theCommand, iArguments, oValues);
+}
+
+#endif
+
+//================================================================================================
+
+typedef SRV (*Command)(deque<string>&, deque<string>&);
+
+static const map<string, Command> &func_map(void)
 {
 	// 名前と命令を関連付けたmap
-	typedef SRV (*Command)(deque<string>&, deque<string>&);
 	static map<string, Command>	theMap;
 	if ( theMap.empty() )
 	{ 
@@ -54,26 +139,32 @@ static SRV	call_ssu(string iCommand, deque<string>& iArguments, deque<string>& o
 		d(lsimg);			d(mkdir);
 		#undef	d
 	}
+	return theMap;
+}
+
+void get_ssu_funclist(std::vector<string> &funclist)
+{
+	const map<string, Command> &theMap = func_map();
+
+	funclist.clear();
+
+	for ( map<string, Command>::const_iterator i = theMap.begin() ; i != theMap.end() ; ++i ) {
+		funclist.push_back(i->first);
+	}
+}
+
+static SRV	call_ssu(string iCommand, deque<string>& iArguments, deque<string>& oValues)
+{
+	const map<string, Command> &theMap = func_map();
 
 	// 命令の存在を確認
-	map<string, Command>::iterator i = theMap.find(iCommand);
+	map<string, Command>::const_iterator i = theMap.find(iCommand);
 	if ( i==theMap.end() )
 		return SRV(400, string()+"Error: '"+iCommand+"'という名前の命令は定義されていません。");
 
 	// 実際に呼ぶ
 	return	i->second(iArguments, oValues);
 }
-
-SRV	ssu::request(deque<string>& iArguments, deque<string>& oValues) {
-	if ( iArguments.size()<1 )
-		return	SRV(400, "命令が指定されていません");
-
-	// 最初の引数は命令名として扱う
-	string	theCommand = iArguments.front();
-	iArguments.pop_front();
-	return	call_ssu(theCommand, iArguments, oValues);
-}
-
 
 // ここから実装
 
