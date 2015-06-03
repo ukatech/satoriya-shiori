@@ -259,6 +259,7 @@ int	Satori::request(
 		}
 	}
 	else if (mRequestID == "SatolistEcho"){
+#ifndef POSIX
 		// ‚³‚Æ‚è‚·‚ÆƒfƒoƒbƒKŽÀ‘•
 		if (fDebugMode && secure_flag) {
 
@@ -305,6 +306,7 @@ int	Satori::request(
 				status_code = 200;
 			}
 		}
+#endif // POSIX
 	}
 	else {
 		status_code = CreateResponse(mResponseMap);
