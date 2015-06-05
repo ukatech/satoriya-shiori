@@ -70,6 +70,7 @@ int ssu::request(
 	SRV result = call_ssu(theCommand, iArguments, oValues);
 	o_result = result.mResultString;
 
+	// 注意！Valueヘッダ相当が存在しないときは、S?系システム変数を温存するためにデータを上書きしないこと！
 	if ( ! oValues.empty() ) {
 		o_value.clear();
 		for ( deque<string>::const_iterator o_val = oValues.begin() ; o_val != oValues.end() ; ++o_val ) {
