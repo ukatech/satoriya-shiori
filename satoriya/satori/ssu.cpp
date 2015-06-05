@@ -70,9 +70,11 @@ int ssu::request(
 	SRV result = call_ssu(theCommand, iArguments, oValues);
 	o_result = result.mResultString;
 
-	o_value.clear();
-	for ( deque<string>::const_iterator o_val = oValues.begin() ; o_val != oValues.end() ; ++o_val ) {
-		o_value.push_back(*o_val);
+	if ( ! oValues.empty() ) {
+		o_value.clear();
+		for ( deque<string>::const_iterator o_val = oValues.begin() ; o_val != oValues.end() ; ++o_val ) {
+			o_value.push_back(*o_val);
+		}
 	}
 
 	return result.mReturnCode;

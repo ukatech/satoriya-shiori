@@ -14,6 +14,11 @@ class ShioriPlugins {
 		string	mDllPath;
 		strvec	mPreDefinedArguments;
 		bool	mIsBasic;
+
+		CallData()
+		{
+			mIsBasic = false;
+		}
 	};
 	class DllData {	// DLL‚²‚Æ‚Ìî•ñ
 	public:
