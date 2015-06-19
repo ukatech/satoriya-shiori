@@ -203,7 +203,28 @@ string	Satori::inc_call(
 			for ( int i=1 ; i<iArgv.size() ; ++i )
 				v.push_back( iArgv[i] );
 			string	r;
-			Call(iArgv[0],r);
+			Call(iArgv[0],r,false,false,true);
+			mCallStack.pop();
+			return	r;
+		}
+		return	"";
+	}
+
+	if (iCallName == "vncall")
+	{
+		if (iArgv.size() >= 1) {
+			
+			strvec	v;// = mCallStack.top();
+			string	r;
+
+			for (int i = 1; i < iArgv.size(); ++i){
+				Call(iArgv[i], r);
+				v.push_back(r);
+			}
+//				v.push_back(*GetValue(iArgv[i], ex));
+
+			mCallStack.push(v);		//ここでpushしてはだめ、呼び出し先でA0取るとすると、pushのタイミングはcallの直前。
+			Call(iArgv[0], r, false, false, true);
 			mCallStack.pop();
 			return	r;
 		}
@@ -418,7 +439,7 @@ string* Satori::GetValue(const string &iName,bool &oIsSysValue,bool iIsExpand,bo
 
 
 // 引数に渡されたものを何かの名前であるとし、置き換え対象があれば置き換える。
-bool	Satori::Call(const string& iName, string& oResult, bool for_calc, bool for_non_talk)
+bool	Satori::Call(const string& iName, string& oResult, bool for_calc, bool for_non_talk, bool use_arg_callstack)
 {
 	if ( for_calc ) {
 		for_non_talk = true;
@@ -433,7 +454,7 @@ bool	Satori::Call(const string& iName, string& oResult, bool for_calc, bool for_
 		return false;
 	}
 
-	bool r = CallReal(iName,oResult,for_calc,for_non_talk);
+	bool r = CallReal(iName,oResult,for_calc,for_non_talk, use_arg_callstack);
 	--m_nest_count;
 
 	if ( r && oResult.empty() ) {
@@ -444,7 +465,7 @@ bool	Satori::Call(const string& iName, string& oResult, bool for_calc, bool for_
 	return r;
 }
 
-bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool for_non_talk)
+bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool for_non_talk, bool use_arg_callstack)
 {
 	simple_stack<strvec>::size_type stack_size_before_call = kakko_replace_history.size();
 
@@ -472,6 +493,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 				inner_commands.insert("loop");
 				inner_commands.insert("remember");
 				inner_commands.insert("call");
+				inner_commands.insert("vncall");
 				inner_commands.insert("equal");
 				inner_commands.insert("バイト値");
 				inner_commands.insert("文の数");
@@ -481,28 +503,47 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 				inner_commands.insert("追加単語の全削除");
 			}
 
-			for (set<string>::const_iterator i=mDelimiters.begin() ; i!=mDelimiters.end() ; ++i) {
-				p = strstr_hz(iName.c_str(), i->c_str());
-				if ( p==NULL )
-					continue;
-				string	str(iName.c_str(), p-iName.c_str());
-				if ( mShioriPlugins->find(str) ) {	// 存在確認
-					thePluginName=str;
-					theDelimiter=i;
+			if (use_arg_callstack)
+			{
+				//コールスタックを引数として使う場合、区切り文字が無いので
+				if (mShioriPlugins->find(iName.c_str())) {	// 存在確認
+					thePluginName = iName.c_str();
 					state = SAORI_CALL;
-					break;
 				}
-				else if ( special_commands.find(str)!=special_commands.end()){
-					thePluginName=str;
-					theDelimiter=i;
+				else if (special_commands.find(iName.c_str()) != special_commands.end()){
+					thePluginName = iName.c_str();
 					state = SPECIAL_CALL;
-					break;
 				}
-				else if ( inner_commands.find(str)!=inner_commands.end() ) {
-					thePluginName=str;
-					theDelimiter=i;
+				else if (inner_commands.find(iName.c_str()) != inner_commands.end()) {
+					thePluginName = iName.c_str();
 					state = INC_CALL;
-					break;
+				}
+			}
+			else
+			{
+				for (set<string>::const_iterator i = mDelimiters.begin(); i != mDelimiters.end(); ++i) {
+					p = strstr_hz(iName.c_str(), i->c_str());
+					if (p == NULL)
+						continue;
+					string	str(iName.c_str(), p - iName.c_str());
+					if (mShioriPlugins->find(str)) {	// 存在確認
+						thePluginName = str;
+						theDelimiter = i;
+						state = SAORI_CALL;
+						break;
+					}
+					else if (special_commands.find(str) != special_commands.end()){
+						thePluginName = str;
+						theDelimiter = i;
+						state = SPECIAL_CALL;
+						break;
+					}
+					else if (inner_commands.find(str) != inner_commands.end()) {
+						thePluginName = str;
+						theDelimiter = i;
+						state = INC_CALL;
+						break;
+					}
 				}
 			}
 		}
@@ -515,74 +556,87 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 			_pre_called_=true;
 			strvec	theArguments;
 
-			if ( p!=NULL )// 引数があるなら
+			if (use_arg_callstack && !mCallStack.empty())
 			{
-				assert(theDelimiter != mDelimiters.end());
+				//call / vncall用の処理。
+				//SPECIAL CALL の動作は保証しません
+				theArguments = mCallStack.top();
+			}
+			else
+			{
+				if (p != NULL)// 引数があるなら
+				{
+					assert(theDelimiter != mDelimiters.end());
 
-				if ( state == SPECIAL_CALL ) {
-					int level = 0;
-					get_a_chr(p);
-					const char *p_start = p;
-					while( true ){
-						if ( *p == '\0' ){
-							theArguments.push_back( string(p_start, p-p_start) );
-							break;
-						}
-						string c = get_a_chr(p);
-						if ( c == "（" ) {
-							level++;
-						}
-						if ( c == "）" ) {
-							level--;
-						}
-						if ( level < 0 ) {
-							theArguments.push_back( string(p_start, p-p_start-2) );
-							break;
-						}
-						if ( level == 0 ) {
-							if ( c == *theDelimiter ) {
-								theArguments.push_back( string(p_start, p-p_start-c.size()) );
-								p_start = (char *)p;
+					if (state == SPECIAL_CALL) {
+						int level = 0;
+						get_a_chr(p);
+						const char *p_start = p;
+						while (true){
+							if (*p == '\0'){
+								theArguments.push_back(string(p_start, p - p_start));
+								break;
+							}
+							string c = get_a_chr(p);
+							if (c == "（") {
+								level++;
+							}
+							if (c == "）") {
+								level--;
+							}
+							if (level < 0) {
+								theArguments.push_back(string(p_start, p - p_start - 2));
+								break;
+							}
+							if (level == 0) {
+								if (c == *theDelimiter) {
+									theArguments.push_back(string(p_start, p - p_start - c.size()));
+									p_start = (char *)p;
+								}
 							}
 						}
 					}
-				}else{
-					string argstr = UnKakko(p,false,true);
-					while (true)
-					{
-						p += theDelimiter->size();
-						const char* pdlmt = strstr_hz(p, theDelimiter->c_str());
-						if ( pdlmt==NULL ) {
-							theArguments.push_back(p);
-							break;
+					else{
+						string argstr = UnKakko(p, false, true);
+						while (true)
+						{
+							p += theDelimiter->size();
+							const char* pdlmt = strstr_hz(p, theDelimiter->c_str());
+							if (pdlmt == NULL) {
+								theArguments.push_back(p);
+								break;
+							}
+							theArguments.push_back(string(p, pdlmt - p));
+							p = pdlmt;
 						}
-						theArguments.push_back( string(p,pdlmt-p) );
-						p = pdlmt;
-					}
 
-					if ( mSaoriArgumentCalcMode!=SACM_OFF ) {
-						for ( strvec::iterator i=theArguments.begin() ; i!=theArguments.end() ; ++i ) {
-							if ( i->size()==0 )
-								continue;
-							if ( mSaoriArgumentCalcMode==SACM_AUTO ) {
-								int	c = zen2han(*i).at(0);
-								if ( c!='+' && c!='-' && !(c>='0' && c<='9') )
+						if (mSaoriArgumentCalcMode != SACM_OFF) {
+							for (strvec::iterator i = theArguments.begin(); i != theArguments.end(); ++i) {
+								if (i->size() == 0)
 									continue;
-							}
-
-							string	exp = *i;
-							if ( calc(exp,true) ) {
-								if ( state==SAORI_CALL && aredigits(zen2han(exp)) ) {
-									*i = zen2han(exp);
+								if (mSaoriArgumentCalcMode == SACM_AUTO) {
+									int	c = zen2han(*i).at(0);
+									if (c != '+' && c != '-' && !(c >= '0' && c <= '9'))
+										continue;
 								}
-								else {
-									*i=exp;
+
+								string	exp = *i;
+								if (calc(exp, true)) {
+									if (state == SAORI_CALL && aredigits(zen2han(exp))) {
+										*i = zen2han(exp);
+									}
+									else {
+										*i = exp;
+									}
 								}
 							}
 						}
+
 					}
 				}
 			}
+
+			
 
 			// 引数渡して返値を取得、と。
 			if ( state==SAORI_CALL ) {
