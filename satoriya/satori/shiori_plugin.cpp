@@ -18,7 +18,9 @@
 #include	<sstream>
 using namespace std;
 
+
 //////////DEBUG/////////////////////////
+#include "warning.h"
 #ifdef _WINDOWS
 #ifdef _DEBUG
 #include <crtdbg.h>

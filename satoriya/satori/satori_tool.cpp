@@ -18,6 +18,7 @@
 #include "random.h"
 
 //////////DEBUG/////////////////////////
+#include "warning.h"
 #ifdef _WINDOWS
 #ifdef _DEBUG
 #include <crtdbg.h>
@@ -274,7 +275,7 @@ string	Satori::special_call(
 	bool iIsSecure)
 {
 	if ( iCallName == "when" ) {
-		int result;
+		int result = 0;
 		if ( iArgv.size() < 2 || 3 < iArgv.size() ) {
 			return "引数の個数が正しくありません。";
 		}
@@ -301,7 +302,7 @@ string	Satori::special_call(
 				return UnKakko(iArgv[i].c_str(), for_calc, for_non_talk);
 			}
 			string exp = lhs + UnKakko(iArgv[i].c_str(), for_calc, for_non_talk);
-			int result;
+			int result = 0;
 			if (!calc_argument(exp, result, for_non_talk)) {
 				return "' whenlistの" + itos((i - 1) / 2 + 1) + "番目、式" + exp + "は計算不\x94\x5cでした。";
 			}
@@ -313,9 +314,9 @@ string	Satori::special_call(
 	}
 
 	if ( iCallName == "times" ) {
-		int count;
-		int max;
-		int body;
+		int count = 0;
+		int max = 0;
+		int body = 0;
 		string ret="";
 		char buf[21]; //64bit
 		mLoopCounters.push("0");
@@ -352,8 +353,8 @@ string	Satori::special_call(
 	}
 
 	if ( iCallName == "while" ) {
-		int count;
-		int result;
+		int count = 0;
+		int result = 0;
 		int expression;
 		int body;
 		string ret="";
@@ -391,9 +392,9 @@ string	Satori::special_call(
 	}
 
 	if ( iCallName == "for" ) {
-		int start;
-		int end;
-		int step;
+		int start = 0;
+		int end = 0;
+		int step = 0;
 		int body;
 		char buf[21]; //64bit
 		string ret="";

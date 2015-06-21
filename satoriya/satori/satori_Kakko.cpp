@@ -6,6 +6,7 @@
 #include "random.h"
 
 //////////DEBUG/////////////////////////
+#include "warning.h"
 #ifdef _WINDOWS
 #ifdef _DEBUG
 #include <crtdbg.h>
@@ -43,7 +44,7 @@ void	add_characters(const char* p, int& chars_spoken) {
 	}
 }
 
-#ifndef POSIX
+/*#ifndef POSIX
 static	SYSTEMTIME	DwordToSystemTime(DWORD dw) {
 	SYSTEMTIME	st = { 0, 0, 0, 0, 0, 0, 0, 0 };
 	st.wMilliseconds=WORD(dw%1000); dw/=1000;
@@ -52,7 +53,7 @@ static	SYSTEMTIME	DwordToSystemTime(DWORD dw) {
 	st.wHour=WORD(dw);
 	return	st;
 }
-#endif
+#endif*/
 
 string	Satori::inc_call(
 	const string& iCallName, 

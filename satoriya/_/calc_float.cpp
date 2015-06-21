@@ -3,6 +3,16 @@
 
 #include <ctype.h>
 
+//////////DEBUG/////////////////////////
+#include "warning.h"
+#ifdef _WINDOWS
+#ifdef _DEBUG
+#include <crtdbg.h>
+#define new new( _NORMAL_BLOCK, __FILE__, __LINE__)
+#endif
+#endif
+////////////////////////////////////////
+
 
 typedef	double	VALUE_TYPE;
 
@@ -68,7 +78,7 @@ static bool	make_array(const char*& p, std::vector<calc_element>& oData) {
 		const char*	oprs[] = { // í∑Ç¢Ç‡ÇÃèáÇ…î‰ärÇ∑ÇÈÇÃÅB
 			"&&","||","==","!=","<=",">=","<",">","+","-","*","/"/*,"."*/};
 
-		int	len=0, i;
+		int	len=0, i=0;
 		for (i=0 ; i<sizeof(oprs)/sizeof(oprs[0]) ; ++i) {
 			len = strlen(oprs[i]);
 			if ( strncmp(p, oprs[i], len) == 0 )

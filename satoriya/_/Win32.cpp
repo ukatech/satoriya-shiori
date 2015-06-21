@@ -4,6 +4,16 @@
 #include	<zmouse.h>	// for MouseWheel
 #include	<stdarg.h>	// for va_arg
 
+//////////DEBUG/////////////////////////
+#include "warning.h"
+#ifdef _WINDOWS
+#ifdef _DEBUG
+#include <crtdbg.h>
+#define new new( _NORMAL_BLOCK, __FILE__, __LINE__)
+#endif
+#endif
+////////////////////////////////////////
+
 bool	SetClipBoard(HWND iWnd, const char* iFormat, ...) {
 	assert(iFormat != NULL);
 

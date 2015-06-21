@@ -5,6 +5,15 @@
 // ƒCƒxƒ“ƒg‚ð‘—‚é“z‚Æ‚©
 // http://futaba.sakura.st/sstp.html#notify11
 
+//////////DEBUG/////////////////////////
+#include "warning.h"
+#ifdef _WINDOWS
+#ifdef _DEBUG
+#include <crtdbg.h>
+#define new new( _NORMAL_BLOCK, __FILE__, __LINE__)
+#endif
+#endif
+////////////////////////////////////////
 
 extern bool readSakuraFMO(map<string, strmap>& oSakuraFMOMap);
 

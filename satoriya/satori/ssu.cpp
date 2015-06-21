@@ -12,6 +12,16 @@
 #include <mbctype.h>
 #endif
 
+//////////DEBUG/////////////////////////
+#include "warning.h"
+#ifdef _WINDOWS
+#ifdef _DEBUG
+#include <crtdbg.h>
+#define new new( _NORMAL_BLOCK, __FILE__, __LINE__)
+#endif
+#endif
+////////////////////////////////////////
+
 //================================================================================================
 
 #include	"SaoriHost.h"
@@ -670,7 +680,7 @@ SRV _is_digit(deque<string>& iArguments, deque<string>& oValues) {
 		}
 	}
 
-	int	i;
+	int	i = 0;
 	const char* p = iArguments[0].c_str();
 	int step = 1;
 

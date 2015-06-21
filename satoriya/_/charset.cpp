@@ -5,6 +5,16 @@ using namespace std;
 #include	"charset.h"
 #include    <locale.h>
 
+//////////DEBUG/////////////////////////
+#include "warning.h"
+#ifdef _WINDOWS
+#ifdef _DEBUG
+#include <crtdbg.h>
+#define new new( _NORMAL_BLOCK, __FILE__, __LINE__)
+#endif
+#endif
+////////////////////////////////////////
+
 // ‘å•¶š¬•¶š‚ğ–â‚í‚¸”äŠr
 static const char* stristr(const char* p, const char* substr) {
 	assert(p!=NULL);

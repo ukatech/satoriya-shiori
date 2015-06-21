@@ -1,5 +1,15 @@
 #include	"DisplayMode.h"
 
+//////////DEBUG/////////////////////////
+#include "warning.h"
+#ifdef _WINDOWS
+#ifdef _DEBUG
+#include <crtdbg.h>
+#define new new( _NORMAL_BLOCK, __FILE__, __LINE__)
+#endif
+#endif
+////////////////////////////////////////
+
 // 指定の解像度・色数に一致するDevModeを検索、
 // 存在すればoDevModeに格納して true を返す。見つからなければ false を返す。
 static BOOL	GetDevMode( DEVMODE* oDevMode, DWORD iX, DWORD iY, DWORD iBits ) {

@@ -1,6 +1,16 @@
 #include "SaoriHost.h"
 #include <stdlib.h>
 
+//////////DEBUG/////////////////////////
+#include "warning.h"
+#ifdef _WINDOWS
+#ifdef _DEBUG
+#include <crtdbg.h>
+#define new new( _NORMAL_BLOCK, __FILE__, __LINE__)
+#endif
+#endif
+////////////////////////////////////////
+
 int	SaoriHost::request(
 	const string& i_protocol,
 	const string& i_protocol_version,

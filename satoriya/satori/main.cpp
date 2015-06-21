@@ -4,6 +4,16 @@ using namespace std;
 
 #include <windows.h>
 
+//////////DEBUG/////////////////////////
+#include "warning.h"
+#ifdef _WINDOWS
+#ifdef _DEBUG
+#include <crtdbg.h>
+#define new new( _NORMAL_BLOCK, __FILE__, __LINE__)
+#endif
+#endif
+////////////////////////////////////////
+
 class Ghost {
 	Satori	mSatori;
 public:

@@ -26,6 +26,7 @@
 #endif
 
 //////////DEBUG/////////////////////////
+#include "warning.h"
 #ifdef _WINDOWS
 #ifdef _DEBUG
 #include <crtdbg.h>
@@ -264,7 +265,7 @@ bool	Satori::load(const string& iBaseFolder)
 	//------------------------------------------
 
 	// セーブデータ読み込み
-	bool oldConf = fEncodeSavedata;
+	//bool oldConf = fEncodeSavedata;
 
 	bool loadResult = LoadDictionary(mBaseFolder + "satori_savedata." + (fEncodeSavedata?"sat":"txt"), false);
 	GetSentence("セーブデータ");

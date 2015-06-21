@@ -10,6 +10,7 @@
 #include      <stdarg.h>
 
 //////////DEBUG/////////////////////////
+#include "warning.h"
 #ifdef _WINDOWS
 #ifdef _DEBUG
 #include <crtdbg.h>

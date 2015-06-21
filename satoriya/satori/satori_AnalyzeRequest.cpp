@@ -7,6 +7,7 @@
 #endif
 
 //////////DEBUG/////////////////////////
+#include "warning.h"
 #ifdef _WINDOWS
 #ifdef _DEBUG
 #include <crtdbg.h>
@@ -190,7 +191,7 @@ int	Satori::request(
 	GetSender().validate( fOperationLog && logmode );
 	GetSender().sender() << "--- Operation ---" << endl;
 
-	int status_code;
+	int status_code = 500;
 	if ( mRequestID=="enable_log" || mRequestID=="enable_debug" ) {
 		if ( secure_flag ) {
 			bool flag = false;

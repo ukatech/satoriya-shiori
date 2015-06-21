@@ -1,6 +1,16 @@
 #include "SakuraScript.h"
 #include <mbctype.h> // for _ismbblead
 
+//////////DEBUG/////////////////////////
+#include "warning.h"
+#ifdef _WINDOWS
+#ifdef _DEBUG
+#include <crtdbg.h>
+#define new new( _NORMAL_BLOCK, __FILE__, __LINE__)
+#endif
+#endif
+////////////////////////////////////////
+
 string sakura_script_parts::serialize() const
 {
 	string r;

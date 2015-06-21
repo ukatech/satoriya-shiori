@@ -1,6 +1,17 @@
 #include "ShioriClient.h"
 #include "../_/Sender.h"
 
+//////////DEBUG/////////////////////////
+#include "warning.h"
+#ifdef _WINDOWS
+#ifdef _DEBUG
+#include <crtdbg.h>
+#define new new( _NORMAL_BLOCK, __FILE__, __LINE__)
+#endif
+#endif
+////////////////////////////////////////
+
+
 bool ShioriClient::load(
 	const string& i_sender,
 	const string& i_charset,

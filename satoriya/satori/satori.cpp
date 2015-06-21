@@ -1,6 +1,7 @@
 #include "satori.h"
 
 //////////DEBUG/////////////////////////
+#include "warning.h"
 #ifdef _WINDOWS
 #ifdef _DEBUG
 #include <crtdbg.h>
@@ -13,7 +14,7 @@ const char* gSatoriName = "Satori";
 const char* gSatoriNameW = "ó¢ÅX";
 const char* gSatoriCraftman = "Yagi Kushigahama/The Maintenance Shop";
 const char* gSatoriCraftmanW = "ã˘ÉñïlÇ‚Ç¨/êÆîıî«";
-const char* gSatoriVersion = "phase Mc158-1";
+const char* gSatoriVersion = "phase Mc158-2";
 const char* gShioriVersion = "3.0";
 const char* gSaoriVersion = "1.0";
 
