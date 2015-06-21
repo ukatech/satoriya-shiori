@@ -148,7 +148,7 @@ int	replace(string& str, const char* before, const char* after) {
 	if ( count==0 ) return 0;
 
 	// 中間バッファを確保
-	char*	buf = new char[textLength + diffLength*count + 1];
+	char* buf = new char[textLength + diffLength*count + 1];
 
 	// 置き換えループ
 	const char*	pread = str.c_str();
@@ -170,7 +170,7 @@ int	replace(string& str, const char* before, const char* after) {
 
 	// 過去の領域を解放、バッファの実体を内容とする。
 	str = buf;
-	delete buf;
+	delete[] buf;
 	return	count;
 }
 
@@ -199,7 +199,7 @@ int	erase(string& str, const string& before) {
 	if ( count==0 ) return 0;
 
 	// 中間バッファを確保
-	char*	buf = new char[textLength - beforeLength*count + 1];
+	char* buf = new char[textLength - beforeLength*count + 1];
 
 	// 消去ループ
 	const char*	pread = str.c_str();
@@ -215,7 +215,7 @@ int	erase(string& str, const string& before) {
 
 	// 過去の領域を解放、バッファの実体を内容とする。
 	str = buf;
-	delete buf;
+	delete[] buf;
 	return	count;
 }
 

@@ -205,6 +205,7 @@ int	Satori::request(
 			else {
 				GetSender().validate(flag);
 			}
+			status_code = 200;
 		}
 		else {
 			GetSender().sender() << "local/Local‚Å‚È‚¢‚Ì‚ÅR‚è‚Ü‚µ‚½: ShioriEcho" << endl;

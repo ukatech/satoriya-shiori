@@ -85,7 +85,11 @@ call_console_application(
 			szBuf[dwResult] = '\0'; 
 			o_stdout += szBuf;
 		}
-	} 
+	}
+
+	::CloseHandle(pi.hThread);
+	::CloseHandle(pi.hProcess);
+
 	return	"";
 #endif /* POSIX */
 }
