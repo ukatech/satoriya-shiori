@@ -123,7 +123,7 @@ static VALUE_TYPE	calc_polish(simple_stack<calc_element>& polish) {
 		else if ( el.priority==90 ) {	// ’P€‰‰ŽZŽq
 			assert(stack.size()>=1);
 			if ( el.str=="!" ) stack.push( !stack.pop() );
-			else if ( el.str=="+" ) NULL;
+			else if (el.str == "+") /*NOOP*/;
 			else if ( el.str=="-" ) stack.push( -stack.pop() );
 			else assert(0);
 		}

@@ -352,7 +352,7 @@ WinMain(
 
 	gInstance = hInstance;
 
-	HANDLE	hMutex = ::CreateMutex( NULL, FALSE, "SATORITE_MUTEX_OBJECT" );
+	/*HANDLE hMutex = */::CreateMutex( NULL, FALSE, "SATORITE_MUTEX_OBJECT" );
 	if ( ::GetLastError() == ERROR_ALREADY_EXISTS )
 	{
 		/*FMO	fmo;

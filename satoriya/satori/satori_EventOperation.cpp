@@ -323,13 +323,13 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 		}
 		else {
 			if ( GetRecommendsiteSentence("sakura.recommendsites", script) ) {
-				NULL;
+				/*NOOP*/;
 			}
 			else if ( GetRecommendsiteSentence("kero.recommendsites", script) ) {
-				NULL;
+				/*NOOP*/;
 			}
 			else if ( GetRecommendsiteSentence("sakura.portalsites", script) ) {
-				NULL;
+				/*NOOP*/;
 			}
 			else {
 				script="";

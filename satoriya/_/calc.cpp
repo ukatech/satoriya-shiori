@@ -202,7 +202,7 @@ static bool	calc_polish(simple_stack<calc_element>& polish, string& oResult,bool
 			if ( !aredigits(stack.top()) )
 				return	false;
 			if ( el.str=="!" ) stack.push( itos(!stoi_internal(stack.pop())) );
-			else if ( el.str=="+" ) NULL;
+			else if ( el.str=="+" ) /*NOOP*/;
 			else if ( el.str=="-" ) stack.push( itos(-stoi_internal(stack.pop())) );
 			else assert_special(0);
 		}

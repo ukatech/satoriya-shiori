@@ -1,3 +1,5 @@
+#pragma warning( disable : 4786 ) //「デバッグ情報内での識別子切捨て」
+
 #include	"Sender.h"
 #ifdef POSIX
 #  include      "Utilities.h"
@@ -19,7 +21,6 @@
 #endif
 ////////////////////////////////////////
 
-#pragma warning( disable : 4786 ) //「デバッグ情報内での識別子切捨て」
 
 static const char TAMA_CLASSNAME[] = "TamaWndClass";
 static const char RECV_CLASSNAME[] = "れしば";
