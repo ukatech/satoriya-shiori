@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Express 2013 for Windows Desktop
+# Visual Studio 2013
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "satori", "satori.vcxproj", "{9F595ED0-72D1-4B02-B81A-E72FB17F246D}"
@@ -26,14 +26,14 @@ Global
 		{BE5575DE-8172-4881-8002-639B82C00DB2}.Debug|Win32.Build.0 = Debug|Win32
 		{BE5575DE-8172-4881-8002-639B82C00DB2}.Release|Win32.ActiveCfg = Release|Win32
 		{BE5575DE-8172-4881-8002-639B82C00DB2}.Release|Win32.Build.0 = Release|Win32
-		{BE5575DE-8172-4881-8002-639B82C00DB2}.Template|Win32.ActiveCfg = Template|Win32
-		{BE5575DE-8172-4881-8002-639B82C00DB2}.Template|Win32.Build.0 = Template|Win32
+		{BE5575DE-8172-4881-8002-639B82C00DB2}.Template|Win32.ActiveCfg = Release|Win32
+		{BE5575DE-8172-4881-8002-639B82C00DB2}.Template|Win32.Build.0 = Release|Win32
 		{71289DCD-093C-4C46-868B-05453B1CF5AD}.Debug|Win32.ActiveCfg = Debug|Win32
 		{71289DCD-093C-4C46-868B-05453B1CF5AD}.Debug|Win32.Build.0 = Debug|Win32
 		{71289DCD-093C-4C46-868B-05453B1CF5AD}.Release|Win32.ActiveCfg = Release|Win32
 		{71289DCD-093C-4C46-868B-05453B1CF5AD}.Release|Win32.Build.0 = Release|Win32
-		{71289DCD-093C-4C46-868B-05453B1CF5AD}.Template|Win32.ActiveCfg = Template|Win32
-		{71289DCD-093C-4C46-868B-05453B1CF5AD}.Template|Win32.Build.0 = Template|Win32
+		{71289DCD-093C-4C46-868B-05453B1CF5AD}.Template|Win32.ActiveCfg = Release|Win32
+		{71289DCD-093C-4C46-868B-05453B1CF5AD}.Template|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

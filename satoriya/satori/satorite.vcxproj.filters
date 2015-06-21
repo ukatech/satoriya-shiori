@@ -34,6 +34,9 @@
     <Filter Include="Resource">
       <UniqueIdentifier>{f536da3b-5c3d-44a8-bd39-5475467cb9f9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SSUDirect">
+      <UniqueIdentifier>{f769c42e-66cd-40eb-bf10-c54a03be747c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\_\calc.cpp">
@@ -130,6 +133,12 @@
       <Filter>Satori\phase3</Filter>
     </ClCompile>
     <ClCompile Include="WinMain.cpp" />
+    <ClCompile Include="ssu.cpp">
+      <Filter>SSUDirect</Filter>
+    </ClCompile>
+    <ClCompile Include="..\_\calc_float.cpp">
+      <Filter>_</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\_\Dialog.h">
@@ -215,6 +224,9 @@
     </ClInclude>
     <ClInclude Include="SakuraFMO.h">
       <Filter>Satori\Phase2</Filter>
+    </ClInclude>
+    <ClInclude Include="ssu.h">
+      <Filter>SSUDirect</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

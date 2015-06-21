@@ -33,11 +33,9 @@
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(VCTargetsPath)Microsoft.Cpp.UpgradeFromVC60.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(VCTargetsPath)Microsoft.Cpp.UpgradeFromVC60.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -107,10 +105,9 @@
       <AdditionalIncludeDirectories>..\_;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_WINDOWS;_USRDLL;SATORI_DLL;WINVER=0x400;WIN32;NDEBUG;STRICT;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Release\</AssemblerListingLocation>
-      <PrecompiledHeaderOutputFile>.\Release\satori.pch</PrecompiledHeaderOutputFile>
       <ObjectFileName>.\Release\</ObjectFileName>
       <ProgramDataBaseFileName>.\Release\</ProgramDataBaseFileName>
-      <AdditionalOptions> /Zm800 /GA /QI0f </AdditionalOptions>
+      <PrecompiledHeaderOutputFile>.\Release\satori.pch</PrecompiledHeaderOutputFile>
     </ClCompile>
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -138,101 +135,55 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\_\calc.cpp">
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'"> /Zm800   /Zm800 </AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'"> /Zm800 /GA /QI0f   /Zm800 /GA /QI0f </AdditionalOptions>
     </ClCompile>
+    <ClCompile Include="..\_\calc_float.cpp" />
     <ClCompile Include="..\_\mt19937ar.cpp">
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'"> /Zm800   /Zm800 </AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'"> /Zm800 /GA /QI0f   /Zm800 /GA /QI0f </AdditionalOptions>
     </ClCompile>
     <ClCompile Include="..\_\random.cpp">
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'"> /Zm800   /Zm800 </AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'"> /Zm800 /GA /QI0f   /Zm800 /GA /QI0f </AdditionalOptions>
     </ClCompile>
     <ClCompile Include="..\_\Sender.cpp">
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'"> /Zm800   /Zm800 </AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'"> /Zm800 /GA /QI0f   /Zm800 /GA /QI0f </AdditionalOptions>
     </ClCompile>
     <ClCompile Include="..\_\stltool.cpp">
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'"> /Zm800   /Zm800 </AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'"> /Zm800 /GA /QI0f   /Zm800 /GA /QI0f </AdditionalOptions>
     </ClCompile>
     <ClCompile Include="..\_\Utilities.cpp">
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'"> /Zm800   /Zm800 </AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'"> /Zm800 /GA /QI0f   /Zm800 /GA /QI0f </AdditionalOptions>
     </ClCompile>
     <ClCompile Include="SakuraClient.cpp">
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'"> /Zm800   /Zm800 </AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'"> /Zm800 /GA /QI0f   /Zm800 /GA /QI0f </AdditionalOptions>
     </ClCompile>
     <ClCompile Include="SakuraCS.cpp">
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'"> /Zm800   /Zm800 </AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'"> /Zm800 /GA /QI0f   /Zm800 /GA /QI0f </AdditionalOptions>
     </ClCompile>
     <ClCompile Include="SakuraDLLClient.cpp">
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'"> /Zm800   /Zm800 </AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'"> /Zm800 /GA /QI0f   /Zm800 /GA /QI0f </AdditionalOptions>
     </ClCompile>
     <ClCompile Include="SakuraDLLHost.cpp">
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'"> /Zm800   /Zm800 </AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'"> /Zm800 /GA /QI0f   /Zm800 /GA /QI0f </AdditionalOptions>
     </ClCompile>
     <ClCompile Include="SakuraFMO.cpp">
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'"> /Zm800   /Zm800 </AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'"> /Zm800 /GA /QI0f   /Zm800 /GA /QI0f </AdditionalOptions>
     </ClCompile>
     <ClCompile Include="SaoriClient.cpp">
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'"> /Zm800   /Zm800 </AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'"> /Zm800 /GA /QI0f   /Zm800 /GA /QI0f </AdditionalOptions>
     </ClCompile>
     <ClCompile Include="satori.cpp">
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'"> /Zm800   /Zm800 </AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'"> /Zm800 /GA /QI0f   /Zm800 /GA /QI0f </AdditionalOptions>
     </ClCompile>
     <ClCompile Include="satoriFMO.cpp">
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'"> /Zm800   /Zm800 </AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'"> /Zm800 /GA /QI0f   /Zm800 /GA /QI0f </AdditionalOptions>
     </ClCompile>
     <ClCompile Include="satoriTranslate.cpp">
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'"> /Zm800   /Zm800 </AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'"> /Zm800 /GA /QI0f   /Zm800 /GA /QI0f </AdditionalOptions>
     </ClCompile>
     <ClCompile Include="satori_AnalyzeRequest.cpp">
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'"> /Zm800   /Zm800 </AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'"> /Zm800 /GA /QI0f   /Zm800 /GA /QI0f </AdditionalOptions>
     </ClCompile>
     <ClCompile Include="satori_CreateResponce.cpp">
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'"> /Zm800   /Zm800 </AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'"> /Zm800 /GA /QI0f   /Zm800 /GA /QI0f </AdditionalOptions>
     </ClCompile>
     <ClCompile Include="satori_EventOperation.cpp">
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'"> /Zm800   /Zm800 </AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'"> /Zm800 /GA /QI0f   /Zm800 /GA /QI0f </AdditionalOptions>
     </ClCompile>
     <ClCompile Include="satori_Kakko.cpp">
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'"> /Zm800   /Zm800 </AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'"> /Zm800 /GA /QI0f   /Zm800 /GA /QI0f </AdditionalOptions>
     </ClCompile>
     <ClCompile Include="satori_load_dict.cpp">
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'"> /Zm800   /Zm800 </AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'"> /Zm800 /GA /QI0f   /Zm800 /GA /QI0f </AdditionalOptions>
     </ClCompile>
     <ClCompile Include="satori_load_unload.cpp">
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'"> /Zm800   /Zm800 </AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'"> /Zm800 /GA /QI0f   /Zm800 /GA /QI0f </AdditionalOptions>
     </ClCompile>
     <ClCompile Include="satori_sentence.cpp">
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'"> /Zm800   /Zm800 </AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'"> /Zm800 /GA /QI0f   /Zm800 /GA /QI0f </AdditionalOptions>
     </ClCompile>
     <ClCompile Include="satori_tool.cpp">
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'"> /Zm800   /Zm800 </AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'"> /Zm800 /GA /QI0f   /Zm800 /GA /QI0f </AdditionalOptions>
     </ClCompile>
     <ClCompile Include="shiori_plugin.cpp">
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'"> /Zm800   /Zm800 </AdditionalOptions>
-      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'"> /Zm800 /GA /QI0f   /Zm800 /GA /QI0f </AdditionalOptions>
     </ClCompile>
+    <ClCompile Include="ssu.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\_\FMO.h" />
@@ -256,6 +207,7 @@
     <ClInclude Include="Selector.h" />
     <ClInclude Include="ShioriClient.h" />
     <ClInclude Include="shiori_plugin.h" />
+    <ClInclude Include="ssu.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />

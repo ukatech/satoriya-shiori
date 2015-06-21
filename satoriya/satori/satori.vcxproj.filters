@@ -34,6 +34,9 @@
     <Filter Include="Resource">
       <UniqueIdentifier>{7150f942-9c61-451a-9dc7-1c8bda1b04ef}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SSUDirect">
+      <UniqueIdentifier>{1f9f7975-ba56-48c7-a7d8-14a31e7af1a8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="satori.cpp">
@@ -108,6 +111,12 @@
     <ClCompile Include="..\_\Utilities.cpp">
       <Filter>_</Filter>
     </ClCompile>
+    <ClCompile Include="ssu.cpp">
+      <Filter>SSUDirect</Filter>
+    </ClCompile>
+    <ClCompile Include="..\_\calc_float.cpp">
+      <Filter>_</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="satori.h">
@@ -172,6 +181,9 @@
     </ClInclude>
     <ClInclude Include="..\_\Utilities.h">
       <Filter>_</Filter>
+    </ClInclude>
+    <ClInclude Include="ssu.h">
+      <Filter>SSUDirect</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
