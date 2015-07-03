@@ -139,7 +139,7 @@ public:
 		}
 		
 		strvec argv;
-		//const int n = split(i_value, "A,", argv);
+		const int n = split(i_value, "A,", argv);
 		const string method = (argv.size()>=1) ? argv[0] : "–³Œø";
 		const string span = (argv.size()>=2) ? argv[1] : "‹N“®’†";
 		
