@@ -138,6 +138,7 @@ public:
 			++(ed = st);
 		}
 		
+		//無効、起動中　など複数指定の場合がある
 		strvec argv;
 		const int n = split(i_value, "、,", argv);
 		const string method = (argv.size()>=1) ? argv[0] : "無効";
