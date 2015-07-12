@@ -547,6 +547,7 @@ T	round(T num, const int figure=0) {
 }
 
 string	int2zen(int i);
+string ul2zen(unsigned long i);
 
 int     zen2int(const char *str);
 inline int zen2int(const string &s)
