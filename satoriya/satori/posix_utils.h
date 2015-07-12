@@ -8,7 +8,7 @@
 #include <time.h>
 #include <sys/time.h>
 
-inline time_t posix_get_current_tick() {
+inline unsigned long posix_get_current_tick() {
 	struct timeval ts;
 //	struct timespec {time_t tv_sec; long tv_nsec;} ts;
 //    struct timespec ts;
@@ -24,13 +24,13 @@ inline time_t posix_get_current_tick() {
 
 #else  //POSIX
 
-inline time_t posix_get_current_tick() {
+inline unsigned long posix_get_current_tick() {
     return ::GetTickCount();
 }
 
 #endif //POSIX
 
-inline time_t posix_get_current_sec() {
+inline unsigned long posix_get_current_sec() {
     return posix_get_current_tick() / 1000;
 }
 
