@@ -847,36 +847,36 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	}
 	//累計
 	else if (iName == "累計時") {
-	    time_t sec = posix_get_current_sec() - sec_count_at_load + sec_count_total;
-	    time_t hour = sec / 60 / 60;
-	    oResult = int2zen(hour);
+	    unsigned long sec = posix_get_current_sec() - sec_count_at_load + sec_count_total;
+		unsigned long hour = sec / 60 / 60;
+	    oResult = ul2zen(hour);
 	}
 	else if (iName == "累計分" ) {
-	    time_t sec = posix_get_current_sec() - sec_count_at_load + sec_count_total;
-	    time_t hour = sec / 60 / 60;
+		unsigned long  sec = posix_get_current_sec() - sec_count_at_load + sec_count_total;
+		unsigned long  hour = sec / 60 / 60;
 	    sec -= hour * 60 * 60;
-	    time_t minute = sec / 60;
-	    oResult = int2zen(minute);
+		unsigned long  minute = sec / 60;
+		oResult = ul2zen(minute);
 	}
 	else if (iName == "累計秒") {
-	    time_t sec = posix_get_current_sec() - sec_count_at_load + sec_count_total;
-	    time_t hour = sec / 60 / 60;
+		unsigned long  sec = posix_get_current_sec() - sec_count_at_load + sec_count_total;
+		unsigned long  hour = sec / 60 / 60;
 	    sec -= hour * 60 * 60;
-	    time_t minute = sec / 60;
+		unsigned long  minute = sec / 60;
 	    sec -= minute * 60;
-	    oResult = int2zen(sec);
+		oResult = ul2zen(sec);
 	}
 	else if (iName == "単純累計秒") {
-	    time_t sec = posix_get_current_sec() - sec_count_at_load + sec_count_total;
-	    oResult = int2zen(sec);
+		unsigned long  sec = posix_get_current_sec() - sec_count_at_load + sec_count_total;
+		oResult = ul2zen(sec);
 	}
 	else if (iName == "単純累計分") {
-	    time_t sec = posix_get_current_sec() - sec_count_at_load + sec_count_total;
-	    oResult = int2zen(sec / 60);
+		unsigned long  sec = posix_get_current_sec() - sec_count_at_load + sec_count_total;
+		oResult = ul2zen(sec / 60);
 	}
 	else if (iName == "単純累計時") {
-	    time_t sec = posix_get_current_sec() - sec_count_at_load + sec_count_total;
-	    oResult = int2zen(sec / 60 / 60);
+		unsigned long  sec = posix_get_current_sec() - sec_count_at_load + sec_count_total;
+		oResult = ul2zen(sec / 60 / 60);
 	}
 	else if ( hankaku == "time_t" ) { time_t tm; time(&tm); oResult=int2zen(tm); }
 	else if ( iName == "最終トークからの経過秒" ) { oResult=int2zen(second_from_last_talk); }

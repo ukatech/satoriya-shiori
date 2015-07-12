@@ -812,6 +812,21 @@ string int2zen(int i) {
 	return	zen;
 }
 
+string ul2zen(unsigned long i) {
+	static const char*	ary[] = { "‚O", "‚P", "‚Q", "‚R", "‚S", "‚T", "‚U", "‚V", "‚W", "‚X" };
+
+	string	zen;
+
+	string	han = uitos(i);
+	const char* p = han.c_str();
+
+	for (; *p != '\0'; ++p) {
+		assert(*p >= '0' && *p <= '9');
+		zen += ary[*p - '0'];
+	}
+	return	zen;
+}
+
 int zen2int(const char *str)
 {
 	return stoi_internal(zen2han(str));
