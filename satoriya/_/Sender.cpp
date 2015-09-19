@@ -35,6 +35,7 @@ Sender& GetSender()
 
 Sender::Sender()
 {
+	delay_send_event_max = 0;
 	sm_sender_flag = true;
 	is_do_auto_initialize = false;
 	nest_object::sm_nest = 0;
@@ -102,6 +103,17 @@ bool Sender::auto_init()
 			{
 				return	false;
 			}
+
+			//遅延分の送信を行う。
+			for (std::list<std::list<std::string>>::iterator it = delay_send_list.begin(); it != delay_send_list.end(); it++)
+			{
+				for (std::list<std::string>::iterator st = it->begin(); st != it->end(); st++)
+				{
+					send_to_window(SenderConst::E_SJIS, st->c_str());
+				}
+			}
+			delay_send_list.clear();
+
 		}
 		else
 		{
@@ -115,8 +127,6 @@ bool Sender::auto_init()
 // レシーバウィンドウにメッセージを送信
 bool Sender::send(int mode,const char* iFormat, ...)
 {
-	if ( !auto_init() ) { return false; }
-
 	const int nest = nest_object::count();
 	char *theBuf = buffer_to_send;
 	
@@ -130,6 +140,8 @@ bool Sender::send(int mode,const char* iFormat, ...)
 		}
 		theBuf += nest_limited;
 	}
+
+	
 	
 	va_list	theArgPtr;
 	va_start(theArgPtr, iFormat);
@@ -147,6 +159,13 @@ bool Sender::send(int mode,const char* iFormat, ...)
 		*p++ = '\r';
 		*p++ = '\n';
 	}*/
+
+	if (!auto_init())
+	{
+		
+		add_delay_text(buffer_to_send);	//送れなかったぶんを保存する	//ネスト調整してからな
+		return false;
+	}
 
 	send_to_window(mode,buffer_to_send);
 
@@ -280,4 +299,40 @@ int error_buf::overflow(int c)
 		}
 	}
 	return	c;
+}
+
+void Sender::add_delay_text(const char* text)
+{
+	if (!delay_send_list.empty() && sm_sender_flag)
+	{
+		delay_send_list.rbegin()->push_back(text);
+	}
+}
+
+void Sender::next_event()
+{
+	std::list<std::list<std::string>>::reverse_iterator it = delay_send_list.rbegin();
+	if (it == delay_send_list.rend())
+	{
+		//何も入ってない
+		delay_send_list.push_back(std::list<std::string>());
+	}
+	else
+	{
+		if (it->empty())
+		{
+			return;	//空ならいいや
+		}
+		else
+		{
+			//満タンなら消す。
+			while (delay_send_list.size() > delay_send_event_max)
+			{
+				delay_send_list.pop_front();
+			}
+
+			//別のイベントとして用意
+			delay_send_list.push_back(std::list<std::string>());
+		}
+	}
 }

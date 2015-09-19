@@ -171,6 +171,8 @@ int	Satori::request(
 		/*|| compare_tail(mRequestID, "caption")*/ || compare_tail(mRequestID, "visible")
 		|| compare_head(mRequestID, "menu.") || mRequestID.find(".color.")!=string::npos );
 
+	GetSender().next_event();
+
 	if(fRequestLog && logmode)
 	{
 		GetSender().sender() << "--- Request ---" << endl << mStatusLine << endl; // << iRequest << endl;

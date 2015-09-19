@@ -5,6 +5,7 @@
 
 #include	<iostream>
 #include	<vector>
+#include	<list>
 #include      <stdio.h>
 #include      <wchar.h>
 using namespace std;
@@ -106,6 +107,11 @@ class Sender
 	sender_stream	send_stream;
 	error_stream	err_stream;
 
+	std::list<std::list<std::string>> delay_send_list;
+	int delay_send_event_max;	//遅延送信最大数。
+
+	void add_delay_text(const char* text);
+
 	char buffer_to_send[SenderConst::MAX+SenderConst::NEST_MAX+1];
 	wchar_t buffer_to_sendw[SenderConst::MAX+SenderConst::NEST_MAX+3]; //\r\n分増やす
 
@@ -141,6 +147,17 @@ public:
 
 	void validate(bool i_flag=true) { sm_sender_flag = i_flag; }
 	bool is_validated() { return sm_sender_flag; }
+
+	void next_event();	//遅延送信イベントを更新する
+	void set_delay_save_count(int count)
+	{ 
+		if (count < 0)
+		{
+			count = 0;
+		}
+		delay_send_event_max = count; 
+	}
+	int get_delay_save_count(){ return delay_send_event_max; }
 
 	error_stream&  errsender()  { return err_stream; }
 	sender_stream& sender()     { return send_stream; }

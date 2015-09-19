@@ -1027,6 +1027,11 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 		return true;
 	}
 
+	if (key == "‚ê‚µ‚ÎƒƒOˆê•Û‘¶Œ”" && value.size() > 0)
+	{
+		GetSender().set_delay_save_count(zen2int(value));
+	}
+
 	return	false;
 }
 
