@@ -105,7 +105,7 @@ bool Sender::auto_init()
 			}
 
 			//’x‰„•ª‚Ì‘—M‚ğs‚¤B
-			for (std::list<std::list<std::string>>::iterator it = delay_send_list.begin(); it != delay_send_list.end(); it++)
+			for (std::list< std::list<std::string> >::iterator it = delay_send_list.begin(); it != delay_send_list.end(); it++)
 			{
 				for (std::list<std::string>::iterator st = it->begin(); st != it->end(); st++)
 				{
@@ -311,7 +311,7 @@ void Sender::add_delay_text(const char* text)
 
 void Sender::next_event()
 {
-	std::list<std::list<std::string>>::reverse_iterator it = delay_send_list.rbegin();
+	std::list< std::list<std::string> >::reverse_iterator it = delay_send_list.rbegin();
 	if (it == delay_send_list.rend())
 	{
 		//‰½‚à“ü‚Á‚Ä‚È‚¢

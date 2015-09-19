@@ -107,7 +107,7 @@ class Sender
 	sender_stream	send_stream;
 	error_stream	err_stream;
 
-	std::list<std::list<std::string>> delay_send_list;
+	std::list< std::list<std::string> > delay_send_list;
 	int delay_send_event_max;	//’x‰„‘—MÅ‘å”B
 
 	void add_delay_text(const char* text);
