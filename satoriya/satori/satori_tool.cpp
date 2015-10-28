@@ -790,6 +790,18 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 		return true;
 	}
 	
+	if (key == "なでられ時実行イベント") {
+		if (value == "なでられ時の反応") {
+			bool_of_action_when_ghost_is_stroked = true;
+			variables["なでられ時実行イベント"] = "なでられ時の反応";
+		}
+		else /* if ( value == "デフォルト" ) */ {
+			bool_of_action_when_ghost_is_stroked = false;
+			variables["なでられ時実行イベント"] = "デフォルト";
+		}
+		return true;
+	}
+	
 	if ( key == "なでられ持続秒数") {
 		nade_valid_time_initializer = zen2int(value);
 		return true;
@@ -857,6 +869,7 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 			type_of_communicate_search = COMSEARCH_DEFAULT;
 			variables["コミュニケートの検索方法"] = "里々";
 		}
+		return true;
 	}
 	
 	if ( key == "辞書フォルダ" ) {
