@@ -34,6 +34,7 @@ void	Satori::InitMembers() {
 	insert_nade_talk_at_other_talk=false;
 	nade_valid_time_initializer=2;
 	nade_sensitivity=60;
+	bool_of_action_when_ghost_is_stroked=false;
 
 	koro_count.clear();
 	koro_valid_time=0;

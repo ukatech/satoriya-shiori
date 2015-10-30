@@ -189,6 +189,7 @@ private:
 	bool	insert_nade_talk_at_other_talk;	// 喋ってる最中のなで反応有無
 	int		nade_valid_time_initializer;	// なでられ持続秒数（なでセッションの期限）
 	int		nade_sensitivity;				// なでられ我慢回数（発動までの回数）
+	bool	bool_of_action_when_ghost_is_stroked; //ゴーストがなでられた際の実行イベントの切り替え用
 
 	unsigned int mousedown_time;
 	strvec mousedown_reference_array;

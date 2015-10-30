@@ -261,9 +261,14 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 #endif
 			
 			if ( ret == 0 ) {
-				string	str = mReferences[3]+mReferences[4]+"‚È‚Å‚ç‚ê";
-				if ( talks.is_exist(str) )
-					script=GetSentence(str);
+				if (bool_of_action_when_ghost_is_stroked && talks.is_exist("‚È‚Å‚ç‚êŽž‚Ì”½‰ž")) {
+					script = GetSentence("‚È‚Å‚ç‚êŽž‚Ì”½‰ž");
+				}
+				else {
+					string	str = mReferences[3] + mReferences[4] + "‚È‚Å‚ç‚ê";
+					if (talks.is_exist(str))
+						script = GetSentence(str);
+				}
 				GetSender().sender() << "Talk: " << script << endl;
 			}
 			nade_count.clear();
