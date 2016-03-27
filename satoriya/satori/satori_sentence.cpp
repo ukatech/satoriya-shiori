@@ -613,6 +613,10 @@ const Talk* Satori::GetSentenceInternal(string& ioSentenceName)
 
 		if ( ioSentenceName=="OnTalk" && talks.is_exist("OnTalk") ) {	
 			// OnTalkであり、かつ定義されてる場合
+			if (mReferences.size() < 2)
+			{
+				mReferences.resize(2);
+			}
 			if ( reserved_talk_name.empty() ) {	// 話すべきトークはない＝ランダムトークでいい
 				mRequestMap["Reference0"]=mReferences[0]="0";
 				mRequestMap["Reference1"]=mReferences[1]="";
