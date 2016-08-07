@@ -77,7 +77,7 @@ clean:
 
 $(LIBSATORI): $(LIBSATORI_OBJ)
 	$(LD) -o $@ $(LIBSATORI_OBJ) $(LDFLAGS)
-	$(STRIP) -x $@
+#	$(STRIP) -x $@
 
 #$(LIBSSU): $(LIBSSU_OBJ)
 #	$(LD) -o $@ $(LIBSSU_OBJ) $(LDFLAGS)
