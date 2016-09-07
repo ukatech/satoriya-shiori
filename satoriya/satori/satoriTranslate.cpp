@@ -82,14 +82,18 @@ bool	Satori::Translate(string& ioScript) {
 						)
 					{ 
 						// Onで始まるものはOnChoiceSelectを経由されないため、対象外とする
+						if (!compare_head(id, "script:") && !compare_head(id, "\"script:"))
+						{
+							//script: も対象外
 
-						int	count = question_record.size()+1;
-						question_record[id] = pair<int,string>(count, label);
+							int	count = question_record.size() + 1;
+							question_record[id] = pair<int, string>(count, label);
 
-						// ラベルＩＤに書き戻し
-						opt = label+","+id+byte1_dlmt+label+byte1_dlmt+itos(count);
-						for (int i=2;i<vec.size();++i)
-							opt += string(",") + vec[i];
+							// ラベルＩＤに書き戻し
+							opt = label + "," + id + byte1_dlmt + label + byte1_dlmt + itos(count);
+							for (int i = 2; i < vec.size(); ++i)
+								opt += string(",") + vec[i];
+						}
 					}
 				}
 			}

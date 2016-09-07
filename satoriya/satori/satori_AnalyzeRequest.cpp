@@ -155,7 +155,7 @@ int	Satori::request(
 	if ( compare_head(mRequestID, "OnChoice") ) // OnChoiceSelect/OnChoiceEnter‚Ì—¼•û
 	{
 		strvec	vec;
-		int	ref_no = ( mRequestID=="OnChoiceEnter" )?1:0;
+		int	ref_no = ( mRequestID=="OnChoiceEnter" || mRequestID=="OnChoiceSelectEx" )?1:0;
 		string&	info = mRequestMap[string("Reference")+itos(ref_no)];
 		if ( split(info, byte1_dlmt, vec)==3 ) // \1‹æØ‚è‚Ì‚R•¶š—ñ‚Å‚ ‚é‚È‚ç‚Î
 		{
