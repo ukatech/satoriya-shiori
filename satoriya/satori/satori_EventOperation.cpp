@@ -283,9 +283,6 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 		|| iEvent=="起動" ) {	// 「起動」は「OnBoot」「OnGhostChanged」からリダイレクトされる
 		script=surface_restore_string();
 	}
-	else if ( iEvent=="終了" ) {
-		script = "\\-";
-	}
 	else if ( iEvent=="OnMouseWheel" ) {
 		koro_valid_time = 3;
 		koro_count[ mReferences[4] ] += 1;
@@ -441,8 +438,15 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 		}
 	}
 
-	if ( is_empty_script(script) )
-		return	204;	// 喋らない
+	if ( is_empty_script(script) ) {
+		if ( mRequestID=="OnClose" ) {
+			oResponse["Value"] = "\\-";
+			return 200;
+		}
+		else {
+			return 204;	// 喋らない
+		}
+	}
 
 	// scriptへの付与処理
 	if ( is_speaked_anybody() || is_rnd_talk ) {
@@ -453,7 +457,7 @@ int	Satori::EventOperation(string iEvent, map<string,string> &oResponse)
 		talk_interval_count = ( dist==0 ) ? talk_interval : 
 			(talk_interval-dist)+(random(dist*2));
 	}
-	script += ( iEvent=="OnClose" || iEvent=="終了" ) ? "\\-" : "\\e";
+	script += ( mRequestID=="OnClose" ) ? "\\-" : "\\e";
 
 
 	if ( !mCommunicateFor.empty() ) { // 話しかけの有無
