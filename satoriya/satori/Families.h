@@ -250,7 +250,10 @@ public:
 				}
 				else
 				{
-					hit_point -= (iAndMode ? 999 : 1);	// 一致しなかった、見つからなかった単語
+					if (type != COMSEARCH_LENGTH)//合計文字数でコミュニケートヒットを算出する場合、減点を回避する
+					{
+						hit_point -= (iAndMode ? 999 : 1);	// 一致しなかった、見つからなかった単語
+					}
 				}
 			}
 			if ( hit_point<=4 )
