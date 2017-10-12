@@ -620,10 +620,9 @@ void	Satori::erase_var(const string& key)
 			//else if ( firstChar=='C' ) {
 			//}
 		}
-		else {
-			variables.erase(key);
-		}
 	}
+
+	variables.erase(key);
 }
 
 bool	Satori::system_variable_operation(string key, string value, string* result)
