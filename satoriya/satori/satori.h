@@ -236,7 +236,7 @@ private:
 
 	int		chars_spoken;
 	int		next_wait_value;
-	int		question_num;
+	//int		question_num;
 
 	map<int,bool> surface_changed_before_speak;	// 会話前にサーフェスが切り替え指示があった？
 

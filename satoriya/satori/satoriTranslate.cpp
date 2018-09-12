@@ -89,8 +89,12 @@ bool	Satori::Translate(string& ioScript) {
 							int	count = question_record.size() + 1;
 							question_record[id] = pair<int, string>(count, label);
 
+							//id‚à•ª—£
+							strvec vec_id;
+							split(id,"\1",vec_id);
+
 							// ƒ‰ƒxƒ‹‚h‚c‚É‘‚«–ß‚µ
-							opt = label + "," + id + byte1_dlmt + label + byte1_dlmt + itos(count);
+							opt = label + "," + vec_id[0] + byte1_dlmt + label + byte1_dlmt + itos(count);
 							for (int i = 2; i < vec.size(); ++i)
 								opt += string(",") + vec[i];
 						}

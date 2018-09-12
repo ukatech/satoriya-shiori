@@ -139,7 +139,7 @@ string Satori::SentenceToSakuraScriptExec(const Talk& vec)
 	//実行環境初期化
 	string allresult = "\\1";
 
-	question_num = 0;	// 選択肢番号
+	//question_num = 0;	// 選択肢番号
 	chars_spoken = 0;	// 喋った字数
 	next_wait_value = 0; // ウェイト処理
 
