@@ -91,7 +91,12 @@ bool	Satori::Translate(string& ioScript) {
 
 							//id‚à•ª—£
 							strvec vec_id;
-							split(id,"\1",vec_id);
+							if ( id.size() == 0 ) {
+								vec_id.push_back("");
+							}
+							else {
+								split(id,"\1",vec_id);
+							}
 
 							// ƒ‰ƒxƒ‹‚h‚c‚É‘‚«–ß‚µ
 							opt = label + "," + vec_id[0] + byte1_dlmt + label + byte1_dlmt + itos(count);
