@@ -321,7 +321,11 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName)
 		if ( i->typemark == "–" )
 		{
 			// ƒg[ƒN‚Ìê‡
-			if ( is_for_anchor ) { anchors.push_back(i->name); }
+			if ( is_for_anchor ) {
+				if ( i->name.size() > 0 ) {
+					anchors.push_back(i->name);
+				}
+			}
 			talks.add_element(i->name, i->body, i->condition);
 
 #ifdef _DEBUG
