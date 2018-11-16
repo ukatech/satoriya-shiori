@@ -116,6 +116,7 @@ class Sender
 	wchar_t buffer_to_sendw[SenderConst::MAX+SenderConst::NEST_MAX+3]; //\r\n分増やす
 
 	bool sm_sender_flag;		// 動作有効可否
+	bool sm_buffering_flag;		// バッファリングモード
 	bool is_do_auto_initialize;
 
 	Sender();
@@ -162,6 +163,20 @@ public:
 	error_stream&  errsender()  { return err_stream; }
 	sender_stream& sender()     { return send_stream; }
 
+	void buffering(bool i_flag = true) { sm_buffering_flag = i_flag; }
+
+	void flush();
+	void delete_last_request();
+};
+
+// buffering ON
+class SenderEnableBuffering
+{
+private:
+	Sender& s;
+public:
+	SenderEnableBuffering(Sender& sp) : s(sp) { s.buffering(true); }
+	~SenderEnableBuffering() { s.flush(); s.buffering(false); }
 };
 
 

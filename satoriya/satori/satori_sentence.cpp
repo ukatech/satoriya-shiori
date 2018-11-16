@@ -302,10 +302,12 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 
 			if ( words.size()>=2 ) {
 				string	r;
-				if ( !calculate(words[1], r) )
-					break;
+				if ( !calculate(words[1], r) ) {
+					GetSender().sender() << "計算式が異常なので、無視して続行します。" << endl;
+					continue;
+				}
 				if ( zen2int(r) == 0 ) {
-					GetSender().sender() << "＊計算結果が０だったため、続行します。" << endl;
+					GetSender().sender() << "計算結果が０だったため、続行します。" << endl;
 					continue;
 				}
 			}
@@ -367,6 +369,13 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 				system_variable_operation(key, "", &result);//存在抹消したものがシステム変数かも！
 			}
 			else {
+				if ( words.is_exist(key) ) {
+					GetSender().sender() << "変数「" << key << "」と同じ名前の単語群があります。トラブルの元なので避けましょう。" << endl;
+				}
+				if ( talks.is_exist(key) ) {
+					GetSender().sender() << "変数「" << key << "」と同じ名前の文があります。トラブルの元なので避けましょう。" << endl;
+				}
+
 				bool isOverwritten;
 				bool isSysValue;
 

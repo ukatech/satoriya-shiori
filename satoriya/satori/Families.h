@@ -264,25 +264,26 @@ public:
 			GetSender().sender() << "'" << (**it).first << "' : " << hit_point << "pt ,";
 			
 			if ( hit_point<max_hit_point) {
-				GetSender().sender() << "‹p‰º" << endl;
+				GetSender().sender() << "‹p‰º";
 				continue;
 			} else if ( hit_point == max_hit_point ) {
-				GetSender().sender() << "Œó•â‚Æ‚µ‚Ä’Ç‰Á" << endl;
+				GetSender().sender() << "Œó•â‚Æ‚µ‚Ä’Ç‰Á";
 			} else {
 				max_hit_point = hit_point;
-				GetSender().sender() << "’P“Æ‚ÅÌ—p" << endl;
+				GetSender().sender() << "’P“Æ‚ÅÌ—p";
 				result.clear();
 			}
-			
+			GetSender().sender() << endl;
 			
 			(**it).second.get_elements_pointers(result);
 		}
 		
 		GetSender().sender() << "Œ‹‰Ê: ";
 		if ( result.size() <= 0 ) {
-			GetSender().sender() << "ŠY“–‚È‚µiŒŸõŒó•â‚ ‚èA’PŒêŒŸõ¸”sj" << endl;
+			GetSender().sender() << "ŠY“–‚È‚µiŒŸõŒó•â‚ ‚èA’PŒêŒŸõ¸”sj";
 			return	NULL;
 		}
+		GetSender().sender() << endl;
 		
 		return result[ random(result.size()) ];
 	}

@@ -668,6 +668,11 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	{
 		// 単語を選択した
 		GetSender().sender() << "＠" << iName << endl;
+
+		if ( talks.is_exist(iName) ) {
+			GetSender().sender() << "同じ名前「" << iName << "」の単語群と文があります。トラブルの元なので避けましょう。" << endl;
+		}
+
 		oResult = UnKakko( w->c_str() );
 		//括弧展開後にチェックするようになったのでここは無効化
 		//if ( ! for_non_talk ) {

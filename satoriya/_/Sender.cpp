@@ -36,7 +36,10 @@ Sender& GetSender()
 Sender::Sender()
 {
 	delay_send_event_max = 0;
+
 	sm_sender_flag = true;
+	sm_buffering_flag = false;
+
 	is_do_auto_initialize = false;
 	nest_object::sm_nest = 0;
 #ifndef POSIX
@@ -47,6 +50,8 @@ Sender::Sender()
 
 Sender::~Sender()
 {
+	flush();
+
 	send_to_window(SenderConst::E_END,"");
 }
 
@@ -105,15 +110,7 @@ bool Sender::auto_init()
 			}
 
 			//遅延分の送信を行う。
-			for (std::list< std::list<std::string> >::iterator it = delay_send_list.begin(); it != delay_send_list.end(); it++)
-			{
-				for (std::list<std::string>::iterator st = it->begin(); st != it->end(); st++)
-				{
-					send_to_window(SenderConst::E_SJIS, st->c_str());
-				}
-			}
-			delay_send_list.clear();
-
+			flush();
 		}
 		else
 		{
@@ -140,8 +137,6 @@ bool Sender::send(int mode,const char* iFormat, ...)
 		}
 		theBuf += nest_limited;
 	}
-
-	
 	
 	va_list	theArgPtr;
 	va_start(theArgPtr, iFormat);
@@ -160,19 +155,16 @@ bool Sender::send(int mode,const char* iFormat, ...)
 		*p++ = '\n';
 	}*/
 
-	if (!auto_init())
-	{
-		
-		add_delay_text(buffer_to_send);	//送れなかったぶんを保存する	//ネスト調整してからな
-		return false;
-	}
-
-	send_to_window(mode,buffer_to_send);
-
 	//::OutputDebugString(theBuf);
 	//::OutputDebugString("\n");
 
-	return	false;
+	add_delay_text(buffer_to_send);
+	
+	if ( ! sm_buffering_flag ) {
+		flush();
+	}
+
+	return false;
 }
 
 bool Sender::send_to_window(const int mode,const char* theBuf)
@@ -303,7 +295,10 @@ int error_buf::overflow(int c)
 
 void Sender::add_delay_text(const char* text)
 {
-	if (!delay_send_list.empty() && sm_sender_flag)
+	if (delay_send_list.empty()) {
+		next_event();
+	}
+	if (sm_sender_flag)
 	{
 		delay_send_list.rbegin()->push_back(text);
 	}
@@ -312,6 +307,7 @@ void Sender::add_delay_text(const char* text)
 void Sender::next_event()
 {
 	std::list< std::list<std::string> >::reverse_iterator it = delay_send_list.rbegin();
+
 	if (it == delay_send_list.rend())
 	{
 		//何も入ってない
@@ -336,3 +332,35 @@ void Sender::next_event()
 		}
 	}
 }
+
+void Sender::flush()
+{
+	if (!auto_init())
+	{
+		return;
+	}
+
+	for (std::list< std::list<std::string> >::iterator it = delay_send_list.begin(); it != delay_send_list.end(); it++)
+	{
+		for (std::list<std::string>::iterator st = it->begin(); st != it->end(); st++)
+		{
+			send_to_window(SenderConst::E_SJIS, st->c_str());
+		}
+	}
+
+	//1つだけ残してパージ
+	if ( ! delay_send_list.empty() ) {
+		while ( delay_send_list.size() > 1 ) {
+			delay_send_list.pop_back();
+		}
+		delay_send_list.rbegin()->clear();
+	}
+}
+
+void Sender::delete_last_request()
+{
+	if ( ! delay_send_list.empty() ) {
+		delay_send_list.rbegin()->clear();
+	}
+}
+

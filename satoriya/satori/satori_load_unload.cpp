@@ -110,6 +110,8 @@ string	Satori::getversionlist(const string& iBaseFolder)
 
 bool	Satori::load(const string& iBaseFolder)
 {
+	GetSender().next_event();
+
 	setlocale(LC_ALL, "Japanese");
 #ifdef _WINDOWS
 	_setmbcp(_MB_CP_LOCALE);
@@ -330,6 +332,8 @@ bool	Satori::load(const string& iBaseFolder)
 	diet_script(on_loaded_script);
 
 	GetSender().sender() << "loaded." << endl;
+
+	GetSender().flush();
 	return	true;
 }
 
@@ -341,6 +345,7 @@ bool	Satori::load(const string& iBaseFolder)
 #  include <time.h>
 #endif
 bool	Satori::Save(bool isOnUnload) {
+	GetSender().next_event();
 
 	// メンバ変数を里々変数化
 	for (map<int, string>::iterator it=reserved_talk.begin(); it!=reserved_talk.end() ; ++it)
@@ -442,6 +447,7 @@ bool	Satori::Save(bool isOnUnload) {
 
 //---------------------------------------------------------------------------
 bool	Satori::unload() {
+	GetSender().next_event();
 
 	// ファイルに保存
 	if ( is_dic_loaded ) {
@@ -453,6 +459,8 @@ bool	Satori::unload() {
 	mShioriPlugins->unload();
 
 	GetSender().sender() << "■SATORI::Unload ---------------------" << endl;
+	GetSender().flush();
+
 	return	true;
 }
 

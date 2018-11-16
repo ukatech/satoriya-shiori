@@ -218,7 +218,7 @@ static bool select_dict_and_load_to_vector(const string& iFileName, strvec& oFil
 		}
 		else {
 			if ( warnFileName ) {
-				GetSender().sender() << "  " << satfile << "is not exist.";
+				GetSender().sender() << "  " << satfile << "is not exist." << endl;
 			}
 			file = txtfile;
 		}
@@ -229,7 +229,7 @@ static bool select_dict_and_load_to_vector(const string& iFileName, strvec& oFil
 		}
 		else {
 			if ( warnFileName ) {
-				GetSender().sender() << "  " << txtfile << "is not exist.";
+				GetSender().sender() << "  " << txtfile << "is not exist." << endl;
 			}
 			file = satfile;
 			decodeMe = true;
@@ -239,9 +239,10 @@ static bool select_dict_and_load_to_vector(const string& iFileName, strvec& oFil
 	GetSender().sender() << "  loading " << get_file_name(file);
 	if ( !strvec_from_file(oFileBody, file) )
 	{
-		GetSender().sender() << "... failed." << endl;
+		GetSender().sender() << "... failed.";
 		return	false;
 	}
+	GetSender().sender() << endl;
 
 	if ( decodeMe ) {
 		// ˆÃ†‰»‚ð‰ðœ

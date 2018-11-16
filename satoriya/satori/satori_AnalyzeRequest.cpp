@@ -26,6 +26,8 @@ int	Satori::request(
 	string& o_protocol_version,
 	strpairvec& o_data)
 {
+	SenderEnableBuffering seb(GetSender());
+
 	//-------------------------------------------------
 	// リクエスト単位のクラスメンバを初期化
 
@@ -166,14 +168,15 @@ int	Satori::request(
 	}
 
 	// ログについて色々
-	bool	logmode = !( mRequestID=="OnSurfaceChange" || mRequestID=="OnSecondChange"
-		|| mRequestID=="OnMouseMove" || mRequestID=="OnTranslate" 
-		/*|| compare_tail(mRequestID, "caption")*/ || compare_tail(mRequestID, "visible")
+	bool log_disable_soft = ( mRequestID=="OnSurfaceChange" || mRequestID=="OnSecondChange" || mRequestID=="OnMinuteChange"
+		|| mRequestID=="OnMouseMove" || mRequestID=="OnTranslate");
+
+	bool log_disable_hard = ( /*compare_tail(mRequestID, "caption") || */compare_tail(mRequestID, "visible")
 		|| compare_head(mRequestID, "menu.") || mRequestID.find(".color.")!=string::npos );
 
 	GetSender().next_event();
 
-	if(fRequestLog && logmode)
+	if(fRequestLog)
 	{
 		GetSender().sender() << "--- Request ---" << endl << mStatusLine << endl; // << iRequest << endl;
 		for(strmap::const_iterator i=mRequestMap.begin() ; i!=mRequestMap.end() ; ++i)
@@ -190,7 +193,6 @@ int	Satori::request(
 	secure_flag = ( it!=mRequestMap.end() && stricmp(it->second.c_str(), "local")==0 );
 
 	// メイン処理
-	GetSender().validate( fOperationLog && logmode );
 	GetSender().sender() << "--- Operation ---" << endl;
 
 	int status_code = 500;
@@ -411,11 +413,22 @@ int	Satori::request(
 	}
 
 	GetSender().validate();
-	if(fResponseLog && logmode)
+	if(fResponseLog)
 	{
 		GetSender().sender() << "--- Response ---" << endl << mResponseMap << endl;
 	}
 	mResponseMap.clear();
+
+	if ( log_disable_hard ) {
+		GetSender().delete_last_request();
+	}
+	else if ( log_disable_soft ) {
+		if ( status_code != 200 ) {
+			GetSender().delete_last_request();
+		}
+	}
+
+	GetSender().flush();
 
 	//--------------------------------------------------------------------
 
@@ -428,6 +441,8 @@ int	Satori::request(
 		unload();
 		load(tmp);
 		GetSender().sender() << "■■reloaded." << endl;
+
+		GetSender().flush();
 	}
 
 	return	status_code;
