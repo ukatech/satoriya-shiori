@@ -35,6 +35,9 @@ protected:
 	BOOL		m_fModeless;
 
 public:
+	Dialog() { }
+	virtual ~Dialog() { }
+
 	// コントロールアクセスヘルパー
 	
 	HWND	toHWND( int id ) { return ::GetDlgItem( m_hDlg, id ); }

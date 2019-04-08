@@ -38,7 +38,7 @@ namespace SenderConst {
 	};
 };
 
-class sender_buf : public std::streambuf
+class sender_buf : public std::basic_streambuf<char>
 {
 public:
 	sender_buf() { line[0]='\0'; pos=0; }
@@ -49,7 +49,7 @@ private:
 	int		pos;
 };
 
-class error_buf : public std::streambuf
+class error_buf : public std::basic_streambuf<char>
 {
 public:
 	error_buf() { line[0]='\0'; pos=0; log_mode=false; }
@@ -71,18 +71,18 @@ private:
 	std::vector<string> log_data;
 };
 
-class sender_stream : public std::ostream
+class sender_stream : public std::basic_ostream<char>
 {
 	sender_buf buf;
 public:
-	sender_stream() : std::ostream( &buf ) {}
+	sender_stream() : std::basic_ostream<char>( &buf ) {}
 };
 
-class error_stream : public std::ostream
+class error_stream : public std::basic_ostream<char>
 {
 	error_buf buf;
 public:
-	error_stream() : std::ostream( &buf ) {}
+	error_stream() : std::basic_ostream<char>( &buf ) {}
 
 	void set_log_mode(bool is_log) { buf.set_log_mode(is_log); }
 	bool get_log_mode(void) { return buf.get_log_mode(); }

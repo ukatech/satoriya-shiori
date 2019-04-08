@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -18,13 +18,13 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -136,52 +136,28 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\_\calc.cpp">
-
-
     </ClCompile>
     <ClCompile Include="..\_\calc_float.cpp">
-
-
     </ClCompile>
     <ClCompile Include="..\_\mt19937ar.cpp">
-
-
     </ClCompile>
     <ClCompile Include="..\_\random.cpp">
-
-
     </ClCompile>
     <ClCompile Include="..\_\Sender.cpp">
-
-
     </ClCompile>
     <ClCompile Include="..\_\stltool.cpp">
-
-
     </ClCompile>
     <ClCompile Include="..\_\Utilities.cpp">
-
-
     </ClCompile>
     <ClCompile Include="SakuraCS.cpp">
-
-
     </ClCompile>
     <ClCompile Include="SakuraDLLHost.cpp">
-
-
     </ClCompile>
     <ClCompile Include="SaoriHost.cpp">
-
-
     </ClCompile>
     <ClCompile Include="ssu.cpp">
-
-
     </ClCompile>
     <ClCompile Include="TimeCommands.cpp">
-
-
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

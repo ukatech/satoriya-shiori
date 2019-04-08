@@ -32,6 +32,10 @@ class UserWindow : public Window
 {
 	HWND m_next_window;
 
+public:
+	UserWindow() { }
+	virtual ~UserWindow() { }
+
 	virtual	bool	OnCreate(LPCREATESTRUCT iCreateStruct)
 	{
 		m_next_window = ::SetClipboardViewer(mWnd);
@@ -76,6 +80,11 @@ class UserWindow : public Window
 class	UserThread : public Thread
 {
 	UserWindow w;
+
+public:
+	UserThread() { }
+	virtual ~UserThread() { }
+
 	virtual	DWORD	ThreadMain()
 	{
 		return w.run(
@@ -212,6 +221,9 @@ class UserDialog : public Dialog {
 	UserThread	ut;
 	Font m_font;
 public:
+	UserDialog() { }
+	virtual ~UserDialog() { }
+
 	// イベントハンドラ
 	virtual	BOOL	OnInitDialog( HWND hwndFocus, LONG lInitParam ) {
 		::SetWindowText(m_hDlg, SATORITE_WINDOW_CAPTION().c_str());
