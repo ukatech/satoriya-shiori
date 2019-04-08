@@ -35,9 +35,9 @@ const char escaper::sm_escape_sjis_code[3]={(char)0x9e,(char)0xff,0x00};
 // 引数文字列を受け取り、メンバに格納し、「エスケープされた文字列」を返す。
 string escaper::insert(const string& i_str)
 {
-	std::vector<string>::iterator it = find(m_id2str.begin(),m_id2str.end(),i_str);
+	std::vector<string>::iterator it = std::find(m_id2str.begin(),m_id2str.end(),i_str);
 	if ( it != m_id2str.end() ) {
-		return string() + sm_escape_sjis_code + itos(distance(m_id2str.begin(),it)) + " ";
+		return string() + sm_escape_sjis_code + itos(std::distance(m_id2str.begin(),it)) + " ";
 	}
 	else {
 		m_id2str.push_back(i_str);

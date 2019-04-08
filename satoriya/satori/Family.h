@@ -166,7 +166,7 @@ public:
 		typename CondsMap::iterator it = m_conds_map.find(i_condition);
 		if ( it == m_conds_map.end() ) { return; }
 		Elements& lt = it->second;
-		lt.erase(remove(lt.begin(),lt.end(),i_t),lt.end());
+		lt.erase(std::remove(lt.begin(),lt.end(),i_t),lt.end());
 		if ( lt.empty() ) {
 			m_conds_map.erase(it);
 		}

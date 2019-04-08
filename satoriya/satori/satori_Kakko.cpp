@@ -270,7 +270,7 @@ string	Satori::inc_call(
 				if ( it != mAppendedWords.end() ) { //しかも「単語の追加」で追加したもので…
 					std::vector<Word> &setword = it->second;
 					
-					std::vector<Word>::iterator itrm = remove(setword.begin(),setword.end(),iArgv[1]);
+					std::vector<Word>::iterator itrm = std::remove(setword.begin(),setword.end(),iArgv[1]);
 					if ( itrm != setword.end() ) {
 						setword.erase(itrm,setword.end());
 						f->delete_element(iArgv[1]);

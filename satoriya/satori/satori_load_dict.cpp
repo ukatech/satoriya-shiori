@@ -350,7 +350,7 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName)
 	}
 
 	if ( is_for_anchor ) {
-		sort(anchors.begin(),anchors.end(),satori_anchor_compare);
+		std::sort(anchors.begin(),anchors.end(),satori_anchor_compare);
 	}
 
 	//GetSender().sender() << "@@@talk:" << talks.count_all() << ", word:" << words.count_all() << std::endl;

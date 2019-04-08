@@ -981,7 +981,7 @@ SRV _lsimg(std::deque<string>& iArguments, std::deque<string>& oValues)
 		return "0";
 	do {
 		string lo(wfd.cFileName);
-		transform(lo.begin(), lo.end(), lo.begin(), tolower);
+		std::transform(lo.begin(), lo.end(), lo.begin(), tolower);
 		if (compare_tail(lo, ".png") ||
 			compare_tail(lo, ".jpg") ||
 			compare_tail(lo, ".jpe") ||

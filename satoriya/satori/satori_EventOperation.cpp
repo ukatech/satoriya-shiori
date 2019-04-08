@@ -197,7 +197,7 @@ int	Satori::EventOperation(string iEvent, std::map<string,string> &oResponse)
 
 	if ( !script.empty() ) {
 	}
-	else if ( iEvent=="OnAnchorSelect" && find(anchors.begin(),anchors.end(),mReferences[0])!=anchors.end() ) {
+	else if ( iEvent=="OnAnchorSelect" && std::find(anchors.begin(),anchors.end(),mReferences[0])!=anchors.end() ) {
 		// OnAnchorSelectがきたとき、ref0がdicAnchorの文名の場合は
 		// イベントが定義されている場合でもシステム側を優先する。
 		script=GetSentence(mReferences[0]);
