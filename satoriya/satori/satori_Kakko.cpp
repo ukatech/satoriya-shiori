@@ -69,7 +69,7 @@ string	Satori::inc_call(
 			return bytes;
 		}
 		else {
-			GetSender().sender() << "error: 'バイト値' : 引数が不正です。" << endl;
+			GetSender().sender() << "error: 'バイト値' : 引数が不正です。" << std::endl;
 			return "";
 		}
 	}
@@ -92,13 +92,13 @@ string	Satori::inc_call(
 			}
 		}
 		else {
-			GetSender().sender() << "error: '合成単語群' : 引数が不正です。" << endl;
+			GetSender().sender() << "error: '合成単語群' : 引数が不正です。" << std::endl;
 			return "";
 		}
 	}
 
 	if ( !iIsSecure ) {
-		GetSender().sender() << "local/Localでないので蹴りました: " << iCallName << endl;
+		GetSender().sender() << "local/Localでないので蹴りました: " << iCallName << std::endl;
 		return	"";
 	}
 
@@ -107,11 +107,11 @@ string	Satori::inc_call(
 			string	result, key=iArgv[0], value=iArgv[1];
 
 			if ( aredigits(zen2han(key)) ) {
-				GetSender().sender() << "＄" << key << "　数字のみの変数名は扱えません." << endl;
+				GetSender().sender() << "＄" << key << "　数字のみの変数名は扱えません." << std::endl;
 				erase_var(key);	// 存在抹消
 			}
 			else if ( value=="" ) {
-				GetSender().sender() << "＄" << key << "／cleared." << endl;
+				GetSender().sender() << "＄" << key << "／cleared." << std::endl;
 				erase_var(key);	// 存在抹消
 			}
 			else {
@@ -120,7 +120,7 @@ string	Satori::inc_call(
 				string *pstr = GetValue(key,isSysValue,true,&isOverwritten);
 				
 				GetSender().sender() << "＄" << key << "＝" << value << "／" << 
-					(isOverwritten ? "written." : "overwritten.")<< endl;
+					(isOverwritten ? "written." : "overwritten.")<< std::endl;
 
 				if ( pstr ) { *pstr = value; }
 				system_variable_operation(key, value, &result);
@@ -248,15 +248,15 @@ string	Satori::inc_call(
 			if ( f == NULL || false == f->is_exist_element(iArgv[1]) )
 			{
 				mAppendedWords[ iArgv[0] ].push_back( words.add_element(iArgv[0],iArgv[1],Condition()) );
-				GetSender().sender() << "単語群「" << iArgv[0] << "」に単語「" << iArgv[1] << "」が追加されました。" << endl;
+				GetSender().sender() << "単語群「" << iArgv[0] << "」に単語「" << iArgv[1] << "」が追加されました。" << std::endl;
 			}
 			else
 			{
-				GetSender().sender() << "単語群「" << iArgv[0] << "」に単語「" << iArgv[1] << "」は既に存在します。" << endl;
+				GetSender().sender() << "単語群「" << iArgv[0] << "」に単語「" << iArgv[1] << "」は既に存在します。" << std::endl;
 			}
 		}
 		else {
-			GetSender().sender() << "error: '単語の追加' : 引数が不正です。" << endl;
+			GetSender().sender() << "error: '単語の追加' : 引数が不正です。" << std::endl;
 		}
 		return	"";
 	}
@@ -266,11 +266,11 @@ string	Satori::inc_call(
 		{
 			Family<Word>* f = words.get_family(iArgv[0]);
 			if ( f && f->is_exist_element(iArgv[1]) ) { //すでに存在し…
-				map<string, vector<Word> >::iterator it = mAppendedWords.find(iArgv[0]);
+				std::map<string, std::vector<Word> >::iterator it = mAppendedWords.find(iArgv[0]);
 				if ( it != mAppendedWords.end() ) { //しかも「単語の追加」で追加したもので…
-					vector<Word> &setword = it->second;
+					std::vector<Word> &setword = it->second;
 					
-					vector<Word>::iterator itrm = remove(setword.begin(),setword.end(),iArgv[1]);
+					std::vector<Word>::iterator itrm = remove(setword.begin(),setword.end(),iArgv[1]);
 					if ( itrm != setword.end() ) {
 						setword.erase(itrm,setword.end());
 						f->delete_element(iArgv[1]);
@@ -278,7 +278,7 @@ string	Satori::inc_call(
 						if ( setword.empty() ) {
 							mAppendedWords.erase(it);
 						}
-						GetSender().sender() << "単語群「" << iArgv[0] << "」の単語「" << iArgv[1] << "」が削除されました。" << endl;
+						GetSender().sender() << "単語群「" << iArgv[0] << "」の単語「" << iArgv[1] << "」が削除されました。" << std::endl;
 						if ( f->empty() ) {
 							words.erase(iArgv[0]);
 						}
@@ -287,7 +287,7 @@ string	Satori::inc_call(
 			}
 		}
 		else {
-			GetSender().sender() << "error: '追加単語の削除' : 引数が不正です。" << endl;
+			GetSender().sender() << "error: '追加単語の削除' : 引数が不正です。" << std::endl;
 		}
 		return	"";
 	}
@@ -297,15 +297,15 @@ string	Satori::inc_call(
 		{
 			Family<Word>* f = words.get_family(iArgv[0]);
 			if ( f ) { //すでに存在し…
-				map<string, vector<Word> >::iterator it = mAppendedWords.find(iArgv[0]);
+				std::map<string, std::vector<Word> >::iterator it = mAppendedWords.find(iArgv[0]);
 				if ( it != mAppendedWords.end() ) { //しかも「単語の追加」で追加したもので…
-					vector<Word> &setword = it->second;
-					for ( vector<Word>::const_iterator its = setword.begin(); its != setword.end() ; ++its ) {
+					std::vector<Word> &setword = it->second;
+					for ( std::vector<Word>::const_iterator its = setword.begin(); its != setword.end() ; ++its ) {
 						f->delete_element(*its);
 					}
 					mAppendedWords.erase(it);
 
-					GetSender().sender() << "単語群「" << iArgv[0] << "」に追加された単語は全て削除されました。" << endl;
+					GetSender().sender() << "単語群「" << iArgv[0] << "」に追加された単語は全て削除されました。" << std::endl;
 				}
 				if ( f->empty() ) {
 					words.erase(iArgv[0]);
@@ -313,7 +313,7 @@ string	Satori::inc_call(
 			}
 		}
 		else {
-			GetSender().sender() << "error: '単語の削除' : 引数が不正です。" << endl;
+			GetSender().sender() << "error: '単語の削除' : 引数が不正です。" << std::endl;
 		}
 		return	"";
 	}
@@ -449,7 +449,7 @@ bool	Satori::Call(const string& iName, string& oResult, bool for_calc, bool for_
 	++m_nest_count;
 
 	if ( m_nest_limit > 0 && m_nest_count > m_nest_limit ) {
-		GetSender().sender() << "呼び出し回数超過：" << iName << endl;
+		GetSender().sender() << "呼び出し回数超過：" << iName << std::endl;
 		oResult = "（" + iName + "）";
 		--m_nest_count;
 		return false;
@@ -475,7 +475,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	// SAORI対応, 内蔵関数呼び出しもここで
 	{
 		string	thePluginName="";
-		set<string>::const_iterator theDelimiter = mDelimiters.end();
+		std::set<string>::const_iterator theDelimiter = mDelimiters.end();
 
 		const char* p = NULL;
 		enum { NO_CALL, SAORI_CALL, INC_CALL, SPECIAL_CALL } state = NO_CALL;
@@ -485,9 +485,9 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 			state = SAORI_CALL;
 		} else {
 
-			static set<string> inner_commands;
+			static std::set<string> inner_commands;
 			if ( inner_commands.empty() ) {
-				// 本当はmap<name, function>だなー　むー
+				// 本当はstd::map<name, function>だなー　むー
 				inner_commands.insert("set");
 				inner_commands.insert("nop");
 				inner_commands.insert("sync");
@@ -522,7 +522,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 			}
 			else
 			{
-				for (set<string>::const_iterator i = mDelimiters.begin(); i != mDelimiters.end(); ++i) {
+				for (std::set<string>::const_iterator i = mDelimiters.begin(); i != mDelimiters.end(); ++i) {
 					p = strstr_hz(iName.c_str(), i->c_str());
 					if (p == NULL)
 						continue;
@@ -667,10 +667,10 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	else if ( (w = words.select(iName, *this)) != NULL )
 	{
 		// 単語を選択した
-		GetSender().sender() << "＠" << iName << endl;
+		GetSender().sender() << "＠" << iName << std::endl;
 
 		if ( talks.is_exist(iName) ) {
-			GetSender().sender() << "同じ名前「" << iName << "」の単語群と文があります。トラブルの元なので避けましょう。" << endl;
+			GetSender().sender() << "同じ名前「" << iName << "」の単語群と文があります。トラブルの元なので避けましょう。" << std::endl;
 		}
 
 		oResult = UnKakko( w->c_str() );
@@ -704,7 +704,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		/* 展開後に処理される
 		if ( !is_speaked(speaker) ) {
 			if ( surface_changed_before_speak.find(speaker) == surface_changed_before_speak.end() ) {
-				surface_changed_before_speak.insert(map<int,bool>::value_type(speaker,is_speaked_anybody()) );
+				surface_changed_before_speak.insert(std::map<int,bool>::value_type(speaker,is_speaked_anybody()) );
 			}
 		}*/
 	}
@@ -896,7 +896,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 #ifndef POSIX
 	else if ( compare_head(iName, "ウィンドウハンドル") && iName.length() > 18 ) {
 		int character = zen2int(iName.c_str()+18);
-		map<int,HWND>::const_iterator found = characters_hwnd.find(character);
+		std::map<int,HWND>::const_iterator found = characters_hwnd.find(character);
 		if ( found != characters_hwnd.end() ) {
 			oResult = uitos((unsigned int)found->second);
 		}
@@ -1030,7 +1030,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 
 	else if ( compare_tail(iName, "の存在") ) {
 		updateGhostsInfo();	// ゴースト情報を更新
-		vector<strmap>::iterator i=ghosts_info.begin();
+		std::vector<strmap>::iterator i=ghosts_info.begin();
 		for ( ; i!=ghosts_info.end() ; ++i )
 			if ( compare_head(iName, (*i)["name"]) )
 				break;
@@ -1040,7 +1040,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	}
 	else if ( compare_tail(iName, "のサーフェス") ) {
 		updateGhostsInfo();	// ゴースト情報を更新
-		vector<strmap>::iterator i=ghosts_info.begin();
+		std::vector<strmap>::iterator i=ghosts_info.begin();
 		for ( ; i!=ghosts_info.end() ; ++i )
 			if ( compare_head(iName, (*i)["name"]) ) {
 				oResult = (*i)["sakura.surface"];
@@ -1086,7 +1086,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		else if ( name=="EventTalk" )
 		{
 			int	n=0;
-			for ( map< string, Family<Talk> >::const_iterator it = talks.compatible().begin() ; it != talks.compatible().end() ; ++it )
+			for ( std::map< string, Family<Talk> >::const_iterator it = talks.compatible().begin() ; it != talks.compatible().end() ; ++it )
 				if ( compare_head(it->first, "On") )
 					n += it->second.size_of_element();
 			oResult = int2zen(n);
@@ -1094,7 +1094,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		else if ( name=="OtherTalk" )
 		{
 			int	n=0;
-			for ( map< string, Family<Talk> >::const_iterator it = talks.compatible().begin() ; it != talks.compatible().end() ; ++it )
+			for ( std::map< string, Family<Talk> >::const_iterator it = talks.compatible().begin() ; it != talks.compatible().end() ; ++it )
 				if ( !compare_head(it->first, "On") && !it->first.empty() )
 					n += it->second.size_of_element();
 			oResult = int2zen(n);
@@ -1102,16 +1102,16 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		else if ( name=="Line" )
 		{
 			int	n=0;
-			for ( map< string, Family<Talk> >::const_iterator it = talks.compatible().begin() ; it != talks.compatible().end() ; ++it )
+			for ( std::map< string, Family<Talk> >::const_iterator it = talks.compatible().begin() ; it != talks.compatible().end() ; ++it )
 			{
-				vector<const Talk*> v;
+				std::vector<const Talk*> v;
 				it->second.get_elements_pointers(v);
-				for ( vector<const Talk*>::const_iterator el_it = v.begin() ; el_it != v.end() ; ++el_it )
+				for ( std::vector<const Talk*>::const_iterator el_it = v.begin() ; el_it != v.end() ; ++el_it )
 				{
 					n += (*el_it)->size();
 				}
 			}
-			for ( map< string, Family<Word> >::const_iterator it = words.compatible().begin() ; it != words.compatible().end() ; ++it )
+			for ( std::map< string, Family<Word> >::const_iterator it = words.compatible().begin() ; it != words.compatible().end() ; ++it )
 			{
 				n += it->second.size_of_element();
 			}
@@ -1120,11 +1120,11 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		else if ( name=="Parenthesis" )
 		{
 			int	n=0;
-			for ( map< string, Family<Talk> >::const_iterator it = talks.compatible().begin() ; it != talks.compatible().end() ; ++it )
+			for ( std::map< string, Family<Talk> >::const_iterator it = talks.compatible().begin() ; it != talks.compatible().end() ; ++it )
 			{
-				vector<const Talk*> v;
+				std::vector<const Talk*> v;
 				it->second.get_elements_pointers(v);
-				for ( vector<const Talk*>::const_iterator el_it = v.begin() ; el_it != v.end() ; ++el_it )
+				for ( std::vector<const Talk*>::const_iterator el_it = v.begin() ; el_it != v.end() ; ++el_it )
 				{
 					for ( Talk::const_iterator tk_it = (*el_it)->begin() ; tk_it != (*el_it)->end() ; ++tk_it )
 					{
@@ -1132,11 +1132,11 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 					}
 				}
 			}
-			for ( map< string, Family<Word> >::const_iterator it = words.compatible().begin() ; it != words.compatible().end() ; ++it )
+			for ( std::map< string, Family<Word> >::const_iterator it = words.compatible().begin() ; it != words.compatible().end() ; ++it )
 			{
-				vector<const Word*> v;
+				std::vector<const Word*> v;
 				it->second.get_elements_pointers(v);
-				for ( vector<const Word*>::const_iterator el_it = v.begin() ; el_it != v.end() ; ++el_it )
+				for ( std::vector<const Word*>::const_iterator el_it = v.begin() ; el_it != v.end() ; ++el_it )
 				{
 					n += count(**el_it, "（");
 				}
@@ -1145,13 +1145,13 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		}
 	}
 	else if ( iName=="次のトーク" ) {
-		map<int,string>::const_iterator it = reserved_talk.find(1);
+		std::map<int,string>::const_iterator it = reserved_talk.find(1);
 		if ( it != reserved_talk.end() ) 
 			oResult = it->second;
 	}
 	else if ( compare_head(iName,"次から") && compare_tail(iName,"回目のトーク") ) {
 		int	count = zen2int( string(iName.c_str()+6, iName.length()-6-12) );
-		map<int,string>::const_iterator it = reserved_talk.find(count);
+		std::map<int,string>::const_iterator it = reserved_talk.find(count);
 		if ( it != reserved_talk.end() ) {
 			oResult = it->second;
 		}
@@ -1159,7 +1159,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	else if ( compare_head(iName, "トーク「") && compare_tail(iName, "」の予\x96\xf1有無") ) { // 「約」には\が含まれる。
 		string	str(iName, 8, iName.length()-8-12);
 		oResult = "0";
-		for (map<int, string>::const_iterator it=reserved_talk.begin(); it!=reserved_talk.end() ; ++it) {
+		for (std::map<int, string>::const_iterator it=reserved_talk.begin(); it!=reserved_talk.end() ; ++it) {
 			if ( str == it->second ) {
 				oResult = "1";
 				break;
@@ -1189,13 +1189,13 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		//括弧展開後にチェックするようになったのでここは無効化
 		//speaked_speaker.insert(speaker);
 		//chars_spoken += oResult.size();
-		GetSender().sender() << "（" << iName << "） not found." << endl;
+		GetSender().sender() << "（" << iName << "） not found." << std::endl;
 		return	false;
 	}
 
 	if ( stack_size_before_call != 0 && stack_size_before_call <= kakko_replace_history.size() ) {
 		kakko_replace_history[stack_size_before_call-1].push_back(oResult);
 	}
-	GetSender().sender() << "（" << iName << "）→" << oResult << "" << endl;
+	GetSender().sender() << "（" << iName << "）→" << oResult << "" << std::endl;
 	return	true;
 }

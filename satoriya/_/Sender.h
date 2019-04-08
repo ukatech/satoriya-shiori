@@ -8,7 +8,7 @@
 #include	<list>
 #include      <stdio.h>
 #include      <wchar.h>
-using namespace std;
+using std::string;
 
 #ifndef POSIX
 #include <windows.h> // for HWND
@@ -38,7 +38,7 @@ namespace SenderConst {
 	};
 };
 
-class sender_buf : public streambuf
+class sender_buf : public std::streambuf
 {
 public:
 	sender_buf() { line[0]='\0'; pos=0; }
@@ -49,7 +49,7 @@ private:
 	int		pos;
 };
 
-class error_buf : public streambuf
+class error_buf : public std::streambuf
 {
 public:
 	error_buf() { line[0]='\0'; pos=0; log_mode=false; }
@@ -71,18 +71,18 @@ private:
 	std::vector<string> log_data;
 };
 
-class sender_stream : public ostream
+class sender_stream : public std::ostream
 {
 	sender_buf buf;
 public:
-	sender_stream() : ostream( &buf ) {}
+	sender_stream() : std::ostream( &buf ) {}
 };
 
-class error_stream : public ostream
+class error_stream : public std::ostream
 {
 	error_buf buf;
 public:
-	error_stream() : ostream( &buf ) {}
+	error_stream() : std::ostream( &buf ) {}
 
 	void set_log_mode(bool is_log) { buf.set_log_mode(is_log); }
 	bool get_log_mode(void) { return buf.get_log_mode(); }

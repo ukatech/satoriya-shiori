@@ -17,11 +17,11 @@ typedef enum {
 template<typename T>
 class Families
 {
-    typedef typename map< string, Family<T> >::iterator iterator;
-    typedef typename map< string, Family<T> >::const_iterator const_iterator;
+    typedef typename std::map< string, Family<T> >::iterator iterator;
+    typedef typename std::map< string, Family<T> >::const_iterator const_iterator;
 	
-	set<string> m_clearOC_at_talk_end;
-	map< string, Family<T> > m_elements;
+	std::set<string> m_clearOC_at_talk_end;
+	std::map< string, Family<T> > m_elements;
 	
 public:
 	//Families() { cout << "Families()" << endl; }
@@ -39,7 +39,7 @@ public:
 	}
 	
 	// 過去互換の提供
-	const map< string, Family<T> >& compatible() const
+	const std::map< string, Family<T> >& compatible() const
 	{
 		return m_elements;
 	}
@@ -88,7 +88,7 @@ public:
 	// トークの終了を通知。重複制御期間が「トーク中」であるFamilyの重複回避制御をクリアする
 	void handle_talk_end()
 	{
-		for ( set<string>::iterator it = m_clearOC_at_talk_end.begin() ; it != m_clearOC_at_talk_end.end() ; ++it )
+		for ( std::set<string>::iterator it = m_clearOC_at_talk_end.begin() ; it != m_clearOC_at_talk_end.end() ; ++it )
 		{
 			get_family(*it)->clear_OC();
 		}
@@ -132,7 +132,7 @@ public:
 			st = m_elements.find(i_name);
 			if ( st == m_elements.end() )
 			{
-				GetSender().sender() << "'" << i_name << "' は存在しません。" << endl;
+				GetSender().sender() << "'" << i_name << "' は存在しません。" << std::endl;
 				return;
 			}
 			++(ed = st);
@@ -163,31 +163,31 @@ public:
 			else if ( method=="無効" )
 				family.set_OC(new OC_Random<const T*>);
 			else
-				GetSender().sender() << "重複回避制御の方法'" << method << "' は定義されていません。" << endl;
+				GetSender().sender() << "重複回避制御の方法'" << method << "' は定義されていません。" << std::endl;
 			
 			if ( span == "トーク中" )
 				m_clearOC_at_talk_end.insert(it->first);
 			else if ( span == "起動中")
 				m_clearOC_at_talk_end.erase(it->first);
 			else
-				GetSender().sender() << "重複回避の期間'" << method << "' は定義されていません。" << endl;
+				GetSender().sender() << "重複回避の期間'" << method << "' は定義されていません。" << std::endl;
 			
 		}
 	}
 	
 	const Talk* communicate_search(const string& iSentence, bool iAndMode, FamilyComSearchType type) const
 	{
-		GetSender().sender() << "文名の検索を開始" << endl;
-		GetSender().sender() << "　対象文字列: " << iSentence << endl;
-		GetSender().sender() << "　全単語一致モード: " << (iAndMode?"true":"false") << endl;
+		GetSender().sender() << "文名の検索を開始" << std::endl;
+		GetSender().sender() << "　対象文字列: " << iSentence << std::endl;
+		GetSender().sender() << "　全単語一致モード: " << (iAndMode?"true":"false") << std::endl;
 
-		vector<const_iterator> elem_vector;
+		std::vector<const_iterator> elem_vector;
 
 		std::string::size_type sentenceNamePos = find_hz(iSentence,"「");
 
 		bool isComNameMode = sentenceNamePos != string::npos;
 		if ( isComNameMode ) {
-			GetSender().sender() << "　「発見、名前限定モードに移行" << endl;
+			GetSender().sender() << "　「発見、名前限定モードに移行" << std::endl;
 			for ( const_iterator it = m_elements.begin() ; it != m_elements.end() ; ++it )
 			{
 				if ( it->second.is_comname() ) {
@@ -204,7 +204,7 @@ public:
 			}
 		}
 		else {
-			GetSender().sender() << "　「なし、通常コミュ探索モードに移行" << endl;
+			GetSender().sender() << "　「なし、通常コミュ探索モードに移行" << std::endl;
 			for ( const_iterator it = m_elements.begin() ; it != m_elements.end() ; ++it )
 			{
 				if ( ! it->second.is_comname() ) {
@@ -215,13 +215,13 @@ public:
 		}
 
 		if ( elem_vector.size() <= 0 ) {
-			GetSender().sender() << "結果: 該当なし（そもそも候補なし）" << endl;
+			GetSender().sender() << "結果: 該当なし（そもそも候補なし）" << std::endl;
 			return	NULL;
 		}
 		
-		vector<const Talk*>	result;
+		std::vector<const Talk*>	result;
 		int	max_hit_point=0;
-		for ( typename vector<const_iterator>::const_iterator it = elem_vector.begin() ; it != elem_vector.end() ; ++it )
+		for ( typename std::vector<const_iterator>::const_iterator it = elem_vector.begin() ; it != elem_vector.end() ; ++it )
 		{
 			// 語群を全角スペースで区切る
 			const strvec &words = (**it).second.get_namevec();
@@ -273,7 +273,7 @@ public:
 				GetSender().sender() << "単独で採用";
 				result.clear();
 			}
-			GetSender().sender() << endl;
+			GetSender().sender() << std::endl;
 			
 			(**it).second.get_elements_pointers(result);
 		}
@@ -283,7 +283,7 @@ public:
 			GetSender().sender() << "該当なし（検索候補あり、単語検索失敗）";
 			return	NULL;
 		}
-		GetSender().sender() << endl;
+		GetSender().sender() << std::endl;
 		
 		return result[ random(result.size()) ];
 	}

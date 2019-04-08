@@ -18,36 +18,36 @@
 #endif
 ////////////////////////////////////////
 
-ostream& operator<<(ostream& o, const strvec& i) {
+std::ostream& operator<<(std::ostream& o, const strvec& i) {
 	for ( strvec::const_iterator p=i.begin() ; p!=i.end() ; ++p )
-		o << *p << endl;
+		o << *p << std::endl;
 	return	o;
 }
 
-ostream& operator<<(ostream& o, const strmap& i) {
+std::ostream& operator<<(std::ostream& o, const strmap& i) {
 	for ( strmap::const_iterator p=i.begin() ; p!=i.end() ; ++p )
-		o << p->first << "=" << p->second << endl;
+		o << p->first << "=" << p->second << std::endl;
 	return	o;
 }
 
-ostream& operator<<(ostream& o, const strintmap& i) {
+std::ostream& operator<<(std::ostream& o, const strintmap& i) {
 	for ( strintmap::const_iterator p=i.begin() ; p!=i.end() ; ++p )
-		o << p->first << "=" << p->second << endl;
+		o << p->first << "=" << p->second << std::endl;
 	return	o;
 }
-istream& operator>>(istream& i, strvec& o) {
+std::istream& operator>>(std::istream& i, strvec& o) {
 	string	str;
 	while ( getline(i, str) )
 		o.push_back(str);
 	return	i;
 }
-istream& operator>>(istream& i, strmap& o) {
+std::istream& operator>>(std::istream& i, strmap& o) {
 	string	key, value;
 	while ( getline(i, key, '=') && getline(i, value) )
 		o[key] = value;
 	return	i;
 }
-istream& operator>>(istream& i, strintmap& o) {
+std::istream& operator>>(std::istream& i, strintmap& o) {
 	string	key, value;
 	while ( getline(i, key, '=') && getline(i, value) )
 		o[key] = stoi_internal(value);
@@ -55,19 +55,19 @@ istream& operator>>(istream& i, strintmap& o) {
 }
 
 // ストリームから、デリミタまでを読み込んでstringに格納
-bool	getline(istream& i, string& o, int delimtier) {
+bool	getline(std::istream& i, string& o, int delimtier) {
 	if ( i.peek() == EOF )
 		return	false;	// ファイルの終端ですがな。
 
 	int	c;	// 一文字保持
-	stringstream	line;	// 行を格納するストリーム
+	std::stringstream	line;	// 行を格納するストリーム
 	while ( (c=i.get()) != delimtier && c!=EOF)
 		line.put(c);
 	o=line.str();
 	return	true;
 }
 
-bool	getline(istream& i, int& o, int delimtier) {
+bool	getline(std::istream& i, int& o, int delimtier) {
 	if ( i.peek() == EOF )
 		return	false;	// ファイルの終端ですがな。
 
@@ -233,7 +233,7 @@ int	count(const string& str, const string& target) {
 
 // ファイルの存在を確認
 bool	is_exist_file(const string& iFileName) {
-	ifstream	in(iFileName.c_str());
+	std::ifstream	in(iFileName.c_str());
 	if ( !in.is_open() )
 		return	false;
 	in.close();
@@ -247,12 +247,12 @@ bool	strvec_from_file(
 	o.reserve(1000);
 
 	assert(!iFileName.empty());
-	ifstream	in(iFileName.c_str());
+	std::ifstream	in(iFileName.c_str());
 	if ( !in.is_open() )
 		return	false;
 	while ( in.peek() != EOF ) {
 		// １行読み込み
-		stringstream	line;
+		std::stringstream	line;
 		int	c;
 		while ( (c=in.get()) != '\n' && c!=EOF) {
 		    if (c != '\r') {
@@ -270,12 +270,12 @@ bool	strvec_to_file(
 	const string& iFileName)
 {
 	assert(!iFileName.empty());
-	ofstream	out(iFileName.c_str());
+	std::ofstream	out(iFileName.c_str());
 	if ( !out.is_open() )
 		return	false;
 	strvec::const_iterator	it;
 	for (it=vec.begin() ; it!=vec.end() ; ++it)
-		out << *it << endl;
+		out << *it << std::endl;
 	out.close();
 	return	true;
 }
@@ -283,7 +283,7 @@ bool	strvec_to_file(
 
 bool	strmap_from_file(strmap& o, const string& iFileName, const string& dlmt, const string& front_comment_mark)
 {
-	ifstream	in(iFileName.c_str());
+	std::ifstream	in(iFileName.c_str());
 	if ( !in.is_open() )
 		return	false;
 	while ( in.peek() != EOF )
@@ -319,18 +319,18 @@ bool	strmap_from_file(strmap& o, const string& iFileName, const string& dlmt, co
 
 bool	strmap_to_file(const strmap& oMap, const string& iFileName, const string& dlmt)
 {
-	ofstream	out(iFileName.c_str());
+	std::ofstream	out(iFileName.c_str());
 	if ( !out.is_open() )
 		return	false;
 	strmap::const_iterator	it;
 	for (it=oMap.begin() ; it!=oMap.end() ; ++it)
-		out << it->first << dlmt << it->second << endl;
+		out << it->first << dlmt << it->second << std::endl;
 	out.close();
 	return	true;
 }
 
 bool	string_from_file(string& o, const string& iFileName) {
-	ifstream	in(iFileName.c_str());
+	std::ifstream	in(iFileName.c_str());
 	if ( !in.is_open() )
 		return	false;
 	/*in.seekg(0, ios::end);
@@ -344,7 +344,7 @@ bool	string_from_file(string& o, const string& iFileName) {
 }
 
 bool	string_to_file(const string& i, const string& iFileName) {
-	ofstream	out(iFileName.c_str());
+	std::ofstream	out(iFileName.c_str());
 	if ( !out.is_open() )
 		return	false;
 	out.write(i.c_str(), i.size());
@@ -625,7 +625,7 @@ bool	inimap::load(const string& iFileName) {
 	this->clear();
 
 	// ファイルを開く
-	ifstream	in(iFileName.c_str());
+	std::ifstream	in(iFileName.c_str());
 	if ( !in.is_open() )
 		return	false;
 	// 現在のセクションへのイテレータ
@@ -637,7 +637,7 @@ bool	inimap::load(const string& iFileName) {
 		string	str;	// このループで扱う行文字列
 
 		{// １行読み込んでstrに格納
-			stringstream	line;
+			std::stringstream	line;
 			int	c;
 			while ( (c=in.get()) != '\n' && c!=EOF) {
 			    if (c != '\r') {
@@ -656,7 +656,7 @@ bool	inimap::load(const string& iFileName) {
 			if ( end_pos == string::npos )
 				return	false;	// 閉じカッコの無い大カッコを発見、異常とみなす
 			string	section_name = str.substr(1, end_pos-1); // セクション名取得
-			pair<inimap::iterator, bool> result = 
+			std::pair<inimap::iterator, bool> result = 
 				this->insert( inimap::value_type(section_name, strmap()) ); // mapに挿入
 			theSection = result.first;	// 現在のセクションを指すイテレータを取得
 		}
@@ -669,7 +669,7 @@ bool	inimap::load(const string& iFileName) {
 			// theSectionが未設定のままここに来たときは無名のセクションを設定
 			if (theSection == this->end())
 			{
-				pair<inimap::iterator, bool> result = 
+				std::pair<inimap::iterator, bool> result = 
 					this->insert( inimap::value_type("", strmap()) ); // mapに挿入
 				theSection = result.first;	// 現在のセクションを指すイテレータを取得
 			}
@@ -687,15 +687,15 @@ bool	inimap::load(const string& iFileName) {
 bool	inimap::save(const string& iFileName) const {
 
 	// ファイルを開く
-	ofstream	out(iFileName.c_str());
+	std::ofstream	out(iFileName.c_str());
 	if ( !out.is_open() )
 		return	false;
 
 	for (inimap::const_iterator i=this->begin() ; i!=this->end() ; ++i)
 	{
-		out << "[" << i->first << "]" << endl;	// [SectionName]を出力
+		out << "[" << i->first << "]" << std::endl;	// [SectionName]を出力
 		for (strmap::const_iterator j=i->second.begin() ; j!=i->second.end() ; ++j)
-			out << j->first << "=" << j->second << endl;	// key=valueを出力
+			out << j->first << "=" << j->second << std::endl;	// key=valueを出力
 	}
 
 	return	true;
@@ -707,7 +707,7 @@ bool	inivec::load(const string& iFileName) {
 	this->clear();
 
 	// ファイルを開く
-	ifstream	in(iFileName.c_str());
+	std::ifstream	in(iFileName.c_str());
 	if ( !in.is_open() )
 		return	false;
 	// 現在のセクションへのイテレータ

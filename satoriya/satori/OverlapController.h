@@ -28,7 +28,7 @@ public:
 
 	// 候補から一つを選択
 	// 候補は一つ以上あることが保証されている。
-	virtual T select(const list<T>&) =0;
+	virtual T select(const std::list<T>&) =0;
 
 	virtual int type(void) = 0;
 
@@ -36,9 +36,9 @@ public:
 	// イベント通知ハンドラ
 
 	// 候補が追加された
-	virtual void on_add(const list<T>& i_candidates, typename list<T>::const_iterator i_it) {}
+	virtual void on_add(const std::list<T>& i_candidates, typename std::list<T>::const_iterator i_it) {}
 	// 候補が消去されようとしている
-	virtual void on_erase(const list<T>& i_candidates, typename list<T>::const_iterator i_it) {}
+	virtual void on_erase(const std::list<T>& i_candidates, typename std::list<T>::const_iterator i_it) {}
 	// 重複回避状況を初期化
 	virtual void on_clear() {}
 };
@@ -55,9 +55,9 @@ public:
 	}
 
 	// 候補から一つを選択
-	virtual T select(const list<T>& i_candidates)
+	virtual T select(const std::list<T>& i_candidates)
 	{
-		typename list<T>::const_iterator it = i_candidates.begin();
+		typename std::list<T>::const_iterator it = i_candidates.begin();
 		advance( it, random(i_candidates.size()) );
 		return *it;
 	}
@@ -68,8 +68,8 @@ public:
 template<typename T>
 class OC_NonOverlap : public OverlapController<T>
 {
-	set<T> m_used;
-	set<T> m_unused;
+	std::set<T> m_used;
+	std::set<T> m_unused;
 	T m_last;
 
 public:
@@ -81,7 +81,7 @@ public:
 	}
 
 	// 候補から一つを選択
-	virtual T select(const list<T>&)
+	virtual T select(const std::list<T>&)
 	{
 		for ( ; ; ) {
 			// 「未使用」が空っぽなら「使用済み」を全て「未使用」にする。
@@ -91,7 +91,7 @@ public:
 			}
 
 			// 「未使用」からランダムに一つを選び出す
-			typename set<T>::iterator it = m_unused.begin();
+			typename std::set<T>::iterator it = m_unused.begin();
 			advance( it, random(m_unused.size()) );
 
 			// 選んだ一つを「未使用」から「使用済み」に移す
@@ -110,13 +110,13 @@ public:
 	}
 
 	// 候補が追加された
-	virtual void on_add(const list<T>&, typename list<T>::const_iterator i_it)
+	virtual void on_add(const std::list<T>&, typename std::list<T>::const_iterator i_it)
 	{
 		m_unused.insert(*i_it);
 	}
 
 	// 候補が消去されようとしている
-	virtual void on_erase(const list<T>&, typename list<T>::const_iterator i_it)
+	virtual void on_erase(const std::list<T>&, typename std::list<T>::const_iterator i_it)
 	{
 		// 現在どっちにあるかわからないので、両方に指示を出す
 		m_unused.erase(*i_it);
@@ -127,7 +127,7 @@ public:
 	// 重複回避状況を初期化
 	virtual void on_clear() 
 	{
-		for ( typename set<T>::const_iterator it = m_used.begin() ; it != m_used.end() ; ++it )
+		for ( typename std::set<T>::const_iterator it = m_used.begin() ; it != m_used.end() ; ++it )
 		{
 			m_unused.insert(*it);
 		}
@@ -151,7 +151,7 @@ public:
 	}
 
 	// 候補から一つを選択
-	virtual T select(const list<T>& i_candidates)
+	virtual T select(const std::list<T>& i_candidates)
 	{
 		// 一個しか無いなら回避のしようがない
 		if ( i_candidates.size() == 1 )
@@ -160,7 +160,7 @@ public:
 		}
 		
 		// ランダムに一つ選ぶ
-		typename list<T>::const_iterator it = i_candidates.begin();
+		typename std::list<T>::const_iterator it = i_candidates.begin();
 		advance( it, random(i_candidates.size()) );
 		
 		if ( m_last != INVALID_VALUE )
@@ -180,7 +180,7 @@ public:
 	}
 
 	// 候補が消去されようとしている
-	virtual void on_erase(const list<T>& i_candidates, typename list<T>::const_iterator i_it)
+	virtual void on_erase(const std::list<T>& i_candidates, typename std::list<T>::const_iterator i_it)
 	{
 		if ( m_last == *i_it ) 
 			m_last = INVALID_VALUE;
@@ -209,9 +209,9 @@ public:
 	}
 
 	// 候補から一つを選択
-	virtual T select(const list<T>& i_candidates)
+	virtual T select(const std::list<T>& i_candidates)
 	{
-		typename list<T>::const_iterator it = i_candidates.begin();
+		typename std::list<T>::const_iterator it = i_candidates.begin();
 
 		if ( m_last != INVALID_VALUE )
 		{
@@ -236,7 +236,7 @@ public:
 	}
 
 	// 候補が消去されようとしている
-	virtual void on_erase(const list<T>& i_candidates, typename list<T>::const_iterator& i_it)
+	virtual void on_erase(const std::list<T>& i_candidates, typename std::list<T>::const_iterator& i_it)
 	{
 		if ( m_last == *i_it ) 
 		{
@@ -270,9 +270,9 @@ public:
 	}
 
 	// 候補から一つを選択
-	virtual T select(const list<T>& i_candidates)
+	virtual T select(const std::list<T>& i_candidates)
 	{
-		typename list<T>::const_reverse_iterator it = i_candidates.rbegin();
+		typename std::list<T>::const_reverse_iterator it = i_candidates.rbegin();
 		if ( m_last != INVALID_VALUE )
 		{
 			while ( m_last != *it )
@@ -296,7 +296,7 @@ public:
 	}
 
 	// 候補が消去されようとしている
-	virtual void on_erase(const list<T>& i_candidates, typename list<T>::const_iterator& i_it)
+	virtual void on_erase(const std::list<T>& i_candidates, typename std::list<T>::const_iterator& i_it)
 	{
 		if ( m_last == *i_it ) 
 		{

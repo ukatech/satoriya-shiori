@@ -146,7 +146,7 @@ string	Satori::GetWord(const string& name) {
 	return "いぬ";
 }
 
-void Satori::surface_restore_string_addfunc(string &str,map<int, int>::const_iterator &i)
+void Satori::surface_restore_string_addfunc(string &str, std::map<int, int>::const_iterator &i)
 {
 	if ( i->first >= 2 ) {
 		if ( ! mIsMateria ) {
@@ -174,9 +174,9 @@ string	Satori::surface_restore_string()
 	string	str="";
 	
 	if ( srestore == SR_FORCE ) {	
-		for ( map<int, int>::const_iterator i=default_surface.begin() ; i!=default_surface.end() ; ++i ) {
+		for (std::map<int, int>::const_iterator i=default_surface.begin() ; i!=default_surface.end() ; ++i ) {
 			if ( surface_changed_before_speak.size() ) {
-				map<int,bool>::const_iterator found = surface_changed_before_speak.find(i->first);
+				std::map<int,bool>::const_iterator found = surface_changed_before_speak.find(i->first);
 				if ( found == surface_changed_before_speak.end() || found->second ) {
 					surface_restore_string_addfunc(str,i);
 				}
@@ -187,7 +187,7 @@ string	Satori::surface_restore_string()
 		}
 	}
 	else {
-		for ( map<int, int>::const_iterator i=default_surface.begin() ; i!=default_surface.end() ; ++i ) {
+		for (std::map<int, int>::const_iterator i=default_surface.begin() ; i!=default_surface.end() ; ++i ) {
 			if ( surface_changed_before_speak.find(i->first) == surface_changed_before_speak.end() ) {
 				surface_restore_string_addfunc(str,i);
 			}
@@ -202,13 +202,13 @@ string	Satori::surface_restore_string()
 // ある名前により指定される「全ての」URL及び付帯情報、のリスト
 bool	Satori::GetURLList(const string& name, string& result)
 {
-	list<const Talk*> tg;
+	std::list<const Talk*> tg;
 	talks.select_all(name,*this,tg);
 	
 	const string sep_1 = "\1";
 	const string sep_2 = "\2";
 	
-	for ( list<const Talk*>::iterator it = tg.begin() ; it != tg.end() ; ++it )
+	for (std::list<const Talk*>::iterator it = tg.begin() ; it != tg.end() ; ++it )
 	{
 		const Talk& vec = **it;
 		if ( vec.size() < 1 )
@@ -233,10 +233,10 @@ bool	Satori::GetURLList(const string& name, string& result)
 // ある名前により指定されるURL中の指定サイトのスクリプトを取得
 bool	Satori::GetRecommendsiteSentence(const string& name, string& result)
 {
-	list<const Talk*> tg;
+	std::list<const Talk*> tg;
 	talks.select_all(name,*this,tg);
 	
-	for ( list<const Talk*>::iterator it = tg.begin() ; it != tg.end() ; ++it )
+	for (std::list<const Talk*>::iterator it = tg.begin() ; it != tg.end() ; ++it )
 	{
 		const Talk& t = **it;
 		if ( t.size() >= 4 && t[1]==mReferences[1] )
@@ -249,7 +249,7 @@ bool	Satori::GetRecommendsiteSentence(const string& name, string& result)
 }
 
 strmap*	Satori::find_ghost_info(string name) {
-	vector<strmap>::iterator i=ghosts_info.begin();
+	std::vector<strmap>::iterator i=ghosts_info.begin();
 	for ( ; i!=ghosts_info.end() ; ++i )
 		if ( (*i)["name"] == name )
 			return	&(*i);
@@ -466,7 +466,7 @@ string	Satori::KakkoSection(const char*& p,bool for_calc,bool for_non_talk)
 	if ( for_calc ) {
 		for_non_talk = true;
 	}
-	for ( set<string>::iterator it = special_commands.begin(); it != special_commands.end(); ++it) {
+	for (std::set<string>::iterator it = special_commands.begin(); it != special_commands.end(); ++it) {
 		if ( strncmp(it->c_str(), p, it->size()) == 0 ) {
 			pp = p + it->size();
 			string c = get_a_chr(pp);
@@ -901,7 +901,7 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 		while ( reserved_talk.find(count) != reserved_talk.end() )
 			++count;
 		reserved_talk[count] = value;
-		GetSender().sender() << "次回のランダムトークが「" << value << "」に予\x96\xf1されました。" << endl;
+		GetSender().sender() << "次回のランダムトークが「" << value << "」に予\x96\xf1されました。" << std::endl;
 		return true;
 	}
 	
@@ -909,13 +909,13 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 		variables.erase(key);
 		int	count = zen2int( string(key.c_str()+6, key.length()-6-12) );
 		if ( count<=0 ) {
-			GetSender().sender() << "トーク予\x96\xf1、設定値がヘンです。" << endl;
+			GetSender().sender() << "トーク予\x96\xf1、設定値がヘンです。" << std::endl;
 		}
 		else {
 			while ( reserved_talk.find(count) != reserved_talk.end() )
 				++count;
 			reserved_talk[count] = value;
-			GetSender().sender() << count << "回後のランダムトークが「" << value << "」に予\x96\xf1されました。" << endl;
+			GetSender().sender() << count << "回後のランダムトークが「" << value << "」に予\x96\xf1されました。" << std::endl;
 		}
 		return true;
 	}
@@ -924,7 +924,7 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 		if ( value=="＊" )
 			reserved_talk.clear();
 		else
-			for (map<int, string>::iterator it=reserved_talk.begin(); it!=reserved_talk.end() ; )
+			for (std::map<int, string>::iterator it=reserved_talk.begin(); it!=reserved_talk.end() ; )
 				if ( value == it->second )
 					reserved_talk.erase(it++);
 				else
@@ -966,9 +966,9 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 		mAutoSaveInterval = zen2int(value);
 		mAutoSaveCurrentCount = mAutoSaveInterval;
 		if ( mAutoSaveInterval > 0 )
-			GetSender().sender() << ""  << itos(mAutoSaveInterval) << "秒間隔で自動セーブを行います。" << endl;
+			GetSender().sender() << ""  << itos(mAutoSaveInterval) << "秒間隔で自動セーブを行います。" << std::endl;
 		else
-			GetSender().sender() << "自動セーブは行いません。" << endl;
+			GetSender().sender() << "自動セーブは行いません。" << std::endl;
 		return true;
 	}
 	
@@ -1000,12 +1000,12 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 			variables.erase(key);
 			if ( timer.find(name)!=timer.end() ) {
 				timer.erase(name);
-				GetSender().sender() << "タイマ「"  << name << "」の予\x96\xf1がキャンセルされました。" << endl;
+				GetSender().sender() << "タイマ「"  << name << "」の予\x96\xf1がキャンセルされました。" << std::endl;
 			} else
-				GetSender().sender() << "タイマ「"  << name << "」は元から予\x96\xf1されていません。" << endl;
+				GetSender().sender() << "タイマ「"  << name << "」は元から予\x96\xf1されていません。" << std::endl;
 		} else {
 			timer[name] = sec;
-			GetSender().sender() << "タイマ「"  << name << "」が" << sec << "秒後に予\x96\xf1されました。" << endl;
+			GetSender().sender() << "タイマ「"  << name << "」が" << sec << "秒後に予\x96\xf1されました。" << std::endl;
 		}
 		}
 		return true;

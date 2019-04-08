@@ -17,10 +17,10 @@ public:
 	}
 
 	virtual int request(
-		const vector<string>& i_argument,
+		const std::vector<string>& i_argument,
 		bool i_is_secure,
 		string& o_result,
-		vector<string>& o_value);
+		std::vector<string>& o_value);
 
 	virtual bool load(
 		const string& i_sender,

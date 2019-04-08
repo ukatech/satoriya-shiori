@@ -27,7 +27,7 @@ bool	Satori::updateGhostsInfo() {
 
 	ghosts_info.clear();
 	ghosts_info.push_back( strmap() );
-	for( map<string, strmap>::iterator i=theSakuraFMO.begin() ; i!=theSakuraFMO.end() ; ++i ) {
+	for( std::map<string, strmap>::iterator i=theSakuraFMO.begin() ; i!=theSakuraFMO.end() ; ++i ) {
 		//ƒ_ƒ~[‚ðR‚é
 		if ( i->first.find("ssp_fmo_header_dummyentry") != string::npos ) { continue; }
 		if ( i->first.find("SSTPVIEWER-") != string::npos ) { continue; }

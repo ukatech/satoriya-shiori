@@ -10,7 +10,7 @@
 #endif
 ////////////////////////////////////////
 
-void CreateStringSet(const strvec& vec, set<string>& strset);
+void CreateStringSet(const strvec& vec, std::set<string>& strset);
 
 int		Satori::CreateResponse(strmap& oResponse)
 {
@@ -28,7 +28,7 @@ int		Satori::CreateResponse(strmap& oResponse)
 			}
 			for (int n=0 ; n<max ; ++n) {
 				characters_hwnd[n] = (HWND)(stoi_internal(vec[n]));
-				GetSender().sender() << "ó¢ÅXÇÕ id:" << n << " ÇÃhWndÇéÊìæÇµÇ‹ÇµÇΩÅB" << endl;
+				GetSender().sender() << "ó¢ÅXÇÕ id:" << n << " ÇÃhWndÇéÊìæÇµÇ‹ÇµÇΩÅB" << std::endl;
 			}
 #endif
 		}
@@ -71,13 +71,13 @@ int		Satori::CreateResponse(strmap& oResponse)
 			installed_plugin.clear();
 			const char dm[2] = { 1, 0 };//ãÊêÿÇËï∂éö
 			for (int i = 0; i < mReferences.size(); i++){
-				vector<string> plugins;
+				std::vector<string> plugins;
 				split(mReferences[i], dm, plugins);
 				if (plugins.size() == 2){
 					PluginInfo info;
 					info.plugin_name = plugins[0];
 					info.plugin_id = plugins[1];
-					installed_plugin.insert(map<string, PluginInfo>::value_type(info.plugin_name, info));
+					installed_plugin.insert(std::map<string, PluginInfo>::value_type(info.plugin_name, info));
 				}
 			}
 		}
@@ -86,7 +86,7 @@ int		Satori::CreateResponse(strmap& oResponse)
 			rate_of_use_graph.clear();
 			const char dm[2] = { 1, 0 };//ãÊêÿÇËï∂éö
 			for (int i = 0; i < mReferences.size(); i++){
-				vector<string> rate;
+				std::vector<string> rate;
 				split(mReferences[i], dm, rate);
 				if (rate.size() == 7){
 					RateOfUseGraph info;
@@ -97,7 +97,7 @@ int		Satori::CreateResponse(strmap& oResponse)
 					info.boot_minutes = rate[4];
 					info.boot_percent = rate[5];
 					info.status = rate[6];
-					rate_of_use_graph.insert(map<string, RateOfUseGraph>::value_type(info.ghost_name, info));
+					rate_of_use_graph.insert(std::map<string, RateOfUseGraph>::value_type(info.ghost_name, info));
 				}
 			}
 		}
@@ -122,12 +122,12 @@ int		Satori::CreateResponse(strmap& oResponse)
 		//	str.assign( str.substr(0, str.size()-2)+"]" );
 		string	temp;
 		if ( secure_flag ) {
-			GetSender().sender() << "[DirectCall]" << endl;
+			GetSender().sender() << "[DirectCall]" << std::endl;
 			Call(str, temp);
 			return	204;
 		}
 		else {
-			GetSender().sender() << "local/LocalÇ≈Ç»Ç¢ÇÃÇ≈èRÇËÇ‹ÇµÇΩ: " << str << endl;
+			GetSender().sender() << "local/LocalÇ≈Ç»Ç¢ÇÃÇ≈èRÇËÇ‹ÇµÇΩ: " << str << std::endl;
 			return	204;
 		}
 	}
@@ -161,7 +161,7 @@ int		Satori::CreateResponse(strmap& oResponse)
 	return	200;
 }
 
-void CreateStringSet(const strvec& vec, set<string>& strset)
+void CreateStringSet(const strvec& vec, std::set<string>& strset)
 {
 	strset.clear();
 	for (int i = 0; i < vec.size(); i++){

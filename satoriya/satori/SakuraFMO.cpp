@@ -15,17 +15,17 @@
 
 bool SakuraFMO::update()
 {
-	vector<char> v;
+	std::vector<char> v;
 	{
 		FMO	fmo;
 		if ( !fmo.open(FILE_MAP_READ, FALSE, "Sakura") ) {
-			GetSender().sender() << "FMO can't open." << endl;
+			GetSender().sender() << "FMO can't open." << std::endl;
 			return	false;
 		}
 
 		LPVOID	p = fmo.map();
 		if ( p==NULL ) {
-			GetSender().sender() << "FMO can't mapping." << endl;
+			GetSender().sender() << "FMO can't mapping." << std::endl;
 			return	false;
 		}
 
@@ -66,10 +66,10 @@ bool SakuraFMO::update()
 	for( const_iterator i=begin() ; i!=end() ; ++i )
 	{
 		const strmap&	m = i->second;
-		GetSender().sender() << i->first << endl;
+		GetSender().sender() << i->first << std::endl;
 		for( strmap::const_iterator j=m.begin() ; j!=m.end() ; ++j )
 		{
-			GetSender().sender() << "@" << j->first << ":" << j->second << endl;
+			GetSender().sender() << "@" << j->first << ":" << j->second << std::endl;
 		}
 	}
 	

@@ -33,8 +33,8 @@ class ShioriPlugins {
 		SaoriClient	*m_pSaoriClient;
 		int	mRefCount;
 	};
-	map<string, CallData>	mCallData;	// 呼び出し名；呼び出し名ごとの情報
-	map<string, DllData>	mDllData;	// DLLのフルパス；DLLごとの情報
+	std::map<string, CallData>	mCallData;	// 呼び出し名；呼び出し名ごとの情報
+	std::map<string, DllData>	mDllData;	// DLLのフルパス；DLLごとの情報
 
 	string	mBaseFolder;
 

@@ -2,7 +2,7 @@
 
 #include	<string>
 #include	<deque>
-using namespace std;
+using std::string;
 
 // SAORIñﬂÇËíl
 struct SRV {
@@ -30,6 +30,6 @@ public:
 	SaoriHost() : SakuraDLLHost() {}
 	virtual ~SaoriHost() {}
 
-	virtual SRV	request(deque<string>& iArguments, deque<string>& oValues)=0;
+	virtual SRV	request(std::deque<string>& iArguments, std::deque<string>& oValues)=0;
 		// iArgumentsÇÕÇ¢Ç∂ÇÁÇÍÇ‹Ç∑ÅB
 };

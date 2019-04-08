@@ -72,7 +72,7 @@ bool	Satori::FindEventTalk(string& ioevent) {
 			return	true;	// イベントが存在、それに決定
 		if ( replace_map.find(ioevent) == replace_map.end() )
 			return	false;	// 置き換え対象がもう無い
-		GetSender().sender() << "event replaced " << ioevent <<  " → " <<  replace_map[ioevent] << endl;
+		GetSender().sender() << "event replaced " << ioevent <<  " → " <<  replace_map[ioevent] << std::endl;
 		ioevent = replace_map[ioevent];
 	}
 }
@@ -87,7 +87,7 @@ string	Satori::GetSentence(const string& name)
 	/*++m_nest_count;
 
 	if ( m_nest_limit > 0 && m_nest_count > m_nest_limit ) {
-		GetSender().sender() << "呼び出し回数超過：" << name << endl;
+		GetSender().sender() << "呼び出し回数超過：" << name << std::endl;
 		--m_nest_count;
 		return string("（" + name + "）");
 	}*/
@@ -97,7 +97,7 @@ string	Satori::GetSentence(const string& name)
 	if ( pTalk ) {
 		Sender::nest_object smo(2); 
 		script = SentenceToSakuraScriptExec(*pTalk);
-		GetSender().sender() << "return: " << script << "" << endl;
+		GetSender().sender() << "return: " << script << "" << std::endl;
 	}
 	return	script;
 }
@@ -178,7 +178,7 @@ string Satori::SentenceToSakuraScriptExec(const Talk& vec)
 
 			const Talk* pTR = GetSentenceInternal(jump);
 			if ( ! pTR ) {
-				GetSender().sender() << "＞" << jump_to << " not found." << endl;
+				GetSender().sender() << "＞" << jump_to << " not found." << std::endl;
 			}
 			else {
 				pVec = pTR;
@@ -192,7 +192,7 @@ string Satori::SentenceToSakuraScriptExec(const Talk& vec)
 
 			const Talk* pTR = talks.communicate_search(jump, comAndMode,type_of_communicate_search);
 			if ( ! pTR ) {
-				GetSender().sender() << "≫" << jump_to << " not found." << endl;
+				GetSender().sender() << "≫" << jump_to << " not found." << std::endl;
 			}
 			else {
 				pVec = pTR;
@@ -203,7 +203,7 @@ string Satori::SentenceToSakuraScriptExec(const Talk& vec)
 		++jumpcount;
 
 		if ( m_jump_limit > 0 && jumpcount >= m_jump_limit ) {
-			GetSender().sender() << "ジャンプ回数超過" << endl;
+			GetSender().sender() << "ジャンプ回数超過" << std::endl;
 			break;
 		}
 	}
@@ -219,10 +219,10 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 	// 再帰管理
 	static	int nest_count=0;
 	++nest_count;
-	//DBG(GetSender().sender() << "enter SentenceToSakuraScriptInternal, nest-count: " << nest_count << ", vector_size: " << vec.size() << endl);
+	//DBG(GetSender().sender() << "enter SentenceToSakuraScriptInternal, nest-count: " << nest_count << ", vector_size: " << vec.size() << std::endl);
 
 	if ( m_nest_limit > 0 && nest_count > m_nest_limit ) {
-		GetSender().sender() << "呼び出し回数超過" << endl;
+		GetSender().sender() << "呼び出し回数超過" << std::endl;
 		--nest_count;
 		return 0;
 	}
@@ -238,7 +238,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 	for ( ; it != vec.end() ; ++it) {
 		line = *it;
 		const char*	p = line.c_str();
-		//DBG(GetSender().sender() << nest_count << " '" << p << "'" << endl);
+		//DBG(GetSender().sender() << nest_count << " '" << p << "'" << std::endl);
 
 		if ( it==vec.begin() && strncmp(p, "→", 2)==0 ) {
 			p+=2;
@@ -246,10 +246,10 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 
 			if ( ghosts_info.size()>=2 ) {	// そもそも自分以外にゴーストはいるのか。
 				string	temp = p;
-				vector<strmap>::iterator i=ghosts_info.begin(); ++i; // 自分は飛ばす
+				std::vector<strmap>::iterator i=ghosts_info.begin(); ++i; // 自分は飛ばす
 				for ( ; i!=ghosts_info.end() ; ++i ) { 
 					string	name = (*i)["name"];
-					GetSender().sender() << "ghost: " << name <<endl;
+					GetSender().sender() << "ghost: " << name <<std::endl;
 					if ( compare_head(temp, name) ) {// 相手を特定
 						mCommunicateFor = name;
 						p += mCommunicateFor.size();
@@ -303,11 +303,11 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 			if ( words.size()>=2 ) {
 				string	r;
 				if ( !calculate(words[1], r) ) {
-					GetSender().sender() << "計算式が異常なので、無視して続行します。" << endl;
+					GetSender().sender() << "計算式が異常なので、無視して続行します。" << std::endl;
 					continue;
 				}
 				if ( zen2int(r) == 0 ) {
-					GetSender().sender() << "計算結果が０だったため、続行します。" << endl;
+					GetSender().sender() << "計算結果が０だったため、続行します。" << std::endl;
 					continue;
 				}
 			}
@@ -360,20 +360,20 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 				speaked_speaker.insert(speaker);
 			}
 			else if ( aredigits(zen2han(key)) ) {
-				GetSender().sender() << "＄" << key << "　数字のみの変数名は扱えません." << endl;
+				GetSender().sender() << "＄" << key << "　数字のみの変数名は扱えません." << std::endl;
 				erase_var(key);	// 存在抹消
 			}
 			else if ( value=="" ) {
-				GetSender().sender() << "＄" << key << "／cleared." << endl;
+				GetSender().sender() << "＄" << key << "／cleared." << std::endl;
 				erase_var(key);	// 存在抹消
 				system_variable_operation(key, "", &result);//存在抹消したものがシステム変数かも！
 			}
 			else {
 				if ( words.is_exist(key) ) {
-					GetSender().sender() << "変数「" << key << "」と同じ名前の単語群があります。トラブルの元なので避けましょう。" << endl;
+					GetSender().sender() << "変数「" << key << "」と同じ名前の単語群があります。トラブルの元なので避けましょう。" << std::endl;
 				}
 				if ( talks.is_exist(key) ) {
-					GetSender().sender() << "変数「" << key << "」と同じ名前の文があります。トラブルの元なので避けましょう。" << endl;
+					GetSender().sender() << "変数「" << key << "」と同じ名前の文があります。トラブルの元なので避けましょう。" << std::endl;
 				}
 
 				bool isOverwritten;
@@ -391,7 +391,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 				}
 
 				GetSender().sender() << "＄" << key << "＝" << value << "／" << 
-					(isOverwritten ? "written." : "overwritten.")<< endl;
+					(isOverwritten ? "written." : "overwritten.")<< std::endl;
 
 				if ( pstr ) { *pstr = value; }
 				system_variable_operation(key, value, &result);
@@ -539,7 +539,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 					//トーク前喋りチェック
 					if ( !is_speaked(speaker) ) {
 						if ( surface_changed_before_speak.find(speaker) == surface_changed_before_speak.end() ) {
-							surface_changed_before_speak.insert(map<int,bool>::value_type(speaker,is_speaked_anybody()) );
+							surface_changed_before_speak.insert(std::map<int,bool>::value_type(speaker,is_speaked_anybody()) );
 						}
 					}
 				}
@@ -551,10 +551,10 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 				}
 
 				if ( opt!="" ) {
-					//GetSender().sender() << "ss_cmd: " << c << "," << cmd << "," << opt << endl;
+					//GetSender().sender() << "ss_cmd: " << c << "," << cmd << "," << opt << std::endl;
 					result += c + cmd + "[" + opt + "]";
 				} else {
-					//GetSender().sender() << "ss_cmd: " << c << "," << cmd << endl;
+					//GetSender().sender() << "ss_cmd: " << c << "," << cmd << std::endl;
 					result += c + cmd;
 				}
 
@@ -577,7 +577,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 		result += "\\n";
 	}
 
-	//DBG(GetSender().sender() << "leave SentenceToSakuraScriptInternal, nest-count: " << nest_count << endl);
+	//DBG(GetSender().sender() << "leave SentenceToSakuraScriptInternal, nest-count: " << nest_count << std::endl);
 	--nest_count;
 	return 0;
 }
@@ -605,7 +605,7 @@ const Talk* Satori::GetSentenceInternal(string& ioSentenceName)
 		string	reserved_talk_name;	// 今回話すべきトークがあれば、その名前になる
 		if ( !reserved_talk.empty() ) {
 			// 予約トークの添字を1ずつデクリメント
-			map<int, string>::iterator	it = reserved_talk.begin();
+			std::map<int, string>::iterator	it = reserved_talk.begin();
 			while ( it!=reserved_talk.end() )
 			{
 				reserved_talk[it->first-1] = it->second;
@@ -643,15 +643,15 @@ const Talk* Satori::GetSentenceInternal(string& ioSentenceName)
 	}
 
 	// mapから指定名を持つトーク群を検索
-	GetSender().sender() << "＊" << ioSentenceName << endl;
+	GetSender().sender() << "＊" << ioSentenceName << std::endl;
 	const Talk* talk = talks.select(ioSentenceName, *this);
 	if ( talk == NULL )
 	{
-		GetSender().sender() << " not matched." << endl; // 条件に一致するものがなかった。
+		GetSender().sender() << " not matched." << std::endl; // 条件に一致するものがなかった。
 		--nest_count;
 		return NULL;
 	}
-	GetSender().sender() << endl;
+	GetSender().sender() << std::endl;
 	--nest_count;
 	return talk;
 }

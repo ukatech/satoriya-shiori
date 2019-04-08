@@ -16,7 +16,7 @@
 #include	"console_application.h"
 #include	"ssu.h"
 #include	<sstream>
-using namespace std;
+using std::string;
 
 
 //////////DEBUG/////////////////////////
@@ -280,10 +280,10 @@ bool ShioriPlugins::load_a_plugin(const string& iPluginLine)
 
 void	ShioriPlugins::load_default_entry()
 {
-	vector<string> funclist;
+	std::vector<string> funclist;
 	get_ssu_funclist(funclist);
 
-	for ( vector<string>::const_iterator i = funclist.begin(); i != funclist.end() ; ++i ) {
+	for (std::vector<string>::const_iterator i = funclist.begin(); i != funclist.end() ; ++i ) {
 		if ( mCallData.find(*i) == mCallData.end() ) {
 			string func_line = *i;
 			func_line += ",saori/ssu.dll,";
@@ -296,7 +296,7 @@ void	ShioriPlugins::load_default_entry()
 
 void	ShioriPlugins::unload()
 {
-	for ( map<string, CallData>::iterator i=mCallData.begin() ; i!=mCallData.end() ; ++i ) {
+	for ( std::map<string, CallData>::iterator i=mCallData.begin() ; i!=mCallData.end() ; ++i ) {
 		if ( i->second.mIsBasic )
 			continue;
 		DllData&	ddat = mDllData[i->second.mDllPath];
@@ -356,7 +356,7 @@ string	ShioriPlugins::request(const string& iCallName, const strvec& iArguments,
 		//---------------------
 		// リクエスト作成
 
-		vector<string> req;
+		std::vector<string> req;
 		req.insert(req.end(), theCallData.mPreDefinedArguments.begin(), theCallData.mPreDefinedArguments.end());
 		req.insert(req.end(), iArguments.begin(), iArguments.end());
 

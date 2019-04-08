@@ -4,7 +4,7 @@
 #include <string>
 #include <algorithm>
 #include <map>
-using namespace std;
+using std::string;
 
 typedef string Condition;
 
@@ -26,8 +26,8 @@ class Family
 	bool ComNameFound;
 
 	// 条件式をキー、要素リストを値としたmap
-	typedef vector<T> Elements;
-	typedef map<Condition, Elements> CondsMap;
+	typedef std::vector<T> Elements;
+	typedef std::map<Condition, Elements> CondsMap;
 	CondsMap m_conds_map;
 
 #if 0
@@ -194,22 +194,22 @@ public:
 			Elements& e = m_conds_map.begin()->second;
 			assert(e.size() > 0);
 
-			for ( typename vector<T>::const_iterator j = e.begin() ; j != e.end() ; ++j ) {
+			for ( typename std::vector<T>::const_iterator j = e.begin() ; j != e.end() ; ++j ) {
 				candidates.push_back( &(*j) );
 			}
 		}
 		else {
 			//  候補を選択
-			cout << "selecting" << endl;
+			std::cout << "selecting" << std::endl;
 			for ( typename CondsMap::const_iterator i = m_conds_map.begin() ; i != m_conds_map.end() ; ++i )
 			{
 				// 「無条件」であるか「条件式を評価した結果、0/０を返さなかったもの」を採用
 				if ( i->first.empty() || i_evalcator.evalcate_to_bool(i->first) )
 				{
-					for ( typename vector<T>::const_iterator j = i->second.begin() ; j != i->second.end() ; ++j )
+					for ( typename std::vector<T>::const_iterator j = i->second.begin() ; j != i->second.end() ; ++j )
 					{
 						candidates.push_back( &(*j) );
-						cout << "[" << *j << "]" << endl;
+						std::cout << "[" << *j << "]" << std::endl;
 					}
 				}
 			}
@@ -220,7 +220,7 @@ public:
 	// 引数は「評価者」。
 	const T* select(Evalcator& i_evalcator)
 	{
-		list<const T*> candidates;
+		std::list<const T*> candidates;
 		select_all(i_evalcator,candidates);
 
 		if ( candidates.empty() ) {

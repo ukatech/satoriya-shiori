@@ -25,7 +25,7 @@ bool	Satori::Translate(string& ioScript) {
 	const bool is_AnchorEnable = mRequestID.empty() || (mRequestID.compare(0,2,"On") == 0); //reqidがempty＝さとりてcall
 
 	// さくらスクリプトとそれ以外を分割して処理を加える
-	vector<string>	vec;
+	std::vector<string>	vec;
 	string	acum;
 	bool	content=false;	// 文に中身があるのか
 	bool	is_first_question = true; // 選択分岐記録の消去処理用。
@@ -87,7 +87,7 @@ bool	Satori::Translate(string& ioScript) {
 							//script: も対象外
 
 							int	count = question_record.size() + 1;
-							question_record[id] = pair<int, string>(count, label);
+							question_record[id] = std::pair<int, string>(count, label);
 
 							//idも分離
 							strvec vec_id;
@@ -131,7 +131,7 @@ bool	Satori::Translate(string& ioScript) {
 				vec.push_back(c + cmd + "[" + opt + "]");
 			acum="";
 
-			static	set<string>	nc_cmd;	// 有効と数えないさくらスクリプト群
+			static	std::set<string>	nc_cmd;	// 有効と数えないさくらスクリプト群
 			static	bool	initialized=false;
 			if (!initialized) {
 				initialized=true;
@@ -156,7 +156,7 @@ bool	Satori::Translate(string& ioScript) {
 	ioScript="";
 	string repstr;
 
-	for (vector<string>::iterator i=vec.begin() ; i!=vec.end() ; ++i) {
+	for (std::vector<string>::iterator i=vec.begin() ; i!=vec.end() ; ++i) {
 		if ( i->at(0)!='\\' && i->at(0)!='%' ) {
 			// さくらスクリプト以外の文への処理
 
@@ -165,7 +165,7 @@ bool	Satori::Translate(string& ioScript) {
 				if ( is_AnchorEnable && !is_OnTranslate ) {
 					string::size_type n = i->size();
 					for ( string::size_type c=0 ; c<n ; ++c ) {
-						for ( vector<string>::iterator j=anchors.begin() ; j!=anchors.end() ; ++j ) {
+						for ( std::vector<string>::iterator j=anchors.begin() ; j!=anchors.end() ; ++j ) {
 							if ( n - c >= j->size() ) {
 								if ( i->compare(c,j->size(),*j) == 0 ) {
 									repstr = "\\_a[";

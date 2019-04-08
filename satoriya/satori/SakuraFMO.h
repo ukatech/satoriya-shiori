@@ -1,7 +1,7 @@
 
 #include "../_/stltool.h"
 
-class SakuraFMO : public map<string, strmap>
+class SakuraFMO : public std::map<string, strmap>
 {
 public:
 	bool update();

@@ -74,7 +74,7 @@ class escaper
 	static const char sm_escape_sjis_code[3];
 
 	//map<string, int> m_str2id;
-	vector<string> m_id2str;
+	std::vector<string> m_id2str;
 
 public:
 	// 引数文字列を受け取り、メンバに格納し、「エスケープされた文字列」を返す。
@@ -130,7 +130,7 @@ private:
 	// 格納されたメンバからResponseを作成。返値はステータスコード。
 	int		CreateResponse(strmap& oResponse);
 	// SHIORI/3.0 IDがOnで始まってた場合、CreateResponseから呼ばれる
-	int		EventOperation(string iEvent, map<string,string> &oResponse);
+	int		EventOperation(string iEvent, std::map<string,string> &oResponse);
 
 	// 戻り値map
 	strmap mResponseMap;
@@ -145,7 +145,7 @@ private:
 	escaper m_escaper;
 
 	// SAORI/内部命令を呼び出す際の引数区切りとなる文字列群
-	set<string>	mDelimiters;
+	std::set<string>	mDelimiters;
 
 	// 全ての＊トーク
 	AllTalks	talks;
@@ -156,16 +156,16 @@ private:
 	// ＄変数
 	strmap	variables;
 	// 自動アンカー
-	vector<string>	anchors;
+	std::vector<string>	anchors;
 
 	// 変数の消去。何かと問題があるらしいよ？
 	void	erase_var(const string& key);
 
 	// 動的に登録された単語。wordsにも収録する。satori_savedata.txtに保存するのが目的。
-	map<string, vector<Word> >	mAppendedWords;
+	std::map<string, std::vector<Word> >	mAppendedWords;
 
 	// 戻したトークの履歴
-	deque<string>	mResponseHistory;
+	std::deque<string>	mResponseHistory;
 
 	// call引数stack 実装自体は再帰。
 	simple_stack<strvec>	mCallStack;
@@ -176,7 +176,7 @@ private:
 
 	// 選択分岐の記録    map<ID, pair<NUMBER, LABEL> >　
 	// よく考えたら、選択項目とるだけなら全く不要だった。まぁ全体取得できても悪くは無いけど
-	map<string, pair<int, string> >	question_record;
+	std::map<string, std::pair<int, string> >	question_record;
 
 	int	second_from_last_talk;	// 最後に喋ってからの経過時間
 
@@ -226,7 +226,7 @@ private:
 
 	// しゃべり管理。SentenceToSakuraScriptExecの未再帰呼び出し時に初期化。
 	int		speaker;		// 話者
-	set<int>	speaked_speaker;		// 少しでも喋った？
+	std::set<int>	speaked_speaker;		// 少しでも喋った？
 	bool	is_speaked(int n) { return speaked_speaker.find(n) != speaked_speaker.end(); }
 	bool	is_speaked_anybody() { return !speaked_speaker.empty(); }
 	void    reset_speaked_status() {
@@ -238,7 +238,7 @@ private:
 	int		next_wait_value;
 	//int		question_num;
 
-	map<int,bool> surface_changed_before_speak;	// 会話前にサーフェスが切り替え指示があった？
+	std::map<int,bool> surface_changed_before_speak;	// 会話前にサーフェスが切り替え指示があった？
 
 
 	// 過去のカッコ置き換えを記憶。反復（Ｈ？）で使用
@@ -251,9 +251,9 @@ private:
 	bool auto_anchor_enable;
 	bool auto_anchor_enable_onetime;
 
-	map<int, int>	default_surface;
-	map<int, int>	surface_add_value;
-	map<int, int>	next_default_surface; // 途中でdef_surfaceを切り換えても、そのrequestでは使わない
+	std::map<int, int>	default_surface;
+	std::map<int, int>	surface_add_value;
+	std::map<int, int>	next_default_surface; // 途中でdef_surfaceを切り換えても、そのrequestでは使わない
 	string	surface_restore_string();
 
 	// 返り値抑止
@@ -271,15 +271,15 @@ private:
 	int m_nest_count;
 
 	// ばるーん位置
-	map<int, bool>	validBalloonOffset;	// 1回でも設定されたら有効 つーか片方だけだと意味無かった。むぅ。
-	map<int, string>	BalloonOffset;
+	std::map<int, bool>	validBalloonOffset;	// 1回でも設定されたら有効 つーか片方だけだと意味無かった。むぅ。
+	std::map<int, string>	BalloonOffset;
 
 	// 時間系情報取得用
 	unsigned long sec_count_at_load, sec_count_total;
 
 	// サーフェス
-	map<int, int>	cur_surface;
-	map<int, int>	last_talk_exiting_surface;
+	std::map<int, int>	cur_surface;
+	std::map<int, int>	last_talk_exiting_surface;
 	// 毎秒更新される「状態」
 	bool	mikire_flag,kasanari_flag,can_talk_flag;
 
@@ -289,11 +289,11 @@ private:
 #else
 	bool	updateGhostsInfo();	// FMOから情報取得
 #endif
-	vector<strmap>	ghosts_info;	// FMOの内容そのまま。0は自分自身、1～は順番どおり。
+	std::vector<strmap>	ghosts_info;	// FMOの内容そのまま。0は自分自身、1～は順番どおり。
 	strmap*	find_ghost_info(string name);	// ghosts_infoを検索、特定のゴーストの情報を得る
 
 	string	mCommunicateFor;	// 話しかけ対象ゴースト。→で設定されresponseにToをつける
-	set<string>	mCommunicateLog;	// 会話ログ。繰り返しがあった場合は会話打ち切り
+	std::set<string>	mCommunicateLog;	// 会話ログ。繰り返しがあった場合は会話打ち切り
 
 	// でばぐもーど
 	bool    fDebugMode;
@@ -313,7 +313,7 @@ private:
 	strintmap	timer;
 
 	// トークの予約
-	map<int, string>	reserved_talk;
+	std::map<int, string>	reserved_talk;
 
 	// 「独自イベントによるmateriaイベントの置き換え」のためのスクリプト入れ
 	string	on_loaded_script;
@@ -324,7 +324,7 @@ private:
 	string	inc_call(const string&, const strvec&, strvec&, bool is_secure);
 	string	special_call(const string&, const strvec&, bool for_calc, bool for_non_talk, bool is_secure);
 	bool calc_argument(const string &iExpression, int &oResult, bool for_non_talk);
-	set<string> special_commands;
+	std::set<string> special_commands;
 
 	// 安全？
 	bool	secure_flag;
@@ -349,13 +349,13 @@ private:
 		numDictionary, numDictionarySize;
 
 	//Notifyの保存
-	set<string> installed_ghost_name;
-	set<string> installed_shell_name;
-	set<string> installed_balloon_name;
-	set<string> installed_headline_name;
-	set<string> installed_font_name;
-	map<string, PluginInfo> installed_plugin;
-	map<string, RateOfUseGraph> rate_of_use_graph;
+	std::set<string> installed_ghost_name;
+	std::set<string> installed_shell_name;
+	std::set<string> installed_balloon_name;
+	std::set<string> installed_headline_name;
+	std::set<string> installed_font_name;
+	std::map<string, PluginInfo> installed_plugin;
+	std::map<string, RateOfUseGraph> rate_of_use_graph;
 
 	//Notifyの収拾
 	bool is_save_notify;
@@ -371,7 +371,7 @@ private:
 	bool	is_single_monitor;	// 最上位。これがfalseならば以下を使ってはいけない
 	RECT	desktop_rect;
 	RECT	max_screen_rect;
-	map<int, HWND>	characters_hwnd;
+	std::map<int, HWND>	characters_hwnd;
 #endif
 
 	// ループ時のカウンタ参照用
@@ -413,7 +413,7 @@ private:
 	string* GetValue(const string &key,bool &oIsSysValue,bool iIsExpand = false,bool *oIsExpanded = NULL,const char *pDefault = "");
 	bool IsArrayValue(const string &iName,int &ref,char &firstChar);
 
-	void surface_restore_string_addfunc(string &str,map<int, int>::const_iterator &i);
+	void surface_restore_string_addfunc(string &str, std::map<int, int>::const_iterator &i);
 
 	// SentenceToSakuraScriptExecの実体。
 	int SentenceToSakuraScriptInternal(const Talk &vec,string &result,string &jumpto,ptrdiff_t &ip);

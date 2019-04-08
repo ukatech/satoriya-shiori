@@ -15,7 +15,7 @@ typedef	unsigned __int64	uint64;
 
 string	TimeCommands(
 	const string& iCommand,
-	const deque<string>& iArguments)
+	const std::deque<string>& iArguments)
 {/*
 	if ( iCommand=="tm" ) {
 

@@ -3,7 +3,7 @@
 #include <exception>
 #include <stdexcept>
 #include <typeinfo>
-using namespace std;
+using std::string;
 
 #include "OverlapController.h"
 
@@ -15,7 +15,7 @@ using namespace std;
 template<typename T>
 class Selector
 {
-	list<T> m_candidates; // 選択の対象となる候補
+	std::list<T> m_candidates; // 選択の対象となる候補
 	OverlapController<T>* m_OC; // 選択メソッド
 
 public:
@@ -54,7 +54,7 @@ public:
 
 	// 選択対象候補を更新する。
 	// i_candidatesは降順にソートされており、かつ、空であってはならない。
-	void update_candidates(const list<T>& i_candidates)
+	void update_candidates(const std::list<T>& i_candidates)
 	{
 		if ( m_OC == NULL )
 		{
@@ -66,8 +66,8 @@ public:
 		#define NOW i_candidates
 		#define OLD m_candidates
 
-		typename list<T>::const_iterator now = NOW.begin();
-		typename list<T>::iterator old = OLD.begin();
+		typename std::list<T>::const_iterator now = NOW.begin();
+		typename std::list<T>::iterator old = OLD.begin();
 
 		while (true)
 		{
@@ -153,7 +153,7 @@ public:
 
 		if ( m_candidates.empty() )
 		{
-			throw runtime_error("select: candidates list is empty!");
+			throw std::runtime_error("select: candidates list is empty!");
 		}
 		
 		return m_OC->select(m_candidates);

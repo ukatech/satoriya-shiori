@@ -37,7 +37,7 @@
 #include	<deque>
 #include	<cassert>
 #include    <stdio.h>
-using namespace std;
+using std::string;
 
 
 #define const_strlen(s) ((sizeof(s) / sizeof(s[0]))-1)
@@ -61,14 +61,14 @@ public:
 	}
 }:*/
 
-typedef vector<string> strvec;
-typedef	map<string, string>	strmap;
-typedef	set<string>	stringset;
-typedef	list<string>	strlist;
-typedef	map<string, int>	strintmap;
+typedef std::vector<string> strvec;
+typedef	std::map<string, string>	strmap;
+typedef	std::set<string>	stringset;
+typedef	std::list<string>	strlist;
+typedef	std::map<string, int>	strintmap;
 typedef	unsigned char	byte;
-typedef	pair<string, string>	strpair;
-typedef vector<strpair> strpairvec;
+typedef	std::pair<string, string>	strpair;
+typedef std::vector<strpair> strpairvec;
 /*
 {
 public:
@@ -85,19 +85,19 @@ public:
 };
 */
 
-class inimap : public map<string, strmap>	{
+class inimap : public std::map<string, strmap>	{
 public:
 	bool	load(const string& iFileName);
 	bool	save(const string& iFileName) const;
 };
-class inivec : public vector< pair<string, strpairvec> > {
+class inivec : public std::vector< std::pair<string, strpairvec> > {
 public:
 	bool	load(const string& iFileName);
 };
 
 // デリミタまで読み込み
-bool	getline(istream& i, string& o, int delimtier='\n');
-bool	getline(istream& i, int& o, int delimtier='\n');
+bool	getline(std::istream& i, string& o, int delimtier='\n');
+bool	getline(std::istream& i, int& o, int delimtier='\n');
 
 // intとの相互変換
 inline long stoi_internal(const string& s) { return strtol(s.c_str(),NULL,10); }
@@ -159,7 +159,7 @@ inline std::string::size_type find_hz(const string& str, const char* target,std:
 
 // dequeの後ろから n 個目を参照する
 template<class T>
-T&	from_back(deque<T>& iDeque, int n) {
+T&	from_back(std::deque<T>& iDeque, int n) {
 	assert(n>=0 && n<iDeque.size());
 	return	iDeque[iDeque.size()-1-n];
 }
@@ -193,7 +193,7 @@ inline int split(const string& i, T& o) {
 template<class T>
 int	split(const char* p, const char* dp, T& o, int max_words=0, bool split_one=false)
 {
-	set<string>	dlmt_set;
+	std::set<string>	dlmt_set;
 	while ( *dp != '\0' )
 		dlmt_set.insert(get_a_chr(dp));
 
@@ -243,7 +243,7 @@ inline int split(const string& i, const char* dp, T& o, int max_words=0, bool sp
 
 
 
-inline int	splitToSet(const string& iString, set<string>& oSet, int iDelimiter) {
+inline int	splitToSet(const string& iString, std::set<string>& oSet, int iDelimiter) {
 	oSet.clear();
 	const char* start=iString.c_str();
 	const char* p=start;
@@ -270,7 +270,7 @@ inline int	splitToSet(const string& iString, set<string>& oSet, int iDelimiter) 
 
 // mapからkeyの一覧を取得
 template<typename C, typename K, typename V>
-int	keys(const map<K,V>& iMap, C& oContainer) {
+int	keys(const std::map<K,V>& iMap, C& oContainer) {
 	oContainer.clear();
 	for ( typename map<K,V>::const_iterator i=iMap.begin() ; i!=iMap.end() ; ++i)
 		oContainer.push_back(i->first);
@@ -278,7 +278,7 @@ int	keys(const map<K,V>& iMap, C& oContainer) {
 }
 // mapからkeyの一覧を取得
 template<typename C, typename K, typename V>
-C	keys(const map<K,V>& iMap) {
+C	keys(const std::map<K,V>& iMap) {
 	C	theContainer;
 	keys<C,K,V>(iMap, theContainer);
 	return	theContainer;
@@ -286,7 +286,7 @@ C	keys(const map<K,V>& iMap) {
 
 // mapからvalueの一覧を取得
 template<typename C, typename K, typename V>
-int	values(const map<K,V>& iMap, C& oContainer) {
+int	values(const std::map<K,V>& iMap, C& oContainer) {
 	oContainer.clear();
 	for ( typename map<K,V>::const_iterator i=iMap.begin() ; i!=iMap.end() ; ++i)
 		oContainer.push_back(i->second);
@@ -294,7 +294,7 @@ int	values(const map<K,V>& iMap, C& oContainer) {
 }
 // mapからvalueの一覧を取得
 template<typename C, typename K, typename V>
-C	values(const map<K,V>& iMap) {
+C	values(const std::map<K,V>& iMap) {
 	C	theContainer;
 	keys<C,K,V>(iMap, theContainer);
 	return	theContainer;
@@ -448,20 +448,20 @@ string	set_filename(const string& str, const char* new_filename);
 inline string	set_filename(const string& str, const string& new_filename) { return set_filename(str, new_filename.c_str()); }
 
 // 出力
-ostream& operator<<(ostream& o, const strvec& i);
-ostream& operator<<(ostream& o, const strmap& i);
-ostream& operator<<(ostream& o, const strintmap& i);
-inline ostream& operator<<(ostream& o, const strpairvec& i) {
+std::ostream& operator<<(std::ostream& o, const strvec& i);
+std::ostream& operator<<(std::ostream& o, const strmap& i);
+std::ostream& operator<<(std::ostream& o, const strintmap& i);
+inline std::ostream& operator<<(std::ostream& o, const strpairvec& i) {
 	for ( strpairvec::const_iterator p=i.begin() ; p!=i.end() ; ++p )
-		o << p->first << ": " << p->second << endl;
+		o << p->first << ": " << p->second << std::endl;
 	return	o;
 }
 
 
 // 入力
-istream& operator>>(istream& i, strvec& o);
-istream& operator>>(istream& i, strmap& o);
-istream& operator>>(istream& i, strintmap& o);
+std::istream& operator>>(std::istream& i, strvec& o);
+std::istream& operator>>(std::istream& i, strmap& o);
+std::istream& operator>>(std::istream& i, strintmap& o);
 
 /*
 // なんか、あんまり使っていないもの。。

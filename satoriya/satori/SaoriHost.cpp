@@ -34,7 +34,7 @@ int	SaoriHost::request(
 	if ( i_command != "EXECUTE" ) { return 400; }
 
 	// ˆø”‚ğ Argument? ‚ÉŠi”[
-	deque<string> arguments;
+	std::deque<string> arguments;
 	for ( strpairvec::const_iterator it=i_data.begin() ; it!=i_data.end() ; ++it)
 	{
 		if ( it->first.compare(0, 8, "Argument") == 0 )
@@ -52,14 +52,14 @@ int	SaoriHost::request(
 	}
 
 	// SAORIÀs
-	deque<string> values;
+	std::deque<string> values;
 	SRV	srv = request(arguments, values);
 
 	// –ß‚è’l‚ğ‰ğÍ•Ši”[
 	o_data.push_back( strpair("Charset", "Shift_JIS") );
 	o_data.push_back( strpair("Result", srv.mResultString) );
 	int n=0;
-	for ( deque<string>::const_iterator it=values.begin() ; it!=values.end() ; ++it)
+	for (std::deque<string>::const_iterator it=values.begin() ; it!=values.end() ; ++it)
 	{
 		o_data.push_back( strpair(string("Value") + itos(n++), *it) );
 	}

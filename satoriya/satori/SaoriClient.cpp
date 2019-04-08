@@ -21,10 +21,10 @@ bool SaoriClient::load(
 }
 
 int SaoriClient::request(
-	const vector<string>& i_argument,
+	const std::vector<string>& i_argument,
 	bool i_is_secure,
 	string& o_result,
-	vector<string>& o_value)
+	std::vector<string>& o_value)
 {
 	//---------------------
 	// リクエスト作成
@@ -36,7 +36,7 @@ int SaoriClient::request(
 	data.push_back( strpair("SecurityLevel", (i_is_secure ? "Local" : "External") ) );
 
 	int idx=0;
-	for ( vector<string>::const_iterator i=i_argument.begin() ; i!=i_argument.end() ; ++i,++idx )
+	for ( std::vector<string>::const_iterator i=i_argument.begin() ; i!=i_argument.end() ; ++i,++idx )
 	{
 		data.push_back( strpair(string("Argument")+itos(idx), *i) );
 	}

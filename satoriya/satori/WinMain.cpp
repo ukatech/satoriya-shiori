@@ -103,7 +103,7 @@ class	UserThread : public Thread
 
 
 #include	<strstream>
-using namespace std;
+using std::string;
 #include	"SSTPClient.h"
 struct	SHARED_DATA {
 	HWND	hwndDialog;
@@ -132,10 +132,10 @@ string	Do(const string& str, bool like_dict, bool satori, HWND hwnd)
 	}
 
 	// ì¸óÕÇvectorâª
-	istrstream	in(gBuffer);
+	std::istrstream	in(gBuffer);
 	while ( in.peek() != EOF ) {
 		// ÇPçsì«Ç›çûÇ›
-		strstream	line;
+		std::strstream	line;
 		int	c;
 		while ( (c=in.get()) != '\n' && c!=EOF)
 			if ( c!=13 )
@@ -150,8 +150,8 @@ string	Do(const string& str, bool like_dict, bool satori, HWND hwnd)
 	}
 	in.clear();
 
-	DBG(GetSender().sender() << "dialog input strlen(gBuffer): " << strlen(gBuffer) << endl);
-	DBG(GetSender().sender() << "dialog input vec.size(): " << vec.size() << endl);
+	DBG(GetSender().sender() << "dialog input strlen(gBuffer): " << strlen(gBuffer) << std::endl);
+	DBG(GetSender().sender() << "dialog input vec.size(): " << vec.size() << std::endl);
 
 	string	script;
 	if ( !satori )
@@ -185,7 +185,7 @@ string	Do(const string& str, bool like_dict, bool satori, HWND hwnd)
 		data.push_back( strpair("Sender", "Satorite") );
 		data.push_back( strpair("SecurityLevel", "Local") );
 		pSatori->request("SAORI", "1.0", "EXECUTE", data, protocol, protcol_version, r_data); /**/
-		GetSender().sender() << r_data << endl;
+		GetSender().sender() << r_data << std::endl;
 		for ( strpairvec::const_iterator it = r_data.begin() ; it != r_data.end() ; ++it )
 		{
 			if ( it->first == "Value" || it->first == "Result" )

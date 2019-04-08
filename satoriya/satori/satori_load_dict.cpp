@@ -8,7 +8,7 @@
 #include	"satori_load_dict.h"
 
 #ifdef POSIX
-#  include <iostream>
+#  include <istd::ostream>
 #  include "stltool.h"
 #endif
 
@@ -30,27 +30,27 @@ struct satori_unit
 	strvec body;
 };
 #ifdef _DEBUG
-ostream& operator<<(ostream& o, const satori_unit& su)
+std::ostream& operator<<(std::ostream& o, const satori_unit& su)
 {
-	o << su.typemark << "/" << su.name << "/" << su.condition << endl;
+	o << su.typemark << "/" << su.name << "/" << su.condition << std::endl;
 	o << su.body;
 	return o;
 }
 #endif
 
 static void lines_to_units(
-	const vector<string>& i_lines,
-	const vector<string>& i_typemarks,
+	const std::vector<string>& i_lines,
+	const std::vector<string>& i_typemarks,
 	const string& i_name_cond_delimiter,
-	vector<satori_unit>& o_units)
+	std::vector<satori_unit>& o_units)
 {
-	vector<string>::const_iterator line_it = i_lines.begin();
+	std::vector<string>::const_iterator line_it = i_lines.begin();
 	for ( ; line_it != i_lines.end() ; ++line_it)
 	{
-		//cout << *line_it << endl;
+		//cout << *line_it << std::endl;
 
 		// 行頭にtypemarksのいずれかが出現しているか探す
-		vector<string>::const_iterator mark_it = i_typemarks.begin();
+		std::vector<string>::const_iterator mark_it = i_typemarks.begin();
 		for ( ; mark_it != i_typemarks.end() ; ++mark_it) 
 		{
 			if ( line_it->compare(0, mark_it->size(), mark_it->c_str()) ==0 )
@@ -94,7 +94,7 @@ static void lines_to_units(
 	}
 
 	// 各unit末尾の空行を削る
-	for ( vector<satori_unit>::iterator i = o_units.begin() ; i != o_units.end() ; ++i )
+	for ( std::vector<satori_unit>::iterator i = o_units.begin() ; i != o_units.end() ; ++i )
 	{
 		while (true)
 		{
@@ -106,7 +106,7 @@ static void lines_to_units(
 			i->body.pop_back();
 		}
 
-		//GetSender().sender() << *i << endl;
+		//GetSender().sender() << *i << std::endl;
 	}
 }
 
@@ -179,7 +179,7 @@ static bool pre_process(
 
 			// 一行追加
 			out.push_back(accumulater);
-			//GetSender().sender() << line_number << " [" << accumulater << "]" << endl;
+			//GetSender().sender() << line_number << " [" << accumulater << "]" << std::endl;
 			accumulater="";
 		}
 		else if ( line_number == in.size() ) 
@@ -218,7 +218,7 @@ static bool select_dict_and_load_to_vector(const string& iFileName, strvec& oFil
 		}
 		else {
 			if ( warnFileName ) {
-				GetSender().sender() << "  " << satfile << "is not exist." << endl;
+				GetSender().sender() << "  " << satfile << "is not exist." << std::endl;
 			}
 			file = txtfile;
 		}
@@ -229,7 +229,7 @@ static bool select_dict_and_load_to_vector(const string& iFileName, strvec& oFil
 		}
 		else {
 			if ( warnFileName ) {
-				GetSender().sender() << "  " << txtfile << "is not exist." << endl;
+				GetSender().sender() << "  " << txtfile << "is not exist." << std::endl;
 			}
 			file = satfile;
 			decodeMe = true;
@@ -242,7 +242,7 @@ static bool select_dict_and_load_to_vector(const string& iFileName, strvec& oFil
 		GetSender().sender() << "... failed.";
 		return	false;
 	}
-	GetSender().sender() << endl;
+	GetSender().sender() << std::endl;
 
 	if ( decodeMe ) {
 		// 暗号化を解除
@@ -278,13 +278,13 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName)
 	{
 #ifdef POSIX
 	     GetSender().errsender() <<
-		    "syntax error - SATORI : " << iFileName << std::endl <<
-		    std::endl <<
-		    "There are some mismatched parenthesis." << std::endl <<
-		    "The dictionary is not loaded correctly." << std::endl <<
-		    std::endl <<
-		    "If you want to display parenthesis independently," << std::endl <<
-		    "use \"phi\" symbol to escape it." << std::endl;
+		    "syntax error - SATORI : " << iFileName << std::std::endl <<
+		    std::std::endl <<
+		    "There are some mismatched parenthesis." << std::std::endl <<
+		    "The dictionary is not loaded correctly." << std::std::endl <<
+		    std::std::endl <<
+		    "If you want to display parenthesis independently," << std::std::endl <<
+		    "use \"phi\" symbol to escape it." << std::std::endl;
 #else
 		GetSender().errsender() << iFileName + "\n\n"
 			"\n"
@@ -295,18 +295,18 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName)
 #endif
 	}
 
-	static vector<string> typemarks;
+	static std::vector<string> typemarks;
 	if ( typemarks.empty() )
 	{
 		typemarks.push_back("＊");
 		typemarks.push_back("＠");
 	}
 
-	vector<satori_unit> units;
+	std::vector<satori_unit> units;
 	lines_to_units(preprocessed_vec, typemarks, "\t", units); // 単語群名/トーク名と採用条件式の区切り
 
 
-	for ( vector<satori_unit>::iterator i=units.begin() ; i!=units.end() ; ++i)
+	for ( std::vector<satori_unit>::iterator i=units.begin() ; i!=units.end() ; ++i)
 	{
 		// 末尾の空行を削除
 		//while ( i->body.size()>0 && i->body.size()==0 )
@@ -330,7 +330,7 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName)
 			talks.add_element(i->name, i->body, i->condition);
 
 #ifdef _DEBUG
-			GetSender().sender() << "＊" << i->name << " " << i->condition << endl;
+			GetSender().sender() << "＊" << i->name << " " << i->condition << std::endl;
 #endif
 		}
 		else
@@ -343,7 +343,7 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName)
 			}
 
 #ifdef _DEBUG
-			GetSender().sender() << "＠" << i->name << " " << i->condition << endl;
+			GetSender().sender() << "＠" << i->name << " " << i->condition << std::endl;
 #endif
 		}
 
@@ -353,8 +353,8 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName)
 		sort(anchors.begin(),anchors.end(),satori_anchor_compare);
 	}
 
-	//GetSender().sender() << "　　　talk:" << talks.count_all() << ", word:" << words.count_all() << endl;
-	GetSender().sender() << "... ok." << endl;
+	//GetSender().sender() << "　　　talk:" << talks.count_all() << ", word:" << words.count_all() << std::endl;
+	GetSender().sender() << "... ok." << std::endl;
 	return	true;
 }
 
@@ -363,7 +363,7 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName)
 #  include <dirent.h>
 #endif
 
-void list_files(string i_path, vector<string>& o_files)
+void list_files(string i_path, std::vector<string>& o_files)
 {
 	unify_dir_char(i_path); // \\と/を環境に応じて適切な方に統一
 #ifdef POSIX
@@ -371,7 +371,7 @@ void list_files(string i_path, vector<string>& o_files)
 	DIR* dh = opendir(i_path.c_str());
 	if (dh == NULL)
 	{
-	    GetSender().sender() << "file not found." << endl;
+	    GetSender().sender() << "file not found." << std::endl;
 	}
 	while (1) {
 	    struct dirent* ent = readdir(dh);
@@ -393,7 +393,7 @@ void list_files(string i_path, vector<string>& o_files)
 	hFIND = ::FindFirstFile((i_path+"*.*").c_str(), &fdFOUND);
 	if ( hFIND == INVALID_HANDLE_VALUE )
 	{
-		GetSender().sender() << "file not found." << endl;
+		GetSender().sender() << "file not found." << std::endl;
 	}
 
 	do
@@ -410,13 +410,13 @@ void list_files(string i_path, vector<string>& o_files)
 
 int Satori::LoadDicFolder(const string& i_base_folder)
 {
-	GetSender().sender() << "LoadDicFolder(" << i_base_folder << ")" << endl;
-	vector<string> files;
+	GetSender().sender() << "LoadDicFolder(" << i_base_folder << ")" << std::endl;
+	std::vector<string> files;
 	list_files(i_base_folder, files);
 
 	int count = 0;
 	
-	for (vector<string>::const_iterator it=files.begin() ; it!=files.end() ; ++it)
+	for (std::vector<string>::const_iterator it=files.begin() ; it!=files.end() ; ++it)
 	{
 		const int len = it->size();
 		if ( len < 7 ) { continue; } // dic.txtが最短ファイル名
@@ -428,6 +428,6 @@ int Satori::LoadDicFolder(const string& i_base_folder)
 		}
 	}
 
-	GetSender().sender() << "ok." << endl;
+	GetSender().sender() << "ok." << std::endl;
 	return count;
 }

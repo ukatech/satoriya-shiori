@@ -38,7 +38,7 @@ extern "C" __declspec(dllexport) BOOL __cdecl load(HGLOBAL i_data, long i_data_l
 {
 	string the_base_folder((char*)::GlobalLock(i_data), i_data_len);
 	::GlobalFree(i_data);
-	GetSender().sender() << the_base_folder << endl;
+	GetSender().sender() << the_base_folder << std::endl;
 	return SakuraDLLHost::I()->load(the_base_folder);
 }
 #endif

@@ -51,7 +51,7 @@ BOOL CALLBACK MonitorEnumFunc(HMONITOR hMonitor,HDC hdc,LPRECT rect,LPARAM lPara
 	if ( pGetMonitorInfo==NULL )
 		return	FALSE;
 	if ( !(*pGetMonitorInfo)(hMonitor,&MonitorInfoEx) ) {
-		GetSender().sender() << "'GetMonitorInfo' was failed." << endl;
+		GetSender().sender() << "'GetMonitorInfo' was failed." << std::endl;
         return FALSE;
     }
 
@@ -61,11 +61,11 @@ BOOL CALLBACK MonitorEnumFunc(HMONITOR hMonitor,HDC hdc,LPRECT rect,LPARAM lPara
 	if ( MonitorInfoEx.dwFlags & MONITORINFOF_PRIMARY ) {
 		pRect[1] = *rect;
 		GetSender().sender() << "モニタ: " << MonitorInfoEx.szDevice << " / (" << 
-			rect->left << "," << rect->top << "," << rect->right << "," << rect->bottom << ") / primary" << endl;
+			rect->left << "," << rect->top << "," << rect->right << "," << rect->bottom << ") / primary" << std::endl;
 	}
 	else {
 		GetSender().sender() << "モニタ: " << MonitorInfoEx.szDevice << " / (" << 
-			rect->left << "," << rect->top << "," << rect->right << "," << rect->bottom << ") / extra" << endl;
+			rect->left << "," << rect->top << "," << rect->right << "," << rect->bottom << ") / extra" << std::endl;
 	}
 
 	RECT&	max_screen_rect = pRect[0];
@@ -118,7 +118,7 @@ bool	Satori::load(const string& iBaseFolder)
 #endif
 
 	mBaseFolder = iBaseFolder;
-	GetSender().sender() << "■SATORI::Load on " << mBaseFolder << "" << endl;
+	GetSender().sender() << "■SATORI::Load on " << mBaseFolder << "" << std::endl;
 
 #if POSIX
 	// 「/」で終わっていなければ付ける。
@@ -146,7 +146,7 @@ bool	Satori::load(const string& iBaseFolder)
 			mExeFolder = buf;
 		}
 	}
-	GetSender().sender() << "本体の所在: " << mExeFolder << "" << endl;
+	GetSender().sender() << "本体の所在: " << mExeFolder << "" << std::endl;
 #endif // _MSC_VER
 
 	// メンバ初期化
@@ -170,7 +170,7 @@ bool	Satori::load(const string& iBaseFolder)
 		}
 		else { mOSType = SATORI_OS_WINXP; os="Windows XP or later"; }
 	}
-	GetSender().sender() << "ＯＳ種別: " << os << endl;
+	GetSender().sender() << "ＯＳ種別: " << os << std::endl;
 	if ( mOSType==SATORI_OS_WIN95 ) {
 		is_single_monitor = true;
 	} else {
@@ -190,14 +190,14 @@ bool	Satori::load(const string& iBaseFolder)
 			RECT*	rect;
 			rect = &desktop_rect;
 			GetSender().sender() << "プライマリデスクトップ: (" << 
-				rect->left << "," << rect->top << "," << rect->right << "," << rect->bottom << ")" << endl;
+				rect->left << "," << rect->top << "," << rect->right << "," << rect->bottom << ")" << std::endl;
 			rect = &max_screen_rect;
 			GetSender().sender() << "仮想デスクトップ: (" << 
-				rect->left << "," << rect->top << "," << rect->right << "," << rect->bottom << ")" << endl;
+				rect->left << "," << rect->top << "," << rect->right << "," << rect->bottom << ")" << std::endl;
 			is_single_monitor = ( ::EqualRect(&max_screen_rect, &desktop_rect)!=FALSE );
 			GetSender().sender() << (is_single_monitor ? 
 				"モニタは一つだけと判断、見切れ判定を呼び出し元に任せます。" : 
-				"複数のモニタが接続されていると判断、見切れ判定は里々が行います。") << endl;
+				"複数のモニタが接続されていると判断、見切れ判定は里々が行います。") << std::endl;
 		}
 	}
 #endif // _MSC_VER
@@ -247,14 +247,14 @@ bool	Satori::load(const string& iBaseFolder)
 	
 	if ( f != NULL )
 	{
-		vector<const Word*> els;
+		std::vector<const Word*> els;
 		f->get_elements_pointers(els);
 
-		for ( vector<const Word*>::const_iterator i=els.begin(); i!=els.end() ; ++i)
+		for (std::vector<const Word*>::const_iterator i=els.begin(); i!=els.end() ; ++i)
 		{
 			if ( (*i)->size()>0 && !mShioriPlugins->load_a_plugin(**i) )
 			{
-				GetSender().sender() << "SAORI読み込み中にエラーが発生: " << **i << endl;
+				GetSender().sender() << "SAORI読み込み中にエラーが発生: " << **i << std::endl;
 			}
 		}
 
@@ -295,12 +295,12 @@ bool	Satori::load(const string& iBaseFolder)
 	variables["起動回数"] = itos( zen2int(variables["起動回数"])+1 );
 
 	// 「単語の追加」で登録された単語を覚えておく
-	const map< string, Family<Word> >& m = words.compatible();
-	for ( map< string, Family<Word> >::const_iterator it = m.begin() ; it != m.end() ; ++it )
+	const std::map< string, Family<Word> >& m = words.compatible();
+	for (std::map< string, Family<Word> >::const_iterator it = m.begin() ; it != m.end() ; ++it )
 	{
-		vector<const Word*> v;
+		std::vector<const Word*> v;
 		it->second.get_elements_pointers(v);
-		for ( vector<const Word*>::const_iterator itx = v.begin() ; itx < v.end() ; ++itx ) {
+		for (std::vector<const Word*>::const_iterator itx = v.begin() ; itx < v.end() ; ++itx ) {
 			mAppendedWords[it->first].push_back(**itx);
 		}
 	}
@@ -331,7 +331,7 @@ bool	Satori::load(const string& iBaseFolder)
 	on_loaded_script = GetSentence("OnSatoriBoot");
 	diet_script(on_loaded_script);
 
-	GetSender().sender() << "loaded." << endl;
+	GetSender().sender() << "loaded." << std::endl;
 
 	GetSender().flush();
 	return	true;
@@ -348,7 +348,7 @@ bool	Satori::Save(bool isOnUnload) {
 	GetSender().next_event();
 
 	// メンバ変数を里々変数化
-	for (map<int, string>::iterator it=reserved_talk.begin(); it!=reserved_talk.end() ; ++it)
+	for (std::map<int, string>::iterator it=reserved_talk.begin(); it!=reserved_talk.end() ; ++it)
 		variables[string("次から")+itos(it->first)+"回目のトーク"] = it->second;
 
 	// 起動時間累計を設定
@@ -367,21 +367,21 @@ bool	Satori::Save(bool isOnUnload) {
 
 	string	theFullPath = mBaseFolder + "satori_savedata.tmp";
 
-	ofstream	out(theFullPath.c_str());
+	std::ofstream	out(theFullPath.c_str());
 	bool	temp = GetSender().is_validated();
 	GetSender().validate();
 	GetSender().sender() << "saving " << theFullPath << "... " ;
 	GetSender().validate(temp);
 	if ( !out.is_open() )
 	{
-		GetSender().sender() << "failed." << endl;
+		GetSender().sender() << "failed." << std::endl;
 		return	false;
 	}
 
 	string	line = "＊セーブデータ";
 	string  data;
 
-	out << ENCODE(line) << endl;
+	out << ENCODE(line) << std::endl;
 	for (strmap::const_iterator it=variables.begin() ; it!=variables.end() ; ++it) {
 		string	str = zen2han(it->first);
 		if ( str[0]=='S' && aredigits(str.c_str()+1) ) {
@@ -399,16 +399,16 @@ bool	Satori::Save(bool isOnUnload) {
 		m_escaper.unescape_for_dic(data);
 
 		string	line = string("＄")+it->first+"\t"+data; // 変数を保存
-		out << ENCODE(line) << endl;
+		out << ENCODE(line) << std::endl;
 	}
 
-	for ( map<string, vector<Word> >::const_iterator i=mAppendedWords.begin() ; i!=mAppendedWords.end() ; ++i )
+	for (std::map<string, std::vector<Word> >::const_iterator i=mAppendedWords.begin() ; i!=mAppendedWords.end() ; ++i )
 	{
 		if ( ! i->second.empty() ) {
-			out << endl << ENCODE( string("＠") + i->first ) << endl;
-			for ( vector<Word>::const_iterator j=i->second.begin() ; j!=i->second.end() ; ++j )
+			out << std::endl << ENCODE( string("＠") + i->first ) << std::endl;
+			for (std::vector<Word>::const_iterator j=i->second.begin() ; j!=i->second.end() ; ++j )
 			{
-				out << ENCODE( *j ) << endl;
+				out << ENCODE( *j ) << std::endl;
 			}
 		}
 	}
@@ -416,7 +416,7 @@ bool	Satori::Save(bool isOnUnload) {
 	out.flush();
 	out.close();
 
-	GetSender().sender() << "ok." << endl;
+	GetSender().sender() << "ok." << std::endl;
 
 	//バックアップ
 	string	realFullPath = mBaseFolder + "satori_savedata." + (fEncodeSavedata?"sat":"txt");
@@ -458,7 +458,7 @@ bool	Satori::unload() {
 	// プラグイン解放
 	mShioriPlugins->unload();
 
-	GetSender().sender() << "■SATORI::Unload ---------------------" << endl;
+	GetSender().sender() << "■SATORI::Unload ---------------------" << std::endl;
 	GetSender().flush();
 
 	return	true;

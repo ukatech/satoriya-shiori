@@ -26,7 +26,7 @@
 
 #include	"SaoriHost.h"
 
-static SRV	call_ssu(string iCommand, deque<string>& iArguments, deque<string>& oValues);
+static SRV	call_ssu(string iCommand, std::deque<string>& iArguments, std::deque<string>& oValues);
 
 #ifndef SSU_SAORI_CALL_INTERFACE
 
@@ -55,10 +55,10 @@ string ssu::get_version(const string& i_security_level)
 }
 
 int ssu::request(
-		const vector<string>& i_argument,
+		const std::vector<string>& i_argument,
 		bool i_is_secure,
 		string& o_result,
-		vector<string>& o_value)
+	std::vector<string>& o_value)
 {
 	if ( i_argument.size()<1 ) {
 		o_result = "命令が指定されていません";
@@ -66,7 +66,7 @@ int ssu::request(
 	}
 
 	// 最初の引数は命令名として扱う
-	vector<string>::const_iterator i_arg = i_argument.begin();
+	std::vector<string>::const_iterator i_arg = i_argument.begin();
 	string theCommand = *i_arg;
 	++i_arg;
 
@@ -83,7 +83,7 @@ int ssu::request(
 	// 注意！Valueヘッダ相当が存在しないときは、S?系システム変数を温存するためにデータを上書きしないこと！
 	if ( ! oValues.empty() ) {
 		o_value.clear();
-		for ( deque<string>::const_iterator o_val = oValues.begin() ; o_val != oValues.end() ; ++o_val ) {
+		for (std::deque<string>::const_iterator o_val = oValues.begin() ; o_val != oValues.end() ; ++o_val ) {
 			o_value.push_back(*o_val);
 		}
 	}
@@ -108,11 +108,11 @@ public:
 	#endif
 		return true;
 	}
-	virtual SRV		request(deque<string>& iArguments, deque<string>& oValues);
+	virtual SRV		request(std::deque<string>& iArguments, std::deque<string>& oValues);
 };
 SakuraDLLHost* SakuraDLLHost::m_dll = new ssu;
 
-SRV	ssu::request(deque<string>& iArguments, deque<string>& oValues) {
+SRV	ssu::request(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( iArguments.size()<1 )
 		return	SRV(400, "命令が指定されていません");
 
@@ -126,17 +126,17 @@ SRV	ssu::request(deque<string>& iArguments, deque<string>& oValues) {
 
 //================================================================================================
 
-typedef SRV (*Command)(deque<string>&, deque<string>&);
+typedef SRV (*Command)(std::deque<string>&, std::deque<string>&);
 
-static const map<string, Command> &func_map(void)
+static const std::map<string, Command> &func_map(void)
 {
 	// 名前と命令を関連付けたmap
-	static map<string, Command>	theMap;
+	static std::map<string, Command>	theMap;
 	if ( theMap.empty() )
 	{ 
 		// 初回準備
 		#define	d(iName)	\
-			SRV	_##iName(deque<string>&, deque<string>&); \
+			SRV	_##iName(std::deque<string>&, std::deque<string>&); \
 			theMap[ #iName ] = _##iName
 		// 命令一覧の宣言と関連付け。
 		d(calc);			d(calc_float);		d(if);				d(unless);
@@ -157,21 +157,21 @@ static const map<string, Command> &func_map(void)
 
 void get_ssu_funclist(std::vector<string> &funclist)
 {
-	const map<string, Command> &theMap = func_map();
+	const std::map<string, Command> &theMap = func_map();
 
 	funclist.clear();
 
-	for ( map<string, Command>::const_iterator i = theMap.begin() ; i != theMap.end() ; ++i ) {
+	for (std::map<string, Command>::const_iterator i = theMap.begin() ; i != theMap.end() ; ++i ) {
 		funclist.push_back(i->first);
 	}
 }
 
-static SRV	call_ssu(string iCommand, deque<string>& iArguments, deque<string>& oValues)
+static SRV	call_ssu(string iCommand, std::deque<string>& iArguments, std::deque<string>& oValues)
 {
-	const map<string, Command> &theMap = func_map();
+	const std::map<string, Command> &theMap = func_map();
 
 	// 命令の存在を確認
-	map<string, Command>::const_iterator i = theMap.find(iCommand);
+	std::map<string, Command>::const_iterator i = theMap.find(iCommand);
 	if ( i==theMap.end() )
 		return SRV(400, string()+"Error: '"+iCommand+"'という名前の命令は定義されていません。");
 
@@ -243,7 +243,7 @@ const char*	sjis_at(const char* p, int n) {
 	return	p;
 }
 
-bool	printf_format(const char*& p, deque<string>& iArguments, stringstream& os)
+bool	printf_format(const char*& p, std::deque<string>& iArguments, std::stringstream& os)
 {
 	assert(*p=='%');
 	if ( iArguments.empty() )
@@ -257,10 +257,10 @@ bool	printf_format(const char*& p, deque<string>& iArguments, stringstream& os)
 	bool isSharp=false;
 
 	while (true) {
-		if ( *p == '-' ) { os << left; ++p; }
-		else if ( *p == '+' ) { os << showpos; ++p; }
-		else if ( *p == '0' ) { os.fill('0'); os<<internal; ++p; }
-		else if ( *p == ' ' ) { os.fill(' '); os<<internal; ++p; }
+		if ( *p == '-' ) { os << std::left; ++p; }
+		else if ( *p == '+' ) { os << std::showpos; ++p; }
+		else if ( *p == '0' ) { os.fill('0'); os<< std::internal; ++p; }
+		else if ( *p == ' ' ) { os.fill(' '); os<< std::internal; ++p; }
 		else if ( *p == '#' ) { isSharp = true; ++p; }
 		else break;
 	}
@@ -296,14 +296,14 @@ bool	printf_format(const char*& p, deque<string>& iArguments, stringstream& os)
 			case 'o':
 			case 'x':
 			case 'X':
-				os << showbase;
+				os << std::showbase;
 				break;
 			case 'e':
 			case 'E':
 			case 'f':
 			case 'g':
 			case 'G':
-				os << showpoint;
+				os << std::showpoint;
 				break;
 		}
 	}
@@ -330,12 +330,12 @@ bool	printf_format(const char*& p, deque<string>& iArguments, stringstream& os)
 		}
 	case 'i':
 		{
-			os << oct << zen2int(str);
+			os << std::oct << zen2int(str);
 			break;
 		}
 	case 'o':
 		{
-			os << oct << strtoul(zen2han_internal(str).c_str(),NULL,10);
+			os << std::oct << strtoul(zen2han_internal(str).c_str(),NULL,10);
 			break;
 		}
 	case 'u':
@@ -345,37 +345,37 @@ bool	printf_format(const char*& p, deque<string>& iArguments, stringstream& os)
 		}
 	case 'x':
 		{
-			os << hex << nouppercase << strtoul(zen2han_internal(str).c_str(),NULL,10);
+			os << std::hex << std::nouppercase << strtoul(zen2han_internal(str).c_str(),NULL,10);
 			break;
 		}
 	case 'X':
 		{
-			os << hex << uppercase << strtoul(zen2han_internal(str).c_str(),NULL,10);
+			os << std::hex << std::uppercase << strtoul(zen2han_internal(str).c_str(),NULL,10);
 			break;
 		}
 	case 'e':
 		{
-			os << scientific << nouppercase << strtod(zen2han_internal(str).c_str(),NULL);
+			os << std::scientific << std::nouppercase << strtod(zen2han_internal(str).c_str(),NULL);
 			break;
 		}
 	case 'E':
 		{
-			os << scientific << uppercase << strtod(zen2han_internal(str).c_str(),NULL);
+			os << std::scientific << std::uppercase << strtod(zen2han_internal(str).c_str(),NULL);
 			break;
 		}
 	case 'g':
 		{
-			os << scientific << fixed << nouppercase << strtod(zen2han_internal(str).c_str(),NULL);
+			os << std::scientific << std::fixed << std::nouppercase << strtod(zen2han_internal(str).c_str(),NULL);
 			break;
 		}
 	case 'G':
 		{
-			os << scientific << fixed << uppercase << strtod(zen2han_internal(str).c_str(),NULL);
+			os << std::scientific << std::fixed << std::uppercase << strtod(zen2han_internal(str).c_str(),NULL);
 			break;
 		}
 	case 'f':
 		{
-			os << fixed << strtod(zen2han_internal(str).c_str(),NULL);
+			os << std::fixed << strtod(zen2han_internal(str).c_str(),NULL);
 			break;
 		}
 	case 'n': break;
@@ -386,14 +386,14 @@ bool	printf_format(const char*& p, deque<string>& iArguments, stringstream& os)
 	return	true;
 }
 
-string	sprintf(deque<string>& iArguments) {
-	stringstream s;
+string	sprintf(std::deque<string>& iArguments) {
+	std::stringstream s;
 	string	str = iArguments.front();
 	iArguments.pop_front();
 	const char* p = str.c_str();
 	while ( *p!='\0' ) {
 		if ( *p=='%' ) {
-			stringstream sf;
+			std::stringstream sf;
 			if ( printf_format(p, iArguments, sf) ) {
 				s << sf.str();
 				continue;
@@ -409,7 +409,7 @@ string	sprintf(deque<string>& iArguments) {
 }
 
 
-SRV _calc(deque<string>& iArguments, deque<string>& oValues) {
+SRV _calc(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( iArguments.size()!=1 )
 		return	SRV(400, "引数の個数が正しくありません。");
 	string	exp = iArguments[0];
@@ -418,7 +418,7 @@ SRV _calc(deque<string>& iArguments, deque<string>& oValues) {
 	return	exp;
 }
 
-SRV _calc_float(deque<string>& iArguments, deque<string>& oValues) {
+SRV _calc_float(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( iArguments.size()!=1 )
 		return	SRV(400, "引数の個数が正しくありません。");
 	string	exp = iArguments[0];
@@ -427,7 +427,7 @@ SRV _calc_float(deque<string>& iArguments, deque<string>& oValues) {
 	return	exp;
 }
 
-SRV _if(deque<string>& iArguments, deque<string>& oValues) {
+SRV _if(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( iArguments.size()<2 || iArguments.size()>3 )
 		return	SRV(400, "引数の個数が正しくありません。");
 	string	exp = iArguments[0];
@@ -442,7 +442,7 @@ SRV _if(deque<string>& iArguments, deque<string>& oValues) {
 			return	SRV(204);	// 偽でelseなし
 }
 
-SRV _unless(deque<string>& iArguments, deque<string>& oValues) {
+SRV _unless(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( iArguments.size()<2 || iArguments.size()>3 )
 		return	SRV(400, "引数の個数が正しくありません。");
 	string	exp = iArguments[0];
@@ -457,7 +457,7 @@ SRV _unless(deque<string>& iArguments, deque<string>& oValues) {
 			return	SRV(204);	// 真でelseなし
 }
 
-SRV _nswitch(deque<string>& iArguments, deque<string>& oValues) {
+SRV _nswitch(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( iArguments.size()<2 )
 		return	SRV(400, "引数が足りません。");
 
@@ -470,7 +470,7 @@ SRV _nswitch(deque<string>& iArguments, deque<string>& oValues) {
 		return	SRV(204);
 }
 
-SRV _switch(deque<string>& iArguments, deque<string>& oValues) {
+SRV _switch(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( iArguments.size()<2 )
 		return	SRV(400, "引数が足りません。");
 
@@ -488,7 +488,7 @@ SRV _switch(deque<string>& iArguments, deque<string>& oValues) {
 	return	SRV(204);
 }
 
-SRV _iflist(deque<string>& iArguments, deque<string>& oValues) {
+SRV _iflist(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( iArguments.size()<2 )
 		return	SRV(400, "引数が足りません。");
 
@@ -507,7 +507,7 @@ SRV _iflist(deque<string>& iArguments, deque<string>& oValues) {
 }
 
 
-SRV _substr(deque<string>& iArguments, deque<string>& oValues) {
+SRV _substr(std::deque<string>& iArguments, std::deque<string>& oValues) {
 
 	if ( iArguments.size()<1 )
 		return	SRV(400, "引数が足りません。");
@@ -546,7 +546,7 @@ SRV _substr(deque<string>& iArguments, deque<string>& oValues) {
 	return	SRV(200, string(start_p, end_p));
 }
 
-SRV _split(deque<string>& iArguments, deque<string>& oValues) {
+SRV _split(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( iArguments.size() < 1 )
 		return	SRV(400, "引数の個数が正しくありません。");
 
@@ -573,7 +573,7 @@ SRV _split(deque<string>& iArguments, deque<string>& oValues) {
 	return	SRV(200, itos(vec.size()));
 }
 
-SRV _join(deque<string>& iArguments, deque<string>& oValues) {
+SRV _join(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( iArguments.size()<1 )
 		return	SRV(400, "引数の個数が正しくありません。");
 
@@ -583,83 +583,83 @@ SRV _join(deque<string>& iArguments, deque<string>& oValues) {
 	return	r;
 }
 
-SRV _replace(deque<string>& iArguments, deque<string>& oValues) {
+SRV _replace(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( iArguments.size()!=3 )
 		return	SRV(400, "引数の個数が正しくありません。");
 	replace(iArguments[0], iArguments[1], iArguments[2]);
 	return	SRV(200, iArguments[0]);
 }
 
-SRV _replace_first(deque<string>& iArguments, deque<string>& oValues) {
+SRV _replace_first(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( iArguments.size()!=3 )
 		return	SRV(400, "引数の個数が正しくありません。");
 	replace_first(iArguments[0], iArguments[1], iArguments[2]);
 	return	iArguments[0];
 }
 
-SRV _erase(deque<string>& iArguments, deque<string>& oValues) {
+SRV _erase(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( iArguments.size()!=2 )
 		return	SRV(400, "引数の個数が正しくありません。");
 	erase(iArguments[0], iArguments[1]);
 	return	iArguments[0];
 }
 
-SRV _erase_first(deque<string>& iArguments, deque<string>& oValues) {
+SRV _erase_first(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( iArguments.size()!=2 )
 		return	SRV(400, "引数の個数が正しくありません。");
 	erase_first(iArguments[0], iArguments[1]);
 	return	iArguments[0];
 }
 
-SRV _count(deque<string>& iArguments, deque<string>& oValues) {
+SRV _count(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( iArguments.size()!=2 )
 		return	SRV(400, "引数の個数が正しくありません。");
 	return	itos( count(iArguments[0], iArguments[1]) );
 }
 
-SRV _compare_case(deque<string>& iArguments, deque<string>& oValues) {
+SRV _compare_case(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( iArguments.size()!=2 )
 		return	SRV(400, "引数の個数が正しくありません。");
 	return	(strcmp(zen2han_internal(iArguments[0]).c_str(), zen2han_internal(iArguments[1]).c_str())==0) ? "1" : "0";
 }
 
-SRV _compare(deque<string>& iArguments, deque<string>& oValues) {
+SRV _compare(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( iArguments.size()!=2 )
 		return	SRV(400, "引数の個数が正しくありません。");
 	return	(stricmp(zen2han_internal(iArguments[0]).c_str(), zen2han_internal(iArguments[1]).c_str())==0) ? "1" : "0";
 }
 
-SRV _compare_head_case(deque<string>& iArguments, deque<string>& oValues) {
+SRV _compare_head_case(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( iArguments.size()!=2 )
 		return	SRV(400, "引数の個数が正しくありません。");
 	return	compare_head(zen2han_internal(iArguments[0]), zen2han_internal(iArguments[1])) ? "1" : "0";
 }
 
-SRV _compare_head(deque<string>& iArguments, deque<string>& oValues) {
+SRV _compare_head(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( iArguments.size()!=2 )
 		return	SRV(400, "引数の個数が正しくありません。");
 	return	compare_head_nocase(zen2han_internal(iArguments[0]), zen2han_internal(iArguments[1])) ? "1" : "0";
 }
 
-SRV _compare_tail_case(deque<string>& iArguments, deque<string>& oValues) {
+SRV _compare_tail_case(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( iArguments.size()!=2 )
 		return	SRV(400, "引数の個数が正しくありません。");
 	return	compare_tail(zen2han_internal(iArguments[0]), zen2han_internal(iArguments[1])) ? "1" : "0";
 }
 
-SRV _compare_tail(deque<string>& iArguments, deque<string>& oValues) {
+SRV _compare_tail(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( iArguments.size()!=2 )
 		return	SRV(400, "引数の個数が正しくありません。");
 	return	compare_tail_nocase(zen2han_internal(iArguments[0]), zen2han_internal(iArguments[1])) ? "1" : "0";
 }
 
-SRV _length(deque<string>& iArguments, deque<string>& oValues) {
+SRV _length(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( iArguments.size()<1 )
 		return	"0";
 	return	itos( sjis_strlen(iArguments[0].c_str()) );
 }
 
-SRV _is_empty(deque<string>& iArguments, deque<string>& oValues) {
+SRV _is_empty(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( iArguments.size()<1 )
 		return	"1";
 	if ( iArguments[0].empty() )
@@ -668,7 +668,7 @@ SRV _is_empty(deque<string>& iArguments, deque<string>& oValues) {
 		return	"0";
 }
 
-SRV _is_digit(deque<string>& iArguments, deque<string>& oValues) {
+SRV _is_digit(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( iArguments.size()<1 || iArguments[0].empty() ) {
 		return	"0";
 	}
@@ -739,13 +739,13 @@ SRV _is_digit(deque<string>& iArguments, deque<string>& oValues) {
 	return	"1";
 }
 
-SRV _is_alpha(deque<string>& iArguments, deque<string>& oValues) {
+SRV _is_alpha(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( iArguments.size()<1 || iArguments[0].empty() )
 		return	"0";
 	return	arealphabets(iArguments[0]) ? "1" : "0";
 }
 
-SRV _zen2han(deque<string>& iArguments, deque<string>& oValues) {
+SRV _zen2han(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( ! iArguments.size() )
 		return	SRV(400, "引数の個数が正しくありません。");
 
@@ -816,7 +816,7 @@ string zen2han_internal(string &str,unsigned int flag)
 	return	str;
 }
 
-SRV _han2zen(deque<string>& iArguments, deque<string>& oValues) {
+SRV _han2zen(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( ! iArguments.size() )
 		return	SRV(400, "引数の個数が正しくありません。");
 
@@ -885,7 +885,7 @@ SRV _han2zen(deque<string>& iArguments, deque<string>& oValues) {
 	return	str;
 }
 
-SRV _hira2kata(deque<string>& iArguments, deque<string>& oValues) {
+SRV _hira2kata(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( iArguments.size()!=1 )
 		return	SRV(400, "引数の個数が正しくありません。");
 
@@ -901,7 +901,7 @@ SRV _hira2kata(deque<string>& iArguments, deque<string>& oValues) {
 	return	iArguments[0];
 }
 
-SRV _kata2hira(deque<string>& iArguments, deque<string>& oValues) {
+SRV _kata2hira(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( iArguments.size()!=1 )
 		return	SRV(400, "引数の個数が正しくありません。");
 
@@ -917,13 +917,13 @@ SRV _kata2hira(deque<string>& iArguments, deque<string>& oValues) {
 	return	iArguments[0];
 }
 
-SRV _sprintf(deque<string>& iArguments, deque<string>& oValues) {
+SRV _sprintf(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( iArguments.empty() )
 		return	SRV(400, "引数が足りません。");
 	return	sprintf(iArguments);
 }
 
-SRV _reverse(deque<string>& iArguments, deque<string>& oValues) {
+SRV _reverse(std::deque<string>& iArguments, std::deque<string>& oValues) {
 	if ( iArguments.empty() )
 		return	SRV(400, "引数が足りません。");
 
@@ -938,7 +938,7 @@ SRV _reverse(deque<string>& iArguments, deque<string>& oValues) {
 	return	r;
 }
 
-SRV _at(deque<string>& iArguments, deque<string>& oValues) {
+SRV _at(std::deque<string>& iArguments, std::deque<string>& oValues) {
 
 	if ( iArguments.size()==2 ) {
 		const char* p = sjis_at(iArguments.at(0).c_str(), zen2int(iArguments.at(1)));
@@ -958,7 +958,7 @@ if ( compare_head(theCommand, "tm") ) {
 	return	TimeCommands(theCommand, iArguments);
 }
 */
-SRV _choice(deque<string>& iArguments, deque<string>& oValues)
+SRV _choice(std::deque<string>& iArguments, std::deque<string>& oValues)
 {
 	if ( iArguments.size()==0 )
 	{
@@ -967,7 +967,7 @@ SRV _choice(deque<string>& iArguments, deque<string>& oValues)
 	return iArguments[ random(iArguments.size()) ];
 }
 
-SRV _lsimg(deque<string>& iArguments, deque<string>& oValues)
+SRV _lsimg(std::deque<string>& iArguments, std::deque<string>& oValues)
 {
 	if (iArguments.size() == 0)
 		return "0";
@@ -1006,7 +1006,7 @@ static inline int mkdir(const char* path, int mode)
 	return !CreateDirectory(path, NULL);
 }
 #endif
-SRV _mkdir(deque<string>& iArguments, deque<string>& oValues)
+SRV _mkdir(std::deque<string>& iArguments, std::deque<string>& oValues)
 {
 	if (iArguments.size() == 0)
 		return "";

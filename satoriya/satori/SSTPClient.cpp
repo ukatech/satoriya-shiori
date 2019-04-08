@@ -15,7 +15,7 @@
 #endif
 ////////////////////////////////////////
 
-extern bool readSakuraFMO(map<string, strmap>& oSakuraFMOMap);
+extern bool readSakuraFMO(std::map<string, strmap>& oSakuraFMOMap);
 
 bool direct_sstp(
 	const string& i_script,
@@ -42,7 +42,7 @@ bool direct_sstp(
 	cds.cbData = request.size();
 	cds.lpData = (LPVOID)request.c_str();
 
-	for( map<string, strmap>::iterator i=fmo.begin() ; i!=fmo.end() ; ++i )
+	for( std::map<string, strmap>::iterator i=fmo.begin() ; i!=fmo.end() ; ++i )
 	{
 		HWND host_window = (HWND)atoi(i->second["hwnd"].c_str());
 		if ( host_window == NULL )

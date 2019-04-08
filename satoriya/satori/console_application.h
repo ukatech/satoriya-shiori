@@ -1,5 +1,5 @@
 #include <string>
-using namespace std;
+using std::string;
 
 #ifndef POSIX
 #  include <windows.h>
