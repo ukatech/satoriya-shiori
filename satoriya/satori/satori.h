@@ -277,6 +277,9 @@ private:
 	// 時間系情報取得用
 	unsigned long sec_count_at_load, sec_count_total;
 
+	// 辞書拡張子・接頭辞
+	string dic_load_ext, dic_load_prefix;
+
 	// サーフェス
 	std::map<int, int>	cur_surface;
 	std::map<int, int>	last_talk_exiting_surface;
@@ -414,6 +417,9 @@ private:
 	bool IsArrayValue(const string &iName,int &ref,char &firstChar);
 
 	void surface_restore_string_addfunc(string &str, std::map<int, int>::const_iterator &i);
+
+	// 辞書読み込み内部実装用関数
+	bool select_dict_and_load_to_vector(const string& iFileName, strvec& oFileBody, bool warnFileName);
 
 	// SentenceToSakuraScriptExecの実体。
 	int SentenceToSakuraScriptInternal(const Talk &vec,string &result,string &jumpto,ptrdiff_t &ip);

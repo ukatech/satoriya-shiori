@@ -264,17 +264,21 @@ bool	Satori::load(const string& iBaseFolder)
 	talks.clear();
 	words.clear();
 
+	// 辞書拡張子・接頭辞
+	dic_load_ext = variables["辞書拡張子"];
+	dic_load_prefix = variables["辞書接頭辞"];
+
 	//------------------------------------------
 
 	// セーブデータ読み込み
 	//bool oldConf = fEncodeSavedata;
 
-	bool loadResult = LoadDictionary(mBaseFolder + "satori_savedata." + (fEncodeSavedata?"sat":"txt"), false);
+	bool loadResult = LoadDictionary(mBaseFolder + "satori_savedata." + (fEncodeSavedata?"sat":dic_load_ext.c_str()), false);
 	GetSentence("セーブデータ");
 	bool execResult = talks.get_family("セーブデータ") != NULL;
 
 	if ( ! loadResult || ! execResult ) {
-		loadResult = LoadDictionary(mBaseFolder + "satori_savebackup." + (fEncodeSavedata?"sat":"txt"), false);
+		loadResult = LoadDictionary(mBaseFolder + "satori_savebackup." + (fEncodeSavedata?"sat":dic_load_ext.c_str()), false);
 		GetSentence("セーブデータ");
 		execResult = talks.get_family("セーブデータ") != NULL;
 	}
@@ -293,6 +297,7 @@ bool	Satori::load(const string& iBaseFolder)
 		sec_count_total = zen2ul(variables["ゴースト起動時間累計(ms)"]) / 1000;
 	}
 	variables["起動回数"] = itos( zen2int(variables["起動回数"])+1 );
+
 
 	// 「単語の追加」で登録された単語を覚えておく
 	const std::map< string, Family<Word> >& m = words.compatible();
@@ -419,8 +424,8 @@ bool	Satori::Save(bool isOnUnload) {
 	GetSender().sender() << "ok." << std::endl;
 
 	//バックアップ
-	string	realFullPath = mBaseFolder + "satori_savedata." + (fEncodeSavedata?"sat":"txt");
-	string	realFullPathBackup = mBaseFolder + "satori_savebackup." + (fEncodeSavedata?"sat":"txt");
+	string	realFullPath = mBaseFolder + "satori_savedata." + (fEncodeSavedata?"sat":dic_load_ext.c_str());
+	string	realFullPathBackup = mBaseFolder + "satori_savebackup." + (fEncodeSavedata?"sat":dic_load_ext.c_str());
 #ifdef POSIX
 	unlink(realFullPathBackup.c_str());
 	rename(realFullPath.c_str(),realFullPathBackup.c_str());
@@ -432,8 +437,8 @@ bool	Satori::Save(bool isOnUnload) {
 #endif
 
 	//いらないほうを消す
-	string	delFullPath = mBaseFolder + "satori_savedata." + (fEncodeSavedata?"txt":"sat");
-	string	delFullPathBackup = mBaseFolder + "satori_savebackup." + (fEncodeSavedata?"txt":"sat");
+	string	delFullPath = mBaseFolder + "satori_savedata." + (fEncodeSavedata?dic_load_ext.c_str():"sat");
+	string	delFullPathBackup = mBaseFolder + "satori_savebackup." + (fEncodeSavedata?dic_load_ext.c_str():"sat");
 #ifdef POSIX
 	unlink(delFullPath.c_str());
 	unlink(delFullPathBackup.c_str());

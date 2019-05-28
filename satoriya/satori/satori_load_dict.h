@@ -76,6 +76,9 @@ void	Satori::InitMembers() {
 	sec_count_at_load = posix_get_current_sec();
 	sec_count_total = 0;
 
+	dic_load_ext = "txt";
+	dic_load_prefix = "dic";
+
 	ghosts_info.clear();
 	mCommunicateFor="";
 	mCommunicateLog.clear();

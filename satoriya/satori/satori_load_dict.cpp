@@ -199,9 +199,9 @@ string	Satori::SentenceToSakuraScriptExec_with_PreProcess(const strvec& i_vec)
 }
 
 // .txtと.satの両方がくるので、新しい方だけを読み込む。
-static bool select_dict_and_load_to_vector(const string& iFileName, strvec& oFileBody, bool warnFileName)
+bool Satori::select_dict_and_load_to_vector(const string& iFileName, strvec& oFileBody, bool warnFileName)
 {
-	string txtfile = set_extention(iFileName, "txt");
+	string txtfile = set_extention(iFileName, dic_load_ext);
 	string satfile = set_extention(iFileName, "sat");
 
 	string realext = get_extention(iFileName);
@@ -264,14 +264,14 @@ static bool satori_anchor_compare(const string &lhs,const string &rhs)
 bool Satori::LoadDictionary(const string& iFileName,bool warnFileName) 
 {
 	// ファイルからvectorへ読み込む。
-	// その際、同ファイル名で拡張子が.txtと.satのファイルの日付を比較し、新しい方だけを採用する。
+	// その際、同ファイル名で拡張子が.txt(または指定拡張子)と.satのファイルの日付を比較し、新しい方だけを採用する。
 	strvec	file_vec;
 	if ( !select_dict_and_load_to_vector(iFileName, file_vec, warnFileName) )
 	{
 		return false;
 	}
 
-	bool	is_for_anchor = compare_head(get_file_name(iFileName), "dicAnchor");
+	bool	is_for_anchor = compare_head(get_file_name(iFileName), dic_load_prefix + "Anchor");
 
 	strvec preprocessed_vec;
 	if ( false == pre_process(file_vec, preprocessed_vec, m_escaper, replace_before_dic) )
@@ -416,12 +416,15 @@ int Satori::LoadDicFolder(const string& i_base_folder)
 
 	int count = 0;
 	
+	string ext = ".";
+	ext += dic_load_ext;
+	
 	for (std::vector<string>::const_iterator it=files.begin() ; it!=files.end() ; ++it)
 	{
 		const int len = it->size();
-		if ( len < 7 ) { continue; } // dic.txtが最短ファイル名
-		if ( it->compare(0,3,"dic") != 0 ) { continue; }
-		if ( it->compare(len-4,4,".txt") != 0 && it->compare(len-4,4,".sat") != 0 ) { continue; }
+		if ( len < 3 ) { continue; } // 最短ファイル名3文字以上
+		if ( it->compare(0,3,dic_load_prefix.c_str()) != 0 ) { continue; }
+		if ( it->compare(len-4,4,ext.c_str()) != 0 && it->compare(len-4,4,".sat") != 0 ) { continue; }
 
 		if ( LoadDictionary(i_base_folder + *it) ) {
 			++count;
