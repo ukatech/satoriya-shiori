@@ -265,8 +265,12 @@ bool	Satori::load(const string& iBaseFolder)
 	words.clear();
 
 	// «‘Šg’£qEÚ“ª«
-	dic_load_ext = variables["«‘Šg’£q"];
-	dic_load_prefix = variables["«‘Ú“ª«"];
+	if ( variables.find("«‘Šg’£q") != variables.end() ) {
+		dic_load_ext = variables["«‘Šg’£q"];
+	}
+	if ( variables.find("«‘Ú“ª«") != variables.end() ) {
+		dic_load_prefix = variables["«‘Ú“ª«"];
+	}
 
 	//------------------------------------------
 
