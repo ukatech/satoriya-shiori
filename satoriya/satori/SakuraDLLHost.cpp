@@ -30,7 +30,7 @@ extern "C" int load(char* i_data, long i_data_len) {
 //	GetSender().initialize();
     string the_base_folder(i_data, i_data_len);
     free(i_data);
-    GetSender().sender() << the_base_folder << endl;
+    GetSender().sender() << the_base_folder << std::endl;
     return SakuraDLLHost::I()->load(the_base_folder);
 }
 #else

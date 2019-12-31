@@ -43,7 +43,7 @@ using std::string;
 //
 // パスは環境変数 SAORI_FALLBACK_PATH から取得する。これはコロン区切りの絶対パスである。
 
-static vector<string> posix_dll_search_path;
+static std::vector<string> posix_dll_search_path;
 static bool posix_dll_search_path_is_ready = false;
 static string posix_search_fallback_dll(const string& dllfile) {
     // dllfileは探したいファイルDLL名。パス区切り文字は/。
@@ -64,7 +64,7 @@ static string posix_search_fallback_dll(const string& dllfile) {
 	dllfile.begin() + (pos_slash == string::npos ? 0 : pos_slash),
 	dllfile.end());
 
-    for (vector<string>::const_iterator ite = posix_dll_search_path.begin();
+    for (std::vector<string>::const_iterator ite = posix_dll_search_path.begin();
 	 ite != posix_dll_search_path.end(); ite++ ) {
 	string fpath = *ite + '/' + fname;
 	struct stat sb;
@@ -226,7 +226,7 @@ bool ShioriPlugins::load_a_plugin(const string& iPluginLine)
 				return false;
 				}
 				else {
-				cerr << "SAORI: using " << fallback_lib << " instead of " << fullpath << endl;
+				std::cerr << "SAORI: using " << fallback_lib << " instead of " << fullpath << std::endl;
 				}
 
 				// 参照カウントに使うため、fullpathは書換えない。

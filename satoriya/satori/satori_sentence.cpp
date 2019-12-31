@@ -132,7 +132,7 @@ string Satori::SentenceToSakuraScriptExec(const Talk& vec)
 {
 	string jump_to;
 	string result;
-	ptrdiff_t ip = 0;
+	std::ptrdiff_t ip = 0;
 	const Talk* pVec = &vec;
 	bool comAndMode = mRequestID!="OnCommunicate";
 
@@ -214,7 +214,7 @@ string Satori::SentenceToSakuraScriptExec(const Talk& vec)
 	return allresult;
 }
 
-int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,string &jump_to,ptrdiff_t &ip)
+int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,string &jump_to, std::ptrdiff_t &ip)
 {
 	// çƒãAä«óù
 	static	int nest_count=0;

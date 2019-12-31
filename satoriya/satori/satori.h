@@ -422,7 +422,7 @@ private:
 	bool select_dict_and_load_to_vector(const string& iFileName, strvec& oFileBody, bool warnFileName);
 
 	// SentenceToSakuraScriptExec‚ÌÀ‘ÌB
-	int SentenceToSakuraScriptInternal(const Talk &vec,string &result,string &jumpto,ptrdiff_t &ip);
+	int SentenceToSakuraScriptInternal(const Talk &vec,string &result,string &jumpto,std::ptrdiff_t &ip);
 
 public:
 

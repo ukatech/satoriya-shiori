@@ -8,7 +8,7 @@
 #include	"satori_load_dict.h"
 
 #ifdef POSIX
-#  include <istd::ostream>
+#  include <iostream>
 #  include "stltool.h"
 #endif
 
@@ -278,13 +278,13 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName)
 	{
 #ifdef POSIX
 	     GetSender().errsender() <<
-		    "syntax error - SATORI : " << iFileName << std::std::endl <<
-		    std::std::endl <<
-		    "There are some mismatched parenthesis." << std::std::endl <<
-		    "The dictionary is not loaded correctly." << std::std::endl <<
-		    std::std::endl <<
-		    "If you want to display parenthesis independently," << std::std::endl <<
-		    "use \"phi\" symbol to escape it." << std::std::endl;
+		    "syntax error - SATORI : " << iFileName << std::endl <<
+		    std::endl <<
+		    "There are some mismatched parenthesis." << std::endl <<
+		    "The dictionary is not loaded correctly." << std::endl <<
+		    std::endl <<
+		    "If you want to display parenthesis independently," << std::endl <<
+		    "use \"phi\" symbol to escape it." << std::endl;
 #else
 		GetSender().errsender() << iFileName + "\n\n"
 			"\n"

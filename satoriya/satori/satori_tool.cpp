@@ -13,6 +13,8 @@
 #ifdef POSIX
 #  include <iostream>
 #include <sys/stat.h>
+using std::min;
+using std::max;
 #endif
 
 #include "random.h"
