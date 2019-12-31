@@ -27,6 +27,16 @@
 #define strcasecmp _stricmp
 #endif
 
+#if _MSC_VER <= 1200
+namespace std {
+	#ifdef _WIN64
+	typedef __int64             ptrdiff_t;
+	#else  /* _WIN64 */
+	typedef int            ptrdiff_t;
+	#endif  /* _WIN64 */
+}
+#endif
+
 #include	<iostream>
 #include	<string>
 #include	<map>
