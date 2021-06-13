@@ -507,24 +507,21 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 					// 改行
 					character_wait_clear(2);
 				}
-				else if ( ( (cmd=="0" || cmd=="h") && speaker==1) || ( (cmd=="1" || cmd=="u") && speaker==0) ) {
-					// スコープ切り替え
-					if ( is_speaked(speaker) ) {
-						result += append_at_scope_change_with_sakura_script;
-						chars_spoken += 2;
+				else if ( (cmd=="0" || cmd=="h") || (cmd=="1" || cmd=="u") || (cmd=="p" && aredigits(opt)) ) {
+					int spktmp;
+
+					if (cmd=="0" || cmd=="h") {
+						spktmp = 0;
 					}
-					if (cmd == "0" || cmd == "h"){
-						speaker = 0;
+					else if (cmd=="1" || cmd=="u") {
+						spktmp = 1;
 					}
-					else{
-						speaker = 1;
+					else {
+						spktmp = stoi_internal(opt);
 					}
-					character_wait_clear(2);
-				}
-				else if ( cmd=="p" && aredigits(opt) ) {
-					int spktmp = stoi_internal(opt);
+					
 					if ( speaker != spktmp ) {
-						// スコープ切り替えonSSP/CROW
+						// スコープ切り替え
 						if ( is_speaked(speaker) ) {
 							result += append_at_scope_change_with_sakura_script;
 							chars_spoken += 2;
