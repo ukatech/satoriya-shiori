@@ -376,25 +376,26 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 					GetSender().sender() << "変数「" << key << "」と同じ名前の文があります。トラブルの元なので避けましょう。" << std::endl;
 				}
 
-				bool isOverwritten;
-				bool isSysValue;
+				if ( system_variable_operation(key, value, &result) >= 0 ) {
+					bool isOverwritten;
+					bool isSysValue;
 
-				// "0"は代入先を先に参照する時、エラーを返さないように。
-				string *pstr = GetValue(key,isSysValue,true,&isOverwritten,"0");
+					// "0"は代入先を先に参照する時、エラーを返さないように。
+					string *pstr = GetValue(key,isSysValue,true,&isOverwritten,"0");
 
-				if ( do_calc ) {
-					if ( !calculate(value, value) )
-						break;
-					if ( aredigits(value) ) {
-						value = int2zen(stoi_internal(value));
+					if ( do_calc ) {
+						if ( !calculate(value, value) )
+							break;
+						if ( aredigits(value) ) {
+							value = int2zen(stoi_internal(value));
+						}
 					}
+
+					GetSender().sender() << "＄" << key << "＝" << value << "／" << 
+						(isOverwritten ? "written." : "overwritten.")<< std::endl;
+
+					if ( pstr ) { *pstr = value; }
 				}
-
-				GetSender().sender() << "＄" << key << "＝" << value << "／" << 
-					(isOverwritten ? "written." : "overwritten.")<< std::endl;
-
-				if ( pstr ) { *pstr = value; }
-				system_variable_operation(key, value, &result);
 			}
 			continue;
 		}

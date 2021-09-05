@@ -627,7 +627,19 @@ void	Satori::erase_var(const string& key)
 	variables.erase(key);
 }
 
-bool	Satori::system_variable_operation(string key, string value, string* result)
+// システム変数
+// return = 0(処理なし) / 1(処理した) / -1(処理したけど変数設定してはだめ)
+
+int	Satori::system_variable_operation(string key, string value, string* result)
+{
+	int r = system_variable_operation_real(key,value,result);
+	if ( r < 0 ) {
+		variables.erase(key); //念の為
+	}
+	return r;
+}
+
+int	Satori::system_variable_operation_real(string key, string value, string* result)
 {
 	// mapにしようよ。
 	
@@ -639,7 +651,7 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 		int	dist = static_cast<int>(talk_interval*(talk_interval_random/100.0));
 		talk_interval_count = ( dist==0 ) ? talk_interval : (talk_interval-dist)+(random(dist*2));
 		
-		return true;
+		return 1; //実行＋変数設定
 	}
 	
 	if ( key == "喋り間隔誤差" ) {
@@ -652,12 +664,12 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 		talk_interval_count = ( dist==0 ) ? talk_interval : 
 		(talk_interval-dist)+(random(dist*2));
 		
-		return true;
+		return 1; //実行＋変数設定
 	}
 	
 	if ( key =="見切れてても喋る" ) {
 		is_call_ontalk_at_mikire= (value=="有効");
-		return true;
+		return 1; //実行＋変数設定
 	}
 
 	if ( key == "今回は喋らない" ) {
@@ -667,49 +679,49 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 	
 	if ( key == "スクリプトの一番頭" ) {
 		header_script = value;
-		return true;
+		return 1; //実行＋変数設定
 	}
 
 	if ( key == "呼び出し回数制限" ) {
 		m_nest_limit = zen2int(value);
 		if ( m_nest_limit < 0 ) { m_nest_limit = 0; }
-		return true;
+		return 1; //実行＋変数設定
 	}
 
 	if ( key == "ジャンプ回数制限" ) {
 		m_jump_limit = zen2int(value);
 		if ( m_jump_limit < 0 ) { m_jump_limit = 0; }
-		return true;
+		return 1; //実行＋変数設定
 	}
 	
 	if ( key == "スコープ切り換え時" ) {
 		append_at_scope_change = zen2han(value);
-		return true;
+		return 1; //実行＋変数設定
 	}
 
 	if ( key == "さくらスクリプトによるスコープ切り換え時" ) {
 		append_at_scope_change_with_sakura_script = zen2han(value);
-		return true;
+		return 1; //実行＋変数設定
 	}
 
 	if ( key == "トーク開始時" ) {
 		append_at_talk_start = zen2han(value);
-		return true;
+		return 1; //実行＋変数設定
 	}
 
 	if ( key == "トーク終了時" ) {
 		append_at_talk_end = zen2han(value);
-		return true;
+		return 1; //実行＋変数設定
 	}
 
 	if ( key == "選択肢開始時" ) {
 		append_at_choice_start = zen2han(value);
-		return true;
+		return 1; //実行＋変数設定
 	}
 	
 	if ( key == "選択肢終了時" ) {
 		append_at_choice_end = zen2han(value);
-		return true;
+		return 1; //実行＋変数設定
 	}
 
 	if ( key == "会話時サーフェス戻し" || key == "会話時サーフィス戻し" ) {
@@ -722,7 +734,7 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 		else {
 			surface_restore_at_talk = SR_NONE;
 		}
-		return true;
+		return 1; //実行＋変数設定
 	}
 
 	if ( key == "今回は会話時サーフェス戻し" || key == "今回は会話時サーフィス戻し" ) {
@@ -735,7 +747,7 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 		else {
 			surface_restore_at_talk_onetime = SR_NONE;
 		}
-		return true;
+		return 1; //実行＋変数設定
 	}
 	
 	if ( key == "自動アンカー" ) {
@@ -747,7 +759,7 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 			auto_anchor_enable = false;
 			auto_anchor_enable_onetime = auto_anchor_enable;
 		}
-		return true;
+		return 1; //実行＋変数設定
 	}
 
 	if ( key == "今回は自動アンカー" ) {
@@ -757,7 +769,7 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 		else {
 			auto_anchor_enable_onetime = false;
 		}
-		return true;
+		return 1; //実行＋変数設定
 	}
 	
 	if ( compare_head(key,  "サーフェス加算値") && aredigits(key.c_str() + const_strlen("サーフェス加算値")) ) {
@@ -768,7 +780,7 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 		next_default_surface[n] = zen2int(value);
 		if ( !is_speaked_anybody() )
 			default_surface[n]=next_default_surface[n];
-		return true;
+		return 1; //実行＋変数設定
 	}
 
 	if ( compare_head(key,  "デフォルトサーフェス") && aredigits(key.c_str() + const_strlen("デフォルトサーフェス")) ) {
@@ -776,19 +788,19 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 		next_default_surface[n]= zen2int(value);
 		if ( !is_speaked_anybody() )
 			default_surface[n]=next_default_surface[n];
-		return true;
+		return 1; //実行＋変数設定
 	}
 
 	if ( compare_head(key,  "BalloonOffset") && aredigits(key.c_str() + const_strlen("BalloonOffset")) ) {
 		int n = stoi_internal(key.c_str() + const_strlen("BalloonOffset"));
 		BalloonOffset[n] = value;
 		validBalloonOffset[n] = true;
-		return true;
+		return 1; //実行＋変数設定
 	}
 
 	if ( key == "トーク中のなでられ反応") {
 		insert_nade_talk_at_other_talk= (value=="有効");
-		return true;
+		return 1; //実行＋変数設定
 	}
 	
 	if (key == "なでられ時実行イベント") {
@@ -800,49 +812,49 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 			bool_of_action_when_ghost_is_stroked = false;
 			variables["なでられ時実行イベント"] = "デフォルト";
 		}
-		return true;
+		return 1; //実行＋変数設定
 	}
 	
 	if ( key == "なでられ持続秒数") {
 		nade_valid_time_initializer = zen2int(value);
-		return true;
+		return 1; //実行＋変数設定
 	}
 
 	if ( key == "なでられ反応回数") {
 		nade_sensitivity = zen2int(value);
-		return true;
+		return 1; //実行＋変数設定
 	}
 
 	if ( key == "デバッグ" ) {
 		fDebugMode = (value=="有効");
-		return true;
+		return 1; //実行＋変数設定
 	}
 
 	if ( key == "Log" ) {
 		GetSender().validate(value=="有効");
-		return true;
+		return 1; //実行＋変数設定
 	}
 
 	if ( key == "RequestLog" ) {
 		fRequestLog = (value=="有効");
-		return true;
+		return 1; //実行＋変数設定
 	}
 
 	if ( key == "OperationLog" ) {
 		fOperationLog = (value=="有効");
-		return true;
+		return 1; //実行＋変数設定
 	}
 	
 	if ( key == "ResponseLog" ) {
 		fResponseLog = (value=="有効");
-		return true;
+		return 1; //実行＋変数設定
 	}
 	
 	if ( key == "自動挿入ウェイトの倍率" || key == "自動挿入ウエイトの倍率" ) {
 		rate_of_auto_insert_wait= zen2int(value);
 		rate_of_auto_insert_wait = min(1000, max(0, rate_of_auto_insert_wait));
 		variables["自動挿入ウェイトの倍率"] = int2zen(rate_of_auto_insert_wait);
-		return true;
+		return 1; //実行＋変数設定
 	}
 	
 	if ( key == "自動挿入ウェイトタイプ" || key == "自動挿入ウエイトタイプ"  ) {
@@ -858,7 +870,7 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 			type_of_auto_insert_wait = 1;
 			variables["自動挿入ウェイトタイプ"] = "里々";
 		}
-		return true;
+		return 1; //実行＋変数設定
 	}
 
 	if ( key == "コミュニケートの検索方法"  ) {
@@ -870,45 +882,41 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 			type_of_communicate_search = COMSEARCH_DEFAULT;
 			variables["コミュニケートの検索方法"] = "里々";
 		}
-		return true;
+		return 1; //実行＋変数設定
 	}
 	
 	if ( key == "辞書フォルダ" ) {
 		strvec	words;
 		split(value, ",",dic_folder);
 		reload_flag=true;
-		return true;
+		return 1; //実行＋変数設定
 	}
 	
 	if ( key == "セーブデータ暗号化" ) {
 		fEncodeSavedata = (value=="有効");
-		return true;
+		return 1; //実行＋変数設定
 	}
 	
 	if ( compare_head(key,"単語群「") && compare_tail(key,"」の重複回避") ) {
-		variables.erase(key);
 		words.setOC( string(key.c_str()+8, key.length()-8-12), value );
-		return true;
+		return -1; //◆実行：変数設定しない
 	}
 
 	if ( compare_head(key,"文「") && compare_tail(key,"」の重複回避") ) {
-		variables.erase(key);
 		talks.setOC( string(key.c_str()+4, key.length()-4-12), value );
-		return true;
+		return -1; //◆実行：変数設定しない
 	}
 	
 	if ( key == "次のトーク" ) {
-		variables.erase(key);
 		int	count=1;
 		while ( reserved_talk.find(count) != reserved_talk.end() )
 			++count;
 		reserved_talk[count] = value;
 		GetSender().sender() << "次回のランダムトークが「" << value << "」に予\x96\xf1されました。" << std::endl;
-		return true;
+		return -1; //◆実行：変数設定しない
 	}
 	
 	if ( compare_head(key,"次から") && compare_tail(key,"回目のトーク") ) {
-		variables.erase(key);
 		int	count = zen2int( string(key.c_str()+6, key.length()-6-12) );
 		if ( count<=0 ) {
 			GetSender().sender() << "トーク予\x96\xf1、設定値がヘンです。" << std::endl;
@@ -919,7 +927,7 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 			reserved_talk[count] = value;
 			GetSender().sender() << count << "回後のランダムトークが「" << value << "」に予\x96\xf1されました。" << std::endl;
 		}
-		return true;
+		return -1; //◆実行：変数設定しない
 	}
 
 	if ( key=="トーク予\x96\xf1のキャンセル" ) {
@@ -931,7 +939,7 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 					reserved_talk.erase(it++);
 				else
 					++it;
-		return true;
+		return 1; //実行＋変数設定
 	}
 
 	if ( key == "SAORI引数の計算" ) {
@@ -941,27 +949,25 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 			mSaoriArgumentCalcMode = SACM_OFF;
 		else
 			mSaoriArgumentCalcMode = SACM_AUTO;
-		return true;
+		return 1; //実行＋変数設定
 	}
 	
 	if ( key == "辞書リロード" && value=="実行") {
-		variables.erase(key);
 		reload_flag=true;
-		return true;
+		return -1; //◆実行：変数設定しない
 	}
 	
 	if ( key == "れしば送信") {
 		variables.erase(key);
 		GetSender().reinit(value=="有効");
-		return true;
+		return 1; //実行＋変数設定
 	}
 	
 	if ( key == "手動セーブ" && value=="実行") {
-		variables.erase(key);
 		if ( is_dic_loaded ) {
 			this->Save();
 		}
-		return true;
+		return -1; //◆実行：変数設定しない
 	}
 	
 	if ( key == "自動セーブ間隔" ) {
@@ -971,23 +977,21 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 			GetSender().sender() << ""  << itos(mAutoSaveInterval) << "秒間隔で自動セーブを行います。" << std::endl;
 		else
 			GetSender().sender() << "自動セーブは行いません。" << std::endl;
-		return true;
+		return 1; //実行＋変数設定
 	}
 	
 	if ( key == "全タイマ解除" && value=="実行") {
-		variables.erase(key);
 		for (strintmap::const_iterator i=timer.begin();i!=timer.end();++i)
 			variables.erase(i->first + "タイマ");
 		timer.clear();
-		return true;
+		return -1; //◆実行：変数設定しない
 	}
 	
 	if ( key == "教わること" ) {
-		variables.erase(key);
 		teach_genre=value;
 		if ( result != NULL )
 			*result += "\\![open,teachbox]";
-		return true;
+		return -1; //◆実行：変数設定しない
 	}
 	
 	if ( key.size()>6 && compare_tail(key, "タイマ") ) {
@@ -999,7 +1003,6 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 		else */{
 		int sec = zen2int(value);
 		if ( sec < 1 ) {
-			variables.erase(key);
 			if ( timer.find(name)!=timer.end() ) {
 				timer.erase(name);
 				GetSender().sender() << "タイマ「"  << name << "」の予\x96\xf1がキャンセルされました。" << std::endl;
@@ -1010,43 +1013,50 @@ bool	Satori::system_variable_operation(string key, string value, string* result)
 			GetSender().sender() << "タイマ「"  << name << "」が" << sec << "秒後に予\x96\xf1されました。" << std::endl;
 		}
 		}
-		return true;
+		return -1; //◆実行：変数設定しない
 	}
 
 	if ( key == "引数区切り追加" && value.size()>0 ) {
-		variables.erase(key);
 		mDelimiters.insert(value);
-		return true;
+		return -1; //◆実行：変数設定しない
 	}
 	
 	if ( key == "引数区切り削除" && value.size()>0 ) {
-		variables.erase(key);
 		mDelimiters.erase(value);
-		return true;
+		return -1; //◆実行：変数設定しない
 	}
 	
 	if ( compare_head(key, "Value") && aredigits(key.c_str() + 5) )
 	{
-		variables.erase(key);
 		if(value!=""){
 			mResponseMap[string()+"Reference"+key.substr(5)] = value;
 		}else{
 			mResponseMap.erase(string()+"Reference"+key.substr(5));
 		}
-		return true;
+		return -1; //◆実行：変数設定しない
+	}
+
+	if ( compare_head(key,"返信ヘッダ「") && compare_tail(key,"」") ) {
+		if(value!=""){
+			mResponseMap[string(key.c_str()+12, key.length()-12-2)] = value;
+		}else{
+			mResponseMap.erase(string(key.c_str()+12, key.length()-12-2));
+		}
+		return -1; //◆実行：変数設定しない
 	}
 
 	if (key == "NOTIFYの自動保存" && value.size() > 0){
 		is_save_notify = (value == "有効");
-		return true;
+		return 1; //実行＋変数設定
 	}
 
 	if (key == "れしばログ一時保存件数" && value.size() > 0)
 	{
 		GetSender().set_delay_save_count(zen2int(value));
+		return 1; //実行＋変数設定
 	}
 
-	return	false;
+	return	0; //実行しない
 }
 
 

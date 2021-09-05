@@ -115,15 +115,16 @@ string	Satori::inc_call(
 				erase_var(key);	// ë∂ç›ñïè¡
 			}
 			else {
-				bool isOverwritten;
-				bool isSysValue;
-				string *pstr = GetValue(key,isSysValue,true,&isOverwritten);
-				
-				GetSender().sender() << "Åê" << key << "ÅÅ" << value << "Å^" << 
-					(isOverwritten ? "written." : "overwritten.")<< std::endl;
+				if ( system_variable_operation(key, value, &result) >= 0 ) {
+					bool isOverwritten;
+					bool isSysValue;
+					string *pstr = GetValue(key,isSysValue,true,&isOverwritten);
+					
+					GetSender().sender() << "Åê" << key << "ÅÅ" << value << "Å^" << 
+						(isOverwritten ? "written." : "overwritten.")<< std::endl;
 
-				if ( pstr ) { *pstr = value; }
-				system_variable_operation(key, value, &result);
+					if ( pstr ) { *pstr = value; }
+				}
 			}
 			return	result;
 		}

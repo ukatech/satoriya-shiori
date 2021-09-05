@@ -402,7 +402,9 @@ private:
 	bool	TalkSearch(const string& iSentence, string& oScript, bool iAndMode);
 
 	// システム変数設定時の動作
-	bool	system_variable_operation(string key, string value, string* result=NULL);
+	// return = 0(処理なし) / 1(処理した) / -1(処理したけど変数設定してはだめ)
+	int	system_variable_operation(string key, string value, string* result=NULL);
+	int	system_variable_operation_real(string key, string value, string* result); //内部処理用(直接使わないで)
 
 	// 内部。返値は続行の有無。続行時はSentenceNameをGetSentence。
 	const Talk* GetSentenceInternal(string& ioSentenceName);
