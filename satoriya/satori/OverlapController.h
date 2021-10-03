@@ -30,6 +30,16 @@ public:
 	// 候補は一つ以上あることが保証されている。
 	virtual T select(const std::list<T>&) =0;
 
+	//選択可能なものを返す
+	virtual void get_selectable(const std::list<T>&, std::list<T>&) = 0;
+
+	//外部から選択したことにして重複回避を動かす
+	virtual void apply_selected(const std::list<T>&, T){}
+
+	// 全て使い切った状態かを返す。
+	// 使い切ることができるやつだけ
+	virtual bool is_used_all() { return false; }
+
 	virtual int type(void) = 0;
 
 
@@ -60,6 +70,15 @@ public:
 		typename std::list<T>::const_iterator it = i_candidates.begin();
 		std::advance( it, random(i_candidates.size()) );
 		return *it;
+	}
+
+	//選択可能なものを返す
+	virtual void get_selectable(const std::list<T>& i_candidates, std::list<T>& out_list)
+	{
+		for (std::list<T>::const_iterator it = i_candidates.begin(); it != i_candidates.end(); ++it)
+		{
+			out_list.push_back(*it);
+		}
 	}
 };
 
@@ -107,6 +126,45 @@ public:
 			m_last = t;
 			return t;
 		}
+	}
+
+	//選択可能なものを返す
+	virtual void get_selectable(const std::list<T>&, std::list<T>& out_list)
+	{
+		for (std::set<T>::const_iterator it = m_unused.begin(); it != m_unused.end(); ++it)
+		{
+			out_list.push_back(*it);
+		}
+	}
+
+	//外部から選択したことにして重複回避を動かす
+	virtual void apply_selected(const std::list<T>&, T t)
+	{
+		{
+			/*
+			for (list<T>::const_iterator it = i_candidates.begin(); it != i_candidates.end(); ++it)
+			{
+				if (*it == t)
+				{
+					m_last = t;
+					break;
+				}
+			}
+			*/
+
+			std::set<T>::iterator it = m_unused.find(t);
+			if (it != m_unused.end())
+			{
+				m_unused.erase(t);
+				m_used.insert(t);
+			}
+		}
+	}
+
+	// 候補を使い切った？
+	virtual bool is_used_all()
+	{
+		return m_unused.empty() && !m_used.empty();
 	}
 
 	// 候補が追加された
@@ -179,6 +237,39 @@ public:
 		return (m_last = *it);
 	}
 
+	//選択可能なものを返す
+	virtual void get_selectable(const std::list<T>& i_candidates, std::list<T>& out_list)
+	{
+		if (i_candidates.size() == 1)
+		{
+			out_list.push_back(*(i_candidates.begin()));
+		}
+		else
+		{
+			for (std::list<T>::const_iterator it = i_candidates.begin(); it != i_candidates.end(); ++it)
+			{
+				if (m_last != *it)
+				{
+					//直前だけ避ける
+					out_list.push_back(*it);
+				}
+			}
+		}
+	}
+
+	//外部から選択したことにして重複回避を動かす
+	virtual void apply_selected(const std::list<T>& i_candidates, T t)
+	{
+		for (std::list<T>::const_iterator it = i_candidates.begin(); it != i_candidates.end(); ++it)
+		{
+			if (*it == t)
+			{
+				m_last = t;
+				break;
+			}
+		}
+	}
+
 	// 候補が消去されようとしている
 	virtual void on_erase(const std::list<T>& i_candidates, typename std::list<T>::const_iterator i_it)
 	{
@@ -233,6 +324,48 @@ public:
 			}
 		}
 		return (m_last = *it);
+	}
+
+	//選択可能なものを返す。
+	virtual void get_selectable(const std::list<T>& i_candidates, std::list<T>& out_list)
+	{
+		typename std::list<T>::const_iterator it = i_candidates.begin();
+
+		if (m_last != INVALID_VALUE)
+		{
+			while (m_last != *it)
+			{
+				++it;
+				if (it == i_candidates.end()) { break; }
+			}
+			// assert( m_last == *it );
+
+			// 直前のものより１つだけ進める 直前が無効か最後までいったら最初から
+			if (it == i_candidates.end())
+			{
+				it = i_candidates.begin();
+			}
+			else if (++it == i_candidates.end())
+			{
+				it = i_candidates.begin();
+			}
+		}
+
+		//ひとつだけになる
+		out_list.push_back(*it);
+	}
+
+	//外部から選択したことにして重複回避を動かす
+	virtual void apply_selected(const std::list<T>& i_candidates, T t)
+	{
+		for (std::list<T>::const_iterator it = i_candidates.begin(); it != i_candidates.end(); ++it)
+		{
+			if (*it == t)
+			{
+				m_last = t;
+				break;
+			}
+		}
 	}
 
 	// 候補が消去されようとしている
@@ -293,6 +426,44 @@ public:
 			}
 		}
 		return (m_last = *it);
+	}
+
+	virtual void get_selectable(const std::list<T>& i_candidates, std::list<T>& out_list)
+	{
+		typename std::list<T>::const_reverse_iterator it = i_candidates.rbegin();
+		if (m_last != INVALID_VALUE)
+		{
+			while (m_last != *it)
+			{
+				++it;
+				if (it == i_candidates.rend()) { break; }
+			}
+			//assert( m_last == *it );
+
+			// 直前のものより１つだけ進める 直前が無効か最後までいったら最初から
+			if (it == i_candidates.rend())
+			{
+				it = i_candidates.rbegin();
+			}
+			else if (++it == i_candidates.rend())
+			{
+				it = i_candidates.rbegin();
+			}
+		}
+		out_list.push_back(*it);
+	}
+
+	//外部から選択したことにして重複回避を動かす
+	virtual void apply_selected(const std::list<T>& i_candidates, T t)
+	{
+		for (std::list<T>::const_iterator it = i_candidates.begin(); it != i_candidates.end(); ++it)
+		{
+			if (*it == t)
+			{
+				m_last = t;
+				break;
+			}
+		}
 	}
 
 	// 候補が消去されようとしている

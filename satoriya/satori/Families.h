@@ -12,6 +12,7 @@
 typedef enum {
 	COMSEARCH_DEFAULT,
 	COMSEARCH_LENGTH,
+	COMSEARCH_TAG
 } FamilyComSearchType;
 
 template<typename T>
@@ -174,21 +175,42 @@ public:
 			
 		}
 	}
+
+	bool isOCUsedAll(const string& i_name)
+	{
+		iterator st, ed;
+		if (i_name == "＊")
+		{
+			//全対象には使えない
+			return false;
+		}
+		else
+		{
+			st = m_elements.find(i_name);
+			if (st == m_elements.end())
+			{
+				GetSender().sender() << "'" << i_name << "' は存在しません。" << endl;
+				return false;
+			}
+			Family<T>& family = st->second;
+			return family.is_OC_used_all();
+		}
+	}
 	
-	const Talk* communicate_search(const string& iSentence, bool iAndMode, FamilyComSearchType type) const
+	const Talk* communicate_search(const string& iSentence, bool iAndMode, FamilyComSearchType type, Evalcator& i_evalcator)
 	{
 		GetSender().sender() << "文名の検索を開始" << std::endl;
 		GetSender().sender() << "　対象文字列: " << iSentence << std::endl;
 		GetSender().sender() << "　全単語一致モード: " << (iAndMode?"true":"false") << std::endl;
 
-		std::vector<const_iterator> elem_vector;
+		std::vector<iterator> elem_vector;
 
 		std::string::size_type sentenceNamePos = find_hz(iSentence,"「");
 
 		bool isComNameMode = sentenceNamePos != string::npos;
 		if ( isComNameMode ) {
 			GetSender().sender() << "　「発見、名前限定モードに移行" << std::endl;
-			for ( const_iterator it = m_elements.begin() ; it != m_elements.end() ; ++it )
+			for ( iterator it = m_elements.begin() ; it != m_elements.end() ; ++it )
 			{
 				if ( it->second.is_comname() ) {
 					string comName = it->second.get_comname();
@@ -205,7 +227,7 @@ public:
 		}
 		else {
 			GetSender().sender() << "　「なし、通常コミュ探索モードに移行" << std::endl;
-			for ( const_iterator it = m_elements.begin() ; it != m_elements.end() ; ++it )
+			for ( iterator it = m_elements.begin() ; it != m_elements.end() ; ++it )
 			{
 				if ( ! it->second.is_comname() ) {
 					elem_vector.push_back(it);
@@ -219,9 +241,9 @@ public:
 			return	NULL;
 		}
 		
-		std::vector<const Talk*>	result;
+		std::vector<iterator> hit_vector;
 		int	max_hit_point=0;
-		for ( typename std::vector<const_iterator>::const_iterator it = elem_vector.begin() ; it != elem_vector.end() ; ++it )
+		for ( typename std::vector<iterator>::iterator it = elem_vector.begin() ; it != elem_vector.end() ; ++it )
 		{
 			// 語群を全角スペースで区切る
 			const strvec &words = (**it).second.get_namevec();
@@ -233,7 +255,16 @@ public:
 
 			for ( ; wds_it!=words.end() ; ++wds_it )
 			{
-				if ( find_hz(iSentence,*wds_it,sentenceNamePos) != string::npos )
+				bool test = false;
+				if (type == COMSEARCH_TAG) {
+					std::string s = iSentence.substr(sentenceNamePos + 4);	//+4は空白とカッコ分
+					test = s == *wds_it;
+				}
+				else {
+					test = find_hz(iSentence, *wds_it, sentenceNamePos) != std::string::npos;
+				}
+
+				if ( test )
 				{
 					if ( (!isComNameMode) && compare_tail(*wds_it, "「") ) { // 末尾が 「 であるものだけの場合はヒットと見なさないように。
 						hit_point += 4;
@@ -243,6 +274,9 @@ public:
 						if ( type == COMSEARCH_LENGTH ) {
 							hit_point += 10*wds_it->size();
 						}
+						else if (type == COMSEARCH_TAG){
+							hit_point = 100;
+						}
 						else {
 							hit_point += 10+(wds_it->size()/4);
 						}
@@ -250,7 +284,7 @@ public:
 				}
 				else
 				{
-					if (type != COMSEARCH_LENGTH)//合計文字数でコミュニケートヒットを算出する場合、減点を回避する
+					if (type != COMSEARCH_LENGTH && type != COMSEARCH_TAG)//タグ検索・合計文字数でコミュニケートヒットを算出する場合、減点を回避する
 					{
 						hit_point -= (iAndMode ? 999 : 1);	// 一致しなかった、見つからなかった単語
 					}
@@ -263,29 +297,73 @@ public:
 			
 			GetSender().sender() << "'" << (**it).first << "' : " << hit_point << "pt ,";
 			
-			if ( hit_point<max_hit_point) {
-				GetSender().sender() << "却下";
-				continue;
-			} else if ( hit_point == max_hit_point ) {
-				GetSender().sender() << "候補として追加";
-			} else {
-				max_hit_point = hit_point;
-				GetSender().sender() << "単独で採用";
-				result.clear();
+			if (type == COMSEARCH_TAG)
+			{
+				if (hit_point <= 0)
+				{
+					continue;
+				}
 			}
-			GetSender().sender() << std::endl;
+			else
+			{
+				if (hit_point < max_hit_point) {
+					GetSender().sender() << "却下" << std::endl;
+					continue;
+				}
+				else if (hit_point == max_hit_point) {
+					GetSender().sender() << "候補として追加" << std::endl;
+				}
+				else {
+					max_hit_point = hit_point;
+					GetSender().sender() << "単独で採用" << std::endl;
+					hit_vector.clear();
+				}
+			}
 			
-			(**it).second.get_elements_pointers(result);
+			hit_vector.push_back(*it);
 		}
+
+		//重複回避のチェック
+		std::vector<const Talk*>	result;
+		bool is_remain_talk = false;
+		for (typename std::vector<iterator>::iterator it = hit_vector.begin(); it != hit_vector.end(); ++it)
+		{
+			//選択候補が残っているか確認
+			if (!(**it).second.is_OC_used_all(i_evalcator))
+			{
+				//のこっているものが１つでもあればOK
+				is_remain_talk = true;
+			}
+		}
+
+		//候補ランダムリストの作成
+		for (typename std::vector<iterator>::iterator it = hit_vector.begin(); it != hit_vector.end(); ++it)
+		{
+			if (!is_remain_talk)
+			{
+				//選べるものがないのでリセット
+				(**it).second.clear_OC();
+			}
+			(**it).second.get_elements_pointers_selectables(result, i_evalcator);
+		}
+
 		
 		GetSender().sender() << "結果: ";
 		if ( result.size() <= 0 ) {
-			GetSender().sender() << "該当なし（検索候補あり、単語検索失敗）";
+			GetSender().sender() << "該当なし（検索候補あり、単語検索失敗）" << std::endl;
 			return	NULL;
 		}
-		GetSender().sender() << std::endl;
+
+		const Talk* res = result[ random(result.size()) ];
+
+		//選択したものを重複回避に渡し直す
+		//外部選択になっているので例外的…
+		for (typename std::vector<iterator>::iterator it = elem_vector.begin(); it != elem_vector.end(); ++it)
+		{
+			(**it).second.applySelectedOC(i_evalcator, res);
+		}
 		
-		return result[ random(result.size()) ];
+		return res;
 	}
 };
 

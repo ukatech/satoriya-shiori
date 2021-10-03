@@ -186,13 +186,27 @@ string Satori::SentenceToSakuraScriptExec(const Talk& vec)
 				jump_inited = false;
 			}
 		}
-		else if ( resp == 2 ) {
+		else if ( resp == 2 || resp == 3 ) {
 			string jump = jump_to;
 			m_escaper.unescape(jump);
 
-			const Talk* pTR = talks.communicate_search(jump, comAndMode,type_of_communicate_search);
+			FamilyComSearchType search_type = type_of_communicate_search;
+			if (resp == 3)
+			{
+				//タグ検索モード
+				search_type = COMSEARCH_TAG;	//タグ検索モードを設定
+			}
+
+			const Talk* pTR = talks.communicate_search(jump, comAndMode,search_type, *this);
 			if ( ! pTR ) {
-				GetSender().sender() << "≫" << jump_to << " not found." << std::endl;
+				if (resp == 3)
+				{
+					GetSender().sender() << "≧" << jump_to << " not found." << std::endl;
+				}
+				else
+				{
+					GetSender().sender() << "≫" << jump_to << " not found." << std::endl;
+				}
 			}
 			else {
 				pVec = pTR;
@@ -296,7 +310,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 		}
 
 		// ジャンプ
-		if ( strncmp(p, "＞", 2)==0 || strncmp(p, "≫", 2)==0 ) {
+		if ( strncmp(p, "＞", 2)==0 || strncmp(p, "≫", 2)==0 || strncmp(p, "≧", 2) == 0 ) {
 			strvec	words;
 			split(p+2, "\t", words, 2); // ジャンプ先とジャンプ条件の区切り
 
@@ -323,6 +337,11 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 				ip = std::distance(vec.begin(),it) + 1;
 				--nest_count;
 				return 2;
+			}
+			else if (strncmp(p, "≧", 2) == 0){
+				ip = std::distance(vec.begin(), it) + 1;
+				--nest_count;
+				return 3;
 			}
 			else {
 				ip = std::distance(vec.begin(),it) + 1;

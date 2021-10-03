@@ -436,6 +436,22 @@ int	Satori::EventOperation(string iEvent, std::map<string,string> &oResponse)
 				is_rnd_talk = true;
 			}
 		}
+
+		//発話が発生してない場合、辞書が独自で実行する自動発話向けにOnSatoriSecondChangeを呼ぶ
+		if (is_empty_script(script))
+		{
+			string iEvent = "OnSatoriSecondChange";
+			FindEventTalk(iEvent);
+
+			reset_speaked_status();
+			script = GetSentence(iEvent);
+
+			diet_script(script);
+			if (!is_empty_script(script))
+			{
+				is_rnd_talk = true;
+			}
+		}
 	}
 
 	if ( is_empty_script(script) ) {
@@ -494,7 +510,7 @@ int	Satori::EventOperation(string iEvent, std::map<string,string> &oResponse)
 // Communicate形式検索。該当ありならそのスクリプトを取得、該当なしならfalse。
 bool	Satori::TalkSearch(const string& iSentence, string& oScript, bool iAndMode)
 {
-	const Talk* talk = talks.communicate_search(iSentence, iAndMode,type_of_communicate_search);
+	const Talk* talk = talks.communicate_search(iSentence, iAndMode,type_of_communicate_search, *this);
 	if ( talk == NULL )
 	{
 		return false;
