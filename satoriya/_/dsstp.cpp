@@ -132,7 +132,7 @@ BOOL sendDirectSSTP_for_NOTIFY(string client, string id, deque<string>& refs)
 {
 	HWND hParentWnd=NULL;
 	LPCSTR szClient=client.c_str();
-	LPCSTR szOption="";
+//	LPCSTR szOption="";
 	CHAR szBuffer[100];
 	COPYDATASTRUCT cds;
 	DWORD dwRet;

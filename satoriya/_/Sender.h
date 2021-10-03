@@ -144,7 +144,7 @@ public:
 	};
 
 	bool reinit(bool isEnable);
-	bool send(int mode,const char* iFormat, ...);
+	bool send(int mode,const char* iString);
 
 	void validate(bool i_flag=true) { sm_sender_flag = i_flag; }
 	bool is_validated() { return sm_sender_flag; }

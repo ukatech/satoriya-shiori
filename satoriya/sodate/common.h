@@ -6,6 +6,7 @@
 #include	"../_/FileLister.h"
 #include	"../_/FTP.h"
 #include	"../_/MD5.h"
+#include	"../_/Sender.h"
 
 #include	<map>
 #include	<list>

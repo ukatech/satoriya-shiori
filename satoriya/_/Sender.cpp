@@ -122,7 +122,7 @@ bool Sender::auto_init()
 }
 
 // レシーバウィンドウにメッセージを送信
-bool Sender::send(int mode,const char* iFormat, ...)
+bool Sender::send(int mode,const char* iString)
 {
 	const int nest = nest_object::count();
 	char *theBuf = buffer_to_send;
@@ -138,14 +138,11 @@ bool Sender::send(int mode,const char* iFormat, ...)
 		theBuf += nest_limited;
 	}
 	
-	va_list	theArgPtr;
-	va_start(theArgPtr, iFormat);
 #if (defined(_MSC_VER) && (_MSC_VER <= 1200))
-	_vsnprintf(theBuf, SenderConst::MAX, iFormat, theArgPtr);
+	_snprintf(theBuf, SenderConst::MAX, "%s", iString);
 #else
-	vsnprintf(theBuf, SenderConst::MAX, iFormat, theArgPtr);
+	snprintf(theBuf, SenderConst::MAX, "%s", iString);
 #endif
-	va_end(theArgPtr);
 
 	// \\nを\r\nに置き換える
 	/*char* p = theBuf;

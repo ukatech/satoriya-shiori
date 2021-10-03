@@ -5,7 +5,7 @@ class	Saori {
 public:
 	bool	load(const string& iBaseFolder);
 	bool	unload();
-	int		request(deque<string>& iArguments, string& oResult, deque<string>& oValues);
+	int		request(std::deque<string>& iArguments, string& oResult, std::deque<string>& oValues);
 private:
 
 	

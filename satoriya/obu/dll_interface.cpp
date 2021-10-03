@@ -50,7 +50,7 @@ extern "C" __declspec(dllexport) HGLOBAL __cdecl request(HGLOBAL iData,long *ioL
 
 	int	theStatusCode = 500;
 	string	theResult;
-	deque<string>	theValues;
+	std::deque<string>	theValues;
 
 	const char* p = theRequest.c_str();
 	string	first_line = getToken(p, '\x0a');	// àÍçsñ⁄
@@ -66,7 +66,7 @@ extern "C" __declspec(dllexport) HGLOBAL __cdecl request(HGLOBAL iData,long *ioL
 	}
 	else if ( compare_head(first_line, "EXECUTE") ) 
 	{
-		deque<string>	theArguments;
+		std::deque<string>	theArguments;
 
 		do {
 			string	key = getToken(p, ':');
@@ -121,7 +121,7 @@ extern "C" __declspec(dllexport) HGLOBAL __cdecl request(HGLOBAL iData,long *ioL
 		// ï‘ílÇïtó^
 		theResponce += string("Result: ") + theResult + "\x0d\x0a";
 		int	idx=0;
-		for ( deque<string>::const_iterator i=theValues.begin() ; i!=theValues.end() ; ++i,++idx )
+		for ( std::deque<string>::const_iterator i=theValues.begin() ; i!=theValues.end() ; ++i,++idx )
 			theResponce += VALUE+itos(idx)+": "+ *i + "\x0d\x0a";
 	}
 	theResponce += "\x0d\x0a";
