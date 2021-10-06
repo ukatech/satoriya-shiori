@@ -186,7 +186,7 @@ public:
 			throw std::runtime_error("select: candidates list is empty!");
 		}
 
-		return m_OC->get_selectable(m_candidates, o_result);
+		m_OC->get_selectable(m_candidates, o_result);
 	}
 
 	void applySelected(const std::list<T>& i_candidates, T t)

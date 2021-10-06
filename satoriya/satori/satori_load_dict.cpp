@@ -111,6 +111,35 @@ static void lines_to_units(
 }
 
 
+// 極めて高確率でUTF-8な文字列を検出
+static bool is_utf8_dic(const strvec& in)
+{
+	unsigned int possible_utf8_count = 0;
+	static char possible_3byte_table[] = "\x83\x84\x86\x88\x89\x8a\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9a\x9e\xa0\xbf"; //＃＄＆（）＊０～９：＞＠＿
+
+	for ( strvec::const_iterator fi=in.begin() ; fi!=in.end() ; ++fi )
+	{
+		const char* p = fi->c_str();
+
+		const char* ps = strstr(p,"\xef\xbc");
+
+		while ( ps ) {
+			char c = ps[2]; //3バイト目
+
+			if ( strchr(possible_3byte_table,c) ) {
+				possible_utf8_count += 1;
+				if ( possible_utf8_count >= 10 ) {
+					return true;
+				}
+			}
+
+			ps = strstr(ps+3,"\xef\xbc");
+		}
+	}
+
+	return false;
+}
+
 // プリプロセス的な処理。
 // 改行キャンセル適用、コメント削除、before_replaceの適用
 static bool pre_process(
@@ -268,6 +297,26 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName)
 	strvec	file_vec;
 	if ( !select_dict_and_load_to_vector(iFileName, file_vec, warnFileName) )
 	{
+		return false;
+	}
+
+	if ( is_utf8_dic(file_vec) ) {
+#ifdef POSIX
+	     GetSender().errsender() <<
+		    "syntax error - SATORI : " << iFileName << std::endl <<
+		    std::endl <<
+		    "It is highly possible that you tried to read a dictionary whose character code is UTF-8." << std::endl <<
+		    "The dictionary is not loaded correctly." << std::endl <<
+		    std::endl <<
+		    "Please use Shift-JIS character code." << std::endl;
+#else
+		GetSender().errsender() << iFileName + "\n\n"
+			"\n"
+			"文字コードがUTF-8の辞書を読み込もうとした可能性が高いです。" "\n"
+			"辞書は正しく読み込まれていません。" "\n"
+			"\n"
+			"保存の際に、Shift-JISを指定してくだしあ" << std::endl;
+#endif
 		return false;
 	}
 
