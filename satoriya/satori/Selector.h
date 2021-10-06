@@ -159,6 +159,11 @@ public:
 		return m_OC->select(m_candidates);
 	}
 
+	bool isOCUsedAll()
+	{
+		return m_OC->is_used_all();
+	}
+
 	// 現在の選択メソッドの種類を返す
 	int type()
 	{
@@ -168,5 +173,27 @@ public:
 		}
 
 		return m_OC->type();
+	}
+
+	void getSelectables(std::list<T>& o_result)
+	{
+		if (m_OC == NULL)
+		{
+			m_OC = new OC_Random<T>;
+		}
+		if (m_candidates.empty())
+		{
+			throw std::runtime_error("select: candidates list is empty!");
+		}
+
+		return m_OC->get_selectable(m_candidates, o_result);
+	}
+
+	void applySelected(const std::list<T>& i_candidates, T t)
+	{
+		if (m_OC != NULL)
+		{
+			m_OC->apply_selected(i_candidates, t);
+		}
 	}
 };

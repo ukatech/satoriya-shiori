@@ -953,6 +953,22 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 
 			oResult = int2zen(count);
 		}
+		else if (compare_tail(iName, "v‚Ìd•¡‰ñ”ğŒÍŠ‰")) {
+			string str(iName, 8, iName.length() - 8 - 16);
+			Family<Word>* f = words.get_family(str);
+			bool is_used_all = false;
+			if (f) {
+				if (f->is_OC_used_all(*this)) {
+					is_used_all = true;
+				}
+			}
+			if (is_used_all){
+				oResult = "1";
+			}
+			else {
+				oResult = "0";
+			}
+		}
 	}
 
 
