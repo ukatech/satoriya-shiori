@@ -233,6 +233,18 @@ string	Satori::inc_call(
 		return	"";
 	}
 
+	if (iCallName == "load_saori")
+	{
+		if (iArgv.size() >= 2)
+		{
+			string load_line = iArgv[0];
+			for (int i = 1; i < iArgv.size(); ++i)
+				load_line += "," + iArgv[i];
+
+			mShioriPlugins->load_a_plugin(load_line);
+		}
+	}
+
 	if (iCallName == "equal") {
 		if (iArgv.size() == 2) {
 			const string &lhs = iArgv[0], &rhs = iArgv[1];
