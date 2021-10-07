@@ -220,7 +220,11 @@ int sender_buf::overflow(int c)
 		GetSender().send(SenderConst::E_I,line);
 		line[0]='\0';
 		pos = 0;
-	} 
+	}
+	else if ( c == 0xfe )
+	{
+		//skip
+	}
 	else
 	{
 		// バッファにためる
@@ -244,17 +248,54 @@ int sender_buf::overflow(int c)
 	return	c;
 }
 
-void error_buf::send(const std::string &line)
+void error_buf::set_log_mode(bool is_log)
 {
-	if ( ! line.length() ) { return; }
+	if ( is_log == false ) {
+		for (std::vector<string>::iterator i=log_data.begin() ; i!=log_data.end() ; ++i) {
+#ifdef POSIX
+		   cerr << "error - SATORI : " << *i << endl;
+#else
+			::MessageBox(NULL, i->c_str(), "error - SATORI", MB_OK|MB_SYSTEMMODAL);
+#endif
+		}
+		log_data.clear();
+	}
+	log_mode = is_log;
+}
+
+void error_buf::send(const char *str)
+{
+	if ( ! str || ! *str ) { return; }
+
+	GetSender().send(SenderConst::E_W,str);
+
+	log_tmp_buffer.push_back(string(str));
+}
+
+void error_buf::flush(void)
+{
 	if ( log_mode ) {
-		log_data.push_back(line);
+		string out;
+		for (std::vector<string>::iterator i=log_tmp_buffer.begin() ; i!=log_tmp_buffer.end() ; ++i) {
+			out += *i;
+			out += " ";
+		}
+		log_tmp_buffer.clear();
+
+		log_data.push_back(out);
 	}
 	else {
+		string out;
+		for (std::vector<string>::iterator i=log_tmp_buffer.begin() ; i!=log_tmp_buffer.end() ; ++i) {
+			out += *i;
+			out += "\r\n";
+		}
+		log_tmp_buffer.clear();
+
 #ifdef POSIX
-        cerr << "error - SATORI : " << line << endl;
+        cerr << "error - SATORI : " << out << endl;
 #else
-        ::MessageBox(NULL, line.c_str(), "error - SATORI", MB_OK|MB_SYSTEMMODAL);
+        ::MessageBox(NULL, out.c_str(), "error - SATORI", MB_OK|MB_SYSTEMMODAL);
 #endif
 	}
 }
@@ -263,10 +304,14 @@ int error_buf::overflow(int c)
 {
 	if ( c=='\n' || c=='\0' || c==EOF )
 	{
-		GetSender().send(SenderConst::E_W,line);
+		send(line);
 		line[0]='\0';
 		pos = 0;
-	} 
+	}
+	else if ( c == 0xfe )
+	{
+		flush();
+	}
 	else
 	{
 		// バッファにためる
@@ -276,12 +321,12 @@ int error_buf::overflow(int c)
 		if ( pos+1>=SenderConst::MAX ) {
 			if ( _ismbblead(c) ) {
 				line[pos-1]='\0';
-				GetSender().send(SenderConst::E_W,line);
+				send(line);
 				line[0]=c;
 				line[1]='\0';
 				pos = 1;
 			} else {
-				GetSender().send(SenderConst::E_W,line);
+				send(line);
 				line[0]='\0';
 				pos = 0;
 			}

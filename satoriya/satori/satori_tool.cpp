@@ -1069,10 +1069,10 @@ bool	Satori::calculate(const string& iExpression, string& oResult) {
 #ifdef POSIX
 		GetSender().errsender() <<
 			"error on Satori::calculate" << std::endl <<
-			"Error in expression: " << iExpression << std::endl;
+			"Error in expression: " << iExpression << satori::endl;
 #else
 		// もうちょっと抽象化を……
-		GetSender().errsender() << string() + "式が計算不能です。\n" + iExpression << std::endl;
+		GetSender().errsender() << string() + "式が計算不能です。\n" + iExpression << satori::endl;
 #endif
 	}
 	return	r;

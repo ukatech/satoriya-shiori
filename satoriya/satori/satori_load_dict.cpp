@@ -128,7 +128,7 @@ static bool is_utf8_dic(const strvec& in)
 
 			if ( strchr(possible_3byte_table,c) ) {
 				possible_utf8_count += 1;
-				if ( possible_utf8_count >= 10 ) {
+				if ( possible_utf8_count >= 5 ) {
 					return true;
 				}
 			}
@@ -308,14 +308,14 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName)
 		    "It is highly possible that you tried to read a dictionary whose character code is UTF-8." << std::endl <<
 		    "The dictionary is not loaded correctly." << std::endl <<
 		    std::endl <<
-		    "Please use Shift-JIS character code." << std::endl;
+		    "Please use Shift-JIS character code." << satori::endl;
 #else
 		GetSender().errsender() << iFileName + "\n\n"
 			"\n"
 			"文字コードがUTF-8の辞書を読み込もうとした可能性が高いです。" "\n"
 			"辞書は正しく読み込まれていません。" "\n"
 			"\n"
-			"保存の際に、Shift-JISを指定してくだしあ" << std::endl;
+			"保存の際に、Shift-JISを指定してください。" << satori::endl;
 #endif
 		return false;
 	}
@@ -333,14 +333,14 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName)
 		    "The dictionary is not loaded correctly." << std::endl <<
 		    std::endl <<
 		    "If you want to display parenthesis independently," << std::endl <<
-		    "use \"phi\" symbol to escape it." << std::endl;
+		    "use \"phi\" symbol to escape it." << satori::endl;
 #else
 		GetSender().errsender() << iFileName + "\n\n"
 			"\n"
 			"カッコの対応関係が正しくない部分があります。" "\n"
 			"辞書は正しく読み込まれていません。" "\n"
 			"\n"
-			"カッコを単独で表示する場合は　φ（　と記述してください。" << std::endl;
+			"カッコを単独で表示する場合は　φ（　と記述してください。" << satori::endl;
 #endif
 	}
 

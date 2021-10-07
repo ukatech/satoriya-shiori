@@ -35,7 +35,7 @@ string	SakuraDLLClient::request(const string& iRequestString)
 {
 	if ( mRequest==NULL )
 	{
-		GetSender().errsender() << "SakuraDLLClient::request: ロードしていないライブラリにrequestしようとしました。" <<std::endl;
+		GetSender().errsender() << "SakuraDLLClient::request: ロードしていないライブラリにrequestしようとしました。" << satori::endl;
 		return	"";
 	}
 
@@ -153,15 +153,15 @@ bool	SakuraDLLClient::load(
 #ifdef POSIX
 	mModule = dlopen(dll_fullpath.c_str(), RTLD_LAZY);
 	if (mModule == NULL) {
-	    GetSender().sender() << "failed." <<std::endl;
-	    GetSender().errsender() << dlerror() <<std::endl;
+	    GetSender().sender() << "failed." << std::endl;
+	    GetSender().errsender() << dlerror() << satori::endl;
 	    return false;
 	}
 #else
 	mModule = ::LoadLibraryEx(dll_fullpath.c_str(),NULL,LOAD_WITH_ALTERED_SEARCH_PATH);
 	if ( mModule==NULL ) {
-		GetSender().sender() << "failed." <<std::endl;
-		GetSender().errsender() << dll_fullpath + ": LoadLibraryで失敗。" <<std::endl;
+		GetSender().sender() << "failed." << std::endl;
+		GetSender().errsender() << dll_fullpath + ": LoadLibraryで失敗。" << satori::endl;
 		return	false;
 	}
 #endif
@@ -189,9 +189,9 @@ bool	SakuraDLLClient::load(
 #endif
 	if ( mRequest==NULL )
 	{
-		GetSender().sender() << "failed." <<std::endl;
+		GetSender().sender() << "failed." << std::endl;
 		unload();
-		GetSender().errsender() << dll_fullpath + ": requestがエクスポートされていません。" <<std::endl;
+		GetSender().errsender() << dll_fullpath + ": requestがエクスポートされていません。" << satori::endl;
 		return	false;
 	}
 	if ( mLoad!=NULL )
@@ -205,9 +205,9 @@ bool	SakuraDLLClient::load(
 		memcpy(h, work_folder.c_str(), len + 1); //ZeroTermまで
 		if ( mLoad(h, len) == FALSE )
 		{
-			GetSender().sender() << "failed." <<std::endl;
+			GetSender().sender() << "failed." << std::endl;
 			unload();
-			GetSender().errsender() << dll_fullpath + ": load()がFALSEを返しました。" <<std::endl;
+			GetSender().errsender() << dll_fullpath + ": load()がFALSEを返しました。" << satori::endl;
 			return	false;
 		}
 	}

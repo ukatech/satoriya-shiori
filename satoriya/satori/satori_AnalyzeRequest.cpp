@@ -394,9 +394,7 @@ int	Satori::request(
 		std::string errlevel;
 
 		for ( std::vector<string>::const_iterator itr = errlog.begin() ; itr != errlog.end(); ++itr ) {
-			errmsg += "SATORI - ";
-			errmsg += mRequestID;
-			errmsg += " > ";
+			errmsg += "SATORI : ";
 			errmsg += *itr;
 			errmsg += "\1";
 			errlevel += "critical\1";

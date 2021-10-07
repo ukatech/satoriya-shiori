@@ -52,23 +52,26 @@ private:
 class error_buf : public std::basic_streambuf<char>
 {
 public:
-	error_buf() { line[0]='\0'; pos=0; log_mode=false; }
+	error_buf() { line[0]='\0'; pos=0; log_mode=true; } //‰Šúlogmode‚Ítrue‚Å‚È‚¢‚Æload‚ğƒJƒo[‚Å‚«‚È‚¢
 	virtual int overflow(int c=EOF);
 
-	void set_log_mode(bool is_log) { log_mode = is_log; }
+	void set_log_mode(bool is_log);
 	bool get_log_mode(void) { return log_mode; }
 
 	const std::vector<string> & get_log(void) { return log_data; }
 	void clear_log(void) { log_data.clear(); }
 
 private:
-	void send(const std::string &str);
+	void send(const char* str);
+	void flush(void);
 
 	char	line[SenderConst::MAX+1];
 	int		pos;
 
 	bool    log_mode;
+
 	std::vector<string> log_data;
+	std::vector<string> log_tmp_buffer;
 };
 
 class sender_stream : public std::basic_ostream<char>
@@ -179,5 +182,11 @@ public:
 	~SenderEnableBuffering() { s.flush(); s.buffering(false); }
 };
 
+namespace satori {
+	template<class CharT, class Traits>
+		std::basic_ostream<CharT, Traits>& endl(std::basic_ostream<CharT, Traits>& os) {
+		return os << '\n' << '\xfe' << std::flush;
+	}
+}
 
 #endif	// SENDER_H
