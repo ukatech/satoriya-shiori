@@ -116,7 +116,11 @@ static void lines_to_units(
 static bool is_utf8_dic(const strvec& in)
 {
 	unsigned int possible_utf8_count = 0;
-	static char possible_3byte_table[] = "\x83\x84\x86\x88\x89\x8a\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9a\x9e\xa0\xbf"; //＃＄＆（）＊０～９：＞＠＿
+
+	//Unicode : Halfwidth and Fullwidth Forms から里々でよく使うものを抜き出し
+	//efbc??のみ
+	//efbdは「」ぐらいしかないのでここでは入れていない
+	static char possible_3byte_table[] = "\x83\x84\x86\x88\x89\x8a\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9a\x9d\x9e\xa0\xbf"; //＃＄＆（）＊０～９：＝＞＠＿
 
 	for ( strvec::const_iterator fi=in.begin() ; fi!=in.end() ; ++fi )
 	{
