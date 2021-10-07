@@ -5,6 +5,7 @@
 #include <algorithm>
 
 #include	"../_/Utilities.h"
+#include	"../_/Charset.h"
 #include	"satori_load_dict.h"
 
 #ifdef POSIX
@@ -138,6 +139,14 @@ static bool is_utf8_dic(const strvec& in)
 	}
 
 	return false;
+}
+
+static void convert_utf8_to_sjis_dic(strvec &in)
+{
+	for ( strvec::iterator fi = in.begin() ; fi != in.end() ; ++fi )
+	{
+		*fi = UTF8toSJIS(*fi);
+	}
 }
 
 // プリプロセス的な処理。
@@ -302,22 +311,15 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName)
 
 	if ( is_utf8_dic(file_vec) ) {
 #ifdef POSIX
-	     GetSender().errsender() <<
-		    "syntax error - SATORI : " << iFileName << std::endl <<
-		    std::endl <<
-		    "It is highly possible that you tried to read a dictionary whose character code is UTF-8." << std::endl <<
-		    "The dictionary is not loaded correctly." << std::endl <<
-		    std::endl <<
-		    "Please use Shift-JIS character code." << satori::endl;
+	     GetSender().sender() <<
+		    iFileName << std::endl << std::endl <<
+		    "It is highly possible that you tried to read a dictionary whose character code is UTF-8." << satori::endl;
 #else
-		GetSender().errsender() << iFileName + "\n\n"
-			"\n"
-			"文字コードがUTF-8の辞書を読み込もうとした可能性が高いです。" "\n"
-			"辞書は正しく読み込まれていません。" "\n"
-			"\n"
-			"保存の際に、Shift-JISを指定してください。" << satori::endl;
+		GetSender().sender() <<
+			iFileName + "\n\n"
+			"文字コードがUTF-8の辞書のようです。変換します。" << satori::endl;
 #endif
-		return false;
+		convert_utf8_to_sjis_dic(file_vec);
 	}
 
 	bool	is_for_anchor = compare_head(get_file_name(iFileName), dic_load_prefix + "Anchor");
