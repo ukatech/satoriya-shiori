@@ -18,12 +18,17 @@ using namespace std;
 // ‘å•¶š¬•¶š‚ğ–â‚í‚¸”äŠr
 static const char* stristr(const char* p, const char* substr) {
 	assert(p!=NULL);
-	for(;*p;++p) {
-		for(int i=0;substr[i];++i)
-			if (tolower(substr[i])!=tolower(p[i]))
+	for (; *p; ++p) {
+		int i = 0;
+		for (i = 0; substr[i]; ++i) {
+			if (tolower(substr[i]) != tolower(p[i])) {
 				break;
-		if(substr[i]=='\0')
+			}
+		}
+
+		if (substr[i] == '\0') {
 			return	p;
+		}
 	}
 	return	NULL;
 }

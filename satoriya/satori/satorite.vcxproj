@@ -95,7 +95,6 @@
       <Optimization>Disabled</Optimization>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
-      <MinimalRebuild>true</MinimalRebuild>
       <AdditionalIncludeDirectories>..\_;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_WINDOWS;WIN32;_DEBUG;STRICT;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Debug_ST\</AssemblerListingLocation>
@@ -134,6 +133,7 @@
     <ClCompile Include="..\_\calc.cpp">
     </ClCompile>
     <ClCompile Include="..\_\calc_float.cpp" />
+    <ClCompile Include="..\_\charset.cpp" />
     <ClCompile Include="..\_\Dialog.cpp">
     </ClCompile>
     <ClCompile Include="..\_\Font.cpp">
@@ -199,6 +199,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\_\charset.h" />
     <ClInclude Include="..\_\Dialog.h" />
     <ClInclude Include="..\_\FMO.h" />
     <ClInclude Include="..\_\Font.h" />

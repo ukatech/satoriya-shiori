@@ -139,6 +139,9 @@
     <ClCompile Include="..\_\calc_float.cpp">
       <Filter>_</Filter>
     </ClCompile>
+    <ClCompile Include="..\_\charset.cpp">
+      <Filter>_</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\_\Dialog.h">
@@ -227,6 +230,9 @@
     </ClInclude>
     <ClInclude Include="ssu.h">
       <Filter>SSUDirect</Filter>
+    </ClInclude>
+    <ClInclude Include="..\_\charset.h">
+      <Filter>_</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
