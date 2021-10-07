@@ -102,6 +102,10 @@ SOURCE=..\_\calc_float.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\_\charset.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\_\Dialog.cpp
 # End Source File
 # Begin Source File
