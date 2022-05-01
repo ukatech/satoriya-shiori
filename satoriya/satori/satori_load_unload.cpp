@@ -417,7 +417,14 @@ bool	Satori::Save(bool isOnUnload) {
 			out << std::endl << ENCODE( string("＠") + i->first ) << std::endl;
 			for (std::vector<Word>::const_iterator j=i->second.begin() ; j!=i->second.end() ; ++j )
 			{
-				out << ENCODE( *j ) << std::endl;
+				data = *j;
+
+				replace(data,"φ","φφ");
+				replace(data,"（","φ（");
+				replace(data,"）","φ）");
+				m_escaper.unescape_for_dic(data);
+
+				out << ENCODE( data ) << std::endl;
 			}
 		}
 	}
