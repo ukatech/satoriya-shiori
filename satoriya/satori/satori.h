@@ -52,6 +52,7 @@ extern const char* gSatoriNameW;
 extern const char* gSatoriCraftman;
 extern const char* gSatoriCraftmanW;
 extern const char* gSatoriVersion;
+extern const char* gSatoriLicense;
 extern const char* gShioriVersion;
 extern const char* gSaoriVersion;
 

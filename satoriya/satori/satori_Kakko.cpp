@@ -764,6 +764,10 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	else if ( iName == "里々のバージョン" ) {
 		oResult = gSatoriVersion;
 	}
+	else if ( iName == "里々のライセンス" ) {
+		oResult = gSatoriLicense;
+		replace(oResult, "\n", "\\n");
+	}
 	else if ( iName == "現在年" ) {
 #ifdef POSIX
 	        time_t st = time(NULL);
