@@ -179,13 +179,10 @@ int	Satori::request(
 	if(fRequestLog)
 	{
 		GetSender().sender() << "--- Request ---" << std::endl << mStatusLine <<std::endl; // << iRequest <<std::endl;
-		for(strmap::const_iterator i=mRequestMap.begin() ; i!=mRequestMap.end() ; ++i)
-			if ( !i->first.empty() && !i->second.empty()
-				&& i->first!="SecurityLevel" 
-				&& i->first!="Sender" 
-				&& i->first!="Charset" ) {
-				GetSender().sender() << i->first << ": " << i->second <<std::endl;
-			}
+		GetSender().sender() << "ID: " << mRequestID << std::endl;
+		for (size_t i = 0; i < mReferences.size(); i++) {
+			GetSender().sender() << "Reference" << i << ": " << mReferences[i] << std::endl;
+		}
 	}
 
 	// ‚¹‚«‚ã‚ H
