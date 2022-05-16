@@ -373,8 +373,9 @@ int	Satori::EventOperation(string iEvent, std::map<string,string> &oResponse)
 	if ( iEvent=="OnSecondChange" ) {
 
 		// 存在するタイマのディクリメント
-		for (strintmap::iterator i=timer.begin();i!=timer.end();++i)
+		for (strintmap::iterator i=timer_sec.begin();i!=timer_sec.end();++i) {
 			variables[i->first + "タイマ"] = int2zen( --(i->second) );
+		}
 
 		// 自動セーブ
 		if ( mAutoSaveInterval > 0 ) {
@@ -394,7 +395,7 @@ int	Satori::EventOperation(string iEvent, std::map<string,string> &oResponse)
 	if ( is_empty_script(script) && can_talk_flag && iEvent=="OnSecondChange" ) {
 
 		// タイマ予約発話
-		for (strintmap::const_iterator i=timer.begin();i!=timer.end();++i) {
+		for (strintmap::const_iterator i=timer_sec.begin();i!=timer_sec.end();++i) {
 			if ( i->second < 1 ) {
 				//GetSentence実行後にtimerのイテレータは状態変化しているかもしれないので
 				//いったん保存しておく
@@ -406,8 +407,13 @@ int	Satori::EventOperation(string iEvent, std::map<string,string> &oResponse)
 				reset_speaked_status();
 				script=GetSentence(timer_name);
 				
-				timer.erase(timer_name);
-				variables.erase(var_name);
+				strintmap::const_iterator tm = timer_sec.find(timer_name);
+				if ( tm != timer_sec.end() ) { //まだタイマー変数が残っている
+					if ( tm->second < 1 ) { //再設定されてない
+						timer_sec.erase(timer_name);
+						variables.erase(var_name);
+					}
+				}
 
 				if ( !is_empty_script(script) ) {
 					diet_script(script);
@@ -419,12 +425,18 @@ int	Satori::EventOperation(string iEvent, std::map<string,string> &oResponse)
 
 		// 自動発話
 		if ( is_empty_script(script) && (mikire_flag==false || is_call_ontalk_at_mikire==true)) {
-			if ( nade_valid_time>0 )
-				if ( --nade_valid_time == 0 )
+			if ( nade_valid_time>0 ) {
+				if ( --nade_valid_time == 0 ) {
 					nade_count.clear();
-			if ( koro_valid_time>0 )
-				if ( --koro_valid_time == 0 )
+				}
+			}
+
+			if ( koro_valid_time>0 ) {
+				if ( --koro_valid_time == 0 ) {
 					koro_count.clear();
+				}
+			}
+
 			if ( talk_interval>0 && --talk_interval_count<0 ) {
 				string	iEvent="OnTalk";
 				FindEventTalk(iEvent);

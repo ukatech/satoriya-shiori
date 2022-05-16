@@ -94,7 +94,7 @@ void	Satori::InitMembers() {
 
 	teach_genre="";
 
-	timer.clear();
+	timer_sec.clear();
 
 	on_loaded_script = "";
 	on_unloading_script = "";

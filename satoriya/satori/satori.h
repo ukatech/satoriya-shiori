@@ -314,7 +314,7 @@ private:
 	string	teach_genre;
 
 	// タイマ名：発話までの秒数
-	strintmap	timer;
+	strintmap	timer_sec;
 
 	// トークの予約
 	std::map<int, string>	reserved_talk;

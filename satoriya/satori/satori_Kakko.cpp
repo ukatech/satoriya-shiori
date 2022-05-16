@@ -2,6 +2,7 @@
 #include	"../_/Utilities.h"
 #include "posix_utils.h"
 #include	<time.h>
+#include	<tlhelp32.h>
 
 #include "random.h"
 
@@ -1059,6 +1060,37 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		if (rate_of_use_graph.count(str)){
 			oResult = rate_of_use_graph[str].status;
 		}
+	}
+	else if (compare_head(iName, "プロセス「") && compare_tail(iName, "」の存在")){
+		string	str(iName, 10, iName.length() - 10 - 8);
+
+		HANDLE hSnap = ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS,0);
+
+		PROCESSENTRY32 pinfo = {0};
+		pinfo.dwSize = sizeof(pinfo);
+
+		DWORD pid = 0;
+
+		if ( ::Process32First(hSnap,&pinfo) ) {
+			do {
+				const char *pName = strrchr(pinfo.szExeFile,'\\');
+				if ( pName ) {
+					pName += 1;
+				}
+				else {
+					pName = pinfo.szExeFile;
+				}
+
+				if ( stricmp(pName,str.c_str()) == 0 ) {
+					pid = pinfo.th32ProcessID;
+					break;
+				}
+			} while ( ::Process32Next(hSnap,&pinfo) );
+		}
+
+		::CloseHandle(hSnap);
+
+		oResult = int2zen(pid);
 	}
 
 	else if ( compare_tail(iName, "の存在") ) {
