@@ -672,3 +672,4 @@ const Talk* Satori::GetSentenceInternal(string& ioSentenceName)
 	--nest_count;
 	return talk;
 }
+

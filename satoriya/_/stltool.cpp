@@ -454,6 +454,19 @@ const char*	strstr_hz(const char* target, const char* find) {
 	}
 	return	NULL;
 }
+const char*	strstri_hz(const char* target, const char* find) {
+	int	len=strlen(find);
+	const char* p=target;
+	while ( *p!='\0' ) {
+		if ( _strnicmp(p, find, len)==0 )
+			return	p;
+		if ( _ismbblead(*p) )
+			p+=2; 
+		else
+			++p;
+	}
+	return	NULL;
+}
 
 //STLƒXƒ^ƒCƒ‹‚Ìstrstr_hz
 std::string::size_type find_hz(const char* str, const char* target, std::string::size_type find_pos)

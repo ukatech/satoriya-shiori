@@ -1061,41 +1061,25 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 			oResult = rate_of_use_graph[str].status;
 		}
 	}
+	else if (compare_head(iName, "ウインドウ「") && compare_tail(iName, "」の存在")){
+		string	str(iName, 12, iName.length() - 12 - 8);
+
+		oResult = ul2zen(FindTopLevelWindow(str.c_str(),false));
+	}
+	else if (compare_head(iName, "「") && compare_tail(iName, "」を含むウインドウの存在")){
+		string	str(iName, 2, iName.length() - 2 - 24);
+
+		oResult = ul2zen(FindTopLevelWindow(str.c_str(),true));
+	}
 	else if (compare_head(iName, "プロセス「") && compare_tail(iName, "」の存在")){
-#ifdef POSIX
-		//POSIXでは基本とれない
-		oResult = "０";
-#else
 		string	str(iName, 10, iName.length() - 10 - 8);
 
-		HANDLE hSnap = ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS,0);
+		oResult = ul2zen(FindProcessName(str.c_str(),false));
+	}
+	else if (compare_head(iName, "「") && compare_tail(iName, "」を含むプロセスの存在")){
+		string	str(iName, 2, iName.length() - 2 - 22);
 
-		PROCESSENTRY32 pinfo = {0};
-		pinfo.dwSize = sizeof(pinfo);
-
-		DWORD pid = 0;
-
-		if ( ::Process32First(hSnap,&pinfo) ) {
-			do {
-				const char *pName = strrchr(pinfo.szExeFile,'\\');
-				if ( pName ) {
-					pName += 1;
-				}
-				else {
-					pName = pinfo.szExeFile;
-				}
-
-				if ( stricmp(pName,str.c_str()) == 0 ) {
-					pid = pinfo.th32ProcessID;
-					break;
-				}
-			} while ( ::Process32Next(hSnap,&pinfo) );
-		}
-
-		::CloseHandle(hSnap);
-
-		oResult = int2zen(pid);
-#endif
+		oResult = ul2zen(FindProcessName(str.c_str(),true));
 	}
 
 	else if ( compare_tail(iName, "の存在") ) {
@@ -1268,4 +1252,107 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	}
 	GetSender().sender() << "（" << iName << "）→" << oResult << "" << std::endl;
 	return	true;
+}
+
+
+#ifndef POSIX
+typedef struct EnumWindowsInfo
+{
+	const char* txt;
+	char title[1024];
+	bool isPartial;
+	HWND hWnd;
+} EnumWindowsInfo;
+
+BOOL CALLBACK EnumWindowsProc(HWND hwnd,LPARAM lParam)
+{
+	EnumWindowsInfo &inf = *reinterpret_cast<EnumWindowsInfo*>(lParam);
+
+	::GetWindowText(hwnd,inf.title,sizeof(inf.title)-1);
+
+	if ( inf.title[0] ) {
+		if ( inf.isPartial ) {
+			if ( strstri_hz(inf.title,inf.txt) ) {
+				inf.hWnd = hwnd;
+				return FALSE;
+			}
+		}
+		else {
+			if ( stricmp(inf.title,inf.txt) == 0 ) {
+				inf.hWnd = hwnd;
+				return FALSE;
+			}
+		}
+	}
+	
+	return TRUE;
+}
+#endif
+
+//ウインドウ探索　ウインドウ存在判定で使う
+unsigned long Satori::FindTopLevelWindow(const char* txt,bool isPartial)
+{
+#ifdef POSIX
+	return 0;
+#else
+
+	if ( ! txt || ! *txt ) { return 0; }
+
+	EnumWindowsInfo inf;
+	inf.txt = txt;
+	inf.isPartial = isPartial;
+	inf.hWnd = NULL;
+
+	::EnumWindows(EnumWindowsProc,(LPARAM)&inf);
+
+	return (unsigned long)inf.hWnd;
+#endif
+}
+
+//プロセス探索　ウインドウ存在判定で使う
+unsigned long Satori::FindProcessName(const char* txt,bool isPartial)
+{
+#ifdef POSIX
+	return 0;
+#else
+
+	if ( ! txt || ! *txt ) { return 0; }
+
+	HANDLE hSnap = ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS,0);
+
+	PROCESSENTRY32 pinfo = {0};
+	pinfo.dwSize = sizeof(pinfo);
+
+	DWORD pid = 0;
+
+	if ( ::Process32First(hSnap,&pinfo) ) {
+		do {
+			const char *pName = strrchr(pinfo.szExeFile,'\\');
+			if ( pName ) {
+				pName += 1;
+			}
+			else {
+				pName = pinfo.szExeFile;
+			}
+
+			if ( isPartial ) {
+				if ( strstri_hz(pName,txt) ) {
+					pid = pinfo.th32ProcessID;
+					break;
+				}
+			}
+			else {
+				if ( stricmp(pName,txt) == 0 ) {
+					pid = pinfo.th32ProcessID;
+					break;
+				}
+			}
+		} while ( ::Process32Next(hSnap,&pinfo) );
+	}
+
+	::CloseHandle(hSnap);
+
+	return pid;
+
+#endif
 }

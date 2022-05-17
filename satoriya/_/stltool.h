@@ -127,6 +127,7 @@ inline bool	arealphabets(const string& s) { return arealphabets(s.c_str()); }
 
 // target中の最初にfind文字列が出現する位置を返す。半角全角両対応
 const char*	strstr_hz(const char* target, const char* find);
+const char*	strstri_hz(const char* target, const char* find);
 
 // 文字列置換
 bool	replace_first(string& str, const string& before, const string& after);

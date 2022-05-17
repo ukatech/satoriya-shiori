@@ -427,6 +427,12 @@ private:
 	// SentenceToSakuraScriptExecの実体。
 	int SentenceToSakuraScriptInternal(const Talk &vec,string &result,string &jumpto,std::ptrdiff_t &ip);
 
+	// ウインドウ探索
+	unsigned long FindTopLevelWindow(const char* txt,bool isPartial);
+
+	// プロセス探索
+	unsigned long FindProcessName(const char* txt,bool isPartial);
+
 public:
 
 	Satori();
