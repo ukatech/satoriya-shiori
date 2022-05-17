@@ -1062,6 +1062,10 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		}
 	}
 	else if (compare_head(iName, "プロセス「") && compare_tail(iName, "」の存在")){
+#ifdef POSIX
+		//POSIXでは基本とれない
+		oResult = "０";
+#else
 		string	str(iName, 10, iName.length() - 10 - 8);
 
 		HANDLE hSnap = ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS,0);
@@ -1091,6 +1095,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		::CloseHandle(hSnap);
 
 		oResult = int2zen(pid);
+#endif
 	}
 
 	else if ( compare_tail(iName, "の存在") ) {
