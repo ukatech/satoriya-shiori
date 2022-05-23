@@ -396,7 +396,7 @@ bool	Satori::Save(bool isOnUnload) {
 		if ( str[0]=='S' && aredigits(str.c_str()+1) ) {
 			continue;
 		}
-		if ( str == "今回は喋らない" || str == "今回は会話時サーフェス戻し" || str == "今回は会話時サーフィス戻し" || str == "今回は自動アンカー" ) {
+		if ( str == "今回は喋らない" || str == "今回は会話時サーフェス戻し" || str == "今回は会話時サーフィス戻し" || str == "今回は自動アンカー" || str == "今回は自動改行挿入" ) {
 			continue;
 		}
 

@@ -592,7 +592,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 		}
 		character_wait_clear(2);
 
-		if ( auto_newline_enable_onetime ) {
+		if ( auto_newline_enable_onetime ) { //onetimeのほうのチェックだけで良い
 			result += "\\n";
 		}
 	}
