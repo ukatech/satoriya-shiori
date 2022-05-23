@@ -591,7 +591,10 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 
 		}
 		character_wait_clear(2);
-		result += "\\n";
+
+		if ( auto_newline_enable_onetime ) {
+			result += "\\n";
+		}
 	}
 
 	//DBG(GetSender().sender() << "leave SentenceToSakuraScriptInternal, nest-count: " << nest_count << std::endl);

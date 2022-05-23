@@ -51,6 +51,7 @@ int	Satori::request(
 
 	surface_restore_at_talk_onetime = SR_INVALID;
 	auto_anchor_enable_onetime = auto_anchor_enable;
+	auto_newline_enable_onetime = auto_newline_enable;
 
 	is_quick_section = false;
 

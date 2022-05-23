@@ -62,6 +62,9 @@ void	Satori::InitMembers() {
 	auto_anchor_enable = true;
 	auto_anchor_enable_onetime = true;
 
+	auto_newline_enable = true;
+	auto_newline_enable_onetime = true;
+
 	surface_add_value.clear();
 	last_talk_exiting_surface.clear();
 	next_default_surface.clear();
@@ -125,6 +128,7 @@ void	Satori::InitMembers() {
 
 	surface_restore_at_talk_onetime = SR_INVALID;
 	auto_anchor_enable_onetime = auto_anchor_enable;
+	auto_newline_enable_onetime = auto_newline_enable;
 
 	is_dic_loaded = false;
 	is_call_ontalk_at_mikire = false;

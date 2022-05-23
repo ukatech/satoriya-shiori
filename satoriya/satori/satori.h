@@ -252,6 +252,9 @@ private:
 	bool auto_anchor_enable;
 	bool auto_anchor_enable_onetime;
 
+	bool auto_newline_enable;
+	bool auto_newline_enable_onetime;
+
 	std::map<int, int>	default_surface;
 	std::map<int, int>	surface_add_value;
 	std::map<int, int>	next_default_surface; // “r’†‚Ådef_surface‚ğØ‚èŠ·‚¦‚Ä‚àA‚»‚Ìrequest‚Å‚Íg‚í‚È‚¢

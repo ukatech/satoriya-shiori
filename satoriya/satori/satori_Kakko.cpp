@@ -995,6 +995,20 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		string *v = GetValue(str,isSysValue); //こっちはシステム変数かどうかどっちでもいい
 		oResult = v ? "1" : "0";
 	}
+	else if ( compare_head(iName, "変数「") && compare_tail(iName, "」か０") ) {
+		string	str(iName, 6, iName.length()-6-6);
+		bool isSysValue;
+		string *v = GetValue(str,isSysValue); //こっちはシステム変数かどうかどっちでもいい
+		oResult = v ? *v : "０";
+	}
+	else if ( compare_head(iName, "変数「") && compare_tail(iName, "」か空文字列") ) {
+		string	str(iName, 6, iName.length()-6-12);
+		bool isSysValue;
+		string *v = GetValue(str,isSysValue); //こっちはシステム変数かどうかどっちでもいい
+		oResult = v ? *v : "";
+	}
+
+
 	else if (compare_head(iName, "導入済みゴースト「") && compare_tail(iName, "」の存在")){
 		string	str(iName, 18, iName.length() - 18 - 8);
 		oResult = installed_ghost_name.count(str) ? "1" : "0";

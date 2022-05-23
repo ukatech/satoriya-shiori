@@ -772,6 +772,28 @@ int	Satori::system_variable_operation_real(string key, string value, string* res
 		return 1; //実行＋変数設定
 	}
 	
+	if ( key == "自動改行挿入" ) {
+		if ( value == "有効" ) {
+			auto_newline_enable = true;
+			auto_newline_enable_onetime = auto_newline_enable;
+		}
+		else {
+			auto_newline_enable = false;
+			auto_newline_enable_onetime = auto_newline_enable;
+		}
+		return 1; //実行＋変数設定
+	}
+	
+	if ( key == "今回は自動改行挿入" ) {
+		if ( value == "有効" ) {
+			auto_newline_enable_onetime = true;
+		}
+		else {
+			auto_newline_enable_onetime = false;
+		}
+		return 1; //実行＋変数設定
+	}
+	
 	if ( compare_head(key,  "サーフェス加算値") && aredigits(key.c_str() + const_strlen("サーフェス加算値")) ) {
 		int n = zen2int(key.c_str() + const_strlen("サーフェス加算値"));
 		surface_add_value[n]= zen2int(value);
