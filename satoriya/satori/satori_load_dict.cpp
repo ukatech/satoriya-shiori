@@ -477,9 +477,9 @@ int Satori::LoadDicFolder(const string& i_base_folder)
 	for (std::vector<string>::const_iterator it=files.begin() ; it!=files.end() ; ++it)
 	{
 		const int len = it->size();
-		if ( len < 3 ) { continue; } // 最短ファイル名3文字以上
-		if ( it->compare(0,3,dic_load_prefix.c_str()) != 0 ) { continue; }
-		if ( it->compare(len-4,4,ext.c_str()) != 0 && it->compare(len-4,4,".sat") != 0 ) { continue; }
+		if ( len < dic_load_prefix.length() + (ext.length() < 4 ? ext.length() : 4)  ) { continue; } // 最短ファイル名は辞書接頭辞 + min(辞書拡張子, ".sat")
+		if ( it->compare(0,dic_load_prefix.length(),dic_load_prefix.c_str()) != 0 ) { continue; }
+		if ( it->compare(len-ext.length(),ext.length(),ext.c_str()) != 0 && it->compare(len-4,4,".sat") != 0 ) { continue; }
 
 		if ( LoadDictionary(i_base_folder + *it) ) {
 			++count;
