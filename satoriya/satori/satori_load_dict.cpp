@@ -478,8 +478,8 @@ int Satori::LoadDicFolder(const string& i_base_folder)
 	{
 		const int len = it->size();
 		if ( len < dic_load_prefix.length() + (ext.length() < 4 ? ext.length() : 4)  ) { continue; } // Å’Zƒtƒ@ƒCƒ‹–¼‚ÍŽ«‘Ú“ªŽ« + min(Ž«‘Šg’£Žq, ".sat")
-		if ( it->compare(0,3,dic_load_prefix.c_str()) != 0 ) { continue; }
-		if ( it->compare(len-4,4,ext.c_str()) != 0 && it->compare(len-4,4,".sat") != 0 ) { continue; }
+		if ( it->compare(0,dic_load_prefix.length(),dic_load_prefix.c_str()) != 0 ) { continue; }
+		if ( it->compare(len-ext.length(),ext.length(),ext.c_str()) != 0 && it->compare(len-4,4,".sat") != 0 ) { continue; }
 
 		if ( LoadDictionary(i_base_folder + *it) ) {
 			++count;
