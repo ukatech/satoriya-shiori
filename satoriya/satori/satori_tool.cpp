@@ -918,6 +918,11 @@ int	Satori::system_variable_operation_real(string key, string value, string* res
 		fEncodeSavedata = (value=="有効");
 		return 1; //実行＋変数設定
 	}
+
+	if ( key == "タイマ変数はセーブしない" ) {
+		fDontSaveTimerValue = (value=="有効");
+		return 1; //実行＋変数設定
+	}
 	
 	if ( compare_head(key,"単語群「") && compare_tail(key,"」の重複回避") ) {
 		words.setOC( string(key.c_str()+8, key.length()-8-12), value );

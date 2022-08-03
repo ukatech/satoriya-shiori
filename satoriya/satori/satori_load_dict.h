@@ -111,6 +111,8 @@ void	Satori::InitMembers() {
 	fEncodeSavedata = false;
 	mSaoriArgumentCalcMode = SACM_AUTO;
 
+	fDontSaveTimerValue = false;
+
 	reserved_talk.clear();
 
 	second_from_last_talk=0;

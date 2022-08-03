@@ -346,6 +346,8 @@ private:
 	bool	fEncodeSavedata;
 	// さおり引数を計算するか
 	enum { SACM_ON, SACM_OFF, SACM_AUTO } mSaoriArgumentCalcMode;
+	// タイマ変数はセーブしない
+	bool	fDontSaveTimerValue;
 
 	// 自動セーブ間隔
 	int	mAutoSaveInterval;

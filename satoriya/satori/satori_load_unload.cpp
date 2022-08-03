@@ -399,10 +399,10 @@ bool	Satori::Save(bool isOnUnload) {
 		if ( key == "今回は喋らない" || key == "今回は会話時サーフェス戻し" || key == "今回は会話時サーフィス戻し" || key == "今回は自動アンカー" || key == "今回は自動改行挿入" ) {
 			continue;
 		}
-		if ( key.size()>6 && compare_tail(key, "タイマ") ) {
+		if ( fDontSaveTimerValue && key.size()>6 && compare_tail(key, "タイマ") ) { //＄タイマ変数はセーブしない＝有効
 			string	name(key.c_str(), strlen(key.c_str())-6);
 			if ( timer_sec.find(name)!=timer_sec.end() ) {
-				continue; //タイマ変数はセーブしない
+				continue;
 			}
 		}
 
