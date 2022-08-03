@@ -392,12 +392,18 @@ bool	Satori::Save(bool isOnUnload) {
 
 	out << ENCODE(line) << std::endl;
 	for (strmap::const_iterator it=variables.begin() ; it!=variables.end() ; ++it) {
-		string	str = zen2han(it->first);
-		if ( str[0]=='S' && aredigits(str.c_str()+1) ) {
+		string	key = zen2han(it->first);
+		if ( key[0]=='S' && aredigits(key.c_str()+1) ) {
 			continue;
 		}
-		if ( str == "今回は喋らない" || str == "今回は会話時サーフェス戻し" || str == "今回は会話時サーフィス戻し" || str == "今回は自動アンカー" || str == "今回は自動改行挿入" ) {
+		if ( key == "今回は喋らない" || key == "今回は会話時サーフェス戻し" || key == "今回は会話時サーフィス戻し" || key == "今回は自動アンカー" || key == "今回は自動改行挿入" ) {
 			continue;
+		}
+		if ( key.size()>6 && compare_tail(key, "タイマ") ) {
+			string	name(key.c_str(), strlen(key.c_str())-6);
+			if ( timer_sec.find(name)!=timer_sec.end() ) {
+				continue; //タイマ変数はセーブしない
+			}
 		}
 
 		data = it->second;

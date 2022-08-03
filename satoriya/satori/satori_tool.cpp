@@ -1010,18 +1010,18 @@ int	Satori::system_variable_operation_real(string key, string value, string* res
 		return 1; //実行＋変数設定
 	}
 	
+	if ( key == "教わること" ) {
+		teach_genre=value;
+		if ( result != NULL )
+			*result += "\\![open,teachbox]";
+		return -1; //◆実行：変数設定しない
+	}
+	
 	if ( key == "全タイマ解除" && value=="実行") {
 		for (strintmap::const_iterator i=timer_sec.begin();i!=timer_sec.end();++i) {
 			variables.erase(i->first + "タイマ");
 		}
 		timer_sec.clear();
-		return -1; //◆実行：変数設定しない
-	}
-	
-	if ( key == "教わること" ) {
-		teach_genre=value;
-		if ( result != NULL )
-			*result += "\\![open,teachbox]";
 		return -1; //◆実行：変数設定しない
 	}
 	
@@ -1047,7 +1047,7 @@ int	Satori::system_variable_operation_real(string key, string value, string* res
 			GetSender().sender() << "タイマ「"  << name << "」が" << sec << "秒後に予\x96\xf1されました。" << std::endl;
 		}
 		/*}*/
-		return -1; //◆実行：変数設定しない
+		return 1; //実行＋変数設定
 	}
 	
 	if ( key == "引数区切り追加" && value.size()>0 ) {
