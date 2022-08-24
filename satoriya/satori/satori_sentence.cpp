@@ -448,27 +448,60 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 				p = line.c_str() + index;
 				p_do_not_process_end = p + kakko_result.size();
 			}
-			else if ( do_process && (c=="\xff") ) {	//内部特殊表現
-				c=get_a_chr(p);
-				if ( c=="\x01" ) { //0xff0x01＝スコープ切り替え　後に半角数値が1文字続く
-					c=get_a_chr(p);
-					int speaker_tmp = stoi_internal(c.c_str());
-					if ( is_speaked(speaker) && speaker != speaker_tmp ) {
-						result += append_at_scope_change;
-						chars_spoken += 2;
+			else if ( c=="\xff" ) {	//内部特殊表現 (カッコ遅延評価もあるのでdo_process判定はスキップ)
+				c = get_a_chr(p);
+
+				if ( c == "\x01" || c == "\x02" ) {
+					string cmd = c;
+
+					string param;
+
+					while (true) {
+						c=get_a_chr(p);
+						if ( c=="\xff" ) { break; }
+						param += c;
 					}
-					speaker = speaker_tmp;
-					character_wait_clear(2);
-					if ( speaker == 0 ) {
-						result += "\\0";
+
+					if ( cmd == "\x01" ) { //スコープ切り替え
+						int speaker_tmp = stoi_internal(param.c_str());
+						if ( is_speaked(speaker) && speaker != speaker_tmp ) {
+							result += append_at_scope_change;
+							chars_spoken += 2;
+						}
+						speaker = speaker_tmp;
+						character_wait_clear(2);
+						if ( speaker == 0 ) {
+							result += "\\0";
+						}
+						else if ( speaker == 1 ) {
+							result += "\\1";
+						}
+						else {
+							result += "\\p[" + itos(speaker_tmp) + "]";
+						}
 					}
-					else if ( speaker == 1 ) {
-						result += "\\1";
-					}
-					else {
-						result += "\\p[" + c + "]";
+					else if ( cmd == "\x02" ) { //サーフェス加算のための遅延評価
+						int s = stoi_internal(param.c_str());
+						if ( s != -1 ) { // -1は「消し」なので特別扱い
+							s += surface_add_value[speaker];
+						}
+
+						//ここをいじったら\sタグ処理部も更新すること
+
+						//サーフィス切り替えの前にウェイトは済ませておくこと
+						character_wait_exec;
+
+						//トーク前喋りチェック
+						if ( !is_speaked(speaker) ) {
+							if ( surface_changed_before_speak.find(speaker) == surface_changed_before_speak.end() ) {
+								surface_changed_before_speak.insert(std::map<int,bool>::value_type(speaker,is_speaked_anybody()) );
+							}
+						}
+
+						result += "\\s[" + itos(s) + "]";
 					}
 				}
+
 			}
 			else if ( do_process && (c=="：") ) {	// スコープ切り替え - ここは二人を想定。
 				if ( is_speaked(speaker) ) {
@@ -550,9 +583,11 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 						character_wait_clear(2);
 					}
 				}
-				else if ( cmd=="s" ) {
+				else if ( cmd=="s" ) { //ここをいじったら0xff0x02 (内部特殊表現) も更新すること
+
 					//サーフィス切り替えの前にウェイトは済ませておくこと
 					character_wait_exec;
+
 					//トーク前喋りチェック
 					if ( !is_speaked(speaker) ) {
 						if ( surface_changed_before_speak.find(speaker) == surface_changed_before_speak.end() ) {

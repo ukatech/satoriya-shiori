@@ -215,10 +215,10 @@ bool	Satori::load(const string& iBaseFolder)
 		// 置換辞書に追加
 		j = m.find("popular-name");
 		if ( j != m.end() && j->second.size()>0 ) 
-			replace_before_dic[j->second + "："] = string("\xff\x01") + zen2han(i->first); //0xff0x01はあとで変換
+			replace_before_dic[j->second + "："] = string("\xff\x01") + zen2han(i->first) + "\xff"; //0xff0x01(数値)0x01はあとで変換
 		j = m.find("initial-letter");
 		if ( j != m.end() && j->second.size()>0 ) 
-			replace_before_dic[j->second + "："] = string("\xff\x01") + zen2han(i->first); //0xff0x01はあとで変換
+			replace_before_dic[j->second + "："] = string("\xff\x01") + zen2han(i->first) + "\xff"; //0xff0x01(数値)0x01はあとで変換
 
 		j = m.find("base-surface");
 		if ( j != m.end() && j->second.size()>0 )
@@ -399,11 +399,17 @@ bool	Satori::Save(bool isOnUnload) {
 		if ( key == "今回は喋らない" || key == "今回は会話時サーフェス戻し" || key == "今回は会話時サーフィス戻し" || key == "今回は自動アンカー" || key == "今回は自動改行挿入" ) {
 			continue;
 		}
-		if ( fDontSaveTimerValue && key.size()>6 && compare_tail(key, "タイマ") ) { //＄タイマ変数はセーブしない＝有効
-			string	name(key.c_str(), strlen(key.c_str())-6);
-			if ( timer_sec.find(name)!=timer_sec.end() ) {
-				continue;
+		if ( key.size()>6 && compare_tail(key, "タイマ") ) { //＄タイマ変数はセーブしない＝有効
+			string	timer_name(key.c_str(), strlen(key.c_str())-6); //「タイマ」を消す
+			
+			strintmap::const_iterator tm = timer_sec.find(timer_name);
+			if ( tm != timer_sec.end() ) {
+				if ( fDontSaveTimerValue ) {
+					continue;
+				}
 			}
+
+			if ( tm->second < 1 ) { continue; } //タイムアウト済なのでスキップ
 		}
 
 		data = it->second;

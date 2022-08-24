@@ -1031,7 +1031,7 @@ int	Satori::system_variable_operation_real(string key, string value, string* res
 	}
 	
 	if ( key.size()>6 && compare_tail(key, "タイマ") ) {
-		string	name(key.c_str(), strlen(key.c_str())-6);
+		string	timer_name(key.c_str(), strlen(key.c_str())-6); //「タイマ」を消す
 		/*if ( sentences.find(name) == sentences.end() ) {
 		result = string("※　タイマ終了時のジャンプ先 ＊")+name+" がありません　※";
 		// セーブデータ復帰時を考慮
@@ -1039,17 +1039,18 @@ int	Satori::system_variable_operation_real(string key, string value, string* res
 		else {*/
 		int sec = zen2int(value);
 		if ( sec < 1 ) {
-			if ( timer_sec.find(name)!=timer_sec.end() ) {
-				timer_sec.erase(name);
-				GetSender().sender() << "タイマ「"  << name << "」の予\x96\xf1がキャンセルされました。" << std::endl;
+			if ( timer_sec.find(timer_name)!=timer_sec.end() ) {
+				timer_sec.erase(timer_name);
+				variables.erase(key);
+				GetSender().sender() << "タイマ「"  << timer_name << "」の予\x96\xf1がキャンセルされました。" << std::endl;
 			}
 			else {
-				GetSender().sender() << "タイマ「"  << name << "」は元から予\x96\xf1されていません。" << std::endl;
+				GetSender().sender() << "タイマ「"  << timer_name << "」は元から予\x96\xf1されていません。" << std::endl;
 			}
 		}
 		else {
-			timer_sec[name] = sec;
-			GetSender().sender() << "タイマ「"  << name << "」が" << sec << "秒後に予\x96\xf1されました。" << std::endl;
+			timer_sec[timer_name] = sec;
+			GetSender().sender() << "タイマ「"  << timer_name << "」が" << sec << "秒後に予\x96\xf1されました。" << std::endl;
 		}
 		/*}*/
 		return 1; //実行＋変数設定
