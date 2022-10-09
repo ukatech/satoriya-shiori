@@ -285,6 +285,16 @@ bool	Satori::load(const string& iBaseFolder)
 		loadResult = LoadDictionary(mBaseFolder + "satori_savebackup." + (fEncodeSavedata?"sat":dic_load_ext.c_str()), false);
 		GetSentence("セーブデータ");
 		execResult = talks.get_family("セーブデータ") != NULL;
+
+		if ( ! loadResult || ! execResult ) {
+			load_savedata_status = "失敗";
+		}
+		else {
+			load_savedata_status = "バックアップ";
+		}
+	}
+	else {
+		load_savedata_status = "正常";
 	}
 
 	talks.clear();

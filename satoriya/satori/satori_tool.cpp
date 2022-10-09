@@ -934,6 +934,11 @@ int	Satori::system_variable_operation_real(string key, string value, string* res
 		return -1; //◆実行：変数設定しない
 	}
 	
+	if ( key == "セーブデータ読み込み" ) {
+		load_savedata_status = value;
+		return -1; //◆実行：変数設定しない
+	}
+	
 	if ( key == "次のトーク" ) {
 		int	count=1;
 		while ( reserved_talk.find(count) != reserved_talk.end() )
@@ -956,7 +961,7 @@ int	Satori::system_variable_operation_real(string key, string value, string* res
 		}
 		return -1; //◆実行：変数設定しない
 	}
-	
+
 	if ( key=="トーク予\x96\xf1のキャンセル" ) {
 		if ( value=="＊" ) {
 			reserved_talk.clear();

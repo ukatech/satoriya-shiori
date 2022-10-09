@@ -65,6 +65,8 @@ void	Satori::InitMembers() {
 	auto_newline_enable = true;
 	auto_newline_enable_onetime = true;
 
+	load_savedata_status = "³í";
+
 	surface_add_value.clear();
 	last_talk_exiting_surface.clear();
 	next_default_surface.clear();

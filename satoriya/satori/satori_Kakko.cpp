@@ -1210,6 +1210,9 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 			oResult = int2zen(n);
 		}
 	}
+	else if ( iName=="セーブデータ読み込み" ) {
+		oResult = load_savedata_status;
+	}
 	else if ( iName=="次のトーク" ) {
 		std::map<int,string>::const_iterator it = reserved_talk.find(1);
 		if ( it != reserved_talk.end() ) 
