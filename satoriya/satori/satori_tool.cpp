@@ -1037,11 +1037,7 @@ int	Satori::system_variable_operation_real(string key, string value, string* res
 	
 	if ( key.size()>6 && compare_tail(key, "タイマ") ) {
 		string	timer_name(key.c_str(), strlen(key.c_str())-6); //「タイマ」を消す
-		/*if ( sentences.find(name) == sentences.end() ) {
-		result = string("※　タイマ終了時のジャンプ先 ＊")+name+" がありません　※";
-		// セーブデータ復帰時を考慮
-		}
-		else {*/
+
 		int sec = zen2int(value);
 		if ( sec < 1 ) {
 			if ( timer_sec.find(timer_name)!=timer_sec.end() ) {
@@ -1052,13 +1048,13 @@ int	Satori::system_variable_operation_real(string key, string value, string* res
 			else {
 				GetSender().sender() << "タイマ「"  << timer_name << "」は元から予\x96\xf1されていません。" << std::endl;
 			}
+			return -1; //◆実行：変数設定しない
 		}
 		else {
 			timer_sec[timer_name] = sec;
 			GetSender().sender() << "タイマ「"  << timer_name << "」が" << sec << "秒後に予\x96\xf1されました。" << std::endl;
+			return 1; //実行＋変数設定
 		}
-		/*}*/
-		return 1; //実行＋変数設定
 	}
 	
 	if ( key == "引数区切り追加" && value.size()>0 ) {

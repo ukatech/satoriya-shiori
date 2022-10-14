@@ -434,6 +434,9 @@ private:
 	// SentenceToSakuraScriptExecの実体。
 	int SentenceToSakuraScriptInternal(const Talk &vec,string &result,string &jumpto,std::ptrdiff_t &ip);
 
+	// 変数代入
+	bool SubstVariable(const string &key,string &value,string &result,bool do_calc);
+
 	// ウインドウ探索
 	unsigned long FindTopLevelWindow(const char* txt,bool isPartial);
 

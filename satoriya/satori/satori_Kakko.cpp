@@ -107,26 +107,8 @@ string	Satori::inc_call(
 		if ( iArgv.size()==2 ) {
 			string	result, key=iArgv[0], value=iArgv[1];
 
-			if ( aredigits(zen2han(key)) ) {
-				GetSender().sender() << "" << key << "@”Žš‚Ì‚Ý‚Ì•Ï”–¼‚Íˆµ‚¦‚Ü‚¹‚ñ." << std::endl;
-				erase_var(key);	// ‘¶Ý–•Á
-			}
-			else if ( value=="" ) {
-				GetSender().sender() << "" << key << "^cleared." << std::endl;
-				erase_var(key);	// ‘¶Ý–•Á
-			}
-			else {
-				if ( system_variable_operation(key, value, &result) >= 0 ) {
-					bool isOverwritten;
-					bool isSysValue;
-					string *pstr = GetValue(key,isSysValue,true,&isOverwritten);
-					
-					GetSender().sender() << "" << key << "" << value << "^" << 
-						(isOverwritten ? "written." : "overwritten.")<< std::endl;
+			SubstVariable(key,value,result,false);
 
-					if ( pstr ) { *pstr = value; }
-				}
-			}
 			return	result;
 		}
 		return	"";

@@ -378,42 +378,9 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 				result += "＄"; // ＄そのまま表示
 				speaked_speaker.insert(speaker);
 			}
-			else if ( aredigits(zen2han(key)) ) {
-				GetSender().sender() << "＄" << key << "　数字のみの変数名は扱えません." << std::endl;
-				erase_var(key);	// 存在抹消
-			}
-			else if ( value=="" ) {
-				GetSender().sender() << "＄" << key << "／cleared." << std::endl;
-				erase_var(key);	// 存在抹消
-				system_variable_operation(key, "", &result);//存在抹消したものがシステム変数かも！
-			}
 			else {
-				if ( words.is_exist(key) ) {
-					GetSender().sender() << "変数「" << key << "」と同じ名前の単語群があります。トラブルの元なので避けましょう。" << std::endl;
-				}
-				if ( talks.is_exist(key) ) {
-					GetSender().sender() << "変数「" << key << "」と同じ名前の文があります。トラブルの元なので避けましょう。" << std::endl;
-				}
-
-				if ( system_variable_operation(key, value, &result) >= 0 ) {
-					bool isOverwritten;
-					bool isSysValue;
-
-					// "0"は代入先を先に参照する時、エラーを返さないように。
-					string *pstr = GetValue(key,isSysValue,true,&isOverwritten,"0");
-
-					if ( do_calc ) {
-						if ( !calculate(value, value) )
-							break;
-						if ( aredigits(value) ) {
-							value = int2zen(stoi_internal(value));
-						}
-					}
-
-					GetSender().sender() << "＄" << key << "＝" << value << "／" << 
-						(isOverwritten ? "written." : "overwritten.")<< std::endl;
-
-					if ( pstr ) { *pstr = value; }
+				if ( ! SubstVariable(key,value,result,do_calc) ) {
+					break;
 				}
 			}
 			continue;
@@ -635,6 +602,50 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 	//DBG(GetSender().sender() << "leave SentenceToSakuraScriptInternal, nest-count: " << nest_count << std::endl);
 	--nest_count;
 	return 0;
+}
+
+bool Satori::SubstVariable(const string &key,string &value,string &result,bool do_calc)
+{
+	if ( aredigits(zen2han(key)) ) {
+		GetSender().sender() << "＄" << key << "　数字のみの変数名は扱えません." << std::endl;
+		erase_var(key);	// 存在抹消
+	}
+	else if ( value=="" ) {
+		GetSender().sender() << "＄" << key << "／cleared." << std::endl;
+		erase_var(key);	// 存在抹消
+		system_variable_operation(key, "", &result);//存在抹消したものがシステム変数かも！
+	}
+	else {
+		if ( words.is_exist(key) ) {
+			GetSender().sender() << "変数「" << key << "」と同じ名前の単語群があります。トラブルの元なので避けましょう。" << std::endl;
+		}
+		if ( talks.is_exist(key) ) {
+			GetSender().sender() << "変数「" << key << "」と同じ名前の文があります。トラブルの元なので避けましょう。" << std::endl;
+		}
+
+		if ( system_variable_operation(key, value, &result) >= 0 ) {
+			bool isOverwritten;
+			bool isSysValue;
+
+			// "0"は代入先を先に参照する時、エラーを返さないように。
+			string *pstr = GetValue(key,isSysValue,true,&isOverwritten,"0");
+
+			if ( do_calc ) {
+				if ( !calculate(value, value) ) {
+					return false;
+				}
+				if ( aredigits(value) ) {
+					value = int2zen(stoi_internal(value));
+				}
+			}
+
+			GetSender().sender() << "＄" << key << "＝" << value << "／" << 
+				(isOverwritten ? "written." : "overwritten.")<< std::endl;
+
+			if ( pstr ) { *pstr = value; }
+		}
+	}
+	return true;
 }
 
 #undef	DBG
