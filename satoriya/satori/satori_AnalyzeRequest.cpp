@@ -193,7 +193,7 @@ int	Satori::request(
 	// 予め指定したイベントプレフィックスはexternalでも実行可能に
 	bool is_external = (it != mRequestMap.end() && stricmp(it->second.c_str(), "external") == 0);
 	if (is_external) {
-		for (auto prefix : external_event_prefixes) {
+		for (auto prefix : allow_external_event_prefixes) {
 			if (prefix == "全部" || strstr(mRequestID.c_str(), prefix.c_str()) == mRequestID.c_str()) {
 				secure_flag = true;
 				break;

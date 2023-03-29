@@ -1098,7 +1098,7 @@ int	Satori::system_variable_operation_real(string key, string value, string* res
 	}
 
 	if (key == "外部から実行可能なイベントの接頭辞") {
-		split(value, ",", external_event_prefixes);
+		split(value, ",", allow_external_event_prefixes);
 		return 1; //実行+変数設定
 	}
 	
