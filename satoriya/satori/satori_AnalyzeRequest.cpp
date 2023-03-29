@@ -190,6 +190,17 @@ int	Satori::request(
 	strmap::const_iterator it = mRequestMap.find("SecurityLevel");
 	secure_flag = ( it!=mRequestMap.end() && stricmp(it->second.c_str(), "local")==0 );
 
+	// 予め指定したイベントプレフィックスはexternalでも実行可能に
+	bool is_external = (it != mRequestMap.end() && stricmp(it->second.c_str(), "external") == 0);
+	if (is_external) {
+		for (auto prefix : external_event_prefixes) {
+			if (prefix == "全部" || strstr(mRequestID.c_str(), prefix.c_str()) == mRequestID) {
+				secure_flag = true;
+				break;
+			}
+		}
+	}
+
 	// メイン処理
 	GetSender().sender() << "--- Operation ---" << std::endl;
 

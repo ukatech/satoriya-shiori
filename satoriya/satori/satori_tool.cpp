@@ -1096,6 +1096,11 @@ int	Satori::system_variable_operation_real(string key, string value, string* res
 		GetSender().set_delay_save_count(zen2int(value));
 		return 1; //実行＋変数設定
 	}
+
+	if (key == "外部から実行可能なイベントの接頭辞") {
+		split(value, ",", external_event_prefixes);
+		return 1; //実行+変数設定
+	}
 	
 	return	0; //実行しない
 }
