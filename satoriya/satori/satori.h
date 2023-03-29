@@ -312,8 +312,12 @@ private:
 
 	// 変数によりリロードが指示されたらON。
 	bool	reload_flag;
+
 	// 辞書フォルダ
 	strvec	dic_folder;
+
+	// 使用可能
+	strvec external_event_prefixes;
 
 	// TEACHされる変数名
 	string	teach_genre;
