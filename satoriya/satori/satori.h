@@ -319,9 +319,6 @@ private:
 	// 辞書フォルダ
 	strvec	dic_folder;
 
-	// 使用可能
-	strvec external_event_prefixes;
-
 	// TEACHされる変数名
 	string	teach_genre;
 
