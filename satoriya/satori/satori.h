@@ -286,6 +286,9 @@ private:
 	// 辞書拡張子・接頭辞
 	string dic_load_ext, dic_load_prefix;
 
+	// 外部から実行可能なイベントの接頭辞
+	strvec allow_external_event_prefixes;
+
 	// サーフェス
 	std::map<int, int>	cur_surface;
 	std::map<int, int>	last_talk_exiting_surface;

@@ -193,8 +193,9 @@ int	Satori::request(
 	// 予め指定したイベントプレフィックスはexternalでも実行可能に
 	bool is_external = (it != mRequestMap.end() && stricmp(it->second.c_str(), "external") == 0);
 	if (is_external) {
-		for (auto prefix : allow_external_event_prefixes) {
-			if (prefix == "全部" || strstr(mRequestID.c_str(), prefix.c_str()) == mRequestID.c_str()) {
+		for (strvec::const_iterator prefix = allow_external_event_prefixes.begin() ;
+		prefix != allow_external_event_prefixes.end() ; ++prefix ) {
+			if ( *prefix == "全部" || ( strnicmp(mRequestID.c_str(), prefix->c_str(), prefix->length()) == 0 ) ) {
 				secure_flag = true;
 				break;
 			}
