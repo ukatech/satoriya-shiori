@@ -149,6 +149,34 @@ int		Satori::CreateResponse(strmap& oResponse)
 			return	204;
 	} 
 	else if ( !Call(mRequestID, result) ) {
+
+		if ( mRequestID=="getaistate" ) {
+			static const string names[] = {"NoNameTalk", "EventTalk", "OtherTalk", "Word", "Anchor", "Variable"};
+			static const int names_count = sizeof(names) / sizeof(names[0]);
+
+			string res;
+			int cnt;
+
+			//•\Ž¦’l
+			res += itos( count_func(names[0]) );
+			for ( cnt = 1 ; cnt < names_count ; ++cnt ) {
+				res += ",";
+				res += itos( count_func(names[cnt]) );
+			}
+
+			res += byte1_dlmt;
+
+			//ƒ‰ƒxƒ‹
+			res += names[0];
+			for ( cnt = 1 ; cnt < names_count ; ++cnt ) {
+				res += ",";
+				res += names[cnt];
+			}
+
+			oResponse["Value"] = res;
+			return 200;
+		}
+
 		return	204;
 	}
 	else {

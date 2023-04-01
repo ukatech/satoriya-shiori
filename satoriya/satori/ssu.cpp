@@ -612,9 +612,23 @@ SRV _erase_first(std::deque<string>& iArguments, std::deque<string>& oValues) {
 }
 
 SRV _count(std::deque<string>& iArguments, std::deque<string>& oValues) {
-	if ( iArguments.size()!=2 )
+	if ( iArguments.size() >= 2 ) {
+		int cnt = 0;
+
+		int argsize = iArguments.size();
+
+		for ( int arg = 0 ; arg < (argsize-1) ; ++arg ) {
+			cnt += count(iArguments[arg], iArguments[argsize-1]);
+		}
+
+		return	itos( cnt );
+	}
+	else if ( iArguments.size()==1 ) { //arg0‚ª‹ó‚Á‚Û‚ÅØ‚è‹l‚ß‚ç‚ê‚½
+		return  "0";
+	}
+	else {
 		return	SRV(400, "ˆø”‚ÌŒÂ”‚ª³‚µ‚­‚ ‚è‚Ü‚¹‚ñB");
-	return	itos( count(iArguments[0], iArguments[1]) );
+	}
 }
 
 SRV _compare_case(std::deque<string>& iArguments, std::deque<string>& oValues) {

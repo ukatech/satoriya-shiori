@@ -447,6 +447,9 @@ private:
 	// ƒvƒƒZƒX’Tõ
 	unsigned long FindProcessName(const char* txt,bool isPartial);
 
+	// count
+	int count_func(const string &name);
+
 public:
 
 	Satori();

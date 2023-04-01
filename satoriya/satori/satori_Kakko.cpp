@@ -1121,75 +1121,9 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	else if ( compare_head(hankaku, "count") )
 	{
 		string	name(hankaku.c_str()+5);
-		if ( name=="Words" ) { oResult = int2zen( words.size_of_family() ); }
-		else if ( name=="Variable" ) { oResult = int2zen( variables.size() ); }
-		else if ( name=="Anchor" ) { oResult = int2zen( anchors.size() ); }
-		else if ( name=="Talk" ) { oResult = int2zen( talks.size_of_element() ); }
-		else if ( name=="Word" ) { oResult = int2zen( words.size_of_element() ); }
-		else if ( name=="NoNameTalk" )
-		{
-			Family<Talk>* f = talks.get_family("");
-			oResult = int2zen( ( f==0 ) ? 0 : f->size_of_element() );
-		}
-		else if ( name=="EventTalk" )
-		{
-			int	n=0;
-			for ( std::map< string, Family<Talk> >::const_iterator it = talks.compatible().begin() ; it != talks.compatible().end() ; ++it )
-				if ( compare_head(it->first, "On") )
-					n += it->second.size_of_element();
-			oResult = int2zen(n);
-		}
-		else if ( name=="OtherTalk" )
-		{
-			int	n=0;
-			for ( std::map< string, Family<Talk> >::const_iterator it = talks.compatible().begin() ; it != talks.compatible().end() ; ++it )
-				if ( !compare_head(it->first, "On") && !it->first.empty() )
-					n += it->second.size_of_element();
-			oResult = int2zen(n);
-		}
-		else if ( name=="Line" )
-		{
-			int	n=0;
-			for ( std::map< string, Family<Talk> >::const_iterator it = talks.compatible().begin() ; it != talks.compatible().end() ; ++it )
-			{
-				std::vector<const Talk*> v;
-				it->second.get_elements_pointers(v);
-				for ( std::vector<const Talk*>::const_iterator el_it = v.begin() ; el_it != v.end() ; ++el_it )
-				{
-					n += (*el_it)->size();
-				}
-			}
-			for ( std::map< string, Family<Word> >::const_iterator it = words.compatible().begin() ; it != words.compatible().end() ; ++it )
-			{
-				n += it->second.size_of_element();
-			}
-			oResult = int2zen(n);
-		}
-		else if ( name=="Parenthesis" )
-		{
-			int	n=0;
-			for ( std::map< string, Family<Talk> >::const_iterator it = talks.compatible().begin() ; it != talks.compatible().end() ; ++it )
-			{
-				std::vector<const Talk*> v;
-				it->second.get_elements_pointers(v);
-				for ( std::vector<const Talk*>::const_iterator el_it = v.begin() ; el_it != v.end() ; ++el_it )
-				{
-					for ( Talk::const_iterator tk_it = (*el_it)->begin() ; tk_it != (*el_it)->end() ; ++tk_it )
-					{
-						n += count(*tk_it, "（");
-					}
-				}
-			}
-			for ( std::map< string, Family<Word> >::const_iterator it = words.compatible().begin() ; it != words.compatible().end() ; ++it )
-			{
-				std::vector<const Word*> v;
-				it->second.get_elements_pointers(v);
-				for ( std::vector<const Word*>::const_iterator el_it = v.begin() ; el_it != v.end() ; ++el_it )
-				{
-					n += count(**el_it, "（");
-				}
-			}
-			oResult = int2zen(n);
+		int r = count_func(name);
+		if ( r >= 0 ) {
+			oResult = int2zen(r);
 		}
 	}
 	else if ( iName=="セーブデータ読み込み" ) {
@@ -1251,7 +1185,87 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	return	true;
 }
 
+//countコール・getaistate互換用
+int Satori::count_func(const string &name)
+{
+	if ( name=="Words" ) { return words.size_of_family(); }
+	else if ( name=="Variable" ) { return variables.size(); }
+	else if ( name=="Anchor" ) { return anchors.size(); }
+	else if ( name=="Talk" ) { return talks.size_of_element(); }
+	else if ( name=="Word" ) { return words.size_of_element(); }
+	else if ( name=="NoNameTalk" )
+	{
+		Family<Talk>* f = talks.get_family("");
+		return ( f==0 ) ? 0 : f->size_of_element();
+	}
+	else if ( name=="EventTalk" )
+	{
+		int	n=0;
+		for ( std::map< string, Family<Talk> >::const_iterator it = talks.compatible().begin() ; it != talks.compatible().end() ; ++it ) {
+			if ( compare_head(it->first, "On") ) {
+				n += it->second.size_of_element();
+			}
+		}
+		return n;
+	}
+	else if ( name=="OtherTalk" )
+	{
+		int	n=0;
+		for ( std::map< string, Family<Talk> >::const_iterator it = talks.compatible().begin() ; it != talks.compatible().end() ; ++it ) {
+			if ( !compare_head(it->first, "On") && !it->first.empty() ) {
+				n += it->second.size_of_element();
+			}
+		}
+		return n;
+	}
+	else if ( name=="Line" )
+	{
+		int	n=0;
+		for ( std::map< string, Family<Talk> >::const_iterator it = talks.compatible().begin() ; it != talks.compatible().end() ; ++it )
+		{
+			std::vector<const Talk*> v;
+			it->second.get_elements_pointers(v);
+			for ( std::vector<const Talk*>::const_iterator el_it = v.begin() ; el_it != v.end() ; ++el_it )
+			{
+				n += (*el_it)->size();
+			}
+		}
+		for ( std::map< string, Family<Word> >::const_iterator it = words.compatible().begin() ; it != words.compatible().end() ; ++it )
+		{
+			n += it->second.size_of_element();
+		}
+		return n;
+	}
+	else if ( name=="Parenthesis" )
+	{
+		int	n=0;
+		for ( std::map< string, Family<Talk> >::const_iterator it = talks.compatible().begin() ; it != talks.compatible().end() ; ++it )
+		{
+			std::vector<const Talk*> v;
+			it->second.get_elements_pointers(v);
+			for ( std::vector<const Talk*>::const_iterator el_it = v.begin() ; el_it != v.end() ; ++el_it )
+			{
+				for ( Talk::const_iterator tk_it = (*el_it)->begin() ; tk_it != (*el_it)->end() ; ++tk_it )
+				{
+					n += count(*tk_it, "（");
+				}
+			}
+		}
+		for ( std::map< string, Family<Word> >::const_iterator it = words.compatible().begin() ; it != words.compatible().end() ; ++it )
+		{
+			std::vector<const Word*> v;
+			it->second.get_elements_pointers(v);
+			for ( std::vector<const Word*>::const_iterator el_it = v.begin() ; el_it != v.end() ; ++el_it )
+			{
+				n += count(**el_it, "（");
+			}
+		}
+		return n;
+	}
+	return -1;
+}
 
+//ウインドウ列挙
 #ifndef POSIX
 typedef struct EnumWindowsInfo
 {
