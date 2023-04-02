@@ -253,7 +253,7 @@ bool ShioriPlugins::load_a_plugin(const string& iPluginLine)
 				}
 
 				// バージョン確認
-				string ver = mDllData[fullpath].m_pSaoriClient->get_version("Local");
+				string ver = mDllData[fullpath].m_pSaoriClient->get_version("local");
 				if ( ver != "SAORI/1.0" )
 				{
 					GetSender().errsender() << fullpath + ": SAORI/1.0のdllではありません。GET Versionの戻り値が未対応のものでした。(" + ver + ")" << satori::endl;

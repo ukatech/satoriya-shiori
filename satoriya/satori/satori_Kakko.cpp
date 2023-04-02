@@ -640,7 +640,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 				for ( strvec::iterator i=theArguments.begin() ; i!=theArguments.end() ; ++i ) {
 					m_escaper.unescape(*i);
 				}
-				oResult = mShioriPlugins->request(thePluginName, theArguments, mKakkoCallResults, secure_flag ? "Local" : "External" );
+				oResult = mShioriPlugins->request(thePluginName, theArguments, mKakkoCallResults, secure_flag ? "local" : "external" );
 			}
 			else if ( state==SPECIAL_CALL ) {
 				oResult = special_call(thePluginName, theArguments, false, true, secure_flag);
