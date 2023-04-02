@@ -33,7 +33,7 @@ int SaoriClient::request(
 
 	data.push_back( strpair("Charset", "Shift_JIS" ) );
 	data.push_back( strpair("Sender", "SATORI" ) );
-	data.push_back( strpair("SecurityLevel", (i_is_secure ? "local" : "external") ) );
+	data.push_back( strpair("SecurityLevel", (i_is_secure ? "Local" : "External") ) );
 
 	int idx=0;
 	for ( std::vector<string>::const_iterator i=i_argument.begin() ; i!=i_argument.end() ; ++i,++idx )
