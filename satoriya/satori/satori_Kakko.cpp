@@ -262,7 +262,7 @@ string	Satori::inc_call(
 			//リクエスト作成
 			const HWND targetHWnd = characters_hwnd[0];
 			std::ostringstream ost;
-			ost << "EXECUTE SSTP/1.1\r\nCommand: GetProperty[" << iArgv[0] << "]\r\nSender: Satori\r\nCharset: Shift_JIS\r\nHWnd: " << (size_t)propertyWindow << "\r\n\r\n";
+			ost << "EXECUTE SSTP/1.1\r\nCommand: GetProperty[" << iArgv[0] << "]\r\nSender: Satori\r\nCharset: Shift_JIS\r\n\r\n";
 			std::string sendData = ost.str();
 
 			//メッセージ転送
