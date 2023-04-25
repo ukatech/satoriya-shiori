@@ -47,7 +47,7 @@ BEGIN
             VALUE "Comments", " \0"
             VALUE "CompanyName", " \0"
             VALUE "FileDescription", "satori\0"
-            VALUE "FileVersion", "1, 167, 2, 1\0"
+            VALUE "FileVersion", "1, 168, 1, 1\0"
             VALUE "InternalName", "satori\0"
             VALUE "LegalCopyright", " \0"
             VALUE "LegalTrademarks", "\0"

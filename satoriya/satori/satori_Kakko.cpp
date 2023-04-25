@@ -251,13 +251,18 @@ string	Satori::inc_call(
 
 			//結果受信用ウインドウ作成: リソースの仕様を局所化してみたけどオーバーヘッドがでかい場合はSHIORIの初期化周辺に絡めるといいのかも
 			const char* windowname = "satori_get_property";
-			WNDCLASSEX windowClass = {};
+			
+			WNDCLASSEX windowClass;
+			ZeroMemory(&windowClass,sizeof(windowClass));
+
 			windowClass.cbSize = sizeof(windowClass);
 			windowClass.hInstance = GetModuleHandle(NULL);
 			windowClass.lpszClassName = windowname;
 			windowClass.lpfnWndProc = ::GetPropertyHandler;
-			RegisterClassEx(&windowClass);
-			HWND propertyWindow = CreateWindow(windowname, windowname, 0, 0, 0, 100, 100, NULL, NULL, windowClass.hInstance, NULL);
+			
+			::RegisterClassEx(&windowClass);
+
+			HWND propertyWindow = ::CreateWindow(windowname, windowname, 0, 0, 0, 100, 100, NULL, NULL, windowClass.hInstance, NULL);
 
 			//リクエスト作成
 			const HWND targetHWnd = characters_hwnd[0];
@@ -266,17 +271,19 @@ string	Satori::inc_call(
 			std::string sendData = ost.str();
 
 			//メッセージ転送
-			COPYDATASTRUCT cds = {};
+			COPYDATASTRUCT cds;
 			cds.dwData = 9801;
 			cds.cbData = sendData.size();
 			cds.lpData = malloc(cds.cbData);
 			memcpy(cds.lpData, sendData.c_str(), cds.cbData);
-			auto res = SendMessage(targetHWnd, WM_COPYDATA, (WPARAM)propertyWindow, (LPARAM)&cds);
+
+			/*LRESULT res =*/ ::SendMessage(targetHWnd, WM_COPYDATA, (WPARAM)propertyWindow, (LPARAM)&cds);
 			
 			//リソースの開放
 			free(cds.lpData);
-			DestroyWindow(propertyWindow);
-			UnregisterClass(windowClass.lpszClassName, windowClass.hInstance);
+			
+			::DestroyWindow(propertyWindow);
+			::UnregisterClass(windowClass.lpszClassName, windowClass.hInstance);
 
 			return execute_result;
 #else
