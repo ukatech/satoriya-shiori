@@ -3,6 +3,7 @@
 #include "posix_utils.h"
 #include	<time.h>
 #include	<tlhelp32.h>
+#include	<sstream>
 
 #include "random.h"
 
@@ -55,6 +56,29 @@ static	SYSTEMTIME	DwordToSystemTime(DWORD dw) {
 	return	st;
 }
 #endif*/
+
+//get_property関数用のハンドラと結果格納
+#ifndef POSIX
+std::string execute_result;
+LRESULT CALLBACK GetPropertyHandler(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
+{
+	if (message == WM_COPYDATA)
+	{
+		const COPYDATASTRUCT* cds = (const COPYDATASTRUCT*)lparam;
+		string recv_str((const char*)cds->lpData, cds->cbData);
+		
+		string header = cut_token(recv_str, CRLF);
+		cut_token(header, " ");
+		if (header == "200 OK")
+		{
+			//1行文読み捨て
+			cut_token(recv_str, CRLF);
+			execute_result = cut_token(recv_str, CRLF);
+		}
+	}
+	return CallWindowProc(DefWindowProc, hwnd, message, wparam, lparam);
+}
+#endif
 
 string	Satori::inc_call(
 	const string& iCallName, 
@@ -214,6 +238,51 @@ string	Satori::inc_call(
 			return	r;
 		}
 		return	"";
+	}
+
+	if (iCallName == "get_property")
+	{
+		if (iArgv.size() >= 1)
+		{
+			//里々からベースウェアにDirectSSTPを飛ばしてプロパティシステムにアクセスする。元のSHIORI呼出を返さずにプロパティを取れる。
+#ifndef POSIX
+			//リザルトのリセット
+			execute_result = "";
+
+			//結果受信用ウインドウ作成: リソースの仕様を局所化してみたけどオーバーヘッドがでかい場合はSHIORIの初期化周辺に絡めるといいのかも
+			const char* windowname = "satori_get_property";
+			WNDCLASSEX windowClass = {};
+			windowClass.cbSize = sizeof(windowClass);
+			windowClass.hInstance = GetModuleHandle(NULL);
+			windowClass.lpszClassName = windowname;
+			windowClass.lpfnWndProc = ::GetPropertyHandler;
+			RegisterClassEx(&windowClass);
+			HWND propertyWindow = CreateWindow(windowname, windowname, 0, 0, 0, 100, 100, NULL, NULL, windowClass.hInstance, NULL);
+
+			//リクエスト作成
+			const HWND targetHWnd = characters_hwnd[0];
+			std::ostringstream ost;
+			ost << "EXECUTE SSTP/1.1\r\nCommand: GetProperty[" << iArgv[0] << "]\r\nSender: Satori\r\nCharset: Shift_JIS\r\n\r\n";
+			std::string sendData = ost.str();
+
+			//メッセージ転送
+			COPYDATASTRUCT cds = {};
+			cds.dwData = 9801;
+			cds.cbData = sendData.size();
+			cds.lpData = malloc(cds.cbData);
+			memcpy(cds.lpData, sendData.c_str(), cds.cbData);
+			auto res = SendMessage(targetHWnd, WM_COPYDATA, (WPARAM)propertyWindow, (LPARAM)&cds);
+			
+			//リソースの開放
+			free(cds.lpData);
+			DestroyWindow(propertyWindow);
+			UnregisterClass(windowClass.lpszClassName, windowClass.hInstance);
+
+			return execute_result;
+#else
+			return "";
+#endif
+		}
 	}
 
 	if (iCallName == "load_saori")
@@ -485,6 +554,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 			if ( inner_commands.empty() ) {
 				// 本当はstd::map<name, function>だなー　むー
 				inner_commands.insert("set");
+				inner_commands.insert("get_property");
 				inner_commands.insert("nop");
 				inner_commands.insert("sync");
 				inner_commands.insert("loop");
