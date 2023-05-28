@@ -38,7 +38,7 @@ public:
 
 	// 全て使い切った状態かを返す。
 	// 使い切ることができるやつだけ
-	virtual bool is_used_all() { return false; }
+	virtual bool is_used_all(const std::list<T>& i_candidates) { return false; }
 
 	virtual int type(void) = 0;
 
@@ -162,7 +162,7 @@ public:
 	}
 
 	// 候補を使い切った？
-	virtual bool is_used_all()
+	virtual bool is_used_all(const std::list<T>&)
 	{
 		return m_unused.empty() && !m_used.empty();
 	}
@@ -368,6 +368,32 @@ public:
 		}
 	}
 
+	// 候補を使い切った？
+	virtual bool is_used_all(const std::list<T>& i_candidates)
+	{
+		typename std::list<T>::const_iterator it = i_candidates.begin();
+
+		if ( m_last != INVALID_VALUE )
+		{
+			while ( m_last != *it )
+			{
+				++it;
+				if ( it == i_candidates.end() ) { break; }
+			}
+
+			// 直前のものより１つだけ進める 直前が無効か最後までいったら枯渇
+			if ( it == i_candidates.end() )
+			{
+				return true;
+			}
+			else if ( ++it == i_candidates.end() )
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	// 候補が消去されようとしている
 	virtual void on_erase(const std::list<T>& i_candidates, typename std::list<T>::const_iterator& i_it)
 	{
@@ -464,6 +490,31 @@ public:
 				break;
 			}
 		}
+	}
+
+	// 候補を使い切った？
+	virtual bool is_used_all(const std::list<T>& i_candidates)
+	{
+		typename std::list<T>::const_reverse_iterator it = i_candidates.rbegin();
+		if (m_last != INVALID_VALUE)
+		{
+			while (m_last != *it)
+			{
+				++it;
+				if (it == i_candidates.rend()) { break; }
+			}
+
+			// 直前のものより１つだけ進める 直前が無効か最後までいったら枯渇
+			if (it == i_candidates.rend())
+			{
+				return true;
+			}
+			else if (++it == i_candidates.rend())
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	// 候補が消去されようとしている

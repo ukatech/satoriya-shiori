@@ -161,7 +161,7 @@ public:
 
 	bool isOCUsedAll()
 	{
-		return m_OC->is_used_all();
+		return m_OC->is_used_all(m_candidates);
 	}
 
 	// 現在の選択メソッドの種類を返す
