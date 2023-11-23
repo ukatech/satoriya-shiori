@@ -378,6 +378,7 @@ private:
 	//satori_config.txt‚©‚ç“Ç‚ñ‚¾‚â‚Â
 	bool is_utf8_dic;
 	bool is_utf8_replace;
+	bool is_utf8_savedata;
 
 	// ƒVƒXƒeƒ€î•ñŒn ----------
 
@@ -400,7 +401,7 @@ private:
 	void	InitMembers();
 
 	int	 LoadDicFolder(const string& path);
-	bool LoadDictionary(const string& filename,bool warnFileName = true);
+	bool LoadDictionary(const string& filename,bool warnFileName,bool isUTF8);
 
 	string	GetWord(const string& name);
 

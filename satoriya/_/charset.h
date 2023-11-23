@@ -52,6 +52,7 @@ string euc2jis(const string& str);
 string jis2sjis(const string& str);
 string jis2euc(const string& str);
 
+string	SJIStoUTF8(const string& str);
 string	UTF8toSJIS(const string& str);
 string	UTF16BEtoSJIS(const wchar_t* p);
 string	UTF16LEtoSJIS(const wchar_t* p);

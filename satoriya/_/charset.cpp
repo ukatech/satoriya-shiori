@@ -646,6 +646,13 @@ int CUnicodeF::utf8_to_utf16be_sub( wchar_t *pUcs2, const char *pUtf8, int nUtf8
     return nUcs2;
 }
 
+string	SJIStoUTF8(const string& str) {
+	int	count;
+	char* buf = CUnicodeF::sjis_to_utf8(str.c_str(), &count);
+	string	ret(buf, count);
+	free(buf);
+	return	ret;
+}
 
 string	UTF8toSJIS(const string& str) {
 	// BOMスキップ。UTF-16についてはライブラリでやってくれてるみたい。

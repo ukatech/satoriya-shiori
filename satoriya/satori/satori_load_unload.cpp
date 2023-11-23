@@ -20,6 +20,7 @@
 #include     "../_/random.h"
 
 #include "posix_utils.h"
+#include "charset.h"
 
 #ifdef POSIX
 #include <unistd.h>
@@ -220,6 +221,13 @@ bool	Satori::load(const string& iBaseFolder)
 		if ( j != config.end() && j->second.size()>0 ) {
 			is_utf8_replace = ( stricmp(j->second.c_str(),"true") == 0 || atoi(j->second.c_str()) != 0 );
 		}
+
+		is_utf8_savedata = false;
+		j = config.find("is_utf8_savedata");
+		if ( j != config.end() && j->second.size()>0 ) {
+			is_utf8_savedata = ( stricmp(j->second.c_str(),"true") == 0 || atoi(j->second.c_str()) != 0 );
+		}
+
 	}
 
 	// 置換辞書読み取り
@@ -260,7 +268,7 @@ bool	Satori::load(const string& iBaseFolder)
 	//------------------------------------------
 
 	// コンフィグ読み込み
-	LoadDictionary(mBaseFolder + "satori_conf.txt", false);
+	LoadDictionary(mBaseFolder + "satori_conf.txt", false, is_utf8_dic);
 
 	// 変数初期化実行
 	GetSentence("初期化");	
@@ -302,12 +310,12 @@ bool	Satori::load(const string& iBaseFolder)
 	// セーブデータ読み込み
 	//bool oldConf = fEncodeSavedata;
 
-	bool loadResult = LoadDictionary(mBaseFolder + "satori_savedata." + (fEncodeSavedata?"sat":dic_load_ext.c_str()), false);
+	bool loadResult = LoadDictionary(mBaseFolder + "satori_savedata." + (fEncodeSavedata?"sat":dic_load_ext.c_str()), false, is_utf8_savedata);
 	GetSentence("セーブデータ");
 	bool execResult = talks.get_family("セーブデータ") != NULL;
 
 	if ( ! loadResult || ! execResult ) {
-		loadResult = LoadDictionary(mBaseFolder + "satori_savebackup." + (fEncodeSavedata?"sat":dic_load_ext.c_str()), false);
+		loadResult = LoadDictionary(mBaseFolder + "satori_savebackup." + (fEncodeSavedata?"sat":dic_load_ext.c_str()), false, is_utf8_savedata);
 		GetSentence("セーブデータ");
 		execResult = talks.get_family("セーブデータ") != NULL;
 
@@ -383,7 +391,7 @@ bool	Satori::load(const string& iBaseFolder)
 
 
 //---------------------------------------------------------------------------
-#define	ENCODE(x)	(fEncodeSavedata ? encode(encode(x)) : (x))
+#define	ENCODE(x)	(fEncodeSavedata ? encode(encode( (is_utf8_savedata ? SJIStoUTF8(x) : x) )) : (is_utf8_savedata ? SJIStoUTF8(x) : x) )
 
 #ifdef POSIX
 #  include <time.h>

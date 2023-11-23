@@ -262,7 +262,7 @@ static bool satori_anchor_compare(const string &lhs,const string &rhs)
 }
 
 // 辞書を読み込む。
-bool Satori::LoadDictionary(const string& iFileName,bool warnFileName) 
+bool Satori::LoadDictionary(const string& iFileName,bool warnFileName,bool isUTF8) 
 {
 	// ファイルからvectorへ読み込む。
 	// その際、同ファイル名で拡張子が.txt(または指定拡張子)と.satのファイルの日付を比較し、新しい方だけを採用する。
@@ -272,7 +272,7 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName)
 		return false;
 	}
 
-	if ( is_utf8_dic ) {
+	if ( isUTF8 ) {
 		convert_utf8_to_sjis_strvec(file_vec);
 	}
 	else if ( is_utf8_strvec(file_vec) ) {
@@ -443,7 +443,7 @@ int Satori::LoadDicFolder(const string& i_base_folder)
 		if ( it->compare(0,dic_load_prefix.length(),dic_load_prefix.c_str()) != 0 ) { continue; }
 		if ( it->compare(len-ext.length(),ext.length(),ext.c_str()) != 0 && it->compare(len-4,4,".sat") != 0 ) { continue; }
 
-		if ( LoadDictionary(i_base_folder + *it) ) {
+		if ( LoadDictionary(i_base_folder + *it,true,is_utf8_dic) ) {
 			++count;
 		}
 	}
