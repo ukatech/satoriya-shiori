@@ -375,6 +375,9 @@ private:
 	//Notify‚ÌûE
 	bool is_save_notify;
 
+	//satori_config.txt‚©‚ç“Ç‚ñ‚¾‚â‚Â
+	bool is_utf8_dic;
+	bool is_utf8_replace;
 
 	// ƒVƒXƒeƒ€î•ñŒn ----------
 

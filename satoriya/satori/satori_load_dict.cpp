@@ -112,47 +112,6 @@ static void lines_to_units(
 }
 
 
-// 極めて高確率でUTF-8な文字列を検出
-static bool is_utf8_dic(const strvec& in)
-{
-	unsigned int possible_utf8_count = 0;
-
-	//Unicode : Halfwidth and Fullwidth Forms から里々でよく使うものを抜き出し
-	//efbc??のみ
-	//efbdは「」ぐらいしかないのでここでは入れていない
-	static char possible_3byte_table[] = "\x83\x84\x86\x88\x89\x8a\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9a\x9d\x9e\xa0\xbf"; //＃＄＆（）＊０～９：＝＞＠＿
-
-	for ( strvec::const_iterator fi=in.begin() ; fi!=in.end() ; ++fi )
-	{
-		const char* p = fi->c_str();
-
-		const char* ps = strstr(p,"\xef\xbc");
-
-		while ( ps ) {
-			char c = ps[2]; //3バイト目
-
-			if ( strchr(possible_3byte_table,c) ) {
-				possible_utf8_count += 1;
-				if ( possible_utf8_count >= 5 ) {
-					return true;
-				}
-			}
-
-			ps = strstr(ps+3,"\xef\xbc");
-		}
-	}
-
-	return false;
-}
-
-static void convert_utf8_to_sjis_dic(strvec &in)
-{
-	for ( strvec::iterator fi = in.begin() ; fi != in.end() ; ++fi )
-	{
-		*fi = UTF8toSJIS(*fi);
-	}
-}
-
 // プリプロセス的な処理。
 // 改行キャンセル適用、コメント削除、before_replaceの適用
 static bool pre_process(
@@ -313,7 +272,10 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName)
 		return false;
 	}
 
-	if ( is_utf8_dic(file_vec) ) {
+	if ( is_utf8_dic ) {
+		convert_utf8_to_sjis_strvec(file_vec);
+	}
+	else if ( is_utf8_strvec(file_vec) ) {
 #ifdef POSIX
 	     GetSender().sender() <<
 		    iFileName << std::endl << std::endl <<
@@ -323,7 +285,7 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName)
 			iFileName + "\n\n"
 			"文字コードがUTF-8の辞書のようです。変換します。" << satori::endl;
 #endif
-		convert_utf8_to_sjis_dic(file_vec);
+		convert_utf8_to_sjis_strvec(file_vec);
 	}
 
 	bool	is_for_anchor = compare_head(get_file_name(iFileName), dic_load_prefix + "Anchor");

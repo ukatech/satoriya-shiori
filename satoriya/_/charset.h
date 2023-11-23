@@ -23,6 +23,8 @@
 	http://plaza13.mbn.or.jp/~konton/TIPPRG/tipprg03.html
 */
 
+#ifndef CHARSET_H_INCLUDED
+#define CHARSET_H_INCLUDED
 
 // ï∂éöÉRÅ[Éh
 enum CharactorSet
@@ -65,4 +67,6 @@ inline string convertSomethingToSJIS(const char* p) {
 	default: return p; // ïœä∑ÇµÇ»Ç¢
 	}
 }
+
+#endif //CHARSET_H_INCLUDED
 

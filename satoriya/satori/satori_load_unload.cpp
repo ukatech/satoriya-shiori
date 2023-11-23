@@ -202,9 +202,34 @@ bool	Satori::load(const string& iBaseFolder)
 	}
 #endif // _MSC_VER
 
+	//config
+	{
+		strmap config;
+		strmap_from_file(config, mBaseFolder+"satori_bootconf.txt", ",");
+
+		strmap::const_iterator j;
+
+		is_utf8_dic = false;
+		j = config.find("is_utf8_dic");
+		if ( j != config.end() && j->second.size()>0 ) {
+			is_utf8_dic = ( stricmp(j->second.c_str(),"true") == 0 || atoi(j->second.c_str()) != 0 );
+		}
+
+		is_utf8_replace = false;
+		j = config.find("is_utf8_replace");
+		if ( j != config.end() && j->second.size()>0 ) {
+			is_utf8_replace = ( stricmp(j->second.c_str(),"true") == 0 || atoi(j->second.c_str()) != 0 );
+		}
+	}
+
 	// 置換辞書読み取り
 	strmap_from_file(replace_before_dic, mBaseFolder+"replace.txt", "\t");
 	strmap_from_file(replace_after_dic, mBaseFolder+"replace_after.txt", "\t");
+
+	if ( is_utf8_replace ) {
+		convert_utf8_to_sjis_strmap(replace_before_dic);
+		convert_utf8_to_sjis_strmap(replace_after_dic);
+	}
 
 	// キャラデータ読み込み
 	mCharacters.load(mBaseFolder + "characters.ini");

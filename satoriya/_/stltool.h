@@ -49,7 +49,6 @@ namespace std {
 #include    <stdio.h>
 using std::string;
 
-
 #define const_strlen(s) ((sizeof(s) / sizeof(s[0]))-1)
 
 /*class strvec : public vector<string>
@@ -184,6 +183,13 @@ bool	strvec_to_file(const strvec& i, const string& iFileName);
 // ファイル←→strmap
 bool	strmap_from_file(strmap& o, const string& iFileName, const string& dlmt=",", const string& front_comment_mark="#");
 bool	strmap_to_file(const strmap& i, const string& iFileName, const string& dlmt);
+// strvec utf8判定
+bool is_utf8_strvec(const strvec& in);
+void convert_utf8_to_sjis_strvec(strvec &in);
+// strmap utf8変換
+void convert_utf8_to_sjis_strmap(strmap &in);
+
+
 // 全角半角問わず一文字取得
 string	get_a_chr(const char*& p);
 
