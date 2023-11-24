@@ -379,6 +379,7 @@ private:
 	bool is_utf8_dic;
 	bool is_utf8_replace;
 	bool is_utf8_savedata;
+	bool is_utf8_charactersini;
 
 	// ƒVƒXƒeƒ€î•ñŒn ----------
 

@@ -211,23 +211,39 @@ bool	Satori::load(const string& iBaseFolder)
 		strmap::const_iterator j;
 
 		is_utf8_dic = false;
+		is_utf8_replace = false;
+		is_utf8_savedata = false;
+		is_utf8_charactersini = false;
+
+		j = config.find("is_utf8_all");
+		if ( j != config.end() && j->second.size()>0 ) {
+			if ( stobool(j->second.c_str()) ) {
+				is_utf8_dic = true;
+				is_utf8_replace = true;
+				is_utf8_savedata = true;
+				is_utf8_charactersini = true;
+			}
+		}
+
 		j = config.find("is_utf8_dic");
 		if ( j != config.end() && j->second.size()>0 ) {
-			is_utf8_dic = ( stricmp(j->second.c_str(),"true") == 0 || atoi(j->second.c_str()) != 0 );
+			is_utf8_dic = stobool(j->second.c_str());
 		}
 
-		is_utf8_replace = false;
 		j = config.find("is_utf8_replace");
 		if ( j != config.end() && j->second.size()>0 ) {
-			is_utf8_replace = ( stricmp(j->second.c_str(),"true") == 0 || atoi(j->second.c_str()) != 0 );
+			is_utf8_replace = stobool(j->second.c_str());
 		}
 
-		is_utf8_savedata = false;
 		j = config.find("is_utf8_savedata");
 		if ( j != config.end() && j->second.size()>0 ) {
-			is_utf8_savedata = ( stricmp(j->second.c_str(),"true") == 0 || atoi(j->second.c_str()) != 0 );
+			is_utf8_savedata = stobool(j->second.c_str());
 		}
 
+		j = config.find("is_utf8_charactersini");
+		if ( j != config.end() && j->second.size()>0 ) {
+			is_utf8_charactersini = stobool(j->second.c_str());
+		}
 	}
 
 	// 置換辞書読み取り
@@ -241,7 +257,12 @@ bool	Satori::load(const string& iBaseFolder)
 
 	// キャラデータ読み込み
 	mCharacters.load(mBaseFolder + "characters.ini");
-	for ( inimap::const_iterator i=mCharacters.begin() ; i!=mCharacters.end() ; ++i ) {
+	for ( inimap::iterator i=mCharacters.begin() ; i!=mCharacters.end() ; ++i ) {
+
+		if ( is_utf8_charactersini ) {
+			convert_utf8_to_sjis_strmap(i->second);
+		}
+
 		const strmap& m = i->second;
 		strmap::const_iterator j;
 
