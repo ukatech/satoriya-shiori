@@ -117,6 +117,9 @@ inline unsigned long stoui(const char* s) { return strtoul(s,NULL,10); }
 inline string	itos(long i, const char* iFormat="%d") { char buf[32]; sprintf(buf,iFormat,i); return buf; }
 inline string	uitos(unsigned long i, const char* iFormat="%u") { char buf[32]; sprintf(buf,iFormat,i); return buf; }
 
+inline bool stobool(const char *s) { return ( stricmp(s,"true") == 0 || atoi(s) != 0 ); }
+inline bool stobool(const string &s) { return stobool(s.c_str()); }
+
 // ÇªÇÍÇƒÇ»Ç…ÅB
 bool	aredigits(const char* p);
 inline bool	aredigits(const string& s) { return aredigits(s.c_str()); }

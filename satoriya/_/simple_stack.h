@@ -20,7 +20,7 @@ public:
 		return	theT;
 	}
 	void	pop(int num) {
-		assert(num>=0 && num<=this->size());
+		assert(num>=0 && num<=static_cast<int>(this->size()));
 		while ( num-- > 0 ) {
 			this->pop_back();
 		}
@@ -29,7 +29,7 @@ public:
 		return	this->back();
 	}
 	T&	from_top(int len) {
-		assert(len>=0 && len<this->size());
+		assert(len>=0 && len<static_cast<int>(this->size()));
 		return	(*this)[this->size()-1-len];
 	}
 };
