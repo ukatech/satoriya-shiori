@@ -237,14 +237,19 @@ bool	Satori::GetRecommendsiteSentence(const string& name, string& result)
 {
 	std::list<const Talk*> tg;
 	talks.select_all(name,*this,tg);
+	string unkakko_t1;
 	
 	for (std::list<const Talk*>::iterator it = tg.begin() ; it != tg.end() ; ++it )
 	{
 		const Talk& t = **it;
-		if ( t.size() >= 4 && t[1]==mReferences[1] )
+		if ( t.size() >= 4 )
 		{
-			result = SentenceToSakuraScriptExec( Talk(t.begin()+3, t.end()) );
-			return	true;
+			unkakko_t1 = UnKakko(t[1].c_str(),false,true);
+
+			if ( unkakko_t1 == mReferences[1] ) {
+				result = SentenceToSakuraScriptExec( Talk(t.begin()+3, t.end()) );
+				return	true;
+			}
 		}
 	}
 	return	false;
