@@ -209,7 +209,7 @@ inline int split(const string& i, T& o) {
 	return split(i.c_str(),o);
 }
 
-// 単語単位に分割 max_wordsは最大切り出し単語数。0なら制限しない。
+// 分割(区切り文字列は1文字ずつ候補扱い) max_wordsは最大切り出し単語数。0なら制限しない。
 template<class T>
 int	split(const char* p, const char* dp, T& o, int max_words=0, bool split_one=false)
 {
@@ -261,6 +261,61 @@ inline int split(const char* p, const string& dlmt, T& o, int max_words=0, bool 
 template<class T>
 inline int split(const string& i, const char* dp, T& o, int max_words=0, bool split_one=false) { return split(i.c_str(),dp,o,max_words,split_one); }
 
+
+// 分割(単純分割) max_wordsは最大切り出し単語数。0なら制限しない。
+template<class T>
+int	split_string(const char* p, const char* dp, T& o, int max_words=0, bool split_one=false)
+{
+	if ( *dp == 0 ) {
+		return	split(p, o);
+	}
+
+	if ( max_words==1 ) {
+		o.push_back(p);
+		return	1;
+	}
+
+	string	word;
+	const char *dpr = dp;
+	string  dpc = get_a_chr(dpr); //とりあえず1文字目をとっておく
+	size_t  dpl = strlen(dpr);
+
+	while ( *p != '\0' ) {
+		string	c = get_a_chr(p);
+
+		if ( c == dpc && strncmp(p,dpr,dpl) == 0 ) { //strncmpで2文字目以降を単純比較マッチ
+			if ( word.size() > 0 || split_one ) {
+				o.push_back(word);
+
+				if ( max_words>0 && static_cast<int>(o.size()+1) >= max_words ) {	// 単語数制限
+					word = p;
+					break;
+				}
+				else {
+					word="";
+				}
+			}
+			p += dpl;
+		}
+		else {
+			word += c;
+		}
+	}
+	if ( word.size() > 0 ) { //split_oneがフラグONでも最後のゴミは無視
+		o.push_back(word);
+	}
+
+	return	o.size();
+}
+
+template<class T>
+inline int split_string(const string& i, const string& dlmt, T& o, int max_words=0, bool split_one=false) { return split_string(i.c_str(),dlmt.c_str(),o,max_words,split_one); }
+
+template<class T>
+inline int split_string(const char* p, const string& dlmt, T& o, int max_words=0, bool split_one=false) { return split_string(p,dlmt.c_str(),o,max_words,split_one); }
+
+template<class T>
+inline int split_string(const string& i, const char* dp, T& o, int max_words=0, bool split_one=false) { return split_string(i.c_str(),dp,o,max_words,split_one); }
 
 
 inline int	splitToSet(const string& iString, std::set<string>& oSet, int iDelimiter) {

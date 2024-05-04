@@ -141,7 +141,8 @@ static const std::map<string, Command> &func_map(void)
 		// 命令一覧の宣言と関連付け。
 		d(calc);			d(calc_float);		d(if);				d(unless);
 		d(nswitch);			d(switch);			d(iflist);			d(substr);
-		d(split);			d(join);			d(replace);			d(replace_first);	d(erase);
+		d(split);			d(split_string);	d(join);
+		d(replace);			d(replace_first);	d(erase);
 		d(erase_first);		d(count);
 		d(compare);				d(compare_head);			d(compare_tail);
 		d(compare_case);		d(compare_head_case);		d(compare_tail_case);
@@ -566,6 +567,33 @@ SRV _split(std::deque<string>& iArguments, std::deque<string>& oValues) {
 		}
 
 		split(iArguments[0].c_str(),iArguments[1].c_str(),vec,max_words,split_one);
+	}
+
+	for ( strvec::iterator i=vec.begin() ; i!=vec.end() ; ++i )
+		oValues.push_back(*i);
+	return	SRV(200, itos(vec.size()));
+}
+
+SRV _split_string(std::deque<string>& iArguments, std::deque<string>& oValues) {
+	if ( iArguments.size() < 1 )
+		return	SRV(400, "引数の個数が正しくありません。");
+
+	strvec	vec;
+	if ( iArguments.size()==1 ) {
+		split(iArguments[0],vec);
+	}
+	else {
+		int max_words = 0;
+		if ( iArguments.size() > 2 ) {
+			max_words = zen2int(iArguments[2]);
+		}
+
+		bool split_one = false;
+		if ( iArguments.size() > 3 ) {
+			split_one = zen2int(iArguments[3]) != 0;
+		}
+
+		split_string(iArguments[0].c_str(),iArguments[1].c_str(),vec,max_words,split_one);
 	}
 
 	for ( strvec::iterator i=vec.begin() ; i!=vec.end() ; ++i )
