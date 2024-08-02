@@ -36,6 +36,7 @@ Sender& GetSender()
 Sender::Sender()
 {
 	delay_send_event_max = 0;
+	delay_send_string_max = 200;
 
 	sm_sender_flag = true;
 	sm_buffering_flag = false;
@@ -108,9 +109,6 @@ bool Sender::auto_init()
 			{
 				return	false;
 			}
-
-			//’x‰„•ª‚Ì‘—M‚ğs‚¤B
-			flush();
 		}
 		else
 		{
@@ -342,6 +340,9 @@ void Sender::add_delay_text(const char* text)
 	}
 	if (sm_sender_flag)
 	{
+		if ( delay_send_list.rbegin()->size() > delay_send_string_max ) {
+			flush_latest_event();
+		}
 		delay_send_list.rbegin()->push_back(text);
 	}
 }
@@ -375,18 +376,29 @@ void Sender::next_event()
 	}
 }
 
-void Sender::flush()
+void Sender::flush_latest_event()
 {
-	if (!auto_init())
-	{
-		return;
-	}
-
-	for (std::list< std::list<std::string> >::iterator it = delay_send_list.begin(); it != delay_send_list.end(); it++)
+	std::list< std::list<std::string> >::reverse_iterator it = delay_send_list.rbegin();
+	if (auto_init())
 	{
 		for (std::list<std::string>::iterator st = it->begin(); st != it->end(); st++)
 		{
 			send_to_window(SenderConst::E_SJIS, st->c_str());
+		}
+	}
+	it->clear();
+}
+
+void Sender::flush()
+{
+	if (auto_init())
+	{
+		for (std::list< std::list<std::string> >::iterator it = delay_send_list.begin(); it != delay_send_list.end(); it++)
+		{
+			for (std::list<std::string>::iterator st = it->begin(); st != it->end(); st++)
+			{
+				send_to_window(SenderConst::E_SJIS, st->c_str());
+			}
 		}
 	}
 

@@ -112,6 +112,7 @@ class Sender
 
 	std::list< std::list<std::string> > delay_send_list;
 	int delay_send_event_max;	//遅延送信最大数。
+	int delay_send_string_max;  //イベント内にためこむ文字列リスト最大数
 
 	void add_delay_text(const char* text);
 
@@ -169,6 +170,7 @@ public:
 	void buffering(bool i_flag = true) { sm_buffering_flag = i_flag; }
 
 	void flush();
+	void flush_latest_event();
 	void delete_last_request();
 };
 
