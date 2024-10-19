@@ -479,9 +479,9 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 				character_wait_clear(2);
 				result += (speaker ? "\\1" : "\\0");
 			}
-			else if ( c=="\\" || c=="%" ) {	// さくらスクリプトの解釈、というか解釈のスキップ。
+			else if ( c=="\\" ) {	// さくらスクリプトの解釈、というか解釈のスキップ。
 
-				if (*p=='\\'||*p=='%') {	// エスケープされた\, %
+				if ( *p=='\\' ) {	// エスケープ
 					result += c + *p++;
 					continue;
 				}
@@ -489,10 +489,13 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 				const char*	start=p;
 				string	cmd="",opt="";
 
-				while (!_ismbblead(*p) && (isalpha(*p)||isdigit(*p)||*p=='!'||*p=='-'||*p=='*'||*p=='&'||*p=='?'||*p=='_'||*p=='+'))
+				//複数個のアンダースコアと、1個の文字
+				while (!_ismbblead(*p) && *p=='_')
+					++p;
+				if (!_ismbblead(*p) && (isalpha(*p)||isdigit(*p)||*p=='!'||*p=='-'||*p=='*'||*p=='&'||*p=='?'||*p=='+'))
 					++p;
 				cmd.assign(start, p-start);
-
+				
 				if ( cmd == "_?" || cmd == "_!" ) { //エスケープ処理 この間に自動タグ挿入はしない
 					const char* e1 = strstr(p,"\\_?");
 					if ( ! e1 ) { e1 = strstr(p,"\\_!"); }
@@ -577,6 +580,53 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 					result += c + cmd;
 				}
 
+
+				//result += string(start, p-start);
+			}
+			else if ( c=="%" ) {	// さくらスクリプトの解釈、というか解釈のスキップ。
+
+				if ( *p=='%' || *p=='*' ) {	// エスケープされた%か、%*
+					result += c + *p++;
+					continue;
+				}
+
+				string cmd="";
+
+				static const char* tag_pattern[] = {
+					"month","day","hour","minute","second","username","selfname","selfname2","keroname","screenwidth","screenheight",
+					"exh","et","wronghour","ms","mz","mc","mh","mt","me","mp","m?","dms","lastghostname","lastobjectname","property"
+				};
+				static unsigned int tag_pattern_count = sizeof(tag_pattern)/sizeof(tag_pattern[0]);
+
+				for ( unsigned int tg = 0 ; tg < tag_pattern_count ; ++tg ) {
+					int len = strlen(tag_pattern[tg]);
+
+					if ( strncmp(p,tag_pattern[tg],len) == 0 ) {
+						cmd = tag_pattern[tg];
+						p += len;
+					}
+				}
+
+				string opt="";
+
+				if ( (cmd=="property") && (*p=='[') ) {
+					const char* opt_start = ++p;
+					while (*p!=']') {
+						if (p[0]=='\\' && p[1]==']')	// エスケープされた]
+							++p;
+						p += _ismbblead(*p) ? 2 : 1;
+					}
+					opt.assign(opt_start, p++ -opt_start);
+					opt=UnKakko(opt.c_str());
+				}
+
+				if ( opt!="" ) {
+					//GetSender().sender() << "ss_cmd: " << c << "," << cmd << "," << opt << std::endl;
+					result += c + cmd + "[" + opt + "]";
+				} else {
+					//GetSender().sender() << "ss_cmd: " << c << "," << cmd << std::endl;
+					result += c + cmd;
+				}
 
 				//result += string(start, p-start);
 			}
