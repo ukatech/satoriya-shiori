@@ -419,18 +419,20 @@ bool	Satori::load(const string& iBaseFolder)
 #endif
 bool	Satori::Save(bool isOnUnload) {
 	GetSender().next_event();
+	
+	strmap savemap = variables;
 
 	// メンバ変数を里々変数化
 	for (std::map<int, string>::iterator it=reserved_talk.begin(); it!=reserved_talk.end() ; ++it)
-		variables[string("次から")+itos(it->first)+"回目のトーク"] = it->second;
+		savemap[string("次から")+itos(it->first)+"回目のトーク"] = it->second;
 
 	// 起動時間累計を設定
-	variables["ゴースト起動時間累計秒"] =
+	savemap["ゴースト起動時間累計秒"] =
 	    uitos(posix_get_current_sec() - sec_count_at_load + sec_count_total,"%lu");
 	// (互換用)
-	variables["ゴースト起動時間累計ミリ秒"] =
+	savemap["ゴースト起動時間累計ミリ秒"] =
 	    uitos((posix_get_current_sec() - sec_count_at_load + sec_count_total)*1000,"%lu");
-	variables["ゴースト起動時間累計(ms)"] =
+	savemap["ゴースト起動時間累計(ms)"] =
 	    uitos((posix_get_current_sec() - sec_count_at_load + sec_count_total)*1000,"%lu");
 
 	if ( isOnUnload ) {
@@ -455,7 +457,7 @@ bool	Satori::Save(bool isOnUnload) {
 	string  data;
 
 	out << ENCODE(line) << std::endl;
-	for (strmap::const_iterator it=variables.begin() ; it!=variables.end() ; ++it) {
+	for (strmap::const_iterator it= savemap.begin() ; it!= savemap.end() ; ++it) {
 		string	key = zen2han(it->first);
 		if ( key[0]=='S' && aredigits(key.c_str()+1) ) {
 			continue;
