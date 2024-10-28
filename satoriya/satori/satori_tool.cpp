@@ -979,9 +979,9 @@ int	Satori::system_variable_operation_real(string key, string value, string* res
 				else {
 					++it;
 				}
-				return 1; //実行＋変数設定
 			}
 		}
+		return -1; //◆実行：変数設定しない
 	}
 	
 	if ( key == "SAORI引数の計算" ) {
