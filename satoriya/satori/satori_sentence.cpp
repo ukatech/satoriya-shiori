@@ -490,10 +490,18 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 				string	cmd="",opt="";
 
 				//複数個のアンダースコアと、1個の文字
-				while (!_ismbblead(*p) && *p=='_')
+				while (!_ismbblead(*p) && *p=='_') {
 					++p;
-				if (!_ismbblead(*p) && (isalpha(*p)||isdigit(*p)||*p=='!'||*p=='-'||*p=='*'||*p=='&'||*p=='?'||*p=='+'))
+				}
+				if (!_ismbblead(*p) && (isalpha(*p)||isdigit(*p)||*p=='!'||*p=='-'||*p=='*'||*p=='&'||*p=='?'||*p=='+')) {
+					char c = *p;
 					++p;
+					if (!_ismbblead(*p) && (c == 'w' || c == 's' || c == 'p')) {
+						if ( isdigit(*p) ) {
+							++p;
+						}
+					}
+				}
 				cmd.assign(start, p-start);
 				
 				if ( cmd == "_?" || cmd == "_!" ) { //エスケープ処理 この間に自動タグ挿入はしない
