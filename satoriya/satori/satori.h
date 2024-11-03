@@ -274,6 +274,8 @@ private:
 	// –³ŒÀŒÄ‚Ño‚µ—}~
 	int m_nest_limit;
 	int m_jump_limit;
+	int m_kakko_size_limit;
+
 	int m_nest_count;
 
 	// ‚Î‚é[‚ñˆÊ’u

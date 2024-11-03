@@ -544,9 +544,21 @@ string	Satori::UnKakko(const char* p,bool for_calc,bool for_non_talk)
 {
 	assert(p!=NULL);
 	string	result;
+
 	while ( p[0] != '\0' ) {
 		string c=get_a_chr(p);
-		result += (c=="（") ? KakkoSection(p,for_calc,for_non_talk) : c;
+
+		if ( c == "（" ) {
+			result += KakkoSection(p,for_calc,for_non_talk);
+		}
+		else {
+			result += c;
+		}
+
+		if ( m_kakko_size_limit > 0 && result.size() > m_kakko_size_limit ) {
+			GetSender().sender() << "括弧展開サイズ超過：" << result << std::endl;
+			return result;
+		}
 	}
 	return	result;
 }
@@ -690,6 +702,12 @@ int	Satori::system_variable_operation_real(string key, string value, string* res
 	if ( key == "呼び出し回数制限" ) {
 		m_nest_limit = zen2int(value);
 		if ( m_nest_limit < 0 ) { m_nest_limit = 0; }
+		return 1; //実行＋変数設定
+	}
+
+	if ( key == "括弧展開サイズ制限" ) {
+		m_kakko_size_limit = zen2int(value);
+		if ( m_kakko_size_limit < 0 ) { m_kakko_size_limit = 0; }
 		return 1; //実行＋変数設定
 	}
 	

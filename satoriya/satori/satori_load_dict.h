@@ -139,6 +139,8 @@ void	Satori::InitMembers() {
 
 	m_nest_limit = 200; //200‰ñ‚àŒÄ‚Ô‚ÈI
 	m_jump_limit = 20000; //‚±‚Á‚¿‚Í‚©‚È‚è‹–—e
+	m_kakko_size_limit = 256*1024; //1Š‡ŒÊ‚Å256KB‚à‚ ‚Á‚½‚ç‘å–ŒÌ‚¾‚ë‚¤
+
 	m_nest_count = 0;
 
 	header_script = "";

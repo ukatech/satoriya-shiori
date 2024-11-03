@@ -84,14 +84,6 @@ string	Satori::GetSentence(const string& name)
 {
 	string script, sentence=name;
 
-	/*++m_nest_count;
-
-	if ( m_nest_limit > 0 && m_nest_count > m_nest_limit ) {
-		GetSender().sender() << "呼び出し回数超過：" << name << std::endl;
-		--m_nest_count;
-		return string("（" + name + "）");
-	}*/
-
 	// トークをさくらスクリプトに変換
 	const Talk *pTalk = GetSentenceInternal(sentence);
 	if ( pTalk ) {
