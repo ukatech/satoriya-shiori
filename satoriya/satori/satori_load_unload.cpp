@@ -420,6 +420,11 @@ bool	Satori::load(const string& iBaseFolder)
 bool	Satori::Save(bool isOnUnload) {
 	GetSender().next_event();
 	
+	if ( isOnUnload ) {
+		secure_flag = true;
+		(void)GetSentence("OnSatoriUnload");
+	}
+
 	strmap savemap = variables;
 
 	// メンバ変数を里々変数化
@@ -434,11 +439,6 @@ bool	Satori::Save(bool isOnUnload) {
 	    uitos((posix_get_current_sec() - sec_count_at_load + sec_count_total)*1000,"%lu");
 	savemap["ゴースト起動時間累計(ms)"] =
 	    uitos((posix_get_current_sec() - sec_count_at_load + sec_count_total)*1000,"%lu");
-
-	if ( isOnUnload ) {
-		secure_flag = true;
-		(void)GetSentence("OnSatoriUnload");
-	}
 
 	string	theFullPath = mBaseFolder + "satori_savedata.tmp";
 
