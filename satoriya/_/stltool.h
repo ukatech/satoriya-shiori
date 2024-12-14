@@ -249,6 +249,11 @@ int	split(const char* p, const char* dp, T& o, int max_words=0, bool split_one=f
 		o.push_back(word);
 	}
 
+	if ( o.size() == 0 ) { //‚Ù‚ñ‚Æ‚É‚È‚É‚à‚È‚¢ê‡‚Ì”Ô•º
+		o.push_back("");
+		return 1;
+	}
+
 	return	o.size();
 }
 
@@ -303,6 +308,11 @@ int	split_string(const char* p, const char* dp, T& o, int max_words=0, bool spli
 	}
 	if ( word.size() > 0 ) { //split_one‚ªƒtƒ‰ƒOON‚Å‚àÅŒã‚ÌƒSƒ~‚Í–³‹
 		o.push_back(word);
+	}
+
+	if ( o.size() == 0 ) { //‚Ù‚ñ‚Æ‚É‚È‚É‚à‚È‚¢ê‡‚Ì”Ô•º
+		o.push_back("");
+		return 1;
 	}
 
 	return	o.size();

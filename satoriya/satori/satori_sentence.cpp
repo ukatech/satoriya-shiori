@@ -277,8 +277,15 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 
 		// 選択肢	\q?[id,string]
 		if ( strncmp(p, "＿", 2)==0 ) {
-			if ( strlen(p)>1023 )
+			size_t len = strlen(p);
+			if ( len <= 2 ) {
+				GetSender().sender() << "選択肢記法の後に文字列が存在しないので、無視して続行します。" << std::endl;
 				continue;
+			}
+			if ( len>1023 ) {
+				GetSender().sender() << "選択肢記法が長すぎるので、無視して続行します。" << std::endl;
+				continue;
+			}
 			char	buf[1024];
 			strncpy(buf, p+2, sizeof(buf) / sizeof(buf[0]));
 
