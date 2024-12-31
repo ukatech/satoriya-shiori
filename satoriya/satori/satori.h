@@ -304,6 +304,7 @@ private:
 	bool	updateGhostsInfo();	// FMOから情報取得
 #endif
 	std::vector<strmap>	ghosts_info;	// FMOの内容そのまま。0は自分自身、1～は順番どおり。
+	std::set<string>    otherghostname; // NOTIFY otherghostnameから拾ったsakura名
 	strmap*	find_ghost_info(string name);	// ghosts_infoを検索、特定のゴーストの情報を得る
 
 	string	mCommunicateFor;	// 話しかけ対象ゴースト。→で設定されresponseにToをつける

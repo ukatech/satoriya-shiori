@@ -248,13 +248,13 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 
 		if ( it==vec.begin() && strncmp(p, "→", 2)==0 ) {
 			p+=2;
-			updateGhostsInfo();	// ゴースト情報を更新
+			//updateGhostsInfo();	// ゴースト情報を更新 -> いらない
 
-			if ( ghosts_info.size()>=2 ) {	// そもそも自分以外にゴーストはいるのか。
+			if ( otherghostname.size()>=2 ) {	// そもそも自分以外にゴーストはいるのか。
 				string	temp = p;
-				std::vector<strmap>::iterator i=ghosts_info.begin(); ++i; // 自分は飛ばす
-				for ( ; i!=ghosts_info.end() ; ++i ) { 
-					string	name = (*i)["name"];
+				std::set<string>::iterator i=otherghostname.begin(); ++i; // 自分は飛ばす
+				for ( ; i!=otherghostname.end() ; ++i ) { 
+					string	name = *i;
 					GetSender().sender() << "ghost: " << name <<std::endl;
 					if ( compare_head(temp, name) ) {// 相手を特定
 						mCommunicateFor = name;
@@ -264,11 +264,11 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 				}
 
 				
-				if ( i==ghosts_info.end() ) {	// 特定しなかった場合
+				if ( i==otherghostname.end() ) {	// 特定しなかった場合
 					// ランダム
 					//int n = random(ghosts_info.size()-1))+1;
 					//assert( n>=1 && n < ghosts_info.size());
-					mCommunicateFor = (ghosts_info[1])["name"];
+					mCommunicateFor = *otherghostname.begin();
 
 					// あかん、隣で起動している～～にならん
 				}

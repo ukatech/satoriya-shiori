@@ -85,6 +85,7 @@ void	Satori::InitMembers() {
 	dic_load_prefix = "dic";
 
 	ghosts_info.clear();
+	otherghostname.clear();
 	mCommunicateFor="";
 	mCommunicateLog.clear();
 

@@ -11,6 +11,7 @@
 ////////////////////////////////////////
 
 void CreateStringSet(const strvec& vec, std::set<string>& strset);
+void CreateStringSetFromFirstElement(const strvec& vec, std::set<string>& strset);
 
 int		Satori::CreateResponse(strmap& oResponse)
 {
@@ -63,6 +64,10 @@ int		Satori::CreateResponse(strmap& oResponse)
 		}
 		else if (mRequestID == "installedheadlinename"){
 			CreateStringSet(mReferences, installed_headline_name);
+		}
+		else if (mRequestID == "otherghostname"){
+			//インストール済み情報
+			CreateStringSetFromFirstElement(mReferences, otherghostname);
 		}
 		else if (mRequestID == "OnNotifyFontInfo"){
 			CreateStringSet(mReferences, installed_font_name);
@@ -194,5 +199,20 @@ void CreateStringSet(const strvec& vec, std::set<string>& strset)
 	strset.clear();
 	for (int i = 0; i < vec.size(); i++){
 		strset.insert(vec.at(i));
+	}
+}
+
+void CreateStringSetFromFirstElement(const strvec& vec, std::set<string>& strset)
+{
+	strset.clear();
+
+	strvec byte1splitter;
+	string vecelem;
+
+	for (int i = 0; i < vec.size(); i++){
+		vecelem = vec.at(i);
+		byte1splitter.clear();
+		split(vecelem,"\1",byte1splitter);
+		strset.insert(byte1splitter[0]);
 	}
 }

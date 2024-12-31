@@ -979,12 +979,10 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 #endif
 
 	else if ( iName == "隣で起動しているゴースト" ) { 
-		updateGhostsInfo();	// ゴースト情報を更新
-		oResult = ( ghosts_info.size()>=2 ) ? (ghosts_info[1])["name"] : ""; 
+		oResult = ( otherghostname.size()>=1 ) ? *otherghostname.begin() : ""; 
 	}
 	else if ( iName == "起動しているゴースト数" ) { 
-		updateGhostsInfo();	// ゴースト情報を更新
-		oResult = int2zen(ghosts_info.size()); 
+		oResult = int2zen(otherghostname.size()); 
 	}
 	else if ( compare_head(iName, "isempty") && iName.size()>=8 ) {
 		const char* p = iName.c_str()+7;
@@ -1151,6 +1149,11 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		string	str(iName, 2, iName.length() - 2 - 22);
 
 		oResult = ul2zen(FindProcessName(str.c_str(),true));
+	}
+
+	else if (compare_head(iName, "起動中ゴースト「") && compare_tail(iName, "」の存在")){
+		string	str(iName, 16, iName.length() - 16 - 8);
+		oResult = otherghostname.count(str) ? "1" : "0";
 	}
 
 	else if ( compare_tail(iName, "の存在") ) {
