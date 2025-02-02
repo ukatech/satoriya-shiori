@@ -48,6 +48,11 @@ int		Satori::CreateResponse(strmap& oResponse)
 
 	//喋り変換部初期化
 	reset_speaked_status();
+	
+	//otherghostnameは常に取得する
+	if (mRequestID == "otherghostname"){
+		CreateStringSetFromFirstElement(mReferences, otherghostname);
+	}
 
 	//notifyの保存しておく
 	if (is_save_notify){
@@ -64,10 +69,6 @@ int		Satori::CreateResponse(strmap& oResponse)
 		}
 		else if (mRequestID == "installedheadlinename"){
 			CreateStringSet(mReferences, installed_headline_name);
-		}
-		else if (mRequestID == "otherghostname"){
-			//インストール済み情報
-			CreateStringSetFromFirstElement(mReferences, otherghostname);
 		}
 		else if (mRequestID == "OnNotifyFontInfo"){
 			CreateStringSet(mReferences, installed_font_name);
