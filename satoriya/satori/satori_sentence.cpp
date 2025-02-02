@@ -250,10 +250,10 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 			p+=2;
 			//updateGhostsInfo();	// ゴースト情報を更新 -> いらない
 
-			if ( otherghostname.size()>=2 ) {	// そもそも自分以外にゴーストはいるのか。
+			if ( otherghostname.size()>=1 ) {	// そもそも自分以外にゴーストはいるのか 自分自身はotherghostnameには含まない
 				string	temp = p;
-				std::set<string>::iterator i=otherghostname.begin(); ++i; // 自分は飛ばす
-				for ( ; i!=otherghostname.end() ; ++i ) { 
+				std::set<string>::iterator i = otherghostname.begin();
+				for ( ; i != otherghostname.end() ; ++i ) { 
 					string	name = *i;
 					GetSender().sender() << "ghost: " << name <<std::endl;
 					if ( compare_head(temp, name) ) {// 相手を特定

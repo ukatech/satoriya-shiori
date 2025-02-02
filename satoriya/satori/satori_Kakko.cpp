@@ -979,10 +979,10 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 #endif
 
 	else if ( iName == "隣で起動しているゴースト" ) { 
-		oResult = ( otherghostname.size()>=1 ) ? *otherghostname.begin() : ""; 
+		oResult = ( otherghostname.size()>=1 ) ? *otherghostname.begin() : ""; //自分自身はotherghostnameには含まない
 	}
 	else if ( iName == "起動しているゴースト数" ) { 
-		oResult = int2zen(otherghostname.size()); 
+		oResult = int2zen(otherghostname.size()+1); //自分自身はotherghostnameには含まないので +1 
 	}
 	else if ( compare_head(iName, "isempty") && iName.size()>=8 ) {
 		const char* p = iName.c_str()+7;
@@ -1153,7 +1153,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 
 	else if (compare_head(iName, "起動中ゴースト「") && compare_tail(iName, "」の存在")){
 		string	str(iName, 16, iName.length() - 16 - 8);
-		oResult = otherghostname.count(str) ? "1" : "0";
+		oResult = otherghostname.count(str) ? "1" : "0"; //自分自身はotherghostnameには含まない
 	}
 
 	else if ( compare_tail(iName, "の存在") ) {
