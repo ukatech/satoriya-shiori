@@ -100,6 +100,8 @@ int SakuraDLLClient::request(
 	const strpairvec& i_data,
 	strpairvec& o_data)
 {
+	if ( ! mRequest ) { return 204; }
+
 	string r_protocol, r_protocol_version;
 	int return_code = this->SakuraClient::request(
 		m_protocol,

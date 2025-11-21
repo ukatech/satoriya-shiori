@@ -127,7 +127,7 @@ bool ShioriPlugins::load_a_plugin(const string& iPluginLine)
 			mDllData[fullpath].m_pSaoriClient=new ssu();
 		}
 		else {
-	#ifndef POSIX
+#ifndef POSIX
 			// ネットワーク更新時、SAORI.dllが上書きできずdl2として保存される問題に暫定対処
 			if ( compare_tail(fullpath, ".dll") )
 			{
@@ -143,17 +143,17 @@ bool ShioriPlugins::load_a_plugin(const string& iPluginLine)
 					::MoveFile(dl2.c_str(), fullpath.c_str());
 				}
 			}
-	#endif
+#endif
 			
 			// ファイルの存在を確認
 			FILE*	fp = fopen(fullpath.c_str(), "rb");
 			if ( fp == NULL )
 			{
-	#ifdef POSIX
+#ifdef POSIX
 				GetSender().errsender() << fullpath + ": failed to open" << satori::endl;
-	#else
+#else
 				GetSender().errsender() << fullpath + ": プラグインが存在しません。" << satori::endl;
-	#endif
+#endif
 				return	false;
 			}
 			fclose(fp);
@@ -179,7 +179,7 @@ bool ShioriPlugins::load_a_plugin(const string& iPluginLine)
 			string	filename(lastyen+1, strlen(lastyen)-strlen(lastdot)-1);
 			string	extention(lastdot+1);
 
-	#ifdef POSIX
+#ifdef POSIX
 			// 環境変数 SAORI_FALLBACK_ALWAYS が定義されていて、且つ
 			// 空でも"0"でもなければ、このdllファイルを開いてみる事は
 			// 初めからやらない。そうでなければ、試しにdlopenしてみる。
@@ -233,33 +233,33 @@ bool ShioriPlugins::load_a_plugin(const string& iPluginLine)
 				// dll_full_pathのみ。
 				dll_full_path = fallback_lib;
 			}
-	#endif
+#endif
 
 			// POSIX環境では、ライブラリ名に*.dll以外も許す。
-	#ifdef POSIX
+#ifdef POSIX
 			if ( 1 )
-	#else
+#else
 			if ( compare_tail(fullpath, ".dll") )
-	#endif
+#endif
 			{
 				// プラグインDLLをロード
 				mDllData[fullpath].mRefCount=1;
 				mDllData[fullpath].m_pSaoriClient=new SaoriClient();
 				extern const char* gSatoriName;
-				if ( !(mDllData[fullpath].m_pSaoriClient->load(gSatoriName, "Shift_JIS", foldername+DIR_CHAR, dll_full_path)) )
+
+				if ( mDllData[fullpath].m_pSaoriClient->load(gSatoriName, "Shift_JIS", foldername+DIR_CHAR, dll_full_path) )
 				{
-					mDllData.erase(fullpath);
-					return	false;
+					// バージョン確認
+					string ver = mDllData[fullpath].m_pSaoriClient->get_version("Local");
+					if ( ver != "SAORI/1.0" )
+					{
+						GetSender().errsender() << fullpath + ": SAORI/1.xのdllではありません。GET Versionの戻り値が未対応のものでした。(" + ver + ")" << satori::endl;
+					}
+				}
+				else {
+					GetSender().errsender() << fullpath + ": SAORI/1.xのdllの読み込みに失敗しました。" << satori::endl;
 				}
 
-				// バージョン確認
-				string ver = mDllData[fullpath].m_pSaoriClient->get_version("Local");
-				if ( ver != "SAORI/1.0" )
-				{
-					GetSender().errsender() << fullpath + ": SAORI/1.0のdllではありません。GET Versionの戻り値が未対応のものでした。(" + ver + ")" << satori::endl;
-					mDllData.erase(fullpath);
-					return	false;
-				}
 			}
 		}
 	}
