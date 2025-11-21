@@ -4,6 +4,7 @@
 using namespace std;
 #include	"charset.h"
 #include    <locale.h>
+#include    <mbctype.h>
 
 //////////DEBUG/////////////////////////
 #include "warning.h"
@@ -474,7 +475,7 @@ char *CUnicodeF::utf16be_to_sjis(const wchar_t *pUcsStr, int *nBytesOut)
 
     if (!pUcsStr) return NULL;
 
-    setlocale(LC_ALL, "Japanese");// これがないとUnicodeに変換されない！
+    _setmbcp(932);// これがないとUnicodeに変換されない！
 
     nLen = wcslen( pUcsStr);
 
@@ -524,7 +525,7 @@ wchar_t *CUnicodeF::sjis_to_utf16be(const char *pAnsiStr, int *nBytesOut)
 
     if (!pAnsiStr) return NULL;
 
-    setlocale(LC_ALL, "Japanese");  // これがないとUnicodeに変換されない！
+    _setmbcp(932);  // これがないとUnicodeに変換されない！
 
     len = strlen( pAnsiStr);
     *nBytesOut = sizeof(wchar_t)*(len);

@@ -104,7 +104,7 @@ public:
 	virtual bool	load(const string& i_base_folder) {
 		setlocale(LC_ALL, "Japanese");
 	#ifdef _WINDOWS
-		_setmbcp(_MB_CP_LOCALE);
+		_setmbcp(932);
 	#endif
 		return true;
 	}

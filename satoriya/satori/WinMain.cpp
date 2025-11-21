@@ -360,7 +360,7 @@ WinMain(
 	int iShowCmd) 
 {
 	setlocale(LC_ALL, "Japanese");
-	_setmbcp(_MB_CP_LOCALE);
+	_setmbcp(932);
 
 	gInstance = hInstance;
 
