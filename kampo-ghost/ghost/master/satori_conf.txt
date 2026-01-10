@@ -1,2 +1,0 @@
-
-dic_kampo_data.txt
