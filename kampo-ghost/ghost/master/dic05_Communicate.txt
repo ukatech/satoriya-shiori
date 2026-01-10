@@ -125,22 +125,18 @@
 
 ＊SearchKampoMaster
 ＄_SearchWord【タブ】（A0）
-＄_LoopCount【タブ】（count,（単語群,KampoIndex）,（char,1））
 ＄_HitCount【タブ】0
-
-：（loop,（_LoopCount）,call,SearchKampoLine,（_SearchWord）,（element,（単語群,KampoIndex）,（count）,（char,1）））
+：（loop,SearchKampoLine,（count,（単語群,KampoIndex）,（char,1）））
 
 ＊SearchKampoLine
-＄_SearchWord【タブ】（A0）
-＄_LineData【タブ】（A1）
+＄_LineData【タブ】（element,（単語群,KampoIndex）,（SearchKampoLineカウンタ）,（char,1））
 ＄_DisplayName【タブ】（element,（_LineData）,0,（char,9））
 ＄_Keywords【タブ】（element,（_LineData）,1,（char,9））
 ＄_Tags【タブ】（element,（_LineData）,2,（char,9））
 ＄_TalkEvent【タブ】（element,（_LineData）,3,（char,9））
 
-＞SearchLineHitCheck【タブ】（isin,（_Keywords）,（_SearchWord））
-＞SearchLineHitCheck【タブ】（isin,（_Tags）,（_SearchWord））
-：
+＞SearchLineHitCheck【タブ】（count,（_Keywords）,（_SearchWord）） > 0
+＞SearchLineHitCheck【タブ】（count,（_Tags）,（_SearchWord）） > 0
 
 ＊SearchLineHitCheck
 ＄_HitCount【タブ】（_HitCount）+1

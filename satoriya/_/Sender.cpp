@@ -251,7 +251,7 @@ void error_buf::set_log_mode(bool is_log)
 	if ( is_log == false ) {
 		for (std::vector<string>::iterator i=log_data.begin() ; i!=log_data.end() ; ++i) {
 #ifdef POSIX
-		   cerr << "error - SATORI : " << *i << endl;
+		   std::cerr << "error - SATORI : " << *i << std::endl;
 #else
 			::MessageBox(NULL, i->c_str(), "error - SATORI", MB_OK|MB_SYSTEMMODAL);
 #endif
@@ -291,7 +291,7 @@ void error_buf::flush(void)
 		log_tmp_buffer.clear();
 
 #ifdef POSIX
-        cerr << "error - SATORI : " << out << endl;
+        std::cerr << "error - SATORI : " << out << std::endl;
 #else
         ::MessageBox(NULL, out.c_str(), "error - SATORI", MB_OK|MB_SYSTEMMODAL);
 #endif
