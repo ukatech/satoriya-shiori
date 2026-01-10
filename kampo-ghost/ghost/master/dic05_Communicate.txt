@@ -113,8 +113,7 @@
 
 ：（call,SearchKampoMaster,（SearchWord））
 
-＞検索結果なし【タブ】（count,（SearchResult）,（char,2））==0
-：「（SearchWord）」に一致するお話は見つかりませんでした。
+＞検索結果なし【タブ】（_HitCount）==0
 ＞検索結果表示
 
 ＊検索結果表示
@@ -129,7 +128,7 @@
 ＄_LoopCount【タブ】（count,（単語群,KampoIndex）,（char,1））
 ＄_HitCount【タブ】0
 
-：（loop,（_LoopCount）,call,SearchKampoLine,（_SearchWord）,（element,（単語群,KampoIndex）,（_LoopCount）-（count）,（char,1）））
+：（loop,（_LoopCount）,call,SearchKampoLine,（_SearchWord）,（element,（単語群,KampoIndex）,（count）,（char,1）））
 
 ＊SearchKampoLine
 ＄_SearchWord【タブ】（A0）
