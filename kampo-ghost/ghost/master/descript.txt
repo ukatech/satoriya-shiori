@@ -1,0 +1,14 @@
+charset,Shift_JIS
+
+craftman,Yagi Kushigahama+other
+craftmanw,\x8b\xf9\x83\x96\x95l\x82€\x81{\x97\xa2\x81X\x83\x86\x81[\x83U
+craftmanurl,http://emily.shillest.net/specwiki/index.php?FrontPage
+
+name,\x8a\xbf\x95\xfb\x89\xf0\x90\xe0\x83S\x81[\x83X\x83g\x81i\x89\xbc\x81j
+type,ghost
+
+sakura.name,\x83|\x83X\x83g
+kero.name,\x8d\x9d\x8c\xa2
+
+icon,post.ico
+shiori,satori.dll
