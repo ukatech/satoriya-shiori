@@ -1,45 +1,148 @@
 
+# -----------------------------------------------------
+#
+# shiori互換dll『里々（さとり）』用辞書
+#
+# COMMUNICATEです。
+# 解説は長くなるんで別記。仕様書の４ファイル目を見てください。
+#
+# 大体解るとは思いますが。
+#
+# 一番上の「隣のゴーストにでんぱを送る」は、dic3のメニューから飛んできてます。
+# （以下Wikiより）
+# トークの先頭に「→」を記述する事により、ゴースト間で会話を開始します。
+# 会話を続ける場合も、「→」を付けます。
+# https://soliton.sub.jp/satori/index.php?%A5%B3%A5%DF%A5%E5%A5%CB%A5%B1%A1%BC%A5%C8#k5b10d78
+#
+# -----------------------------------------------------
+
+
+＊隣のゴーストにでんぱを送る
+＞（隣で起動しているゴースト）に話しかける
+＞誰かに話しかける
+
+＊に話しかける
+：……誰もいないよ？
+
+＊誰かに話しかける
+→：こんにちは、（隣で起動しているゴースト）さん。
+
 
 #------------------------------------------------
-# \x8a\xbf\x95\xfb\x8c\x9f\x8d\xf5\x8b@\x94\
+# 対なる
+
+
+＊なるに話しかける
+→：なー。
+：じゃなくて挨拶。
+：こんにちは、なるさん。
+
+
+＊なる「 こんにちは
+→：ね、ゆうかっておいしい？
+
+＊なる「 呼んだ？
+→：ね、ゆうかっておいしい？
+
+＊なる「 変な挨拶
+：なー。
+：なー。
+
+＊なる「 なんだよ
+：もなかが喋ったっ！？
+：いや、それはちょっと違う……
+
+＊なる「 気安く呼ぶな
+：あぅぅ……
+
+
+#------------------------------------------------
+# 対ユーザ（COMMUNICATEボックスからの入力）
+
+＊ユーザ「 名前は
+：ポストです。
+：……それは名前か？
+：え？
+
+＊ユーザ「 元気
+：元気ですよー。
+：つーか、無機物に健康状態を問うか。
+
+＊ユーザ「 おはよう
+：おはようございます。
+
+＊ユーザ「 こんばんは
+：はい、こんばんは。
+
+＊ユーザ「 やぁ やあ
+：やあ。
+
+＊ユーザ「 ポスト
+：はい、ポストですよ。
+
+＊ユーザ「 狛犬
+ん、呼んだか？
+
+#------------------------------------------------
+# どっちも用
+
+＊「 こんにちは
+→：はい、こんにちは。
+：無難なだけの会話が楽しいか？
+：挨拶は気持ちがいいよ。
+
+
+＊「 ポスト 狛犬
+→俺たち、何で一緒にいるんだろうな。
+：……
+
+
+＊COMMUNICATE該当なし
+→：かえるの兄弟。
+
+＊COMMUNICATE該当なし
+→：ポストに生まれ、ポストとして生き、ポストとして死んでいく……か。
+
+#------------------------------------------------
+# 漢方検索機能
 #------------------------------------------------
 
-\x81\x96OnSearchExecute
-\x81\x90SearchWord\x81y\x83^\x83u\x81z\x81iR0\x81j
-\x81\x90SearchResult\x81y\x83^\x83u\x81z
+＊OnSearchExecute
+＄SearchWord【タブ】（call,KillDangerousTag,（R0））
+＄SearchResult【タブ】
 
-\x81F\x81icall,SearchKampoMaster,\x81iSearchWord\x81j\x81j
+：（call,SearchKampoMaster,（SearchWord））
 
-\x81\x84\x8c\x9f\x8d\xf5\x8c\x8b\x89ʂȂ\xb5\x81y\x83^\x83u\x81z\x81icount,\x81iSearchResult\x81j,\x81ichar,2\x81j\x81j==0
-\x81F\x81u\x81iSearchWord\x81j\x81v\x82Ɉ\xea\x92v\x82\xb7\x82邨\x98b\x82͌\xa9\x82\xa9\x82\xe8\x82܂\xb9\x82\xf1\x82ł\xb5\x82\xbd\x81B
-\x81\x84\x8c\x9f\x8d\xf5\x8c\x8b\x89ʕ\\x8e\xa6
+＞検索結果なし【タブ】（count,（SearchResult）,（char,2））==0
+：「（SearchWord）」に一致するお話は見つかりませんでした。
+＞検索結果表示
 
-\x81\x96\x8c\x9f\x8d\xf5\x8c\x8b\x89ʕ\\x8e\xa6
-\x81F\x81u\x81iSearchWord\x81j\x81v\x82Ɋ֘A\x82\xb7\x82邨\x98b\x82͂\xb1\x82\xbf\x82\xe7\x82ł\xb7\x81B
-\x81F\x81iSearchResult\x81j
+＊検索結果表示
+：「（SearchWord）」に関連するお話はこちらです。
+：（SearchResult）
 
-\x81\x96\x8c\x9f\x8d\xf5\x8c\x8b\x89ʂȂ\xb5
-\x81F\x81u\x81iSearchWord\x81j\x81v\x82Ɉ\xea\x92v\x82\xb7\x82邨\x98b\x82͌\xa9\x82\xa9\x82\xe8\x82܂\xb9\x82\xf1\x82ł\xb5\x82\xbd\x81B
+＊検索結果なし
+：「（SearchWord）」に一致するお話は見つかりませんでした。
 
-\x81\x96SearchKampoMaster
-\x81\x90_SearchWord\x81y\x83^\x83u\x81z\x81iA0\x81j
-\x81\x90_LoopCount\x81y\x83^\x83u\x81z\x81icount,\x81i\x92P\x8c\xea\x8cQ,KampoIndex\x81j,\x81ichar,1\x81j\x81j
-\x81\x90_HitCount\x81y\x83^\x83u\x81z0
+＊SearchKampoMaster
+＄_SearchWord【タブ】（A0）
+＄_LoopCount【タブ】（count,（単語群,KampoIndex）,（char,1））
+＄_HitCount【タブ】0
 
-\x81F\x81iloop,\x81i_LoopCount\x81j,call,SearchKampoLine,\x81i_SearchWord\x81j,\x81ielement,\x81i\x92P\x8c\xea\x8cQ,KampoIndex\x81j,\x81i_LoopCount\x81j-\x81icount\x81j,\x81ichar,1\x81j\x81j\x81j
+：（loop,（_LoopCount）,call,SearchKampoLine,（_SearchWord）,（element,（単語群,KampoIndex）,（_LoopCount）-（count）,（char,1）））
 
-\x81\x96SearchKampoLine
-\x81\x90_SearchWord\x81y\x83^\x83u\x81z\x81iA0\x81j
-\x81\x90_LineData\x81y\x83^\x83u\x81z\x81iA1\x81j
-\x81\x90_DisplayName\x81y\x83^\x83u\x81z\x81ielement,\x81i_LineData\x81j,0,\x81ichar,9\x81j\x81j
-\x81\x90_Keywords\x81y\x83^\x83u\x81z\x81ielement,\x81i_LineData\x81j,1,\x81ichar,9\x81j\x81j
-\x81\x90_Tags\x81y\x83^\x83u\x81z\x81ielement,\x81i_LineData\x81j,2,\x81ichar,9\x81j\x81j
-\x81\x90_TalkEvent\x81y\x83^\x83u\x81z\x81ielement,\x81i_LineData\x81j,3,\x81ichar,9\x81j\x81j
+＊SearchKampoLine
+＄_SearchWord【タブ】（A0）
+＄_LineData【タブ】（A1）
+＄_DisplayName【タブ】（element,（_LineData）,0,（char,9））
+＄_Keywords【タブ】（element,（_LineData）,1,（char,9））
+＄_Tags【タブ】（element,（_LineData）,2,（char,9））
+＄_TalkEvent【タブ】（element,（_LineData）,3,（char,9））
 
-\x81\x84SearchLineHitCheck\x81y\x83^\x83u\x81z\x81iisin,\x81i_Keywords\x81j,\x81i_SearchWord\x81j\x81j
-\x81\x84SearchLineHitCheck\x81y\x83^\x83u\x81z\x81iisin,\x81i_Tags\x81j,\x81i_SearchWord\x81j\x81j
-\x81F
+＞SearchLineHitCheck【タブ】（isin,（_Keywords）,（_SearchWord））
+＞SearchLineHitCheck【タブ】（isin,（_Tags）,（_SearchWord））
+：
 
-\x81\x96SearchLineHitCheck
-\x81\x90_HitCount\x81y\x83^\x83u\x81z\x81i_HitCount\x81j+1
-\x81\x90SearchResult\x81y\x83^\x83u\x81z\x81iSearchResult\x81j\n[half]\x81E\__q[\x81i_DisplayName\x81j,\x81i_TalkEvent\x81j]
+＊SearchLineHitCheck
+＄_HitCount【タブ】（_HitCount）+1
+＄SearchResult【タブ】（SearchResult）\n[half]・\__q[（_DisplayName）,（_TalkEvent）]
