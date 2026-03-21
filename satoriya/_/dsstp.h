@@ -40,3 +40,5 @@ using namespace std;
 BOOL sendDirectSSTP_for_NOTIFY(string client, string id, deque<string>& refs);
 
 BOOL CheckSakuraMutex();
+
+BOOL CheckSakuraFileMapping(HWND hParentWnd, vector<HWND>& vec);

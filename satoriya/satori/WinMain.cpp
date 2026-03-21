@@ -7,6 +7,7 @@
 #include	"resource.h"
 
 #include	"../_/Dialog.h"
+#include	"../_/dsstp.h"
 
 //////////DEBUG/////////////////////////
 #include "warning.h"
@@ -393,8 +394,15 @@ WinMain(
 	char*	p = FindFinalChar(base_folder, DIR_CHAR);
 	*(++p)='\0';	// ƒtƒ@ƒCƒ‹–¼‚ğíœ
 
+	std::vector<HWND> hwndVec;
+	CheckSakuraFileMapping(NULL,hwndVec);
+
 	pSatori = new Satori;
 	pSatori->load(base_folder);
+
+	if ( hwndVec.size() > 0 ) {
+		pSatori->SetCharacterHWnd((void*)hwndVec[0]);
+	}
 
 	UserDialog*	dlg = new UserDialog;
 	int	ret = dlg->Run(hInstance, IDD_DIALOG, NULL);

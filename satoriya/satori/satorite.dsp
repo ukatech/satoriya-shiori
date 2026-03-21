@@ -114,6 +114,14 @@ SOURCE=..\_\Dialog.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\_\dsstp.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\_\dsstp.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\_\FMO.h
 # End Source File
 # Begin Source File
