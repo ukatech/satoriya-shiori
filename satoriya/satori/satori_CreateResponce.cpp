@@ -21,17 +21,15 @@ int		Satori::CreateResponse(strmap& oResponse)
 		mNotifiedMap[mRequestID] = mRequestMap["Reference0"];*/
 	if ( mRequestCommand=="NOTIFY" ) {
 		if ( mRequestID=="hwnd" ) {
-#ifndef POSIX
 			strvec	vec;
 			const int max = split(mReferences[0], byte1_dlmt, vec);
 			if ( max > 0 ) {
 				characters_hwnd.clear();
 			}
 			for (int n=0 ; n<max ; ++n) {
-				characters_hwnd[n] = (HWND)(stoi_internal(vec[n]));
+				characters_hwnd[n] = (void*)(stoi_internal(vec[n]));
 				GetSender().sender() << "—¢X‚Í id:" << n << " ‚ÌhWnd‚ðŽæ“¾‚µ‚Ü‚µ‚½B" << std::endl;
 			}
-#endif
 		}
 		else if ( mRequestID=="capability" ) {
 			bool isErrorHeader = false;

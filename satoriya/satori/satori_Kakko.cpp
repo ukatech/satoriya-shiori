@@ -60,9 +60,18 @@ static	SYSTEMTIME	DwordToSystemTime(DWORD dw) {
 #endif*/
 
 //get_property関数用のハンドラと結果格納
-#ifndef POSIX
+#ifdef POSIX
+
+static std::string SendDirectSSTP(void* targetHWnd,std::string sendText)
+{
+	return std::string("");
+}
+
+#else
+
 std::string execute_result;
-LRESULT CALLBACK GetPropertyHandler(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
+
+static LRESULT CALLBACK GetPropertyHandler(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
 	if (message == WM_COPYDATA)
 	{
@@ -79,6 +88,48 @@ LRESULT CALLBACK GetPropertyHandler(HWND hwnd, UINT message, WPARAM wparam, LPAR
 		}
 	}
 	return CallWindowProc(DefWindowProc, hwnd, message, wparam, lparam);
+}
+
+static std::string SendDirectSSTP(const void* targetHWnd,std::string sendText)
+{
+	execute_result = "";
+
+	//結果受信用ウインドウ作成: リソースの仕様を局所化してみたけどオーバーヘッドがでかい場合はSHIORIの初期化周辺に絡めるといいのかも
+	const char* windowname = "satori_get_property";
+	
+	WNDCLASSEX windowClass;
+	ZeroMemory(&windowClass,sizeof(windowClass));
+
+	windowClass.cbSize = sizeof(windowClass);
+	windowClass.hInstance = GetModuleHandle(NULL);
+	windowClass.lpszClassName = windowname;
+	windowClass.lpfnWndProc = ::GetPropertyHandler;
+	
+	::RegisterClassEx(&windowClass);
+
+	HWND propertyWindow = ::CreateWindow(windowname, windowname, 0, 0, 0, 100, 100, NULL, NULL, windowClass.hInstance, NULL);
+
+	std::ostringstream ost;
+	ost << "EXECUTE SSTP/1.1\r\n" << sendText << "Sender: Satori\r\nCharset: Shift_JIS\r\n\r\n";
+
+	std::string sendData = ost.str();
+
+	//メッセージ転送
+	COPYDATASTRUCT cds;
+	cds.dwData = 9801;
+	cds.cbData = sendData.size();
+	cds.lpData = malloc(cds.cbData);
+	memcpy(cds.lpData, sendData.c_str(), cds.cbData);
+
+	/*LRESULT res =*/ ::SendMessage((HWND)targetHWnd, WM_COPYDATA, (WPARAM)propertyWindow, (LPARAM)&cds);
+	
+	//リソースの開放
+	free(cds.lpData);
+	
+	::DestroyWindow(propertyWindow);
+	::UnregisterClass(windowClass.lpszClassName, windowClass.hInstance);
+
+	return execute_result;
 }
 #endif
 
@@ -246,53 +297,28 @@ string	Satori::inc_call(
 	{
 		if (iArgv.size() >= 1)
 		{
-			//里々からベースウェアにDirectSSTPを飛ばしてプロパティシステムにアクセスする。元のSHIORI呼出を返さずにプロパティを取れる。
-#ifndef POSIX
-			//リザルトのリセット
-			execute_result = "";
-
-			//結果受信用ウインドウ作成: リソースの仕様を局所化してみたけどオーバーヘッドがでかい場合はSHIORIの初期化周辺に絡めるといいのかも
-			const char* windowname = "satori_get_property";
-			
-			WNDCLASSEX windowClass;
-			ZeroMemory(&windowClass,sizeof(windowClass));
-
-			windowClass.cbSize = sizeof(windowClass);
-			windowClass.hInstance = GetModuleHandle(NULL);
-			windowClass.lpszClassName = windowname;
-			windowClass.lpfnWndProc = ::GetPropertyHandler;
-			
-			::RegisterClassEx(&windowClass);
-
-			HWND propertyWindow = ::CreateWindow(windowname, windowname, 0, 0, 0, 100, 100, NULL, NULL, windowClass.hInstance, NULL);
-
-			//リクエスト作成
-			const HWND targetHWnd = characters_hwnd[0];
+			const void* targetHWnd = characters_hwnd[0];
 			std::ostringstream ost;
-			ost << "EXECUTE SSTP/1.1\r\nCommand: GetProperty[" << iArgv[0] << "]\r\nSender: Satori\r\nCharset: Shift_JIS\r\n\r\n";
+			ost << "Command: GetProperty\r\nReference0: " << iArgv[0] << "\r\n";
 			std::string sendData = ost.str();
 
-			//メッセージ転送
-			COPYDATASTRUCT cds;
-			cds.dwData = 9801;
-			cds.cbData = sendData.size();
-			cds.lpData = malloc(cds.cbData);
-			memcpy(cds.lpData, sendData.c_str(), cds.cbData);
-
-			/*LRESULT res =*/ ::SendMessage(targetHWnd, WM_COPYDATA, (WPARAM)propertyWindow, (LPARAM)&cds);
-			
-			//リソースの開放
-			free(cds.lpData);
-			
-			::DestroyWindow(propertyWindow);
-			::UnregisterClass(windowClass.lpszClassName, windowClass.hInstance);
-
-			return execute_result;
-#else
-			return "";
-#endif
+			return SendDirectSSTP(targetHWnd,sendData);
 		}
 	}
+
+	if (iCallName == "set_property")
+	{
+		if (iArgv.size() >= 2)
+		{
+			const void* targetHWnd = characters_hwnd[0];
+			std::ostringstream ost;
+			ost << "Command: SetProperty\r\nReference0: " << iArgv[0] << "\r\nReference1: " << iArgv[1] << "\r\n";
+			std::string sendData = ost.str();
+
+			return SendDirectSSTP(targetHWnd,sendData);
+		}
+	}
+
 
 	if (iCallName == "load_saori")
 	{
@@ -564,6 +590,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 				// 本当はstd::map<name, function>だなー　むー
 				inner_commands.insert("set");
 				inner_commands.insert("get_property");
+				inner_commands.insert("set_property");
 				inner_commands.insert("nop");
 				inner_commands.insert("sync");
 				inner_commands.insert("loop");
@@ -970,15 +997,13 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		oResult=itos(last_talk_exiting_surface[ zen2int(iName.c_str()+20) ]);
 	}
 
-#ifndef POSIX
 	else if ( compare_head(iName, "ウィンドウハンドル") && iName.length() > 18 ) {
 		int character = zen2int(iName.c_str()+18);
-		std::map<int,HWND>::const_iterator found = characters_hwnd.find(character);
+		std::map<int,void*>::const_iterator found = characters_hwnd.find(character);
 		if ( found != characters_hwnd.end() ) {
 			oResult = uitos((unsigned int)found->second);
 		}
 	}
-#endif
 
 	else if ( iName == "隣で起動しているゴースト" ) { 
 		oResult = ( otherghostname.size()>=1 ) ? *otherghostname.begin() : ""; //自分自身はotherghostnameには含まない

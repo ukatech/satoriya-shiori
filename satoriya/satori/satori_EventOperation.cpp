@@ -65,11 +65,11 @@ int	Satori::EventOperation(string iEvent, std::map<string,string> &oResponse)
 			strmap &ghost = ghosts_info[0];
 			strmap::const_iterator it = ghost.find("hwnd");
 			if ( it != ghost.end() ) {
-				characters_hwnd[0] = (HWND)(stoi_internal(it->second));
+				characters_hwnd[0] = (void*)(stoi_internal(it->second));
 			}
 			it = ghost.find("kerohwnd");
 			if ( it != ghost.end() ) {
-				characters_hwnd[1] = (HWND)(stoi_internal(it->second));
+				characters_hwnd[1] = (void*)(stoi_internal(it->second));
 			}
 		}
 
@@ -85,7 +85,7 @@ int	Satori::EventOperation(string iEvent, std::map<string,string> &oResponse)
 		else {
 		//	GetSender().sender() << "¡Œ©Ø‚ê”»’èˆ—" <<std::endl;
 			RECT	rc;
-			::GetWindowRect(characters_hwnd[0], &rc);
+			::GetWindowRect((HWND)characters_hwnd[0], &rc);
 			int	center = (rc.left + rc.right)/2;
 			mRequestMap["Reference1"] = mReferences[1] =
 				( center >= max_screen_rect.left && center <= max_screen_rect.right ) ? "0" : "1";

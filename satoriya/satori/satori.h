@@ -394,8 +394,10 @@ private:
 	bool	is_single_monitor;	// 最上位。これがfalseならば以下を使ってはいけない
 	RECT	desktop_rect;
 	RECT	max_screen_rect;
-	std::map<int, HWND>	characters_hwnd;
 #endif
+
+	//HWNDテーブル(POSIXにはHWNDはないのでvoid*とする)
+	std::map<int, void*>	characters_hwnd;
 
 	// ループ時のカウンタ参照用
 	simple_stack<string> mLoopCounters; //バグを誘発させそうなのでstring
@@ -494,6 +496,13 @@ public:
 	// 最終置き換え処理。置換後のスクリプトが中身が無い（実行してもしなくても一緒）と判断したらfalseを返す。
 	bool	Translate(string& script);
 
+	void SetCharacterHWnd(void* hWnd)
+	{
+		std::map<int,void*>::const_iterator found = characters_hwnd.find(0);
+		if ( found == characters_hwnd.end() ) {
+			characters_hwnd[0] = hWnd;
+		}
+	}
 };
 
 //---------------------------------------------------------------------------
