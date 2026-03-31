@@ -202,7 +202,17 @@ static std::string SendDirectSSTP(const void* targetHWnd, std::string sendText)
         }
         data.append(buffer, ret);
     }
-    return data;
+    std::string header = cut_token(data, CRLF);
+    cut_token(header, " ");
+    if (header == "200 OK")
+    {
+        //1s•¶“Ç‚İÌ‚Ä
+        cut_token(data, CRLF);
+        return cut_token(data, CRLF);
+    }
+    else {
+        return "";
+    }
 }
 
 #else
