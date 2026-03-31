@@ -81,6 +81,59 @@ static	SYSTEMTIME	DwordToSystemTime(DWORD dw) {
 //get_propertyä÷êîópÇÃÉnÉìÉhÉâÇ∆åãâ äiî[
 #ifdef POSIX
 
+static std::string SendDataUsingUnixSocket(std::string path, std::string request, bool has_header) {
+	sockaddr_un addr;
+	if (path.length() >= sizeof(addr.sun_path)) {
+		return "";
+	}
+	int soc = socket(AF_UNIX, SOCK_STREAM, 0);
+	if (soc == -1) {
+		return "";
+	}
+	memset(&addr, 0, sizeof(sockaddr_un));
+	addr.sun_family = AF_UNIX;
+	// null-terminatedÇ‡èëÇ´çûÇ‹ÇπÇÈ
+	strncpy(addr.sun_path, path.c_str(), path.length() + 1);
+	if (connect(soc, reinterpret_cast<const sockaddr *>(&addr), sizeof(addr)) == -1) {
+		return "";
+	}
+	if (send(soc, request.data(), request.size(), 0) != request.size()) {
+		close(soc);
+		return "";
+	}
+	shutdown(soc, SHUT_WR);
+	char buffer[BUFFER_SIZE] = {};
+	std::string data;
+	uint32_t remain = 0;
+	if (has_header) {
+		if (read(soc, buffer, sizeof(uint32_t)) != sizeof(uint32_t)) {
+			close(soc);
+			return "";
+		}
+		remain = *reinterpret_cast<uint32_t *>(buffer);
+		data.reserve(remain);
+	}
+	while (true) {
+		int ret = read(soc, buffer, BUFFER_SIZE);
+		if (ret == -1) {
+			close(soc);
+			return "";
+		}
+		if (ret == 0) {
+			close(soc);
+			break;
+		}
+		if (!has_header || remain > ret) {
+			data.append(buffer, ret);
+		}
+		else {
+			data.append(buffer, remain);
+		}
+		remain -= ret;
+	}
+	return data;
+}
+
 static std::string SendDirectSSTP(const void* targetHWnd, std::string sendText)
 {
     shm_t *shm;
@@ -100,52 +153,9 @@ static std::string SendDirectSSTP(const void* targetHWnd, std::string sendText)
     if (sem_post(&shm->sem) == -1) {
         return "";
     }
-    std::string fmo = path + "ninix";
-    sockaddr_un addr;
-    if (fmo.length() >= sizeof(addr.sun_path)) {
+    std::string data = SendDataUsingUnixSocket(path + "ninix", "GetFMO\r\n", true);
+    if (data.empty()) {
         return "";
-    }
-    int soc = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (soc == -1) {
-        return "";
-    }
-    memset(&addr, 0, sizeof(sockaddr_un));
-    addr.sun_family = AF_UNIX;
-    // null-terminatedÇ‡èëÇ´çûÇ‹ÇπÇÈ
-    strncpy(addr.sun_path, fmo.c_str(), fmo.length() + 1);
-    if (connect(soc, reinterpret_cast<const sockaddr *>(&addr), sizeof(addr)) == -1) {
-        return "";
-    }
-    std::string req = "GetFMO\r\n";
-    if (send(soc, req.data(), req.size(), 0) != req.size()) {
-        close(soc);
-        return "";
-    }
-    shutdown(soc, SHUT_WR);
-    char buffer[BUFFER_SIZE] = {};
-    if (read(soc, buffer, sizeof(uint32_t)) != sizeof(uint32_t)) {
-        close(soc);
-        return "";
-    }
-    uint32_t remain = *reinterpret_cast<uint32_t *>(buffer);
-    std::string data(buffer, sizeof(uint32_t));
-    while (true) {
-        int ret = read(soc, buffer, BUFFER_SIZE);
-        if (ret == -1) {
-            close(soc);
-            return "";
-        }
-        if (ret == 0) {
-            close(soc);
-            break;
-        }
-        if (remain > ret) {
-            data.append(buffer, ret);
-        }
-        else {
-            data.append(buffer, remain);
-        }
-        remain -= ret;
     }
     int target = reinterpret_cast<long>(targetHWnd);
     std::istringstream iss(data);
@@ -169,39 +179,9 @@ static std::string SendDirectSSTP(const void* targetHWnd, std::string sendText)
         }
     }
     std::string dsstp = path + uuid;
-    if (path.length() >= sizeof(addr.sun_path)) {
-        return "";
-    }
-    soc = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (soc == -1) {
-        return "";
-    }
-    memset(&addr, 0, sizeof(sockaddr_un));
-    addr.sun_family = AF_UNIX;
-    // null-terminatedÇ‡èëÇ´çûÇ‹ÇπÇÈ
-    strncpy(addr.sun_path, dsstp.c_str(), dsstp.length() + 1);
-    if (connect(soc, reinterpret_cast<const sockaddr *>(&addr), sizeof(addr)) == -1) {
-        return "";
-    }
     std::string request;
 	request = request + "EXECUTE SSTP/1.1\r\n" + sendText + "Sender: Satori\r\nCharset: Shift_JIS\r\n\r\n";
-    if (write(soc, request.c_str(), request.length()) == -1) {
-        close(soc);
-        return "";
-    }
-    data.clear();
-    while (true) {
-        int ret = read(soc, buffer, BUFFER_SIZE);
-        if (ret == -1) {
-            close(soc);
-            return "";
-        }
-        if (ret == 0) {
-            close(soc);
-            break;
-        }
-        data.append(buffer, ret);
-    }
+    data = SendDataUsingUnixSocket(path + uuid, request, false);
     std::string header = cut_token(data, CRLF);
     cut_token(header, " ");
     if (header == "200 OK")
