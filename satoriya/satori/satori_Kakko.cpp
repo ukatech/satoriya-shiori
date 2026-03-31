@@ -4,7 +4,26 @@
 #include	<time.h>
 #ifndef POSIX
 #include	<tlhelp32.h>
-#endif
+#else
+#include <climits>
+#include <cstdint>
+#include <cstring>
+#include <fcntl.h>
+#include <semaphore.h>
+#include <sys/mman.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/un.h>
+#include <unistd.h>
+
+struct shm_t {
+	uint32_t size;
+	sem_t sem;
+	char buf[PATH_MAX];
+};
+
+const int BUFFER_SIZE = 1024;
+#endif // !POSIX
 #include	<sstream>
 
 #include "random.h"
@@ -62,9 +81,128 @@ static	SYSTEMTIME	DwordToSystemTime(DWORD dw) {
 //get_propertyä÷êîópÇÃÉnÉìÉhÉâÇ∆åãâ äiî[
 #ifdef POSIX
 
-static std::string SendDirectSSTP(void* targetHWnd,std::string sendText)
+static std::string SendDirectSSTP(const void* targetHWnd, std::string sendText)
 {
-	return std::string("");
+    shm_t *shm;
+    int fd = shm_open("/ninix", O_RDWR, 0);
+    if (fd == -1) {
+        return "";
+    }
+    shm = static_cast<shm_t *>(mmap(NULL, sizeof(shm_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0));
+    close(fd);
+    if (shm == MAP_FAILED) {
+        return "";
+    }
+    if (sem_wait(&shm->sem) == -1) {
+        return "";
+    }
+    std::string path(shm->buf, shm->size);
+    if (sem_post(&shm->sem) == -1) {
+        return "";
+    }
+    std::string fmo = path + "ninix";
+    sockaddr_un addr;
+    if (fmo.length() >= sizeof(addr.sun_path)) {
+        return "";
+    }
+    int soc = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (soc == -1) {
+        return "";
+    }
+    memset(&addr, 0, sizeof(sockaddr_un));
+    addr.sun_family = AF_UNIX;
+    // null-terminatedÇ‡èëÇ´çûÇ‹ÇπÇÈ
+    strncpy(addr.sun_path, fmo.c_str(), fmo.length() + 1);
+    if (connect(soc, reinterpret_cast<const sockaddr *>(&addr), sizeof(addr)) == -1) {
+        return "";
+    }
+    std::string req = "GetFMO\r\n";
+    if (send(soc, req.data(), req.size(), 0) != req.size()) {
+        close(soc);
+        return "";
+    }
+    shutdown(soc, SHUT_WR);
+    char buffer[BUFFER_SIZE] = {};
+    if (read(soc, buffer, sizeof(uint32_t)) != sizeof(uint32_t)) {
+        close(soc);
+        return "";
+    }
+    uint32_t remain = *reinterpret_cast<uint32_t *>(buffer);
+    std::string data(buffer, sizeof(uint32_t));
+    while (true) {
+        int ret = read(soc, buffer, BUFFER_SIZE);
+        if (ret == -1) {
+            close(soc);
+            return "";
+        }
+        if (ret == 0) {
+            close(soc);
+            break;
+        }
+        if (remain > ret) {
+            data.append(buffer, ret);
+        }
+        else {
+            data.append(buffer, remain);
+        }
+        remain -= ret;
+    }
+    int target = reinterpret_cast<long>(targetHWnd);
+    std::istringstream iss(data);
+    std::string uuid;
+    while (true) {
+        if (!iss) {
+            return "";
+        }
+        std::string tmp;
+        int hwnd;
+        std::getline(iss, tmp);
+        std::istringstream line(tmp);
+        std::getline(iss, uuid, '.');
+        std::getline(iss, tmp, '\x01');
+        if (tmp != "hwnd") {
+            continue;
+        }
+        std::getline(iss, tmp);
+        if (target == atoi(tmp.c_str())) {
+            break;
+        }
+    }
+    std::string dsstp = path + uuid;
+    if (path.length() >= sizeof(addr.sun_path)) {
+        return "";
+    }
+    soc = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (soc == -1) {
+        return "";
+    }
+    memset(&addr, 0, sizeof(sockaddr_un));
+    addr.sun_family = AF_UNIX;
+    // null-terminatedÇ‡èëÇ´çûÇ‹ÇπÇÈ
+    strncpy(addr.sun_path, dsstp.c_str(), dsstp.length() + 1);
+    if (connect(soc, reinterpret_cast<const sockaddr *>(&addr), sizeof(addr)) == -1) {
+        return "";
+    }
+    std::string request;
+	request = request + "EXECUTE SSTP/1.1\r\n" + sendText + "Sender: Satori\r\nCharset: Shift_JIS\r\n\r\n";
+    if (write(soc, request.c_str(), request.length()) == -1) {
+        close(soc);
+        return "";
+    }
+    data.clear();
+    while (true) {
+        int ret = read(soc, buffer, BUFFER_SIZE);
+        if (ret == -1) {
+            close(soc);
+            return "";
+        }
+        if (ret == 0) {
+            close(soc);
+            break;
+        }
+        data.append(buffer, ret);
+    }
+    return data;
 }
 
 #else
