@@ -178,7 +178,6 @@ static std::string SendDirectSSTP(const void* targetHWnd, std::string sendText)
             break;
         }
     }
-    std::string dsstp = path + uuid;
     std::string request;
 	request = request + "EXECUTE SSTP/1.1\r\n" + sendText + "Sender: Satori\r\nCharset: Shift_JIS\r\n\r\n";
     data = SendDataUsingUnixSocket(path + uuid, request, false);
