@@ -1139,7 +1139,12 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		int character = zen2int(iName.c_str()+18);
 		std::map<int,void*>::const_iterator found = characters_hwnd.find(character);
 		if ( found != characters_hwnd.end() ) {
+            // NOTE: sizeof(void *) == sizeof(long)
+#ifdef POSIX
+			oResult = uitos((unsigned long)found->second);
+#else
 			oResult = uitos((unsigned int)found->second);
+#endif // POSIX
 		}
 	}
 
