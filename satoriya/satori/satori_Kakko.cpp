@@ -81,7 +81,7 @@ static	SYSTEMTIME	DwordToSystemTime(DWORD dw) {
 //get_propertyŠÖ”—p‚Ìƒnƒ“ƒhƒ‰‚ÆŒ‹‰ÊŠi”[
 #ifdef POSIX
 
-static std::string SendDataUsingUnixSocket(const std::string path, std::string request, bool has_header) {
+static std::string SendDataUsingUnixSocket(const std::string &path, std::string request, bool has_header) {
 	sockaddr_un addr = {};
 	if (path.length() >= sizeof(addr.sun_path)) {
 		return "";
@@ -133,7 +133,7 @@ static std::string SendDataUsingUnixSocket(const std::string path, std::string r
 	return data;
 }
 
-static std::string SendDirectSSTP(const void* targetHWnd, const std::string sendText)
+static std::string SendDirectSSTP(const void* targetHWnd, const std::string &sendText)
 {
     shm_t *shm;
     int fd = shm_open("/ninix", O_RDWR, 0);
