@@ -4,7 +4,26 @@
 #include	<time.h>
 #ifndef POSIX
 #include	<tlhelp32.h>
-#endif
+#else
+#include <climits>
+#include <cstdint>
+#include <cstring>
+#include <fcntl.h>
+#include <semaphore.h>
+#include <sys/mman.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/un.h>
+#include <unistd.h>
+
+struct shm_t {
+	uint32_t size;
+	sem_t sem;
+	char buf[PATH_MAX];
+};
+
+const int BUFFER_SIZE = 1024;
+#endif // !POSIX
 #include	<sstream>
 
 #include "random.h"
@@ -62,9 +81,116 @@ static	SYSTEMTIME	DwordToSystemTime(DWORD dw) {
 //get_propertyä÷êîópÇÃÉnÉìÉhÉâÇ∆åãâ äiî[
 #ifdef POSIX
 
-static std::string SendDirectSSTP(void* targetHWnd,std::string sendText)
+static std::string SendDataUsingUnixSocket(const std::string &path, std::string request, bool has_header) {
+	sockaddr_un addr = {};
+	if (path.length() >= sizeof(addr.sun_path)) {
+		return "";
+	}
+	int soc = socket(AF_UNIX, SOCK_STREAM, 0);
+	if (soc == -1) {
+		return "";
+	}
+	addr.sun_family = AF_UNIX;
+	// null-terminatedÇ‡èëÇ´çûÇ‹ÇπÇÈ
+	strncpy(addr.sun_path, path.c_str(), path.length() + 1);
+	if (connect(soc, reinterpret_cast<const sockaddr *>(&addr), sizeof(addr)) == -1) {
+		return "";
+	}
+	if (send(soc, request.data(), request.size(), 0) != request.size()) {
+		close(soc);
+		return "";
+	}
+	shutdown(soc, SHUT_WR);
+	char buffer[BUFFER_SIZE] = {};
+	std::string data;
+	uint32_t remain = 0;
+	if (has_header) {
+		if (read(soc, buffer, sizeof(uint32_t)) != sizeof(uint32_t)) {
+			close(soc);
+			return "";
+		}
+		remain = *reinterpret_cast<uint32_t *>(buffer);
+		data.reserve(remain);
+	}
+	while (true) {
+		int ret = read(soc, buffer, BUFFER_SIZE);
+		if (ret == -1) {
+			close(soc);
+			return "";
+		}
+		if (ret == 0) {
+			close(soc);
+			break;
+		}
+		if (!has_header || remain > ret) {
+			data.append(buffer, ret);
+		}
+		else {
+			data.append(buffer, remain);
+		}
+		remain -= ret;
+	}
+	return data;
+}
+
+static std::string SendDirectSSTP(const void* targetHWnd, const std::string &sendText)
 {
-	return std::string("");
+    shm_t *shm;
+    int fd = shm_open("/ninix", O_RDWR, 0);
+    if (fd == -1) {
+        return "";
+    }
+    shm = static_cast<shm_t *>(mmap(NULL, sizeof(shm_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0));
+    close(fd);
+    if (shm == MAP_FAILED) {
+        return "";
+    }
+    if (sem_wait(&shm->sem) == -1) {
+        return "";
+    }
+    std::string path(shm->buf, shm->size);
+    if (sem_post(&shm->sem) == -1) {
+        return "";
+    }
+    std::string data = SendDataUsingUnixSocket(path + "ninix", "GetFMO\r\n", true);
+    if (data.empty()) {
+        return "";
+    }
+    int target = reinterpret_cast<long>(targetHWnd);
+    std::istringstream iss(data);
+    std::string uuid;
+    while (true) {
+        if (!iss) {
+            return "";
+        }
+        std::string tmp;
+        int hwnd;
+        std::getline(iss, tmp);
+        std::istringstream line(tmp);
+        std::getline(iss, uuid, '.');
+        std::getline(iss, tmp, '\x01');
+        if (tmp != "hwnd") {
+            continue;
+        }
+        std::getline(iss, tmp);
+        if (target == atoi(tmp.c_str())) {
+            break;
+        }
+    }
+    std::string request;
+	request = request + "EXECUTE SSTP/1.1\r\n" + sendText + "Sender: Satori\r\nCharset: Shift_JIS\r\n\r\n";
+    data = SendDataUsingUnixSocket(path + uuid, request, false);
+    std::string header = cut_token(data, CRLF);
+    cut_token(header, " ");
+    if (header == "200 OK")
+    {
+        //1çsï∂ì«Ç›éÃÇƒ
+        cut_token(data, CRLF);
+        return cut_token(data, CRLF);
+    }
+    else {
+        return "";
+    }
 }
 
 #else
@@ -1001,7 +1127,12 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		int character = zen2int(iName.c_str()+18);
 		std::map<int,void*>::const_iterator found = characters_hwnd.find(character);
 		if ( found != characters_hwnd.end() ) {
+            // NOTE: sizeof(void *) == sizeof(long)
+#ifdef POSIX
+			oResult = uitos((unsigned long)found->second);
+#else
 			oResult = uitos((unsigned int)found->second);
+#endif // POSIX
 		}
 	}
 
