@@ -133,35 +133,36 @@ static std::string SendDataUsingUnixSocket(const std::string &path, std::string 
 	return data;
 }
 
-static std::string SendDirectSSTP(const void* targetHWnd, const std::string &sendText)
+static bool SendDirectSSTP(const void* targetHWnd, const std::string &sendText, std::string &result)
 {
+    result = "";
     shm_t *shm;
     int fd = shm_open("/ninix", O_RDWR, 0);
     if (fd == -1) {
-        return "";
+        return false;
     }
     shm = static_cast<shm_t *>(mmap(NULL, sizeof(shm_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0));
     close(fd);
     if (shm == MAP_FAILED) {
-        return "";
+        return false;
     }
     if (sem_wait(&shm->sem) == -1) {
-        return "";
+        return false;
     }
     std::string path(shm->buf, shm->size);
     if (sem_post(&shm->sem) == -1) {
-        return "";
+        return false;
     }
     std::string data = SendDataUsingUnixSocket(path + "ninix", "GetFMO\r\n", true);
     if (data.empty()) {
-        return "";
+        return false;
     }
     int target = reinterpret_cast<long>(targetHWnd);
     std::istringstream iss(data);
     std::string uuid;
     while (true) {
         if (!iss) {
-            return "";
+            return false;
         }
         std::string tmp;
         int hwnd;
@@ -186,16 +187,18 @@ static std::string SendDirectSSTP(const void* targetHWnd, const std::string &sen
     {
         //1行文読み捨て
         cut_token(data, CRLF);
-        return cut_token(data, CRLF);
+        result = cut_token(data, CRLF);
+        return true;
     }
     else {
-        return "";
+        return false;
     }
 }
 
 #else
 
 std::string execute_result;
+bool execute_succeeded;
 
 static LRESULT CALLBACK GetPropertyHandler(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
@@ -211,14 +214,16 @@ static LRESULT CALLBACK GetPropertyHandler(HWND hwnd, UINT message, WPARAM wpara
 			//1行文読み捨て
 			cut_token(recv_str, CRLF);
 			execute_result = cut_token(recv_str, CRLF);
+			execute_succeeded = true;
 		}
 	}
 	return CallWindowProc(DefWindowProc, hwnd, message, wparam, lparam);
 }
 
-static std::string SendDirectSSTP(const void* targetHWnd,std::string sendText)
+static bool SendDirectSSTP(const void* targetHWnd, std::string sendText, std::string &result)
 {
 	execute_result = "";
+	execute_succeeded = false;
 
 	//結果受信用ウインドウ作成: リソースの仕様を局所化してみたけどオーバーヘッドがでかい場合はSHIORIの初期化周辺に絡めるといいのかも
 	const char* windowname = "satori_get_property";
@@ -255,7 +260,8 @@ static std::string SendDirectSSTP(const void* targetHWnd,std::string sendText)
 	::DestroyWindow(propertyWindow);
 	::UnregisterClass(windowClass.lpszClassName, windowClass.hInstance);
 
-	return execute_result;
+	result = execute_result;
+	return execute_succeeded;
 }
 #endif
 
@@ -428,7 +434,11 @@ string	Satori::inc_call(
 			ost << "Command: GetProperty\r\nReference0: " << iArgv[0] << "\r\n";
 			std::string sendData = ost.str();
 
-			return SendDirectSSTP(targetHWnd,sendData);
+			std::string result;
+			if (SendDirectSSTP(targetHWnd, sendData, result)) {
+				return result;
+			}
+			return (iArgv.size() >= 2) ? iArgv[1] : "";
 		}
 	}
 
@@ -441,7 +451,9 @@ string	Satori::inc_call(
 			ost << "Command: SetProperty\r\nReference0: " << iArgv[0] << "\r\nReference1: " << iArgv[1] << "\r\n";
 			std::string sendData = ost.str();
 
-			return SendDirectSSTP(targetHWnd,sendData);
+			std::string result;
+			SendDirectSSTP(targetHWnd, sendData, result);
+			return result;
 		}
 	}
 
