@@ -99,7 +99,7 @@ string	Satori::GetSentence(const string& name)
 // 自動挿入ウェイト
 // 2=一般 1=里々 0=無効
 #define	character_wait_clear(wait_quantity)	\
-	if ( mRequestID == "OnHeadlinesense.OnFind" ) { chars_spoken = 0;	} \
+	if ( mRequestID == "OnHeadlinesense.OnFind" || mRequestID == "OnTranslate" ) { chars_spoken = 0;	} \
 	else if( chars_spoken > 0 ) { \
 		if ( ! is_quick_section ) { \
 			if ( type_of_auto_insert_wait >= 2 ) { \
@@ -436,6 +436,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 						}
 						speaker = speaker_tmp;
 						character_wait_clear(2);
+						character_wait_exec;	// スコープ切り替えタグの前にウエイトを吐き出す
 						if ( speaker == 0 ) {
 							result += "\\0";
 						}
@@ -476,6 +477,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 				}
 				speaker = (speaker==0) ? 1 : 0;
 				character_wait_clear(2);
+				character_wait_exec;	// スコープ切り替えタグの前にウエイトを吐き出す
 				result += (speaker ? "\\1" : "\\0");
 			}
 			else if ( c=="\\" ) {	// さくらスクリプトの解釈、というか解釈のスキップ。
@@ -558,6 +560,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 						}
 						speaker = spktmp;
 						character_wait_clear(2);
+						character_wait_exec;	// スコープ切り替えタグの前にウエイトを吐き出す
 					}
 				}
 				else if ( cmd=="s" ) { //ここをいじったら0xff0x02 (内部特殊表現) も更新すること
