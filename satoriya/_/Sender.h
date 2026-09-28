@@ -6,6 +6,7 @@
 #include	<iostream>
 #include	<vector>
 #include	<list>
+#include	<utility>
 #include      <stdio.h>
 #include      <wchar.h>
 using std::wstring;
@@ -31,7 +32,6 @@ namespace SenderConst {
 		E_W = 3,	/* ワーニング */
 		E_N = 4,	/* 注記 */
 		E_END = 5,	/* ログの終了 */
-		E_NO_EMPTY_LOG_ID_LIMIT = 5,
 		E_SJIS = 16,	/* マルチバイト文字コード＝SJIS */
 		E_UTF8 = 17,	/* マルチバイト文字コード＝UTF-8 */
 		E_DEFAULT = 32,	/* マルチバイト文字コード＝OSデフォルトのコード */
@@ -113,11 +113,15 @@ class Sender
 	sender_stream	send_stream;
 	error_stream	err_stream;
 
-	std::list< std::list<std::wstring> > delay_send_list;
+	// 1行分のログ（first=ログコード、second=文字列）
+	typedef std::pair<int, std::wstring> delay_text;
+	typedef std::list<delay_text> delay_text_list;
+
+	std::list<delay_text_list> delay_send_list;
 	int delay_send_event_max;	//遅延送信最大数。
 	int delay_send_string_max;  //イベント内にためこむ文字列リスト最大数
 
-	void add_delay_text(const wchar_t* text);
+	void add_delay_text(int mode, const wchar_t* text);
 
 	wchar_t buffer_to_send[SenderConst::MAX+SenderConst::NEST_MAX+1];
 
@@ -150,6 +154,10 @@ public:
 	};
 
 	bool reinit(bool isEnable);
+#ifndef POSIX
+	// チェックツール（tama/tamac）が logsend で渡したウィンドウを送信先にする
+	void set_receiver_window(HWND hwnd);
+#endif
 	bool send(int mode,const wchar_t* iString);
 
 	void validate(bool i_flag=true) { sm_sender_flag = i_flag; }

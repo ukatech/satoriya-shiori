@@ -64,13 +64,28 @@ bool Sender::initialize()
 		sm_receiver_mode = SenderConst::MODE_TAMA;
 
 		if ( sm_receiver_window ) {
-			send_to_window(SenderConst::E_SJIS,L"");
+			send_to_window(SenderConst::E_UTF8,L"");
 		}
 	}
 
 	return sm_receiver_window != NULL;
 #endif
 }
+
+#ifndef POSIX
+void Sender::set_receiver_window(HWND hwnd)
+{
+	sm_receiver_window = hwnd;
+	sm_receiver_mode = SenderConst::MODE_TAMA;
+
+	//指定されたウィンドウを使い、FindWindowでの自動探索はしない（NULLなら無効）
+	is_do_auto_initialize = true;
+
+	if ( sm_receiver_window ) {
+		send_to_window(SenderConst::E_UTF8,L"");
+	}
+}
+#endif
 
 bool Sender::reinit(bool isEnable)
 {
@@ -145,7 +160,7 @@ bool Sender::send(int mode,const wchar_t* iString)
 	//::OutputDebugString(theBuf);
 	//::OutputDebugString("\n");
 
-	add_delay_text(buffer_to_send);
+	add_delay_text(mode, buffer_to_send);
 	
 	if ( ! sm_buffering_flag ) {
 		flush();
@@ -166,7 +181,6 @@ bool Sender::send_to_window(const int mode,const wchar_t* theBuf)
 	COPYDATASTRUCT cds;
 	DWORD ret_dword = 0;
 
-	size_t theBuf_len = wcslen(theBuf);
 	std::string mbstr;
 	std::wstring wstr;
 
@@ -180,15 +194,11 @@ bool Sender::send_to_window(const int mode,const wchar_t* theBuf)
 	else /*MODE_TAMA*/ {
 		cds.dwData = mode;
 
-		if ( theBuf_len == 0 ) {
-			if ( mode <= SenderConst::E_NO_EMPTY_LOG_ID_LIMIT ) {
-				return false;
-			}
-		}
-
+		// ログ行には改行をつける（空行も送る）。E_END以降は制御用なのでそのまま
+		// 改行はYAYAと同じくLFのみ（tamacはテキストモードで出力するため）
 		wstr = theBuf;
-		if ( theBuf_len > 0 ) {
-			wstr += L"\r\n";
+		if ( mode < SenderConst::E_END ) {
+			wstr += L"\n";
 		}
 
 		cds.cbData = (wstr.size()+1) * sizeof(wchar_t);
@@ -260,7 +270,7 @@ void error_buf::send(const wchar_t *str)
 {
 	if ( ! str || ! *str ) { return; }
 
-	GetSender().send(SenderConst::E_W,str);
+	GetSender().send(SenderConst::E_E,str);
 
 	log_tmp_buffer.push_back(wstring(str));
 }
@@ -328,7 +338,7 @@ error_buf::int_type error_buf::overflow(int_type c)
 	return	c;
 }
 
-void Sender::add_delay_text(const wchar_t* text)
+void Sender::add_delay_text(int mode, const wchar_t* text)
 {
 	if (delay_send_list.empty()) {
 		next_event();
@@ -338,18 +348,18 @@ void Sender::add_delay_text(const wchar_t* text)
 		if ( delay_send_list.rbegin()->size() > delay_send_string_max ) {
 			flush_latest_event();
 		}
-		delay_send_list.rbegin()->push_back(text);
+		delay_send_list.rbegin()->push_back(delay_text(mode, text));
 	}
 }
 
 void Sender::next_event()
 {
-	std::list< std::list<std::wstring> >::reverse_iterator it = delay_send_list.rbegin();
+	std::list<delay_text_list>::reverse_iterator it = delay_send_list.rbegin();
 
 	if (it == delay_send_list.rend())
 	{
 		//何も入ってない
-		delay_send_list.push_back(std::list<std::wstring>());
+		delay_send_list.push_back(delay_text_list());
 	}
 	else
 	{
@@ -366,19 +376,19 @@ void Sender::next_event()
 			}
 
 			//別のイベントとして用意
-			delay_send_list.push_back(std::list<std::wstring>());
+			delay_send_list.push_back(delay_text_list());
 		}
 	}
 }
 
 void Sender::flush_latest_event()
 {
-	std::list< std::list<std::wstring> >::reverse_iterator it = delay_send_list.rbegin();
+	std::list<delay_text_list>::reverse_iterator it = delay_send_list.rbegin();
 	if (auto_init())
 	{
-		for (std::list<std::wstring>::iterator st = it->begin(); st != it->end(); st++)
+		for (delay_text_list::iterator st = it->begin(); st != it->end(); st++)
 		{
-			send_to_window(SenderConst::E_SJIS, st->c_str());
+			send_to_window(st->first, st->second.c_str());
 		}
 	}
 	it->clear();
@@ -389,11 +399,11 @@ void Sender::flush()
 #ifndef POSIX
 	if (auto_init())
 	{
-		for (std::list< std::list<std::wstring> >::iterator it = delay_send_list.begin(); it != delay_send_list.end(); it++)
+		for (std::list<delay_text_list>::iterator it = delay_send_list.begin(); it != delay_send_list.end(); it++)
 		{
-			for (std::list<std::wstring>::iterator st = it->begin(); st != it->end(); st++)
+			for (delay_text_list::iterator st = it->begin(); st != it->end(); st++)
 			{
-				send_to_window(SenderConst::E_SJIS, st->c_str());
+				send_to_window(st->first, st->second.c_str());
 			}
 		}
 	}

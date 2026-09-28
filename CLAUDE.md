@@ -53,6 +53,10 @@ ssu は変更前から警告5件（STLヘッダ由来）が出ます。
   - ssu.dll 単体ビルドは `SSU_SAORI_CALL_INTERFACE` を定義した場合。
 - `SakuraScript.cpp` / `main.cpp` / `cn.cpp` / `TimeCommands.cpp` はどのプロジェクトにも入っていない（死んだコード）。
 - POSIX 向けの分岐は `#ifdef POSIX`。
+- ログ送信：`_/Sender.cpp`
+  - 送信先は `logsend(hwnd)` エクスポート（`SakuraDLLHost.cpp`）で渡されたウィンドウ。無ければ最初の送信時に FindWindow で れしば → tama（`TamaWndClass`）の順に探す。
+  - tama モードでは WM_COPYDATA の `dwData` がログコード（E_I=0 / E_E=2 / 文字コード通知 E_UTF8=17 など、YAYA と同じ値）。各行は遅延送信リストにログコードと一緒にためられ、`flush` で送られる。
+  - errsender（ `GetSender().errsender() << ... << satori::endl` ）は E_E で送られ、`capability` で `response.errorlevel` 非対応と分かった後は MessageBox になる。
 
 ### 動作確認
 - satori.dll を `LoadLibrary` して `loadu` / `request` / `unload` を直接呼ぶ小さなハーネスを VC6 で作ると、SSP を起動せずにリクエスト単位で確認できる。
@@ -62,5 +66,11 @@ ssu は変更前から警告5件（STLヘッダ由来）が出ます。
   - TCP 9801 に `NOTIFY SSTP/1.1` と `Event: ...` を送ると、応答の `Script:` にゴーストが返したスクリプトが入るので、画面を見なくても内容を確認できる。
   - 外部 SSTP から送った `\-` は無視される。終了させるには SSP のメインウィンドウに WM_CLOSE を送るか、手で終了する。
 - テスト用のゴーストは既存のものをコピーして使い、元のゴーストは触らない。
-- tamac（YAYA 用ツール）は `logsend` エクスポートでログを受けるので、里々のログは受け取れない（`-r` での応答確認には使える）。
+- tama / tamac（`C:\D_DRIVE\MyDocuments\GitHub\tama`）でログを受けられる。
+  - `tamac satori.dll` で読み込み時のログが stdout、エラー（errsender、E_E）が `[ERROR]` 付きで stderr に出る。エラーがあると終了コード 2。
+  - `tamac satori.dll -r < request.txt` で標準入力の SHIORI リクエストを送り、応答を stdout に出す（ログは stderr）。
+  - `--ci` の `::error` には file / line が入らない（里々のエラー文が `ファイル(行) :` 形式でないため）。
+  - `tama/builds/Release/tamac.exe` は古いことがある（`-r` 非対応）。現行ソースは `/p:PlatformToolset=v145` と `/p:OutDir=<scratchpad>` を付けて MSBuild でビルドする。
+  - tamac は load / unload を行うので、DLL のあるフォルダに `satori_savedata.txt` が書かれる。ゴーストのコピーで使う。
+- さとりて相当の変換は `ShioriEcho`（`satori_AnalyzeRequest.cpp`）で tamac からできる。`＄デバッグ＝有効`（`satori_conf.txt` の ＊初期化 など）と `SecurityLevel: local` が必要。Reference0, 1, ... が1行ずつ里々の文として展開され、`Value` にさくらスクリプトが返る。
 
