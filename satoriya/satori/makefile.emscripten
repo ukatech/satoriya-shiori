@@ -21,9 +21,10 @@ LDFLAGS = -O3 -shared --memory-init-file 0 --pre-js em-pre.js --post-js em-post.
 
 
 ################## これより下は弄らなくてもコンパイル出来ます ##################
-CXXFLAGS_ADD = -DPOSIX -DSATORI_DLL -I. -I../_
+CXXFLAGS_ADD = -DPOSIX -DSATORI_DLL
 LIBSATORI_OBJ = \
 	../_/Sender.o \
+	../_/charset.o \
 	../_/Utilities.o \
 	../_/calc.o \
 	../_/calc_float.o \
@@ -50,6 +51,7 @@ LIBSATORI_OBJ = \
 	$(NULL)
 #LIBSSU_OBJ = \
 #	../_/Sender.o \
+#	../_/charset.o \
 #	../_/Utilities.o \
 #	../_/calc.o \
 #	../_/calc_float.o \
@@ -68,10 +70,11 @@ LIBSATORI = $(DYLIB_NAME_PREFIX)satori$(DYLIB_NAME_POSTFIX)
 all: $(LIBSATORI)
 
 depend:
-#	mkdep $(CXXFLAGS) $(CXXFLAGS_ADD) $(LIBSATORI_OBJ:.o=.cpp) $(LIBSSU_OBJ:.o=.cpp)
-	mkdep $(CXXFLAGS) $(CXXFLAGS_ADD) $(LIBSATORI_OBJ:.o=.cpp)
+#	mkdep $(CXXFLAGS) $(CXXFLAGS_ADD) -I. -I../_ $(LIBSATORI_OBJ:.o=.cpp) $(LIBSSU_OBJ:.o=.cpp)
+	mkdep $(CXXFLAGS) $(CXXFLAGS_ADD) -I. -I../_ $(LIBSATORI_OBJ:.o=.cpp)
 
 clean:
+	rm -rf $(U8DIR)
 	rm -f $(LIBSATORI) $(LIBSATORI_OBJ)
 #	rm -f $(LIBSSU) $(LIBSSU_OBJ)
 
@@ -83,8 +86,24 @@ $(LIBSATORI): $(LIBSATORI_OBJ)
 #	$(LD) -o $@ $(LIBSSU_OBJ) $(LDFLAGS)
 #	$(STRIP) -x $@
 
-.cpp.o:
-	$(CXX) $(CXXFLAGS) $(CXXFLAGS_ADD) -o $@ -c $<
+# ソースはShift_JISなので、UTF-8に変換したコピー($(U8DIR))をコンパイルする。
+# （clangはShift_JISのワイド文字列リテラルを扱えないため）
+# GNU make と iconv が必要。
+ICONV = iconv -f CP932 -t UTF-8
+U8DIR = utf8src
+
+$(U8DIR)/.stamp: $(wildcard *.cpp *.h ../_/*.cpp ../_/*.h)
+	rm -rf $(U8DIR)
+	mkdir -p $(U8DIR)/satori $(U8DIR)/_
+	for f in *.cpp *.h; do $(ICONV) $$f > $(U8DIR)/satori/$$f || exit 1; done
+	for f in ../_/*.cpp ../_/*.h; do $(ICONV) $$f > $(U8DIR)/_/`basename $$f` || exit 1; done
+	touch $@
+
+../_/%.o: $(U8DIR)/.stamp
+	$(CXX) $(CXXFLAGS) $(CXXFLAGS_ADD) -I$(U8DIR)/satori -I$(U8DIR)/_ -o $@ -c $(U8DIR)/_/$*.cpp
+
+%.o: $(U8DIR)/.stamp
+	$(CXX) $(CXXFLAGS) $(CXXFLAGS_ADD) -I$(U8DIR)/satori -I$(U8DIR)/_ -o $@ -c $(U8DIR)/satori/$*.cpp
 
 DESTDIR = satori-src
 dist:
