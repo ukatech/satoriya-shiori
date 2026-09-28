@@ -57,4 +57,10 @@ ssu は変更前から警告5件（STLヘッダ由来）が出ます。
 ### 動作確認
 - satori.dll を `LoadLibrary` して `loadu` / `request` / `unload` を直接呼ぶ小さなハーネスを VC6 で作ると、SSP を起動せずにリクエスト単位で確認できる。
 - 変更前の DLL は `git worktree` で master を別に展開してビルドすると比較しやすい。
+- SSP での確認：
+  - 起動は `ssp.exe --option readonly --ghost <ゴーストのフォルダ名>` で行う（readonly ならユーザー環境を変更しない）。仕様は https://ssp.shillest.net/ukadoc/ssphelp/option.html
+  - TCP 9801 に `NOTIFY SSTP/1.1` と `Event: ...` を送ると、応答の `Script:` にゴーストが返したスクリプトが入るので、画面を見なくても内容を確認できる。
+  - 外部 SSTP から送った `\-` は無視される。終了させるには SSP のメインウィンドウに WM_CLOSE を送るか、手で終了する。
+- テスト用のゴーストは既存のものをコピーして使い、元のゴーストは触らない。
+- tamac（YAYA 用ツール）は `logsend` エクスポートでログを受けるので、里々のログは受け取れない（`-r` での応答確認には使える）。
 
