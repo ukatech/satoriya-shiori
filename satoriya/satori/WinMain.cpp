@@ -20,9 +20,9 @@
 ////////////////////////////////////////
 
 
-string	SATORITE_WINDOW_CAPTION()
+wstring	SATORITE_WINDOW_CAPTION()
 {
-	static string wcaption(string() + "さとりて phase 9 / " + gSatoriName + " " + gSatoriVersion); 
+	static wstring wcaption(wstring() + L"さとりて phase 9 / " + gSatoriName + L" " + gSatoriVersion); 
 	return wcaption;
 }
 
@@ -45,7 +45,7 @@ public:
 
 	virtual	bool OnDrawClipboard()
 	{
-		HWND	hwnd=::FindWindow("#32770", SATORITE_WINDOW_CAPTION().c_str());
+		HWND	hwnd=::FindWindow(L"#32770", SATORITE_WINDOW_CAPTION().c_str());
 		if ( hwnd!=NULL )
 		{
 			::PostMessage(hwnd, WM_COMMAND, ID_READCLIPBOARD_SYNC, 0);
@@ -96,9 +96,9 @@ public:
 			::LoadCursor(NULL, IDC_ARROW),
 			NULL,
 			NULL,
-			"Satorite_Clipboard_Viewer",
+			L"Satorite_Clipboard_Viewer",
 			0,
-			"Satorite_Clipboard_Viewer",
+			L"Satorite_Clipboard_Viewer",
 			WS_OVERLAPPEDWINDOW,
 			CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 			NULL,
@@ -113,7 +113,7 @@ public:
 
 
 #include	<strstream>
-using std::string;
+using std::wstring;
 #include	"SSTPClient.h"
 struct	SHARED_DATA {
 	HWND	hwndDialog;
@@ -122,48 +122,46 @@ struct	SHARED_DATA {
 
 
 Satori*	pSatori=NULL;
-char	base_folder[MAX_PATH];	// 作業フォルダパス
+wchar_t	base_folder[MAX_PATH];	// 作業フォルダパス
 HINSTANCE	gInstance;
 static const int BUFFER_SIZE = 1024*1024-1; // 1MB
 TCHAR	gBuffer[BUFFER_SIZE+1];	// 入力されたベタテキスト
-char* CONFIG_FILENAME = "satorite.dat";
+wchar_t* CONFIG_FILENAME = L"satorite.dat";
 strmap gConf;
 
-string SATORITE_TALK_NAME = "OnPlaySatoriteScript";
+wstring SATORITE_TALK_NAME = L"OnPlaySatoriteScript";
 //"the_satorite_sentence"
 
-string	Do(const string& str, bool like_dict, bool satori, HWND hwnd)
+wstring	Do(const wstring& str, bool like_dict, bool satori, HWND hwnd)
 {
 	strvec	vec;	// 受け渡しvector
 
 	if ( like_dict )
 	{
-		vec.push_back(string()+"＊"+SATORITE_TALK_NAME);
+		vec.push_back(wstring()+L"＊"+SATORITE_TALK_NAME);
 	}
 
-	// 入力をvector化
-	std::istrstream	in(gBuffer);
-	while ( in.peek() != EOF ) {
-		// １行読み込み
-		std::strstream	line;
-		int	c;
-		while ( (c=in.get()) != '\n' && c!=EOF)
-			if ( c!=13 )
-				line.put(c);
-		line.put('\0');
-
-		// 行ストリームを固定、各行に対し処理
-		char* p=line.str();
-		vec.push_back(p);
-		// 行ストリームの固定を解除
-		line.rdbuf()->freeze(0);
+	// 入力をvector化（改行で分割、CRは捨てる）
+	{
+		wstring	line;
+		for ( wstring::const_iterator it = str.begin() ; it != str.end() ; ++it ) {
+			if ( *it == L'\n' ) {
+				vec.push_back(line);
+				line.erase();
+			}
+			else if ( *it != L'\r' ) {
+				line += *it;
+			}
+		}
+		if ( !line.empty() ) {
+			vec.push_back(line);
+		}
 	}
-	in.clear();
 
-	DBG(GetSender().sender() << "dialog input strlen(gBuffer): " << strlen(gBuffer) << std::endl);
-	DBG(GetSender().sender() << "dialog input vec.size(): " << vec.size() << std::endl);
+	DBG(GetSender().sender() << L"dialog input strlen(gBuffer): " << wcslen(gBuffer) << std::endl);
+	DBG(GetSender().sender() << L"dialog input vec.size(): " << vec.size() << std::endl);
 
-	string	script;
+	wstring	script;
 	if ( !satori )
 	{
 		for ( strvec::const_iterator i=vec.begin() ; i!=vec.end() ; ++i ) {
@@ -174,7 +172,7 @@ string	Do(const string& str, bool like_dict, bool satori, HWND hwnd)
 	else if ( like_dict ) 
 	{
 		// 辞書として保存
-		string	fname = string(base_folder)+"dic_maked_by_satorite.txt";
+		wstring	fname = wstring(base_folder)+L"dic_maked_by_satorite.txt";
 		strvec_to_file(vec, fname);
 		// リロード
 		pSatori->unload();
@@ -186,11 +184,11 @@ string	Do(const string& str, bool like_dict, bool satori, HWND hwnd)
 		script = pSatori->GetSentence(SATORITE_TALK_NAME);
 #endif
 		strpairvec data, r_data;
-		string protocol, protcol_version;
-		data.push_back( strpair("ID", SATORITE_TALK_NAME) );
-		data.push_back( strpair("Sender", "Satorite") );
-		data.push_back( strpair("SecurityLevel", "local") );
-		pSatori->request("SHIORI", "3.0", "GET", data, protocol, protcol_version, r_data); /**/
+		wstring protocol, protcol_version;
+		data.push_back( strpair(L"ID", SATORITE_TALK_NAME) );
+		data.push_back( strpair(L"Sender", L"Satorite") );
+		data.push_back( strpair(L"SecurityLevel", L"local") );
+		pSatori->request(L"SHIORI", L"3.0", L"GET", data, protocol, protcol_version, r_data); /**/
 		/*data.push_back( strpair("Argument0", SATORITE_TALK_NAME) );
 		data.push_back( strpair("Sender", "Satorite") );
 		data.push_back( strpair("SecurityLevel", "Local") );
@@ -198,7 +196,7 @@ string	Do(const string& str, bool like_dict, bool satori, HWND hwnd)
 		GetSender().sender() << r_data << std::endl;
 		for ( strpairvec::const_iterator it = r_data.begin() ; it != r_data.end() ; ++it )
 		{
-			if ( it->first == "Value" || it->first == "Result" )
+			if ( it->first == L"Value" || it->first == L"Result" )
 			{
 				script = it->second;
 				break;
@@ -206,11 +204,11 @@ string	Do(const string& str, bool like_dict, bool satori, HWND hwnd)
 		}
 	} else {
 		// さくらスクリプト変換
-		script = pSatori->SentenceToSakuraScriptExec_with_PreProcess(vec) + "\\e";
+		script = pSatori->SentenceToSakuraScriptExec_with_PreProcess(vec) + L"\\e";
 		pSatori->Translate(script);
 	}
 
-	direct_sstp(script, "Satorite", hwnd);
+	direct_sstp(script, L"Satorite", hwnd);
 	return	script;
 }
 
@@ -236,17 +234,17 @@ public:
 
 		ut.create(gInstance);
 
-		if ( strmap_from_file(gConf, CONFIG_FILENAME, ",") )
+		if ( strmap_from_file(gConf, CONFIG_FILENAME, L",") )
 		{
-			string s = gConf["IDC_EDIT1"];
-			replace(s, "\\\\", "\\");
-			replace(s, "\\r\\n", "\r\n");
+			wstring s = gConf[L"IDC_EDIT1"];
+			replace(s, L"\\\\", L"\\");
+			replace(s, L"\\r\\n", L"\r\n");
 			SetText(IDC_EDIT1, s);
 
-			Check(IDC_ERASE_AT_ESC, (gConf["IDC_ERASE_AT_ESC"]!="0"));
-			Check(IDC_SATORI, (gConf["IDC_SATORI"]!="0"));
-			Check(IDC_LIKE_DICT, (gConf["IDC_LIKE_DICT"]!="0"));
-			Check(IDC_CHECK_CLIPBOARD, (gConf["IDC_CHECK_CLIPBOARD"]!="0"));
+			Check(IDC_ERASE_AT_ESC, (gConf[L"IDC_ERASE_AT_ESC"]!=L"0"));
+			Check(IDC_SATORI, (gConf[L"IDC_SATORI"]!=L"0"));
+			Check(IDC_LIKE_DICT, (gConf[L"IDC_LIKE_DICT"]!=L"0"));
+			Check(IDC_CHECK_CLIPBOARD, (gConf[L"IDC_CHECK_CLIPBOARD"]!=L"0"));
 		}
 		else
 		{
@@ -266,17 +264,17 @@ public:
 	virtual	BOOL	OnDestroy()
 	{
 		{
-			string& s = gConf["IDC_EDIT1"];
+			wstring& s = gConf[L"IDC_EDIT1"];
 			s = GetText(IDC_EDIT1);
-			replace(s, "\\", "\\\\");
-			replace(s, "\r\n", "\\r\\n");
+			replace(s, L"\\", L"\\\\");
+			replace(s, L"\r\n", L"\\r\\n");
 
-			gConf["IDC_ERASE_AT_ESC"] = isChecked(IDC_ERASE_AT_ESC) ? "1" : "0";
-			gConf["IDC_SATORI"] = isChecked(IDC_SATORI) ? "1" : "0";
-			gConf["IDC_LIKE_DICT"] = isChecked(IDC_LIKE_DICT) ? "1" : "0";
-			gConf["IDC_CHECK_CLIPBOARD"] = isChecked(IDC_CHECK_CLIPBOARD) ? "1" : "0";
+			gConf[L"IDC_ERASE_AT_ESC"] = isChecked(IDC_ERASE_AT_ESC) ? L"1" : L"0";
+			gConf[L"IDC_SATORI"] = isChecked(IDC_SATORI) ? L"1" : L"0";
+			gConf[L"IDC_LIKE_DICT"] = isChecked(IDC_LIKE_DICT) ? L"1" : L"0";
+			gConf[L"IDC_CHECK_CLIPBOARD"] = isChecked(IDC_CHECK_CLIPBOARD) ? L"1" : L"0";
 
-			strmap_to_file(gConf, CONFIG_FILENAME, ",");
+			strmap_to_file(gConf, CONFIG_FILENAME, L",");
 		}
 		//fmo.Close();
 		ut.close();
@@ -310,21 +308,21 @@ public:
 			/* FALL_THRU */
 		case ID_READCLIPBOARD:
 			{
-				string	str="";
+				wstring	str=L"";
 				::OpenClipboard(NULL);
-				HANDLE	hText = ::GetClipboardData(CF_TEXT);
+				HANDLE	hText = ::GetClipboardData(CF_UNICODETEXT);
 				if(hText != NULL) {
-					str = (char*)(::GlobalLock(hText));
+					str = (wchar_t*)(::GlobalLock(hText));
 					::GlobalUnlock(hText);
 				}
 				::CloseClipboard();
-				if ( str != "" )
+				if ( str != L"" )
 					SetText(IDC_EDIT1, str.c_str());
 			}
 			/* FALL_THRU */
 		case IDOK:
 			GetText(IDC_EDIT1, gBuffer, BUFFER_SIZE);
-			SetText(IDC_EDIT2, "%s", Do(gBuffer, isChecked(IDC_LIKE_DICT)!=0, isChecked(IDC_SATORI)!=0, m_hDlg).c_str());
+			SetText(IDC_EDIT2, L"%s", Do(gBuffer, isChecked(IDC_LIKE_DICT)!=0, isChecked(IDC_SATORI)!=0, m_hDlg).c_str());
 			break;
 
 		case IDEXIT:
@@ -333,11 +331,11 @@ public:
 
 		case IDCANCEL:
 			if ( isChecked(IDC_ERASE_AT_ESC)!=0 ) {
-				SetText(IDC_EDIT1, "");
-				SetText(IDC_EDIT2, "");
+				SetText(IDC_EDIT1, L"");
+				SetText(IDC_EDIT2, L"");
 			} else {
 				GetText(IDC_EDIT1, gBuffer, BUFFER_SIZE);
-				SetText(IDC_EDIT2, "%s", Do(gBuffer, isChecked(IDC_LIKE_DICT)!=0, isChecked(IDC_SATORI)!=0, m_hDlg).c_str());
+				SetText(IDC_EDIT2, L"%s", Do(gBuffer, isChecked(IDC_LIKE_DICT)!=0, isChecked(IDC_SATORI)!=0, m_hDlg).c_str());
 			}
 			break;
 
@@ -361,11 +359,10 @@ WinMain(
 	int iShowCmd) 
 {
 	setlocale(LC_ALL, "Japanese");
-	_setmbcp(932);
 
 	gInstance = hInstance;
 
-	/*HANDLE hMutex = */::CreateMutex( NULL, FALSE, "SATORITE_MUTEX_OBJECT" );
+	/*HANDLE hMutex = */::CreateMutex( NULL, FALSE, L"SATORITE_MUTEX_OBJECT" );
 	if ( ::GetLastError() == ERROR_ALREADY_EXISTS )
 	{
 		/*FMO	fmo;
@@ -380,7 +377,7 @@ WinMain(
 			::PostMessage(hwnd, WM_COPYDATA, NULL, LPARAM(&cds));
 			::PostMessage(hwnd, WM_COMMAND, IDOK, 0);
 		}*/
-		HWND	hwnd=::FindWindow("#32770", SATORITE_WINDOW_CAPTION().c_str());
+		HWND	hwnd=::FindWindow(L"#32770", SATORITE_WINDOW_CAPTION().c_str());
 		if ( hwnd!=NULL )
 			::PostMessage(hwnd, WM_COMMAND, ID_READCLIPBOARD, 0);
 
@@ -391,8 +388,8 @@ WinMain(
 
 	// 作業フォルダ名を作成
 	::GetModuleFileName( NULL, base_folder, MAX_PATH );
-	char*	p = FindFinalChar(base_folder, DIR_CHAR);
-	*(++p)='\0';	// ファイル名を削除
+	wchar_t*	p = FindFinalChar(base_folder, DIR_CHAR);
+	*(++p)=L'\0';	// ファイル名を削除
 
 	std::vector<HWND> hwndVec;
 	CheckSakuraFileMapping(NULL,hwndVec);

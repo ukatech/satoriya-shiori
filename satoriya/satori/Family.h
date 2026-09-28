@@ -4,9 +4,9 @@
 #include <string>
 #include <algorithm>
 #include <map>
-using std::string;
+using std::wstring;
 
-typedef string Condition;
+typedef wstring Condition;
 
 class Evalcator
 {
@@ -35,14 +35,14 @@ class Family
 
 	struct Condition
 	{
-		string cond_str;
+		wstring cond_str;
 		enum { NOT_EVAL, TRUE, FALSE } eval_result;
 		int ref_coutner;
 	};
 	//みたいなのを別に持って
 
 	class Conditions : set<Condition> {
-		iterator ref(string name);
+		iterator ref(wstring name);
 		void unref(iterator);
 	};
 
@@ -126,14 +126,14 @@ public:
 		}
 	}
 
-	void set_namevec(const std::string &name)
+	void set_namevec(const std::wstring &name)
 	{
-		split(name,"\t　",NameVector);
+		split(name,L"\t　",NameVector);
 		
 		for ( strvec::iterator wds_it=NameVector.begin() ; wds_it!=NameVector.end() ; ++wds_it ) {
-			if ( compare_tail(*wds_it, "「") ) {
+			if ( compare_tail(*wds_it, L"「") ) {
 				if ( wds_it != NameVector.begin() ) {
-					string comName = *wds_it;
+					wstring comName = *wds_it;
 					NameVector.erase(wds_it);
 					NameVector.insert(NameVector.begin(),comName);
 				}
@@ -146,9 +146,9 @@ public:
 	{
 		return NameVector;
 	}
-	string get_comname(void) const
+	wstring get_comname(void) const
 	{
-		if ( ! ComNameFound || NameVector.empty() ) { return ""; }
+		if ( ! ComNameFound || NameVector.empty() ) { return L""; }
 		return NameVector[0];
 	}
 	bool is_comname(void) const
@@ -246,7 +246,7 @@ public:
 		}
 		else {
 			//  候補を選択
-			std::cout << "selecting" << std::endl;
+			std::wcout << L"selecting" << std::endl;
 			for ( typename CondsMap::const_iterator i = m_conds_map.begin() ; i != m_conds_map.end() ; ++i )
 			{
 				// 「無条件」であるか「条件式を評価した結果、0/０を返さなかったもの」を採用
@@ -255,7 +255,7 @@ public:
 					for ( typename std::vector<T>::const_iterator j = i->second.begin() ; j != i->second.end() ; ++j )
 					{
 						candidates.push_back( &(*j) );
-						std::cout << "[" << *j << "]" << std::endl;
+						std::wcout << L"[" << *j << L"]" << std::endl;
 					}
 				}
 			}

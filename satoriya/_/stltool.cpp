@@ -1,12 +1,6 @@
 #include	"stltool.h"
 #include	<sstream>
 #include	<cassert>
-#ifdef POSIX
-#  include      "Utilities.h"
-#else
-#  include      "Utilities.h"
-//#  include	<mbctype.h>	// for _ismbblead,_ismbbtrail
-#endif
 #include	"charset.h"
 
 //////////DEBUG/////////////////////////
@@ -19,421 +13,300 @@
 #endif
 ////////////////////////////////////////
 
-std::ostream& operator<<(std::ostream& o, const strvec& i) {
+std::wostream& operator<<(std::wostream& o, const strvec& i) {
 	for ( strvec::const_iterator p=i.begin() ; p!=i.end() ; ++p )
 		o << *p << std::endl;
 	return	o;
 }
 
-std::ostream& operator<<(std::ostream& o, const strmap& i) {
+std::wostream& operator<<(std::wostream& o, const strmap& i) {
 	for ( strmap::const_iterator p=i.begin() ; p!=i.end() ; ++p )
-		o << p->first << "=" << p->second << std::endl;
+		o << p->first << L"=" << p->second << std::endl;
 	return	o;
 }
 
-std::ostream& operator<<(std::ostream& o, const strintmap& i) {
+std::wostream& operator<<(std::wostream& o, const strintmap& i) {
 	for ( strintmap::const_iterator p=i.begin() ; p!=i.end() ; ++p )
-		o << p->first << "=" << p->second << std::endl;
+		o << p->first << L"=" << p->second << std::endl;
 	return	o;
 }
-std::istream& operator>>(std::istream& i, strvec& o) {
-	string	str;
-	while ( getline(i, str) )
-		o.push_back(str);
-	return	i;
-}
-std::istream& operator>>(std::istream& i, strmap& o) {
-	string	key, value;
-	while ( getline(i, key, '=') && getline(i, value) )
-		o[key] = value;
-	return	i;
-}
-std::istream& operator>>(std::istream& i, strintmap& o) {
-	string	key, value;
-	while ( getline(i, key, '=') && getline(i, value) )
-		o[key] = stoi_internal(value);
-	return	i;
-}
 
-// ストリームから、デリミタまでを読み込んでstringに格納
-bool	getline(std::istream& i, string& o, int delimtier) {
-	if ( i.peek() == EOF )
-		return	false;	// ファイルの終端ですがな。
-
-	int	c;	// 一文字保持
-	std::stringstream	line;	// 行を格納するストリーム
-	while ( (c=i.get()) != delimtier && c!=EOF)
-		line.put(c);
-	o=line.str();
-	return	true;
-}
-
-bool	getline(std::istream& i, int& o, int delimtier) {
-	if ( i.peek() == EOF )
-		return	false;	// ファイルの終端ですがな。
-
-	o=0;
-	int	c;	// 一文字保持
-	while ( (c=i.get()) != delimtier && c!=EOF) {
-		if ( isdigit(c) ) {
-			o *= 10;
-			o += c-'0';
-		}
+bool	aredigits(const wchar_t* p) {
+	if ( *p==L'-' )
+		++p;
+	if ( *p==L'\0' )
+		return false;
+	while ( *p!=L'\0' ) {
+		if ( *p<L'0' || *p>L'9' )
+			return	false;
+		++p;
 	}
 	return	true;
 }
 
-bool	aredigits(const char* p) {
-	if ( *p=='-' )
-		++p;
-	if ( *p=='\0' )
-		return false;
-	while ( *p!='\0' )
-		if ( !isdigit(*p++) )
-			return	false;
-	return	true;
-}
-
-bool	arealphabets(const char* p) {
+bool	arealphabets(const wchar_t* p) {
 	while (*p) {
-		int	c = *p++;
-		if ( c>='a' && c<='z' )
+		wchar_t	c = *p++;
+		if ( c>=L'a' && c<=L'z' )
 			continue;
-		if ( c>='A' && c<='Z' )
+		if ( c>=L'A' && c<=L'Z' )
 			continue;
-		if ( c==(-126) ) {	// sjisにおけるＡ-Ｚ,ａ-ｚを含む１バイト目
-			c = *p++;
-			if ( c>=("Ａ")[1] && c<=("Ｚ")[1] )
-				continue;
-			if ( c>=("ａ")[1] && c<=("ｚ")[1] )
-				continue;
-		}
+		if ( c>=L'Ａ' && c<=L'Ｚ' )
+			continue;
+		if ( c>=L'ａ' && c<=L'ｚ' )
+			continue;
 		return	false;
 	}
 	return	true;
 }
 
 
-bool	replace_first(string& str, const string& before, const string& after) {
-	int	pos = str.find(before);
-	if ( pos == string::npos )
+bool	replace_first(wstring& str, const wstring& before, const wstring& after) {
+	wstring::size_type	pos = str.find(before);
+	if ( pos == wstring::npos )
 		return	false;
 	str.replace(pos, before.size(), after);
 	return	true;
 }
 
-/*int	replace(string& str, const string& before, const string& after) {
-	int	n=0;
-	while (replace_first(str, before, after))
-		++n;
-	return	n;
-}
-*/
+int	replace(wstring& str, const wchar_t* before, const wchar_t* after) {
+	if ( str.empty() || before[0] == 0 ) return 0;
 
-int	replace(string& str, const char* before, const char* after) {
-	if ( str=="" || before[0] == 0 ) return 0;
+	const wstring::size_type	beforeLength = wcslen(before);
 
-	// 文字列長の計算用
-	const int		beforeLength = strlen(before);
-	const int		afterLength = strlen(after);
-	const int		textLength = str.size();
-	const int		diffLength = afterLength - beforeLength;
+	wstring::size_type	pos = str.find(before);
+	if ( pos == wstring::npos ) return 0;
 
-	// 置き換え対象がいくつあるかをカウントしておく
-	const char*	found=str.c_str();
+	wstring	result;
+	result.reserve(str.size());
+	wstring::size_type	start = 0;
 	int	count=0;
-	while ( (found=strstr_hz(found, before)) != NULL ) {
-		found += beforeLength;
+	while ( pos != wstring::npos ) {
+		result.append(str, start, pos-start);
+		result += after;
+		start = pos + beforeLength;
+		pos = str.find(before, start);
 		++count;
 	}
-	if ( count==0 ) return 0;
-
-	// 中間バッファを確保
-	char* buf = new char[textLength + diffLength*count + 1];
-
-	// 置き換えループ
-	const char*	pread = str.c_str();
-	char*	pwrite = buf;
-	found = str.c_str();
-	while ( (found=strstr_hz(pread, before)) != NULL ) {
-		// 対象文字列直前までをコピー
-		strncpy(pwrite, pread, found-pread);
-		pwrite += found-pread;
-		pread = found;
-
-		// 置き換え文字列をコピー
-		strcpy(pwrite, after);
-		pwrite += afterLength;
-		pread += beforeLength;
-	}
-	// 残りをコピー
-	strcpy(pwrite, pread);
-
-	// 過去の領域を解放、バッファの実体を内容とする。
-	str = buf;
-	delete[] buf;
+	result.append(str, start, wstring::npos);
+	str = result;
 	return	count;
 }
 
 // 文字列消去
-bool	erase_first(string& str, const string& before) {
-	int	pos = str.find(before);
-	if ( pos == string::npos )
+bool	erase_first(wstring& str, const wstring& before) {
+	wstring::size_type	pos = str.find(before);
+	if ( pos == wstring::npos )
 		return	false;
 	str.erase(pos, before.size());
 	return	true;
 }
-int	erase_all(string& str, const string& before) {
-	if ( str=="" || before=="" ) return 0;
-
-	// 文字列長の計算用
-	const int		beforeLength = before.size();
-	const int		textLength = str.size();
-
-	// 置き換え対象がいくつあるかをカウントしておく
-	const char*	found=str.c_str();
-	int	count=0;
-	while ( (found=strstr_hz(found, before.c_str())) != NULL ) {
-		found += beforeLength;
-		++count;
-	}
-	if ( count==0 ) return 0;
-
-	// 中間バッファを確保
-	char* buf = new char[textLength - beforeLength*count + 1];
-
-	// 消去ループ
-	const char*	pread = str.c_str();
-	char*	pwrite = buf;
-	found = str.c_str();
-	while ( (found=strstr_hz(pread, before.c_str())) != NULL ) {
-		strncpy(pwrite, pread, found-pread);
-		pwrite += found-pread;
-		pread = found+beforeLength;
-	}
-	// 残りをコピー
-	strcpy(pwrite, pread);
-
-	// 過去の領域を解放、バッファの実体を内容とする。
-	str = buf;
-	delete[] buf;
-	return	count;
+int	erase_all(wstring& str, const wstring& before) {
+	if ( str.empty() || before.empty() ) return 0;
+	return	replace(str, before.c_str(), L"");
 }
 
 // 対象語句の数を数える
-int	count(const string& str, const string& target) {
-	const char*	found=str.c_str();
+int	count(const wstring& str, const wstring& target) {
+	if ( target.empty() ) return 0;
 	int	count=0;
-	while ( (found=strstr_hz(found, target.c_str())) != NULL ) {
-		found += target.size();
+	wstring::size_type	pos = str.find(target);
+	while ( pos != wstring::npos ) {
 		++count;
+		pos = str.find(target, pos + target.size());
 	}
 	return	count;
 }
 
 
+FILE*	w_fopen(const wstring& iFileName, const wchar_t* iMode) {
+#ifdef POSIX
+	return	fopen(WtoUTF8(iFileName).c_str(), WtoUTF8(iMode).c_str());
+#else
+	return	_wfopen(iFileName.c_str(), iMode);
+#endif
+}
+
 // ファイルの存在を確認
-bool	is_exist_file(const string& iFileName) {
-	std::ifstream	in(iFileName.c_str());
-	if ( !in.is_open() )
+bool	is_exist_file(const wstring& iFileName) {
+	FILE*	fp = w_fopen(iFileName, L"rb");
+	if ( fp == NULL )
 		return	false;
-	in.close();
+	fclose(fp);
 	return	true;
+}
+
+bool	bytes_from_file(std::string& o, const wstring& iFileName) {
+	assert(!iFileName.empty());
+	FILE*	fp = w_fopen(iFileName, L"rb");
+	if ( fp == NULL )
+		return	false;
+	char	buf[4096];
+	size_t	n;
+	while ( (n = fread(buf, 1, sizeof(buf), fp)) > 0 ) {
+		o.append(buf, n);
+	}
+	fclose(fp);
+	return	true;
+}
+
+bool	bytes_to_file(const std::string& i, const wstring& iFileName) {
+	assert(!iFileName.empty());
+	FILE*	fp = w_fopen(iFileName, L"wb");
+	if ( fp == NULL )
+		return	false;
+	bool	ok = ( fwrite(i.c_str(), 1, i.size(), fp) == i.size() );
+	if ( fclose(fp) != 0 )
+		ok = false;
+	return	ok;
+}
+
+void	split_lines(const std::string& i, std::vector<std::string>& o) {
+	std::string::size_type	start = 0;
+	while ( start < i.size() ) {
+		std::string::size_type	end = i.find('\n', start);
+		std::string::size_type	next;
+		if ( end == std::string::npos ) {
+			end = i.size();
+			next = end;
+		}
+		else {
+			next = end + 1;
+		}
+		std::string::size_type	line_end = end;
+		if ( line_end > start && i[line_end-1] == '\r' )
+			--line_end;
+		o.push_back(i.substr(start, line_end-start));
+		start = next;
+	}
+}
+
+CharactorSet	detect_lines_charset(std::vector<std::string>& io) {
+	if ( io.empty() )
+		return	CS_UTF8;
+	if ( HasUTF8BOM(io[0]) ) {
+		io[0].erase(0, 3);
+		return	CS_UTF8;
+	}
+	for ( std::vector<std::string>::const_iterator i=io.begin() ; i!=io.end() ; ++i ) {
+		if ( !IsValidUTF8(*i) )
+			return	CS_SJIS;
+	}
+	return	CS_UTF8;
+}
+
+void	lines_to_strvec(std::vector<std::string>& i, strvec& o, CharactorSet cs) {
+	if ( cs == CS_NULL ) {
+		cs = detect_lines_charset(i);
+	}
+	else if ( cs == CS_UTF8 && !i.empty() && HasUTF8BOM(i[0]) ) {
+		i[0].erase(0, 3);
+	}
+	o.reserve(o.size() + i.size());
+	for ( std::vector<std::string>::const_iterator it=i.begin() ; it!=i.end() ; ++it ) {
+		o.push_back(MBtoW(*it, cs));
+	}
 }
 
 bool	strvec_from_file(
 	strvec&	o,
-	const string& iFileName)
+	const wstring& iFileName,
+	CharactorSet cs)
 {
-	o.reserve(1000);
-
-	assert(!iFileName.empty());
-	std::ifstream	in(iFileName.c_str());
-	if ( !in.is_open() )
+	std::string	bytes;
+	if ( !bytes_from_file(bytes, iFileName) )
 		return	false;
-	while ( in.peek() != EOF ) {
-		// １行読み込み
-		std::stringstream	line;
-		int	c;
-		while ( (c=in.get()) != '\n' && c!=EOF) {
-		    if (c != '\r') {
-				line.put(c);
-		    }
-		}
-		o.push_back( line.str() );
-	}
-	in.close();
+	std::vector<std::string>	lines;
+	split_lines(bytes, lines);
+	lines_to_strvec(lines, o, cs);
 	return	true;
 }
 
 bool	strvec_to_file(
 	const strvec& vec,
-	const string& iFileName)
+	const wstring& iFileName,
+	CharactorSet cs)
 {
-	assert(!iFileName.empty());
-	std::ofstream	out(iFileName.c_str());
-	if ( !out.is_open() )
-		return	false;
-	strvec::const_iterator	it;
-	for (it=vec.begin() ; it!=vec.end() ; ++it)
-		out << *it << std::endl;
-	out.close();
-	return	true;
+	std::string	bytes;
+	for ( strvec::const_iterator it=vec.begin() ; it!=vec.end() ; ++it ) {
+		bytes += WtoMB(*it, cs);
+		bytes += FILE_NEWLINE;
+	}
+	return	bytes_to_file(bytes, iFileName);
 }
 
 
-bool	strmap_from_file(strmap& o, const string& iFileName, const string& dlmt, const string& front_comment_mark)
+bool	strmap_from_file(strmap& o, const wstring& iFileName, const wstring& dlmt, const wstring& front_comment_mark, CharactorSet cs)
 {
-	std::ifstream	in(iFileName.c_str());
-	if ( !in.is_open() )
+	strvec	lines;
+	if ( !strvec_from_file(lines, iFileName, cs) )
 		return	false;
-	while ( in.peek() != EOF )
-	{
-		// １行読み込み
-		string line;
-		int	c;
-		while ( (c=in.get()) != '\n' && c!=EOF)
-		{
-		    if (c != '\r') {
-				line += c;
-		    }
-		}
 
+	for ( strvec::const_iterator it=lines.begin() ; it!=lines.end() ; ++it )
+	{
+		const wstring&	line = *it;
 		if ( line.compare(0, front_comment_mark.size(), front_comment_mark)==0 )
 		{
 			continue;
 		}
 
-		string::size_type pos = line.find(dlmt);
-		if ( pos == string::npos )
+		wstring::size_type pos = line.find(dlmt);
+		if ( pos == wstring::npos )
 		{
-			o[ line ] = string();
+			o[ line ] = wstring();
 		}
 		else
 		{
 			o[ line.substr(0, pos) ] = line.substr( pos + dlmt.size() );
 		}
 	}
-	in.close();
 	return	true;
 }
 
-bool	strmap_to_file(const strmap& oMap, const string& iFileName, const string& dlmt)
+bool	strmap_to_file(const strmap& oMap, const wstring& iFileName, const wstring& dlmt, CharactorSet cs)
 {
-	std::ofstream	out(iFileName.c_str());
-	if ( !out.is_open() )
-		return	false;
-	strmap::const_iterator	it;
-	for (it=oMap.begin() ; it!=oMap.end() ; ++it)
-		out << it->first << dlmt << it->second << std::endl;
-	out.close();
-	return	true;
+	strvec	lines;
+	for ( strmap::const_iterator it=oMap.begin() ; it!=oMap.end() ; ++it )
+		lines.push_back(it->first + dlmt + it->second);
+	return	strvec_to_file(lines, iFileName, cs);
 }
 
-bool	string_from_file(string& o, const string& iFileName) {
-	std::ifstream	in(iFileName.c_str());
-	if ( !in.is_open() )
-		return	false;
-	/*in.seekg(0, ios::end);
-	streampos	size = in.tellg();
-	in.seekg(0, ios::beg);
-	in.read(out, size);*/
-	while (in.peek() != EOF)
-		o+=in.get();
-	in.close();
-	return	true;
+
+wstring	get_a_chr(const wchar_t*& p) {
+	if ( *p==L'\0' )
+		return	L"";
+	const wchar_t*	start = p++;
+	if ( IsHighSurrogate(*start) && IsLowSurrogate(*p) )
+		++p;
+	return	wstring(start, p);
 }
 
-bool	string_to_file(const string& i, const string& iFileName) {
-	std::ofstream	out(iFileName.c_str());
-	if ( !out.is_open() )
-		return	false;
-	out.write(i.c_str(), i.size());
-	out.close();
-	return	true;
-}
-
-// 極めて高確率でUTF-8な文字列を検出
-bool is_utf8_strvec(const strvec& in)
-{
-	unsigned int possible_utf8_count = 0;
-
-	//Unicode : Halfwidth and Fullwidth Forms から里々でよく使うものを抜き出し
-	//efbc??のみ
-	//efbdは「」ぐらいしかないのでここでは入れていない
-	static char possible_3byte_table[] = "\x83\x84\x86\x88\x89\x8a\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9a\x9d\x9e\xa0\xbf"; //＃＄＆（）＊０～９：＝＞＠＿
-
-	for ( strvec::const_iterator fi=in.begin() ; fi!=in.end() ; ++fi )
-	{
-		const char* p = fi->c_str();
-
-		const char* ps = strstr(p,"\xef\xbc");
-
-		while ( ps ) {
-			char c = ps[2]; //3バイト目
-
-			if ( strchr(possible_3byte_table,c) ) {
-				possible_utf8_count += 1;
-				if ( possible_utf8_count >= 5 ) {
-					return true;
-				}
-			}
-
-			ps = strstr(ps+3,"\xef\xbc");
-		}
+size_t	count_chars(const wstring& str) {
+	size_t	n = 0;
+	for ( wstring::size_type i=0 ; i<str.size() ; ++i ) {
+		if ( !IsLowSurrogate(str[i]) || i==0 || !IsHighSurrogate(str[i-1]) )
+			++n;
 	}
-
-	return false;
+	return	n;
 }
 
-void convert_utf8_to_sjis_strvec(strvec &in)
-{
-	for ( strvec::iterator fi = in.begin() ; fi != in.end() ; ++fi )
-	{
-		*fi = UTF8toSJIS(*fi);
+size_t	char_pos_to_index(const wstring& str, size_t char_pos) {
+	wstring::size_type	i = 0;
+	while ( char_pos > 0 && i < str.size() ) {
+		if ( IsHighSurrogate(str[i]) && i+1 < str.size() && IsLowSurrogate(str[i+1]) )
+			i += 2;
+		else
+			i += 1;
+		--char_pos;
 	}
-}
-
-void convert_utf8_to_sjis_strmap(strmap &in)
-{
-	strmap newin;
-
-	//キーには直接書き込みできないので、新しく作って変換する
-	for ( strmap::const_iterator fi = in.begin() ; fi != in.end() ; ++fi )
-	{
-		newin[UTF8toSJIS(fi->first)] = UTF8toSJIS(fi->second);
-	}
-
-	in = newin;
+	return	i;
 }
 
 
-string	get_a_chr(const char*& p) {
-	if ( *p=='\0' )
-		return	"";
-	char	buf[3];
-	if ( p[0] == static_cast<char>(0xffU) ) { //内部で特殊な表現としている
-		buf[0]=*p++;
-		buf[1]='\0';
-	}
-	else if ( _ismbblead(p[0]) ) {
-		buf[0]=*p++;
-		buf[1]=*p++;
-		buf[2]='\0';
-	}
-	else {
-		buf[0]=*p++;
-		buf[1]='\0';
-	}
-	return	buf;
-}
-
-
-
-string	encode(const string& s) {
+std::string	encode(const std::string& s) {
 	const char*	p = s.c_str();
 	int	len = s.size();
-	string	ret;
+	std::string	ret;
 
 	for ( int n=0 ; n<len/2 ; ++n ) {
 		ret += p[n];
@@ -444,236 +317,118 @@ string	encode(const string& s) {
 	return	ret;
 }
 
-string	decode(const string& s) {
+std::string	decode(const std::string& s) {
 	const char*	p = s.c_str();
 	int	len = s.size();
-	string	ret;
+	std::string	ret;
 
 	for ( int n=0 ; n<len ; n+=2 ) ret += p[n];
-	for ( int n=len-((len&1)?2:1) ; n>=0 ; n-=2 ) ret += p[n];
+	for ( int m=len-((len&1)?2:1) ; m>=0 ; m-=2 ) ret += p[m];
 
 	return	ret;
 }
-/*
 
-string	encode(const string& in) {
-	int	len = in.size();
-	char*	buf = new char[len+1];
-	buf[len]='\0';
-	
-	const char*	i = in.c_str();
-	char*	o = buf;
-
-	for ( int n=0 ; n<len/2 ; ++n ) {
-		*o++ += i[n];
-		*o++ += i[len-n-1];
-	}
-	if ( len&1 )
-		*o++ += i[len/2];
-
-	string	ret = buf;
-	delete [] buf;
-	return	ret;
+const wchar_t*	strstr_hz(const wchar_t* target, const wchar_t* find) {
+	return	wcsstr(target, find);
 }
-
-string	decode(const string& in) {
-	int	len = in.size();
-	char*	buf = new char[len+1];
-	buf[len]='\0';
-	
-	const char*	i = in.c_str();
-	char*	o = buf;
-
-	for ( int n=0 ; n<len ; n+=2 )
-		*o++ += i[n];
-	for ( n=len-((len&1)?2:1) ; n>=0 ; n-=2 )
-		*o++ += i[n];
-
-	string	ret = buf;
-	delete [] buf;
-	return	ret;
-}
-*/
-
-//SJIS判定つきstrstr
-const char*	strstr_hz(const char* target, const char* find) {
-	int	len=strlen(find);
-	const char* p=target;
-	while ( *p!='\0' ) {
-		if ( strncmp(p, find, len)==0 )
+const wchar_t*	strstri_hz(const wchar_t* target, const wchar_t* find) {
+	size_t	len=wcslen(find);
+	const wchar_t* p=target;
+	while ( *p!=L'\0' ) {
+		if ( _wcsnicmp(p, find, len)==0 )
 			return	p;
-		if ( _ismbblead(*p) )
-			p+=2; 
-		else
-			++p;
-	}
-	return	NULL;
-}
-const char*	strstri_hz(const char* target, const char* find) {
-	int	len=strlen(find);
-	const char* p=target;
-	while ( *p!='\0' ) {
-		if ( strnicmp(p, find, len)==0 )
-			return	p;
-		if ( _ismbblead(*p) )
-			p+=2; 
-		else
-			++p;
+		++p;
 	}
 	return	NULL;
 }
 
 //STLスタイルのstrstr_hz
-std::string::size_type find_hz(const char* str, const char* target, std::string::size_type find_pos)
+std::wstring::size_type find_hz(const wchar_t* str, const wchar_t* target, std::wstring::size_type find_pos)
 {
-	const char *p = strstr_hz(str+find_pos, target);
+	const wchar_t *p = strstr_hz(str+find_pos, target);
 	if ( p == NULL ) {
-		return string::npos;
+		return wstring::npos;
 	}
 	else {
-		p -= find_pos;
 		return p - str;
 	}
 }
 
-bool	compare_head_s(const char* str, const char* head)
+bool	compare_head_s(const wchar_t* str, const wchar_t* head)
 {
 	if ( ! str || ! head || str[0] == 0 || head[0] == 0 ) { return false; }
-	return strncmp(str, head, strlen(head))==0;
+	return wcsncmp(str, head, wcslen(head))==0;
 }
 
-bool	compare_head_nocase_s(const char* str, const char* head)
+bool	compare_head_nocase_s(const wchar_t* str, const wchar_t* head)
 {
 	if ( ! str || ! head || str[0] == 0 || head[0] == 0 ) { return false; }
-#ifdef _MSC_VER 
-	return _strnicmp(str, head, strlen(head))==0;
-#else
-	return strnicmp(str, head, strlen(head))==0;
-#endif
+	return _wcsnicmp(str, head, wcslen(head))==0;
 }
 
-bool	compare_tail_s(const char* str, const char* tail)
+bool	compare_tail_s(const wchar_t* str, const wchar_t* tail)
 {
-	size_t len = strlen(tail);
-	size_t str_len = strlen(str);
+	size_t len = wcslen(tail);
+	size_t str_len = wcslen(str);
 
 	const int diff = str_len-len;
 	if ( diff < 0 ) {
 		return	false;
 	}
 
-	return strcmp(str+diff, tail)==0;
+	return wcscmp(str+diff, tail)==0;
 }
 
-bool	compare_tail_nocase_s(const char* str, const char* tail)
+bool	compare_tail_nocase_s(const wchar_t* str, const wchar_t* tail)
 {
-	size_t len = strlen(tail);
-	size_t str_len = strlen(str);
+	size_t len = wcslen(tail);
+	size_t str_len = wcslen(str);
 
 	const int diff = str_len-len;
 	if ( diff < 0 ) {
 		return	false;
 	}
 
-	return stricmp(str+diff, tail)==0;
+	return _wcsicmp(str+diff, tail)==0;
 }
 
-inline int charactor_to_binary(char c) {
-	if ( c>='0' && c<='9' )
-		return	c-'0';
-	else if ( c>='a' && c<='f' )
-		return	c-'a'+10;
-	else if ( c>='A' && c<='F' )
-		return	c-'A'+10;
-	else {
-		assert(0);
-		return	0;
-	}
+const wchar_t*	find_final_char(const wchar_t* str, wchar_t c) {
+	return	wcsrchr(str, c);
 }
 
-void	string_to_binary(const string& iString, byte* oArray) {
-	int	len = iString.size()/2;
-	for ( int i=0 ; i<len ; ++i)
-		oArray[i] = charactor_to_binary(iString[i*2])*16 + charactor_to_binary(iString[i*2+1]);
+wstring	get_folder_name(const wstring& str) {
+	wstring::size_type	pos = str.rfind(DIR_CHAR);
+	if ( pos == wstring::npos )
+		return	L"";
+	return	str.substr(0, pos);
 }
 
-
-inline char binary_to_charactor(int b) {
-	if ( b<10 )
-		return	'0'+b;
-	else if ( b<16 )
-		return	'a'+(b-10);
-	else {
-		assert(0);
-		return	0;
-	}
-}
-
-string	binary_to_string(const byte* iArray, int iLength) {
-	char*	buf = new char[iLength*2];
-	for ( int i=0 ; i<iLength ; ++i) {
-		buf[i*2] = binary_to_charactor(iArray[i]/16);
-		buf[i*2+1] = binary_to_charactor(iArray[i]%16);
-	}
-	string	str(buf, iLength*2);
-	delete [] buf;
-	return	str;
-}
-
-void	xor_filter(byte* ioArray, int iLength, byte iXorValue) {
-	for ( int i=0 ; i<iLength ; ++i)
-		ioArray[i] ^= iXorValue;
-}
-
-const char*	find_final_char(const char* str, char c) {
-	const char*	last=NULL, *p=str;
-	for (;*p; p+=_ismbblead(*p)?2:1)
-		if ( *p==c )
-			last=p;
-	return	last;
-}
-
-string	get_folder_name(const string& str) {
-	char*	buf = new char[str.size()+1];
-	strcpy(buf, str.c_str());
-	char*	p = find_final_char(buf, DIR_CHAR);
-	string	ret;
-	if ( p==NULL )
-		ret = "";
-	else {
-		*p='\0';
-		ret = buf;
-	}
-	delete [] buf;
-	return	ret;
-}
-
-string	get_file_name(const string& str) {
-	const char*	p = find_final_char(str.c_str(), DIR_CHAR);
+wstring	get_file_name(const wstring& str) {
+	const wchar_t*	p = find_final_char(str.c_str(), DIR_CHAR);
 	return	( p==NULL ) ? str : p+1;
 }
 
-string	get_extention(const string& str) {
-	const char*	p = find_final_char(str.c_str(), '.');
-	return	( p==NULL ) ? "" : p+1;
+wstring	get_extention(const wstring& str) {
+	const wchar_t*	p = find_final_char(str.c_str(), L'.');
+	return	( p==NULL ) ? L"" : p+1;
 }
 
-string	set_extention(const string& str, const char* new_ext) {
-	const char*	p = find_final_char(str.c_str(), '.');
+wstring	set_extention(const wstring& str, const wchar_t* new_ext) {
+	const wchar_t*	p = find_final_char(str.c_str(), L'.');
 	if ( p==NULL )
 		if ( new_ext==NULL )
 			return	str;
 		else
-			return	str+"."+new_ext;
+			return	str+L"."+new_ext;
 	else
 		if ( new_ext==NULL )
-			return	string(str.c_str(), p-str.c_str());
+			return	wstring(str.c_str(), p-str.c_str());
 		else
-			return	string(str.c_str(), p-str.c_str()+1)+new_ext;
+			return	wstring(str.c_str(), p-str.c_str()+1)+new_ext;
 }
 
-string	set_filename(const string& str, const char* new_filename) {
-	const char*	p = find_final_char(str.c_str(), DIR_CHAR);
+wstring	set_filename(const wstring& str, const wchar_t* new_filename) {
+	const wchar_t*	p = find_final_char(str.c_str(), DIR_CHAR);
 	if ( p==NULL )
 		if ( new_filename==NULL )
 			return	str;
@@ -681,70 +436,58 @@ string	set_filename(const string& str, const char* new_filename) {
 			return	str+DIR_CHAR+new_filename;
 	else
 		if ( new_filename==NULL )
-			return	string(str.c_str(), p-str.c_str());
+			return	wstring(str.c_str(), p-str.c_str());
 		else
-			return	string(str.c_str(), p-str.c_str()+1)+new_filename;
+			return	wstring(str.c_str(), p-str.c_str()+1)+new_filename;
 }
 
 
 
 // .iniファイルを読み込み
-bool	inimap::load(const string& iFileName) {
+bool	inimap::load(const wstring& iFileName, CharactorSet cs) {
 	this->clear();
 
-	// ファイルを開く
-	std::ifstream	in(iFileName.c_str());
-	if ( !in.is_open() )
+	strvec	lines;
+	if ( !strvec_from_file(lines, iFileName, cs) )
 		return	false;
 	// 現在のセクションへのイテレータ
 	inimap::iterator	theSection = this->end();
 
 	// 各行に対し処理
-	while ( in.peek() != EOF ) {
+	for ( strvec::const_iterator it=lines.begin() ; it!=lines.end() ; ++it ) {
 
-		string	str;	// このループで扱う行文字列
+		const wstring&	str = *it;	// このループで扱う行文字列
 
-		{// １行読み込んでstrに格納
-			std::stringstream	line;
-			int	c;
-			while ( (c=in.get()) != '\n' && c!=EOF) {
-			    if (c != '\r') {
-					line.put(c);
-			    }
-			}
-			str = line.str();
-		}
-
-		if ( str.empty() || str[0]==';' ) {
+		if ( str.empty() || str[0]==L';' ) {
 			// 空行またはコメント行
 		}
-		else if ( str.size()>=2 && str[0]=='[' ) {
+		else if ( str.size()>=2 && str[0]==L'[' ) {
 			// セクション名の設定行 [SectionName]
-			string::size_type	end_pos = str.find(']', 1);
-			if ( end_pos == string::npos )
+			wstring::size_type	end_pos = str.find(L']', 1);
+			if ( end_pos == wstring::npos )
 				return	false;	// 閉じカッコの無い大カッコを発見、異常とみなす
-			string	section_name = str.substr(1, end_pos-1); // セクション名取得
+			wstring	section_name = str.substr(1, end_pos-1); // セクション名取得
 			std::pair<inimap::iterator, bool> result = 
 				this->insert( inimap::value_type(section_name, strmap()) ); // mapに挿入
 			theSection = result.first;	// 現在のセクションを指すイテレータを取得
 		}
 		else {
 			// 通常の行 key=value
-			string::size_type	eq_pos = str.find('=', 0);
-			if ( eq_pos == string::npos )
+			wstring::size_type	eq_pos = str.find(L'=', 0);
+			if ( eq_pos == wstring::npos )
 				continue;	// []も=も無く空行でもない妙な行
 
 			// theSectionが未設定のままここに来たときは無名のセクションを設定
 			if (theSection == this->end())
 			{
 				std::pair<inimap::iterator, bool> result = 
-					this->insert( inimap::value_type("", strmap()) ); // mapに挿入
+					this->insert( inimap::value_type(L"", strmap()) ); // mapに挿入
 				theSection = result.first;	// 現在のセクションを指すイテレータを取得
 			}
 
 			// mapに挿入
-			string	key = str.substr(0, eq_pos);
-			string	value = str.substr(eq_pos+1, string::npos);
+			wstring	key = str.substr(0, eq_pos);
+			wstring	value = str.substr(eq_pos+1, wstring::npos);
 			theSection->second[key] = value;
 		}
 	}
@@ -752,159 +495,80 @@ bool	inimap::load(const string& iFileName) {
 }
 
 // .iniファイルへ保存
-bool	inimap::save(const string& iFileName) const {
-
-	// ファイルを開く
-	std::ofstream	out(iFileName.c_str());
-	if ( !out.is_open() )
-		return	false;
-
+bool	inimap::save(const wstring& iFileName, CharactorSet cs) const {
+	strvec	lines;
 	for (inimap::const_iterator i=this->begin() ; i!=this->end() ; ++i)
 	{
-		out << "[" << i->first << "]" << std::endl;	// [SectionName]を出力
+		lines.push_back(L"[" + i->first + L"]");	// [SectionName]を出力
 		for (strmap::const_iterator j=i->second.begin() ; j!=i->second.end() ; ++j)
-			out << j->first << "=" << j->second << std::endl;	// key=valueを出力
+			lines.push_back(j->first + L"=" + j->second);	// key=valueを出力
 	}
-
-	return	true;
+	return	strvec_to_file(lines, iFileName, cs);
 }
 
 
-// .iniファイルを読み込み
-bool	inivec::load(const string& iFileName) {
-	this->clear();
-
-	// ファイルを開く
-	std::ifstream	in(iFileName.c_str());
-	if ( !in.is_open() )
-		return	false;
-	// 現在のセクションへのイテレータ
-	iterator	theSection = this->end();
-
-	// 各行に対し処理
-	while ( in.peek() != EOF ) {
-
-		string	str;	// このループで扱う行文字列
-
-		{// １行読み込んでstrに格納
-			int	c;
-			while ( (c=in.get()) != '\n' && c!=EOF) {
-			    if (c != '\r') {
-					str += c;
-			    }
-			}
-		}
-
-		if ( str.empty() ) {
-			// 空行
-		}
-		else if ( str.size()>=2 && str[0]=='[' ) {
-			// セクション名の設定行 [SectionName]
-			string::size_type	end_pos = str.find(']', 1);
-			if ( end_pos == string::npos )
-				return	false;	// 閉じカッコの無い大カッコを発見、異常とみなす
-			string	section_name = str.substr(1, end_pos-1); // セクション名取得
-			
-			this->push_back( value_type(section_name, strpairvec()) ); // vectorに追加
-			--(theSection = this->end());	// 現在のセクションを指すイテレータを取得
-		}
-		else {
-			// 通常の行 key=value
-			string::size_type	eq_pos = str.find('=', 0);
-			if ( eq_pos == string::npos )
-				continue;	// []も=も無く空行でもない妙な行
-
-			// theSectionが未設定のままここに来たときは無名のセクションを設定
-			if (theSection == this->end())
-			{
-				this->push_back( value_type("", strpairvec()) ); // vectorに追加
-				--(theSection = this->end());	// 現在のセクションを指すイテレータを取得
-			}
-	
-			string	key = str.substr(0, eq_pos);
-			string	value = str.substr(eq_pos+1, string::npos);
-			theSection->second.push_back( strpair(key, value) );
-		}
-	}
-	return	true;
-}
-
-// printf互換で文字列を生成し、string型で返す。
-#include	<cstdarg>
-string	stringf(const char* iFormat, ...) {
-	static const int BUF_SIZE = 4096;
-	char	buf[BUF_SIZE];
-	va_list	argptr;
-	va_start(argptr, iFormat);
-#ifdef POSIX
-#  define _vsnprintf vsnprintf
-#endif
-	_vsnprintf(buf, BUF_SIZE-1, iFormat, argptr);
-	va_end(argptr);
-	return	buf;
-}
-
-string	zen2han(const char *s)
+wstring	zen2han(const wchar_t *s)
 {
-	string str(s);
+	wstring str(s);
 
-	// POSIXだとsizeof(char [])がnull-terminatedまで含んだサイズを返して
-    // 余分にループを回してしまってSEGVになるのでstringを使う
-	static const string	before = "０１２３４５６７８９ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ－＋";
-	static const string after = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-+";
-	char	buf1[3]="\0\0", buf2[2]="\0";
-	for (int n=0 ; n<after.length() ; ++n) {
-		buf1[0]=before[n*2];
-		buf1[1]=before[n*2+1];
-		buf2[0]=after[n];
-		replace(str, buf1, buf2);
+	for ( wstring::iterator i=str.begin() ; i!=str.end() ; ++i ) {
+		wchar_t	c = *i;
+		if ( c>=L'０' && c<=L'９' )
+			*i = c - L'０' + L'0';
+		else if ( c>=L'Ａ' && c<=L'Ｚ' )
+			*i = c - L'Ａ' + L'A';
+		else if ( c>=L'ａ' && c<=L'ｚ' )
+			*i = c - L'ａ' + L'a';
+		else if ( c==L'－' || c==0x2212 )	// FULLWIDTH HYPHEN-MINUS(CP932の0x817C) と MINUS SIGN
+			*i = L'-';
+		else if ( c==L'＋' )
+			*i = L'+';
 	}
 
 	return	str;
 }
 
-string int2zen(int i) {
-	static const char*	ary[] = {"０","１","２","３","４","５","６","７","８","９"};
+wstring int2zen(int i) {
+	static const wchar_t*	ary[] = {L"０",L"１",L"２",L"３",L"４",L"５",L"６",L"７",L"８",L"９"};
 	
-	string	zen;
+	wstring	zen;
 	if ( i<0 ) {
-		zen += "－";
+		zen += L"－";
 		i = -i; // INT_MINの時は符号が反転しない
 	}
-	string	han=itos(i);
-	const char* p=han.c_str();
+	wstring	han=itos(i);
+	const wchar_t* p=han.c_str();
 	if ( i==INT_MIN )
 		++p;
-	for (  ; *p != '\0' ; ++p ) {
-		assert(*p>='0' && *p<='9');
-		zen += ary[*p-'0'];
+	for (  ; *p != L'\0' ; ++p ) {
+		assert(*p>=L'0' && *p<=L'9');
+		zen += ary[*p-L'0'];
 	}
 	return	zen;
 }
 
-string ul2zen(unsigned long i) {
-	static const char*	ary[] = { "０", "１", "２", "３", "４", "５", "６", "７", "８", "９" };
+wstring ul2zen(unsigned long i) {
+	static const wchar_t*	ary[] = { L"０", L"１", L"２", L"３", L"４", L"５", L"６", L"７", L"８", L"９" };
 
-	string	zen;
+	wstring	zen;
 
-	string	han = uitos(i);
-	const char* p = han.c_str();
+	wstring	han = uitos(i);
+	const wchar_t* p = han.c_str();
 
-	for (; *p != '\0'; ++p) {
-		assert(*p >= '0' && *p <= '9');
-		zen += ary[*p - '0'];
+	for (; *p != L'\0'; ++p) {
+		assert(*p >= L'0' && *p <= L'9');
+		zen += ary[*p - L'0'];
 	}
 	return	zen;
 }
 
-int zen2int(const char *str)
+int zen2int(const wchar_t *str)
 {
 	return stoi_internal(zen2han(str));
 }
 
-unsigned long zen2ul(const char *str)
+unsigned long zen2ul(const wchar_t *str)
 {
 	return stoui(zen2han(str));
 }
-
 

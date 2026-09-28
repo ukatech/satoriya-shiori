@@ -13,47 +13,60 @@
 ////////////////////////////////////////
 
 
-bool SakuraFMO::update()
+// FMOの内容をバイト列で読む。先頭4バイトはサイズ（自身を含む）。
+static bool	read_fmo(const wchar_t* name, std::string& o)
 {
-	std::vector<char> v;
-	{
-		FMO	fmo;
-		if ( !fmo.open(FILE_MAP_READ, FALSE, "Sakura") ) {
-			GetSender().sender() << "FMO can't open." << std::endl;
-			return	false;
-		}
-
-		LPVOID	p = fmo.map();
-		if ( p==NULL ) {
-			GetSender().sender() << "FMO can't mapping." << std::endl;
-			return	false;
-		}
-
-		int size = *((long*)p);
-		v.resize(size+1);
-		v[size] = '\0';
-		memcpy(&v[0], p, size);
-		fmo.unmap(p);
-		fmo.close();
-
-		/*GetSender().sender() << 
-			"SakuraFMO::update() - - -" << endl <<
-			string((char*)p,size) << endl <<
-			"- - - - - - - - - - - - -" << endl;*/
+	FMO	fmo;
+	if ( !fmo.open(FILE_MAP_READ, FALSE, name) ) {
+		return	false;
 	}
 
+	LPVOID	p = fmo.map();
+	if ( p==NULL ) {
+		GetSender().sender() << L"FMO can't mapping." << std::endl;
+		return	false;
+	}
+
+	long size = *((long*)p);
+	if ( size > 4 ) {
+		o.assign(static_cast<const char*>(p) + 4, size - 4);
+		std::string::size_type nul = o.find('\0');
+		if ( nul != std::string::npos ) {
+			o.erase(nul);
+		}
+	}
+	fmo.unmap(p);
+	fmo.close();
+	return	true;
+}
+
+bool SakuraFMO::update()
+{
+	// SakuraUnicode（UTF-8固定、SSP 2.5.26以降）を優先し、無ければ Sakura（OS依存の文字コード）を読む
+	std::string bytes;
+	wstring text;
+	if ( read_fmo(L"SakuraUnicode", bytes) ) {
+		text = UTF8toW(bytes);
+	}
+	else if ( read_fmo(L"Sakura", bytes) ) {
+		text = ACPtoW(bytes);
+	}
+	else {
+		GetSender().sender() << L"FMO can't open." << std::endl;
+		return	false;
+	}
 
 	strvec	lines;
-	split(&v[4], CRLF, lines);
+	split(text, CRLF, lines);
 	for( strvec::iterator i=lines.begin() ; i!=lines.end() ; ++i ) {
 		strvec	MD5andDATA;
-		if ( split(*i, ".", MD5andDATA, 2) != 2 )
+		if ( split(*i, L".", MD5andDATA, 2) != 2 )
 		{
 			continue;
 		}
 
 		strvec	ENTRYandVALUE;
-		static const char BYTE1[2] = {1,0};
+		static const wchar_t BYTE1[2] = {1,0};
 		if ( split(MD5andDATA[1], BYTE1, ENTRYandVALUE) != 2 )
 		{
 			continue;
@@ -69,7 +82,7 @@ bool SakuraFMO::update()
 		GetSender().sender() << i->first << std::endl;
 		for( strmap::const_iterator j=m.begin() ; j!=m.end() ; ++j )
 		{
-			GetSender().sender() << "　" << j->first << ":" << j->second << std::endl;
+			GetSender().sender() << L"　" << j->first << L":" << j->second << std::endl;
 		}
 	}
 	

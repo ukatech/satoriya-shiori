@@ -2,7 +2,7 @@
 
 #ifdef POSIX
 /* POSIXではstricmpは定義されていない。代わりにstrcasecmpが使える。 */
-#  define stricmp strcasecmp
+#  define _wcsicmp _wcsicmp
 #  include <string.h>
 #endif
 
@@ -17,13 +17,13 @@
 ////////////////////////////////////////
 
 int	Satori::request(
-	const string& i_protocol,
-	const string& i_protocol_version,
-	const string& i_command,
+	const wstring& i_protocol,
+	const wstring& i_protocol_version,
+	const wstring& i_command,
 	const strpairvec& i_data,
 	
-	string& o_protocol,
-	string& o_protocol_version,
+	wstring& o_protocol,
+	wstring& o_protocol_version,
 	strpairvec& o_data)
 {
 	SenderEnableBuffering seb(GetSender());
@@ -32,7 +32,7 @@ int	Satori::request(
 	// リクエスト単位のクラスメンバを初期化
 
 	mRequestMap.clear();
-	mRequestID = "";
+	mRequestID = L"";
 	mReferences.clear();
 	mReferences.reserve(8); // 最小値
 
@@ -40,11 +40,11 @@ int	Satori::request(
 	mRequestCommand = i_command;
 	mRequestType = i_protocol;
 	mRequestVersion = i_protocol_version;
-	mStatusLine = i_command + " " + i_protocol + "/" + i_protocol_version;
+	mStatusLine = i_command + L" " + i_protocol + L"/" + i_protocol_version;
 
 	// 返すプロトコルのデフォルト値
-	o_protocol = "SHIORI";
-	o_protocol_version = "3.0";
+	o_protocol = L"SHIORI";
+	o_protocol_version = L"3.0";
 
 	// 喋るごとに初期化する変数
 	return_empty = false;
@@ -56,31 +56,31 @@ int	Satori::request(
 	is_quick_section = false;
 
 	// スクリプトヘッダ
-	header_script = "";
+	header_script = L"";
 
 	// プロトコルを判別
-	if ( i_protocol=="SAORI" && i_protocol_version[0]>='1' )
+	if ( i_protocol==L"SAORI" && i_protocol_version[0]>=L'1' )
 	{
 		o_protocol = i_protocol;
-		o_protocol_version = "1.0";
+		o_protocol_version = L"1.0";
 		mRequestMode = SAORI;
 	}
-	else if ( i_protocol=="SHIORI" && i_protocol_version[0]>='3' )
+	else if ( i_protocol==L"SHIORI" && i_protocol_version[0]>=L'3' )
 	{
 		mRequestMode = SHIORI3;
 	}
-	else if ( i_protocol=="SHIORI" && i_protocol_version[0]=='2' )
+	else if ( i_protocol==L"SHIORI" && i_protocol_version[0]==L'2' )
 	{
 		mRequestMode = SHIORI2;
 			// 2.xにもバージョンとしては3.0を返す
 	}
-	else if ( i_protocol=="MAKOTO" && i_protocol_version[0]>='2' )
+	else if ( i_protocol==L"MAKOTO" && i_protocol_version[0]>=L'2' )
 	{
 		o_protocol = i_protocol;
-		o_protocol_version = "2.0";
+		o_protocol_version = L"2.0";
 		mRequestMode = MAKOTO2;
 	}
-	else if ( i_protocol=="UNKNOWN" )
+	else if ( i_protocol==L"UNKNOWN" )
 	{
 		mRequestMode = UNKNOWN;
 	}
@@ -94,33 +94,33 @@ int	Satori::request(
 	// SHOIRI/3.0以外のプロトコルの場合、SHOIRI/3.0に変換を行う。
 	for ( strpairvec::const_iterator it = i_data.begin() ; it != i_data.end() ; ++it )
 	{
-		string key = it->first;
-		const string& value = it->second;
+		wstring key = it->first;
+		const wstring& value = it->second;
 
 		switch ( mRequestMode ) {
 		case SAORI:
-			if ( compare_head(key, "Argument") ) {
+			if ( compare_head(key, L"Argument") ) {
 				int	n = stoi_internal(key.c_str()+8);
 				if ( n==0 )
-					key = "ID";
+					key = L"ID";
 				else
-					key = "Reference" + itos(n-1);
+					key = L"Reference" + itos(n-1);
 			}
 			break;
 		case SHIORI2:	// こっちはてきとー
-			if ( key=="Event" )
-				key="ID";
+			if ( key==L"Event" )
+				key=L"ID";
 			break;
 		case MAKOTO2:
-			if ( key=="String" )
-				key="Reference0";
+			if ( key==L"String" )
+				key=L"Reference0";
 			break;
 		default:
 			break;
 		}
 
 		mRequestMap[key] = value;
-		if ( compare_head(key, "Reference") ) {
+		if ( compare_head(key, L"Reference") ) {
 			int	n = stoi_internal(key.c_str()+9);
 			if ( n>=0 && n<65536 ) {
 				if ( n>=mReferences.size() )
@@ -132,70 +132,70 @@ int	Satori::request(
 
 	if ( mRequestMode == MAKOTO2 )
 	{
-		mRequestMap["ID"] = "OnMakoto";
+		mRequestMap[L"ID"] = L"OnMakoto";
 	}
 
-	mRequestID = mRequestMap["ID"];
-	mIsMateria = ( mRequestMap["Sender"] == "embryo" );
-	mIsStatusHeaderExist = ( mRequestMap["Sender"] == "SSP" );
+	mRequestID = mRequestMap[L"ID"];
+	mIsMateria = ( mRequestMap[L"Sender"] == L"embryo" );
+	mIsStatusHeaderExist = ( mRequestMap[L"Sender"] == L"SSP" );
 
 	//-------------------------------------------------
 	// リクエストを解釈
 
-	if ( mRequestCommand=="GET Version" )
+	if ( mRequestCommand==L"GET Version" )
 	{
 		if ( mRequestMode == SHIORI2 )
 		{
-			o_data.push_back( strpair("ID", gSatoriName) );
-			o_data.push_back( strpair("Craftman", gSatoriCraftman) );
-			o_data.push_back( strpair("Version", gSatoriVersion) );
+			o_data.push_back( strpair(L"ID", gSatoriName) );
+			o_data.push_back( strpair(L"Craftman", gSatoriCraftman) );
+			o_data.push_back( strpair(L"Version", gSatoriVersion) );
 		}
 		return 200;
 	}
 
 
 	// 選択分岐記録を変数に代入。ref0を元に戻す。
-	if ( compare_head(mRequestID, "OnChoice") ) // OnChoiceSelect/OnChoiceEnterの両方
+	if ( compare_head(mRequestID, L"OnChoice") ) // OnChoiceSelect/OnChoiceEnterの両方
 	{
 		strvec	vec;
-		int	ref_no = ( mRequestID=="OnChoiceEnter" || mRequestID=="OnChoiceSelectEx" )?1:0;
-		string&	info = mRequestMap[string("Reference")+itos(ref_no)];
+		int	ref_no = ( mRequestID==L"OnChoiceEnter" || mRequestID==L"OnChoiceSelectEx" )?1:0;
+		wstring&	info = mRequestMap[wstring(L"Reference")+itos(ref_no)];
 		if ( split(info, byte1_dlmt, vec)==3 ) // \1区切りの３文字列であるならば
 		{
-			info=mReferences[ref_no]=variables["選択ＩＤ"]=vec[0];
-			variables["選択ラベル"]=vec[1];
-			variables["選択番号"]=vec[2];
+			info=mReferences[ref_no]=variables[L"選択ＩＤ"]=vec[0];
+			variables[L"選択ラベル"]=vec[1];
+			variables[L"選択番号"]=vec[2];
 		}
 	}
 
 	// ログについて色々
-	bool log_disable_soft = ( mRequestID=="OnSurfaceChange" || mRequestID=="OnSecondChange" || mRequestID=="OnMinuteChange"
-		|| mRequestID=="OnMouseMove" || mRequestID=="OnTranslate");
+	bool log_disable_soft = ( mRequestID==L"OnSurfaceChange" || mRequestID==L"OnSecondChange" || mRequestID==L"OnMinuteChange"
+		|| mRequestID==L"OnMouseMove" || mRequestID==L"OnTranslate");
 
-	bool log_disable_hard = ( /*compare_tail(mRequestID, "caption") || */compare_tail(mRequestID, "visible")
-		|| compare_head(mRequestID, "menu.") || mRequestID.find(".color.")!=string::npos );
+	bool log_disable_hard = ( /*compare_tail(mRequestID, "caption") || */compare_tail(mRequestID, L"visible")
+		|| compare_head(mRequestID, L"menu.") || mRequestID.find(L".color.")!=wstring::npos );
 
 	GetSender().next_event();
 
 	if(fRequestLog)
 	{
-		GetSender().sender() << "--- Request ---" << std::endl << mStatusLine <<std::endl; // << iRequest <<std::endl;
-		GetSender().sender() << "ID: " << mRequestID << std::endl;
+		GetSender().sender() << L"--- Request ---" << std::endl << mStatusLine <<std::endl; // << iRequest <<std::endl;
+		GetSender().sender() << L"ID: " << mRequestID << std::endl;
 		for (size_t i = 0; i < mReferences.size(); i++) {
-			GetSender().sender() << "Reference" << i << ": " << mReferences[i] << std::endl;
+			GetSender().sender() << L"Reference" << i << L": " << mReferences[i] << std::endl;
 		}
 	}
 
 	// せきゅあ？
-	strmap::const_iterator it = mRequestMap.find("SecurityLevel");
-	secure_flag = ( it!=mRequestMap.end() && stricmp(it->second.c_str(), "local")==0 );
+	strmap::const_iterator it = mRequestMap.find(L"SecurityLevel");
+	secure_flag = ( it!=mRequestMap.end() && _wcsicmp(it->second.c_str(), L"local")==0 );
 
 	// 予め指定したイベントプレフィックスはexternalでも実行可能に
-	bool is_external = (it != mRequestMap.end() && stricmp(it->second.c_str(), "external") == 0);
+	bool is_external = (it != mRequestMap.end() && _wcsicmp(it->second.c_str(), L"external") == 0);
 	if (is_external) {
 		for (strvec::const_iterator prefix = allow_external_event_prefixes.begin() ;
 		prefix != allow_external_event_prefixes.end() ; ++prefix ) {
-			if ( *prefix == "全部" || ( strnicmp(mRequestID.c_str(), prefix->c_str(), prefix->length()) == 0 ) ) {
+			if ( *prefix == L"全部" || ( _wcsnicmp(mRequestID.c_str(), prefix->c_str(), prefix->length()) == 0 ) ) {
 				secure_flag = true;
 				break;
 			}
@@ -203,17 +203,17 @@ int	Satori::request(
 	}
 
 	// メイン処理
-	GetSender().sender() << "--- Operation ---" << std::endl;
+	GetSender().sender() << L"--- Operation ---" << std::endl;
 
 	int status_code = 500;
-	if ( mRequestID=="enable_log" || mRequestID=="enable_debug" ) {
+	if ( mRequestID==L"enable_log" || mRequestID==L"enable_debug" ) {
 		if ( secure_flag ) {
 			bool flag = false;
 			if ( mReferences.size() > 0 ) {
-				flag = atoi(mReferences[0].c_str()) != 0;
+				flag = _wtoi(mReferences[0].c_str()) != 0;
 			}
 
-			if ( mRequestID=="enable_debug" ) {
+			if ( mRequestID==L"enable_debug" ) {
 				fDebugMode = flag;
 			}
 			else {
@@ -222,38 +222,38 @@ int	Satori::request(
 			status_code = 200;
 		}
 		else {
-			GetSender().sender() << "local/Localでないので蹴りました: ShioriEcho" <<std::endl;
+			GetSender().sender() << L"local/Localでないので蹴りました: ShioriEcho" <<std::endl;
 			status_code = 403;
 		}
 	}
-	else if ( mRequestID=="ShioriEcho" ) {
+	else if ( mRequestID==L"ShioriEcho" ) {
 		// ShioriEcho実装
 		if ( fDebugMode && secure_flag ) {
-			string result = SentenceToSakuraScriptExec_with_PreProcess(mReferences);
+			wstring result = SentenceToSakuraScriptExec_with_PreProcess(mReferences);
 			if ( result.length() ) {
-				static const char* const dangerous_tag[] = {"\\![updatebymyself]",
-					"\\![vanishbymyself]",
-					"\\![enter,passivemode]",
-					"\\![enter,inductionmode]",
-					"\\![leave,passivemode]",
-					"\\![leave,inductionmode]",
-					"\\![lock,repaint]",
-					"\\![unlock,repaint]",
-					"\\![biff]",
-					"\\![open,browser",
-					"\\![open,mailer",
-					"\\![raise",
-					"\\j["};
+				static const wchar_t* const dangerous_tag[] = {L"\\![updatebymyself]",
+					L"\\![vanishbymyself]",
+					L"\\![enter,passivemode]",
+					L"\\![enter,inductionmode]",
+					L"\\![leave,passivemode]",
+					L"\\![leave,inductionmode]",
+					L"\\![lock,repaint]",
+					L"\\![unlock,repaint]",
+					L"\\![biff]",
+					L"\\![open,browser",
+					L"\\![open,mailer",
+					L"\\![raise",
+					L"\\j["};
 
-				std::string replace_to;
+				std::wstring replace_to;
 				for ( int i = 0 ; i < (sizeof(dangerous_tag)/sizeof(dangerous_tag[0])) ; ++i ) {
-					replace_to = "￥［";
+					replace_to = L"￥［";
 					replace_to += dangerous_tag[i]+2; //\をヌキ
 					replace(result,dangerous_tag[i],replace_to);
 				}
 
 				//Translate(result); - Translateは後でかかる
-				mResponseMap["Value"] = result;
+				mResponseMap[L"Value"] = result;
 				status_code = 200;
 			}
 			else {
@@ -262,19 +262,19 @@ int	Satori::request(
 		}
 		else {
 			if ( fDebugMode ) {
-				GetSender().sender() << "local/Localでないので蹴りました: ShioriEcho" <<std::endl;
+				GetSender().sender() << L"local/Localでないので蹴りました: ShioriEcho" <<std::endl;
 				status_code = 403;
 			}
 			else {
-				static const std::string dbgmsg = "デバッグモードが無効です。使用するためには＄デバッグ＝有効にしてください。: ShioriEcho";
+				static const std::wstring dbgmsg = L"デバッグモードが無効です。使用するためには＄デバッグ＝有効にしてください。: ShioriEcho";
 				GetSender().sender() << dbgmsg <<std::endl;
 
-				mResponseMap["Value"] = "\\0" + dbgmsg + "\\e";
+				mResponseMap[L"Value"] = L"\\0" + dbgmsg + L"\\e";
 				status_code = 200;
 			}
 		}
 	}
-	else if (mRequestID == "SatolistEcho"){
+	else if (mRequestID == L"SatolistEcho"){
 #ifndef POSIX
 		// さとりすとデバッガ実装
 		if (fDebugMode && secure_flag) {
@@ -285,40 +285,39 @@ int	Satori::request(
 				customRef.push_back(mReferences[i]);
 			}
 
-			string result = SentenceToSakuraScriptExec_with_PreProcess(customRef);
+			wstring result = SentenceToSakuraScriptExec_with_PreProcess(customRef);
 			if (result.length()) {
-				result = string("SSTP 200 OK\r\nCharset: Shift_JIS\r\nResult: ") + result + "\r\n\r\n";
+				result = wstring(L"SSTP 200 OK\r\nCharset: UTF-8\r\nResult: ") + result + L"\r\n\r\n";
 			}
 			else{
 				//情報なし
-				result = string("SSTP 204 No Content\r\nCharset: Shift_JIS\r\n\r\n");
+				result = wstring(L"SSTP 204 No Content\r\nCharset: UTF-8\r\n\r\n");
 			}
 
-			char* copyData = new char[result.length() + 1];
-			strcpy(copyData, result.c_str());
+			const std::string copyData = WtoUTF8(result);
 
 			COPYDATASTRUCT cds;
 			cds.dwData = 0;
-			cds.cbData = result.length() + 1;
-			cds.lpData = copyData;
+			cds.cbData = copyData.length() + 1;
+			cds.lpData = const_cast<char*>(copyData.c_str());
 			DWORD ret;
 
 			SendMessageTimeout((HWND)stoi_internal(mReferences[0]), WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds, 0, 1000, &ret);
 
 			//ここで204を返すと非対応時のエラーを出すので200で通知メッセージを表示する
 			status_code = 200;
-			mResponseMap["Value"] = "\\0\\_q■情報を送信しました。\\e";
+			mResponseMap[L"Value"] = L"\\0\\_q■情報を送信しました。\\e";
 		}
 		else {
 			if (fDebugMode) {
-				GetSender().sender() << "local/Localでないので蹴りました: SatolistEcho" <<std::endl;
+				GetSender().sender() << L"local/Localでないので蹴りました: SatolistEcho" <<std::endl;
 				status_code = 403;
 			}
 			else {
-				static const std::string dbgmsg = "デバッグモードが無効です。使用するためには＄デバッグ＝有効にしてください。: SatolistEcho";
+				static const std::wstring dbgmsg = L"デバッグモードが無効です。使用するためには＄デバッグ＝有効にしてください。: SatolistEcho";
 				GetSender().sender() << dbgmsg <<std::endl;
 
-				mResponseMap["Value"] = "\\0" + dbgmsg + "\\e";
+				mResponseMap[L"Value"] = L"\\0" + dbgmsg + L"\\e";
 				status_code = 200;
 			}
 		}
@@ -335,7 +334,7 @@ int	Satori::request(
 
 	// Valueに対する最終処理
 	if ( status_code==200 ) {	// && compare_head(mRequestID, "On")
-		strmap::iterator i = mResponseMap.find("Value");
+		strmap::iterator i = mResponseMap.find(L"Value");
 		if ( i!=mResponseMap.end() ) {
 			if ( return_empty ) {
 				status_code = 204;
@@ -348,7 +347,7 @@ int	Satori::request(
 				} 
 				else {
 					second_from_last_talk = 0;
-					if ( compare_head(mRequestID, "On") ) {
+					if ( compare_head(mRequestID, L"On") ) {
 						mResponseHistory.push_front(i->second);
 						if ( mResponseHistory.size() >= RESPONSE_HISTORY_SIZE )
 							mResponseHistory.pop_back();
@@ -358,38 +357,38 @@ int	Satori::request(
 		}
 	}
 
-	GetSender().sender() << "status code : " << itos(status_code) <<std::endl;
+	GetSender().sender() << L"status code : " << itos(status_code) <<std::endl;
 
 	//--------------------------------------------------------------------
 
 	for(strmap::const_iterator i=mResponseMap.begin() ; i!=mResponseMap.end() ; ++i)
 	{
-		string	key=i->first, value=i->second;
+		wstring	key=i->first, value=i->second;
 
 		switch ( mRequestMode ) {
 		case SAORI:
-			if ( key=="Value" ) {
-				key = "Result";
+			if ( key==L"Value" ) {
+				key = L"Result";
 				value = header_script + value;
 			}
-			else if ( compare_head(key, "Reference") ) {
-				key = string() + "Value" + (key.c_str()+9);
+			else if ( compare_head(key, L"Reference") ) {
+				key = wstring() + L"Value" + (key.c_str()+9);
 			}
 			break;
 		case SHIORI2:
-			if ( key=="Value" ) {
-				key = "Sentence";
+			if ( key==L"Value" ) {
+				key = L"Sentence";
 				value = header_script + value;
 			}
 			break;
 		case MAKOTO2:
-			if ( key=="Value" ) {
-				key = "String";
+			if ( key==L"Value" ) {
+				key = L"String";
 				value = header_script + value;
 			}
 			break;
 		default:
-			if ( key=="Value" ) {
+			if ( key==L"Value" ) {
 				value = header_script + value;
 			}
 			break;
@@ -398,24 +397,24 @@ int	Satori::request(
 	}
 
 	if ( GetSender().errsender().get_log_mode() ) {
-		const std::vector<string> &errlog = GetSender().errsender().get_log();
+		const std::vector<wstring> &errlog = GetSender().errsender().get_log();
 
-		std::string errmsg;
-		std::string errlevel;
+		std::wstring errmsg;
+		std::wstring errlevel;
 
-		for ( std::vector<string>::const_iterator itr = errlog.begin() ; itr != errlog.end(); ++itr ) {
-			errmsg += "SATORI : ";
+		for ( std::vector<wstring>::const_iterator itr = errlog.begin() ; itr != errlog.end(); ++itr ) {
+			errmsg += L"SATORI : ";
 			errmsg += *itr;
-			errmsg += "\1";
-			errlevel += "critical\1";
+			errmsg += L"\1";
+			errlevel += L"critical\1";
 		}
 
 		if ( errmsg.length() ) {
 			errmsg.erase(errmsg.end()-1,errmsg.end());
 			errlevel.erase(errlevel.end()-1,errlevel.end());
 
-			o_data.push_back( strpair("ErrorLevel",errlevel) );
-			o_data.push_back( strpair("ErrorDescription",errmsg) );
+			o_data.push_back( strpair(L"ErrorLevel",errlevel) );
+			o_data.push_back( strpair(L"ErrorDescription",errmsg) );
 		}
 		GetSender().errsender().clear_log();
 	}
@@ -423,7 +422,7 @@ int	Satori::request(
 	GetSender().validate();
 	if(fResponseLog)
 	{
-		GetSender().sender() << "--- Response ---" <<std::endl << mResponseMap <<std::endl;
+		GetSender().sender() << L"--- Response ---" <<std::endl << mResponseMap <<std::endl;
 	}
 	mResponseMap.clear();
 
@@ -444,11 +443,11 @@ int	Satori::request(
 	if ( reload_flag )
 	{
 		reload_flag = false;
-		string	tmp = mBaseFolder;
-		GetSender().sender() << "■■reloading." <<std::endl;
+		wstring	tmp = mBaseFolder;
+		GetSender().sender() << L"■■reloading." <<std::endl;
 		unload();
 		load(tmp);
-		GetSender().sender() << "■■reloaded." <<std::endl;
+		GetSender().sender() << L"■■reloaded." <<std::endl;
 
 		GetSender().flush();
 	}

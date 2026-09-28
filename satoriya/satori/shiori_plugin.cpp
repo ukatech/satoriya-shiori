@@ -7,7 +7,6 @@
 #  include      <dlfcn.h>
 #else
 #  include	<windows.h>
-#  include	<mbctype.h>
 #endif
 #include	<assert.h>
 #include	"../_/stltool.h"
@@ -16,7 +15,7 @@
 #include	"console_application.h"
 #include	"ssu.h"
 #include	<sstream>
-using std::string;
+using std::wstring;
 
 
 //////////DEBUG/////////////////////////
@@ -43,41 +42,41 @@ using std::string;
 //
 // パスは環境変数 SAORI_FALLBACK_PATH から取得する。これはコロン区切りの絶対パスである。
 
-static std::vector<string> posix_dll_search_path;
+static std::vector<wstring> posix_dll_search_path;
 static bool posix_dll_search_path_is_ready = false;
-static string posix_search_fallback_dll(const string& dllfile) {
+static wstring posix_search_fallback_dll(const wstring& dllfile) {
     // dllfileは探したいファイルDLL名。パス区切り文字は/。
     // 代替ライブラリが見付かればその絶対パスを、
     // 見付けられなければ空文字列を返す。
     
     if (!posix_dll_search_path_is_ready) {
 	// SAORI_FALLBACK_PATHを見る。
-	char* cstr_path = getenv("SAORI_FALLBACK_PATH");
+	const char* cstr_path = getenv("SAORI_FALLBACK_PATH");
 	if (cstr_path != NULL) {
-	    split(cstr_path, ":", posix_dll_search_path);
+	    split(UTF8toW(cstr_path), L":", posix_dll_search_path);
 	}
 	posix_dll_search_path_is_ready = true;
     }
 
-    string::size_type pos_slash = dllfile.rfind('/');
-    string fname(
-	dllfile.begin() + (pos_slash == string::npos ? 0 : pos_slash),
+    wstring::size_type pos_slash = dllfile.rfind(L'/');
+    wstring fname(
+	dllfile.begin() + (pos_slash == wstring::npos ? 0 : pos_slash),
 	dllfile.end());
 
-    for (std::vector<string>::const_iterator ite = posix_dll_search_path.begin();
+    for (std::vector<wstring>::const_iterator ite = posix_dll_search_path.begin();
 	 ite != posix_dll_search_path.end(); ite++ ) {
-	string fpath = *ite + '/' + fname;
+	wstring fpath = *ite + L'/' + fname;
 	struct stat sb;
-	if (stat(fpath.c_str(), &sb) == 0) {
+	if (stat(WtoUTF8(fpath).c_str(), &sb) == 0) {
 	    // 代替ライブラリが存在するようだ。これ以上のチェックは省略。
 	    return fpath;
 	}
     }
-    return string();
+    return wstring();
 }
 #endif
 
-bool ShioriPlugins::load(const string& iBaseFolder)
+bool ShioriPlugins::load(const wstring& iBaseFolder)
 {
 	mBaseFolder = iBaseFolder;
 
@@ -89,22 +88,22 @@ bool ShioriPlugins::load(const string& iBaseFolder)
 	return true;
 }
 
-bool ShioriPlugins::load_a_plugin(const string& iPluginLine)
+bool ShioriPlugins::load_a_plugin(const wstring& iPluginLine)
 {
 	strvec	vec;
-	split(iPluginLine, ",", vec);	// カンマ区切りで分割
+	split(iPluginLine, L",", vec);	// カンマ区切りで分割
 	if ( vec.size()<2 || vec[0].size()==0 ) {	// 呼び出し名と相対パスが必須
-		GetSender().errsender() << iPluginLine + ": 設定ファイルの書式が正しくありません。" << satori::endl;
+		GetSender().errsender() << iPluginLine + L": 設定ファイルの書式が正しくありません。" << satori::endl;
 		return	false;
 	}
 	if ( mCallData.find(vec[0]) != mCallData.end() ) {
-		GetSender().errsender() << vec[0] + ": 同じ呼び出し名が複数定義されています。" << satori::endl;
+		GetSender().errsender() << vec[0] + L": 同じ呼び出し名が複数定義されています。" << satori::endl;
 		return	false;
 	}
 
 	// フォルダ区切りを環境に応じて方に統一
-	string filename = unify_dir_char(vec[1]);
-	string fullpath = unify_dir_char(mBaseFolder + filename);
+	wstring filename = unify_dir_char(vec[1]);
+	wstring fullpath = unify_dir_char(mBaseFolder + filename);
 
 	if ( mDllData.find(fullpath) != mDllData.end() ) 
 	{
@@ -117,9 +116,9 @@ bool ShioriPlugins::load_a_plugin(const string& iPluginLine)
 
 		//SSU Direct Call
 #ifdef POSIX
-		if ( compare_tail(fullpath, "\\ssu") || compare_tail(fullpath, "/ssu") || compare_tail(fullpath, "\\ssu.dll") || compare_tail(fullpath, "/ssu.dll") )
+		if ( compare_tail(fullpath, L"\\ssu") || compare_tail(fullpath, L"/ssu") || compare_tail(fullpath, L"\\ssu.dll") || compare_tail(fullpath, L"/ssu.dll") )
 #else
-		if ( compare_tail(fullpath, "\\ssu.dll") || compare_tail(fullpath, "/ssu.dll") )
+		if ( compare_tail(fullpath, L"\\ssu.dll") || compare_tail(fullpath, L"/ssu.dll") )
 #endif
 		{
 			// プラグインDLLをロード
@@ -129,11 +128,11 @@ bool ShioriPlugins::load_a_plugin(const string& iPluginLine)
 		else {
 #ifndef POSIX
 			// ネットワーク更新時、SAORI.dllが上書きできずdl2として保存される問題に暫定対処
-			if ( compare_tail(fullpath, ".dll") )
+			if ( compare_tail(fullpath, L".dll") )
 			{
-				string	dl2 = fullpath;
-				dl2[dl2.size()-1]='2';
-				FILE*	fp = fopen(dl2.c_str(), "rb");
+				wstring	dl2 = fullpath;
+				dl2[dl2.size()-1]=L'2';
+				FILE*	fp = w_fopen(dl2, L"rb");
 				if ( fp != NULL )
 				{
 					fclose(fp);
@@ -146,55 +145,47 @@ bool ShioriPlugins::load_a_plugin(const string& iPluginLine)
 #endif
 			
 			// ファイルの存在を確認
-			FILE*	fp = fopen(fullpath.c_str(), "rb");
+			FILE*	fp = w_fopen(fullpath, L"rb");
 			if ( fp == NULL )
 			{
 #ifdef POSIX
-				GetSender().errsender() << fullpath + ": failed to open" << satori::endl;
+				GetSender().errsender() << fullpath + L": failed to open" << satori::endl;
 #else
-				GetSender().errsender() << fullpath + ": プラグインが存在しません。" << satori::endl;
+				GetSender().errsender() << fullpath + L": プラグインが存在しません。" << satori::endl;
 #endif
 				return	false;
 			}
 			fclose(fp);
 
 			// ファイル名・フォルダ名・拡張子を分離
-			const char*	lastyen = NULL;
-			const char*	lastdot = NULL;
-			const char*	p = fullpath.c_str();
-			while (*p != '\0') {
-				if (*p == DIR_CHAR)
-					lastyen=p;
-				else if (*p == '.')
-					lastdot=p;
-				p += _ismbblead(*p) ? 2 : 1; 
-			}
+			const wchar_t*	lastyen = wcsrchr(fullpath.c_str(), DIR_CHAR);
+			const wchar_t*	lastdot = wcsrchr(fullpath.c_str(), L'.');
 			if ( lastyen==NULL || lastdot==NULL )
 			{
 				return false;
 			}
 
-			string  dll_full_path(fullpath);
-			string	foldername(fullpath.c_str(), lastyen - fullpath.c_str());
-			string	filename(lastyen+1, strlen(lastyen)-strlen(lastdot)-1);
-			string	extention(lastdot+1);
+			wstring  dll_full_path(fullpath);
+			wstring	foldername(fullpath.c_str(), lastyen - fullpath.c_str());
+			wstring	filename(lastyen+1, wcslen(lastyen)-wcslen(lastdot)-1);
+			wstring	extention(lastdot+1);
 
 #ifdef POSIX
 			// 環境変数 SAORI_FALLBACK_ALWAYS が定義されていて、且つ
 			// 空でも"0"でもなければ、このdllファイルを開いてみる事は
 			// 初めからやらない。そうでなければ、試しにdlopenしてみる。
-			char* env_fallback_always = getenv("SAORI_FALLBACK_ALWAYS");
+			const char* env_fallback_always = getenv("SAORI_FALLBACK_ALWAYS");
 			bool fallback_always = false;
 			if (env_fallback_always != NULL) {
-				string str_fallback_always(env_fallback_always);
+				wstring str_fallback_always = UTF8toW(env_fallback_always);
 				if (str_fallback_always.length() > 0 &&
-				str_fallback_always != "0") {
+				str_fallback_always != L"0") {
 				fallback_always = true;
 				}
 			}
 			bool do_fallback = true;
 			if (!fallback_always) {
-				void* handle = dlopen(fullpath.c_str(), RTLD_LAZY);
+				void* handle = dlopen(WtoUTF8(fullpath).c_str(), RTLD_LAZY);
 				if (handle != NULL) {
 				// load, unload, requestを取出してみる。
 				void* sym_load = dlsym(handle, "load");
@@ -209,24 +200,24 @@ bool ShioriPlugins::load_a_plugin(const string& iPluginLine)
 			}
 			if (do_fallback) {
 				// 代替ライブラリを探す。
-				string fallback_lib = posix_search_fallback_dll(filename+"."+extention);
+				wstring fallback_lib = posix_search_fallback_dll(filename+L"."+extention);
 				if (fallback_lib.length() == 0) {
 				// 無い。
-				char* cstr_path = getenv("SAORI_FALLBACK_PATH");
-				string fallback_path =
+				const char* cstr_path = getenv("SAORI_FALLBACK_PATH");
+				wstring fallback_path =
 					(cstr_path == NULL ?
-					 "(environment variable `SAORI_FALLBACK_PATH' is empty)" : cstr_path);
+					 wstring(L"(environment variable `SAORI_FALLBACK_PATH' is empty)") : UTF8toW(cstr_path));
 				
 				GetSender().errsender() << (
-					fullpath+": This is not usable in this platform.\n"+
-					"Fallback library `"+filename+"."+extention+"' doesn't exist: "+fallback_path) << satori::endl;
+					fullpath+L": This is not usable in this platform.\n"+
+					L"Fallback library `"+filename+L"."+extention+L"' doesn't exist: "+fallback_path) << satori::endl;
 				
 				mDllData.erase(fullpath);
 
 				return false;
 				}
 				else {
-				std::cerr << "SAORI: using " << fallback_lib << " instead of " << fullpath << std::endl;
+				std::wcerr << L"SAORI: using " << fallback_lib << L" instead of " << fullpath << std::endl;
 				}
 
 				// 参照カウントに使うため、fullpathは書換えない。
@@ -239,25 +230,25 @@ bool ShioriPlugins::load_a_plugin(const string& iPluginLine)
 #ifdef POSIX
 			if ( 1 )
 #else
-			if ( compare_tail(fullpath, ".dll") )
+			if ( compare_tail(fullpath, L".dll") )
 #endif
 			{
 				// プラグインDLLをロード
 				mDllData[fullpath].mRefCount=1;
 				mDllData[fullpath].m_pSaoriClient=new SaoriClient();
-				extern const char* gSatoriName;
+				extern const wchar_t* gSatoriName;
 
-				if ( mDllData[fullpath].m_pSaoriClient->load(gSatoriName, "Shift_JIS", foldername+DIR_CHAR, dll_full_path) )
+				if ( mDllData[fullpath].m_pSaoriClient->load(gSatoriName, L"UTF-8", foldername+DIR_CHAR, dll_full_path) )
 				{
 					// バージョン確認
-					string ver = mDllData[fullpath].m_pSaoriClient->get_version("Local");
-					if ( ver != "SAORI/1.0" )
+					wstring ver = mDllData[fullpath].m_pSaoriClient->get_version(L"Local");
+					if ( ver != L"SAORI/1.0" )
 					{
-						GetSender().errsender() << fullpath + ": SAORI/1.xのdllではありません。GET Versionの戻り値が未対応のものでした。(" + ver + ")" << satori::endl;
+						GetSender().errsender() << fullpath + L": SAORI/1.xのdllではありません。GET Versionの戻り値が未対応のものでした。(" + ver + L")" << satori::endl;
 					}
 				}
 				else {
-					GetSender().errsender() << fullpath + ": SAORI/1.xのdllの読み込みに失敗しました。" << satori::endl;
+					GetSender().errsender() << fullpath + L": SAORI/1.xのdllの読み込みに失敗しました。" << satori::endl;
 				}
 
 			}
@@ -269,7 +260,7 @@ bool ShioriPlugins::load_a_plugin(const string& iPluginLine)
 #ifdef POSIX
 	mCallData[vec[0]].mIsBasic = false; // 拡張子では判断できないので、とりあえずSaori Basicのサポートは無し…
 #else
-	mCallData[vec[0]].mIsBasic = !compare_tail(fullpath, ".dll");
+	mCallData[vec[0]].mIsBasic = !compare_tail(fullpath, L".dll");
 #endif
 	strvec::const_iterator j=vec.begin();
 	for ( j+=2 ; j!=vec.end() ; ++j )
@@ -280,13 +271,13 @@ bool ShioriPlugins::load_a_plugin(const string& iPluginLine)
 
 void	ShioriPlugins::load_default_entry()
 {
-	std::vector<string> funclist;
+	std::vector<wstring> funclist;
 	get_ssu_funclist(funclist);
 
-	for (std::vector<string>::const_iterator i = funclist.begin(); i != funclist.end() ; ++i ) {
+	for (std::vector<wstring>::const_iterator i = funclist.begin(); i != funclist.end() ; ++i ) {
 		if ( mCallData.find(*i) == mCallData.end() ) {
-			string func_line = *i;
-			func_line += ",saori/ssu.dll,";
+			wstring func_line = *i;
+			func_line += L",saori/ssu.dll,";
 			func_line += *i;
 
 			load_a_plugin(func_line);
@@ -296,7 +287,7 @@ void	ShioriPlugins::load_default_entry()
 
 void	ShioriPlugins::unload()
 {
-	for ( std::map<string, CallData>::iterator i=mCallData.begin() ; i!=mCallData.end() ; ++i ) {
+	for ( std::map<wstring, CallData>::iterator i=mCallData.begin() ; i!=mCallData.end() ; ++i ) {
 		if ( i->second.mIsBasic )
 			continue;
 		DllData&	ddat = mDllData[i->second.mDllPath];
@@ -308,11 +299,11 @@ void	ShioriPlugins::unload()
 	mCallData.clear();
 }
 
-string	ShioriPlugins::request(const string& iCallName, const strvec& iArguments, strvec& oResults, const string& iSecurityLevel) {
+wstring	ShioriPlugins::request(const wstring& iCallName, const strvec& iArguments, strvec& oResults, const wstring& iSecurityLevel) {
 
 	if ( mCallData.find(iCallName) == mCallData.end() ) {
-		GetSender().errsender() << iCallName + ": この呼び出し名は定義されていません。" << satori::endl;
-		return	"";
+		GetSender().errsender() << iCallName + L": この呼び出し名は定義されていません。" << satori::endl;
+		return	L"";
 	}
 	CallData&	theCallData = mCallData[iCallName];
 
@@ -322,26 +313,26 @@ string	ShioriPlugins::request(const string& iCallName, const strvec& iArguments,
 
 		// さおべーはexternal呼び出しを判別する能力が無いので（環境変数等で渡せばいい？）
 		// この時点で全て切ります。-universalはリクエスト時にsecurity levelヘッダを渡し、SAORI側で判別していただきます。
-		if ( iSecurityLevel != "local" && iSecurityLevel != "Local" )
-			return	""; 
+		if ( iSecurityLevel != L"local" && iSecurityLevel != L"Local" )
+			return	L""; 
 
-		string	theCommandLine = theCallData.mDllPath;
+		wstring	theCommandLine = theCallData.mDllPath;
 		strvec::const_iterator i;
 		for ( i=theCallData.mPreDefinedArguments.begin() ; i!=theCallData.mPreDefinedArguments.end() ; ++i )
-			theCommandLine += " "+ *i;
+			theCommandLine += L" "+ *i;
 		for ( i=iArguments.begin() ; i!=iArguments.end() ; ++i )
-			theCommandLine += " "+ *i;
+			theCommandLine += L" "+ *i;
 
-		string out;
-		string r = call_console_application(
+		wstring out;
+		wstring r = call_console_application(
 			theCommandLine,
 			get_folder_name(theCallData.mDllPath).c_str(),
 			out);
-		if ( r != "" )
+		if ( r != L"" )
 		{
 			// エラー
-			GetSender().errsender() << iCallName + ": " + r << satori::endl;
-			return "";
+			GetSender().errsender() << iCallName + L": " + r << satori::endl;
+			return L"";
 		}
 		else
 		{
@@ -356,7 +347,7 @@ string	ShioriPlugins::request(const string& iCallName, const strvec& iArguments,
 		//---------------------
 		// リクエスト作成
 
-		std::vector<string> req;
+		std::vector<wstring> req;
 		req.insert(req.end(), theCallData.mPreDefinedArguments.begin(), theCallData.mPreDefinedArguments.end());
 		req.insert(req.end(), iArguments.begin(), iArguments.end());
 
@@ -365,10 +356,10 @@ string	ShioriPlugins::request(const string& iCallName, const strvec& iArguments,
 
 		assert( mDllData.find(theCallData.mDllPath) != mDllData.end() );
 
-		string result;
+		wstring result;
 		int return_code = mDllData[ theCallData.mDllPath ].m_pSaoriClient->request(
 			 req,
-			 ( iSecurityLevel == "local" || iSecurityLevel == "Local" ),
+			 ( iSecurityLevel == L"local" || iSecurityLevel == L"Local" ),
 			 result,
 			 oResults);
 
@@ -381,13 +372,13 @@ string	ShioriPlugins::request(const string& iCallName, const strvec& iArguments,
 		case 204:
 			break;
 		case 400:
-			GetSender().errsender() << theCallData.mDllPath + " - " + iCallName + " : 400 Bad Request / 呼び出しの不備" << satori::endl;
+			GetSender().errsender() << theCallData.mDllPath + L" - " + iCallName + L" : 400 Bad Request / 呼び出しの不備" << satori::endl;
 			break;
 		case 500:
-			GetSender().errsender() << theCallData.mDllPath + " - " + iCallName + " : 500 Internal Server Error / saori内でのエラー" << satori::endl;
+			GetSender().errsender() << theCallData.mDllPath + L" - " + iCallName + L" : 500 Internal Server Error / saori内でのエラー" << satori::endl;
 			break;
 		default:
-			GetSender().errsender() << theCallData.mDllPath + " - " + iCallName + " : " + itos(return_code) + "? / 定義されていないステータスを返しました。" << satori::endl;
+			GetSender().errsender() << theCallData.mDllPath + L" - " + iCallName + L" : " + itos(return_code) + L"? / 定義されていないステータスを返しました。" << satori::endl;
 			break;
 		}
 

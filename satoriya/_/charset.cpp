@@ -1,697 +1,329 @@
-#include	<cassert>
-#include	<string>
-#include	<sstream>
-using namespace std;
 #include	"charset.h"
-#include    <locale.h>
-#include    <mbctype.h>
 
-//////////DEBUG/////////////////////////
-#include "warning.h"
-#ifdef _WINDOWS
-#ifdef _DEBUG
-#include <crtdbg.h>
-#define new new( _NORMAL_BLOCK, __FILE__, __LINE__)
+#ifdef POSIX
+#include	<iconv.h>
+#include	<errno.h>
+#else
+#include	<windows.h>
 #endif
-#endif
-////////////////////////////////////////
 
-// 大文字小文字を問わず比較
-static const char* stristr(const char* p, const char* substr) {
-	assert(p!=NULL);
-	for (; *p; ++p) {
-		int i = 0;
-		for (i = 0; substr[i]; ++i) {
-			if (tolower(substr[i]) != tolower(p[i])) {
+#include	<cstring>
+
+//----------------------------------------------------------------------
+// UTF-8 (自前実装)
+
+static void	append_codepoint(std::wstring& o, unsigned long cp)
+{
+	if ( sizeof(wchar_t) == 2 && cp >= 0x10000 ) {
+		cp -= 0x10000;
+		o += (wchar_t)(0xD800 + (cp >> 10));
+		o += (wchar_t)(0xDC00 + (cp & 0x3FF));
+	}
+	else {
+		o += (wchar_t)cp;
+	}
+}
+
+// p から1文字デコードする。不正なら 0 を返す。成功したら使ったバイト数を返す。
+static int	decode_utf8_char(const unsigned char* p, size_t len, unsigned long& cp)
+{
+	unsigned char c = p[0];
+	int n;
+	unsigned long min;
+	if ( c < 0x80 ) { cp = c; return 1; }
+	else if ( c >= 0xC2 && c <= 0xDF ) { n = 2; cp = c & 0x1F; min = 0x80; }
+	else if ( c >= 0xE0 && c <= 0xEF ) { n = 3; cp = c & 0x0F; min = 0x800; }
+	else if ( c >= 0xF0 && c <= 0xF4 ) { n = 4; cp = c & 0x07; min = 0x10000; }
+	else { return 0; }
+
+	if ( len < (size_t)n ) { return 0; }
+	for ( int i = 1 ; i < n ; ++i ) {
+		if ( (p[i] & 0xC0) != 0x80 ) { return 0; }
+		cp = (cp << 6) | (p[i] & 0x3F);
+	}
+	if ( cp < min || cp > 0x10FFFF || (cp >= 0xD800 && cp <= 0xDFFF) ) { return 0; }
+	return n;
+}
+
+std::wstring	UTF8toW(const std::string& str)
+{
+	std::wstring o;
+	o.reserve(str.size());
+	const unsigned char* p = (const unsigned char*)str.c_str();
+	size_t len = str.size();
+	while ( len > 0 ) {
+		unsigned long cp;
+		int n = decode_utf8_char(p, len, cp);
+		if ( n == 0 ) {
+			// 不正なバイトは U+FFFD にして1バイト進める
+			o += (wchar_t)0xFFFD;
+			n = 1;
+		}
+		else {
+			append_codepoint(o, cp);
+		}
+		p += n;
+		len -= n;
+	}
+	return o;
+}
+
+std::string		WtoUTF8(const std::wstring& str)
+{
+	std::string o;
+	o.reserve(str.size() * 3);
+	const wchar_t* p = str.c_str();
+	const wchar_t* e = p + str.size();
+	while ( p < e ) {
+		unsigned long cp = (unsigned long)*p++;
+		if ( sizeof(wchar_t) == 2 ) {
+			cp &= 0xFFFF;
+			if ( cp >= 0xD800 && cp <= 0xDBFF && p < e && (*p & 0xFFFF) >= 0xDC00 && (*p & 0xFFFF) <= 0xDFFF ) {
+				cp = 0x10000 + ((cp - 0xD800) << 10) + ((*p++ & 0xFFFF) - 0xDC00);
+			}
+			else if ( cp >= 0xD800 && cp <= 0xDFFF ) {
+				cp = 0xFFFD;
+			}
+		}
+		if ( cp > 0x10FFFF ) { cp = 0xFFFD; }
+
+		if ( cp < 0x80 ) {
+			o += (char)cp;
+		}
+		else if ( cp < 0x800 ) {
+			o += (char)(0xC0 | (cp >> 6));
+			o += (char)(0x80 | (cp & 0x3F));
+		}
+		else if ( cp < 0x10000 ) {
+			o += (char)(0xE0 | (cp >> 12));
+			o += (char)(0x80 | ((cp >> 6) & 0x3F));
+			o += (char)(0x80 | (cp & 0x3F));
+		}
+		else {
+			o += (char)(0xF0 | (cp >> 18));
+			o += (char)(0x80 | ((cp >> 12) & 0x3F));
+			o += (char)(0x80 | ((cp >> 6) & 0x3F));
+			o += (char)(0x80 | (cp & 0x3F));
+		}
+	}
+	return o;
+}
+
+bool	IsValidUTF8(const char* p, size_t len)
+{
+	const unsigned char* up = (const unsigned char*)p;
+	while ( len > 0 ) {
+		unsigned long cp;
+		int n = decode_utf8_char(up, len, cp);
+		if ( n == 0 ) { return false; }
+		up += n;
+		len -= n;
+	}
+	return true;
+}
+
+bool	HasUTF8BOM(const std::string& str)
+{
+	return str.size() >= 3 &&
+		(unsigned char)str[0] == 0xEF && (unsigned char)str[1] == 0xBB && (unsigned char)str[2] == 0xBF;
+}
+
+CharactorSet	DetectCharset(const std::string& str)
+{
+	if ( HasUTF8BOM(str) || IsValidUTF8(str) ) {
+		return CS_UTF8;
+	}
+	return CS_SJIS;
+}
+
+//----------------------------------------------------------------------
+// Shift_JIS / ACP
+
+#ifdef POSIX
+
+static std::string	iconv_convert(const std::string& str, const char* to, const char* from)
+{
+	iconv_t cd = iconv_open(to, from);
+	if ( cd == (iconv_t)-1 ) {
+		return std::string();
+	}
+
+	std::string o;
+	char buf[1024];
+	char* in = const_cast<char*>(str.c_str());
+	size_t inleft = str.size();
+	while ( inleft > 0 ) {
+		char* out = buf;
+		size_t outleft = sizeof(buf);
+		size_t r = iconv(cd, &in, &inleft, &out, &outleft);
+		o.append(buf, out - buf);
+		if ( r == (size_t)-1 ) {
+			if ( errno == E2BIG ) { continue; }
+			// 変換できない文字は ? にして1バイト（1文字）飛ばす
+			o += '?';
+			++in;
+			--inleft;
+		}
+	}
+	iconv(cd, NULL, NULL, NULL, NULL);
+	iconv_close(cd);
+	return o;
+}
+
+static const char*	sjis_iconv_name()
+{
+	static const char* name = NULL;
+	if ( name == NULL ) {
+		static const char* candidates[] = { "CP932", "SHIFT_JIS", "SJIS" };
+		name = candidates[0];
+		for ( size_t i = 0 ; i < sizeof(candidates)/sizeof(candidates[0]) ; ++i ) {
+			iconv_t cd = iconv_open("UTF-8", candidates[i]);
+			if ( cd != (iconv_t)-1 ) {
+				iconv_close(cd);
+				name = candidates[i];
 				break;
 			}
 		}
-
-		if (substr[i] == '\0') {
-			return	p;
-		}
 	}
-	return	NULL;
+	return name;
 }
 
-
-typedef	unsigned short	word;
-typedef	unsigned char	byte;
-
-
-word sjis2jis(word ch){
-    byte leader  = (ch >> 8);
-    byte trailer = (ch & 0xFF);
-
-    if(leader <= 0x9F)  leader -= 0x71;
-    else                leader -= 0xB1;
-    leader = (leader << 1) + 1;
-
-    if(trailer > 0x7F)  trailer --;
-    if(trailer >= 0x9E){
-        trailer -= 0x7D;
-        leader ++;
-    } else {
-        trailer -= 0x1F;
-    }
-    return (leader << 8) | trailer;
-}
-
-word jis2sjis(word ch){
-    byte leader  = (ch >> 8);
-    byte trailer = (ch & 0xFF);
-
-    if((leader & 0x01) != 0)    trailer += 0x1F;
-    else                        trailer += 0x7D;
-    if(trailer >= 0x7F)         trailer ++;
-
-    leader = ((leader - 0x21) >> 1) + 0x81;
-    if(leader > 0x9F)          leader += 0x40;
-    return (leader << 8) | trailer;
-}
-
-inline word euc2jis(word ch){ return ch & 0x7F7F; }
-inline word jis2euc(word ch){ return ch | 0x8080; }
-inline word sjis2euc(word ch){ return jis2euc(sjis2jis(ch)); }
-inline word euc2sjis(word ch){ return jis2sjis(euc2jis(ch)); }
-
-#define JIS_ESC 27
-
-string	jis2euc(const string& in)
+std::wstring	SJIStoW(const std::string& str)
 {
-	stringstream	out;
-	const char* p=in.c_str();
-	bool	escaped=false;
-	while ( p[0]!='\0' )
-	{
-		if (0) {}
-		else if ( p[0]==JIS_ESC && p[1]=='$' && p[2]=='@' ) { p+=3; escaped=true; }
-		else if ( p[0]==JIS_ESC && p[1]=='$' && p[2]=='B' ) { p+=3; escaped=true; }
-		else if ( p[0]==JIS_ESC && p[1]=='&' && p[2]=='@' ) { p+=3; escaped=true; }
-		else if ( p[0]==JIS_ESC && p[1]=='$' && p[2]=='(' && p[3]=='D' ) { p+=4; escaped=true; }
-		else if ( p[0]==JIS_ESC && p[1]=='(' && p[2]=='J' ) { p+=3; escaped=false; }
-		else if ( p[0]==JIS_ESC && p[1]=='(' && p[2]=='H' ) { p+=3; escaped=false; }
-		else if ( p[0]==JIS_ESC && p[1]=='(' && p[2]=='B' ) { p+=3; escaped=false; }
-		else if ( p[0]==JIS_ESC && p[1]=='(' && p[2]=='I' ) { p+=3; escaped=false; }
-
-		if ( escaped && p[1]!='\0' )
-		{
-			word	wd = (byte(p[0])<<8) + byte(p[1]);
-			wd = jis2euc(wd);
-			out.put(wd/256);
-			out.put(wd%256);
-			p+=2;
-		}
-		else
-		{
-			out.put(*p++);
-		}
-	}
-	return	out.str();
+	return UTF8toW(iconv_convert(str, "UTF-8", sjis_iconv_name()));
 }
 
-string	euc2sjis(const string& in) {
-	stringstream	out;
-	const char* p=in.c_str();
-	while ( p[0]!='\0' ) {
-		if ( isascii(p[0]) || p[0]=='\n' || p[1]=='\0' )
-			out.put(*p++);
+std::string		WtoSJIS(const std::wstring& str)
+{
+	// 変換できない文字があった場合、iconv_convert は1バイトずつ飛ばしてしまうので、
+	// 1文字ずつ変換して1文字を1つの ? にする。
+	std::string o;
+	const wchar_t* p = str.c_str();
+	const wchar_t* e = p + str.size();
+	while ( p < e ) {
+		const wchar_t* s = p;
+		++p;
+		if ( IsHighSurrogate(*s) && p < e && IsLowSurrogate(*p) ) { ++p; }
+		if ( *s < 0x80 ) {
+			o += (char)*s;
+			continue;
+		}
+		std::string r = iconv_convert(WtoUTF8(std::wstring(s, p)), sjis_iconv_name(), "UTF-8");
+		if ( r.empty() || r[0] == '?' ) {
+			o += '?';
+		}
 		else {
-			word	wd = (byte(p[0])<<8) + byte(p[1]);
-			wd = euc2sjis(wd);
-			out.put(wd/256);
-			out.put(wd%256);
-			p+=2;
+			o += r;
 		}
 	}
-	return	out.str();
+	return o;
 }
 
-string  sjis2euc(const string& in) {
-	stringstream	out;
-	const char* p=in.c_str();
-	while ( p[0]!='\0' ) {
-		if ( isascii(p[0]) || p[0]=='\n' || p[1]=='\0' )
-			out.put(*p++);
-		else {
-			word	wd = (byte(p[0])<<8) + byte(p[1]);
-			wd = sjis2euc(wd);
-			out.put(wd/256);
-			out.put(wd%256);
-			p+=2;
-		}
-	}
-	return	out.str();
-}
+std::wstring	ACPtoW(const std::string& str) { return UTF8toW(str); }
+std::string		WtoACP(const std::wstring& str) { return WtoUTF8(str); }
 
+#else
 
-string	jis2sjis(const string& in) {
-	stringstream	out;
-	const char* p=in.c_str();
-	bool	escaped=false;
-
-
-	while ( p[0]!='\0' ) {
-
-		if (0) {}
-		else if ( p[0]==0x1b && p[1]=='$' && p[2]=='@' ) { p+=3; escaped=true; }
-		else if ( p[0]==0x1b && p[1]=='$' && p[2]=='B' ) { p+=3; escaped=true; }
-		else if ( p[0]==0x1b && p[1]=='&' && p[2]=='@' ) { p+=3; escaped=true; }
-		else if ( p[0]==0x1b && p[1]=='$' && p[2]=='B' ) { p+=3; escaped=true; }
-		else if ( p[0]==0x1b && p[1]=='$' && p[2]=='(' && p[3]=='D' ) { p+=4; escaped=true; }
-		else if ( p[0]==0x1b && p[1]=='(' && p[2]=='J' ) { p+=3; escaped=false; }
-		else if ( p[0]==0x1b && p[1]=='(' && p[2]=='H' ) { p+=3; escaped=false; }
-		else if ( p[0]==0x1b && p[1]=='(' && p[2]=='B' ) { p+=3; escaped=false; }
-		else if ( p[0]==0x1b && p[1]=='(' && p[2]=='I' ) { p+=3; escaped=false; }
-
-		if ( !escaped || p[1]=='\0' )
-			out.put(*p++);
-		else {
-			word	wd = (byte(p[0])<<8) + byte(p[1]);
-			wd = jis2sjis(wd);
-			out.put(wd/256);
-			out.put(wd%256);
-			p+=2;
-		}
-	}
-	return	out.str();
-}
-
-
-
-
-
-inline bool area(byte c, int min, int max) { return ( c>=min && c<=max ); }
-
-
-inline int stricmp_head(const char* lhs, const char* rhs) {
-	return _strnicmp(lhs, rhs, strlen(rhs));
-}
-
-// 文字コード自動判別
-CharactorSet	getCharactorSet(const char* const iString) {
-
-	// UTFのBOMによる判別。UTF-32には未対応。UTF-16では必須
-	{
-		unsigned char* bom = (unsigned char*)iString;
-		if ( bom[0]==0xFE && bom[1]==0xFF )
-			return	CS_UTF16BE;
-		if ( bom[0]==0xFF && bom[1]==0xFE )
-			return	CS_UTF16LE;
-		if ( bom[0]==0xEF && bom[1]==0xBB && bom[2]==0xBF )
-			return	CS_UTF8;
-	}
-
-//	_wstristr　UTF-16のcharset指定は読めない……
-
-	// charset指定っぽい文字列があればそれを使う。ただし一番先頭にくるものを採用
-	const char* enc;
-	if ( 
-		(enc=stristr(iString, "charset=")) != NULL ||
-		(enc=stristr(iString, "encoding=")) != NULL
-		) 
-	{
-		while ( isalpha(*enc) ) ++enc;
-		while ( *enc=='=' || *enc=='\"' || *enc==' ' || *enc=='\'') ++enc;
-		if ( stricmp_head(enc, "iso-2022-jp")==0 )
-			return	CS_JIS;
-		else if ( stricmp_head(enc, "shift_jis")==0 )
-			return	CS_SJIS;
-		else if ( stricmp_head(enc, "x-sjis")==0 )
-			return	CS_SJIS;
-		else if ( stricmp_head(enc, "x-euc-jp")==0 )
-			return	CS_EUC;
-		else if ( stricmp_head(enc, "euc-jp")==0 )
-			return	CS_EUC;
-		else if ( stricmp_head(enc, "utf")==0 ) // -8 じゃなくてもとりあえず。
-			return	CS_UTF8;
-	}
-
-	// jisのエスケープシーケンスがあればjisに確定
-	const char* p = iString;
-	while (*p!=NULL) {
-		if ( p[0]==0x1b && p[1]=='$' && p[2]=='@' ) return CS_JIS;
-		else if ( p[0]==0x1b && p[1]=='$' && p[2]=='B' ) return CS_JIS;
-		else if ( p[0]==0x1b && p[1]=='&' && p[2]=='@' ) return CS_JIS;
-		else if ( p[0]==0x1b && p[1]=='$' && p[2]=='B' ) return CS_JIS;
-		else if ( p[0]==0x1b && p[1]=='$' && p[2]=='(' && p[3]=='D' ) return CS_JIS;
-		else if ( p[0]==0x1b && p[1]=='(' && p[2]=='J' ) return CS_JIS;
-		else if ( p[0]==0x1b && p[1]=='(' && p[2]=='H' ) return CS_JIS;
-		else if ( p[0]==0x1b && p[1]=='(' && p[2]=='B' ) return CS_JIS;
-		else if ( p[0]==0x1b && p[1]=='(' && p[2]=='I' ) return CS_JIS;
-		else if ( byte(p[0])>0xa0 && byte(p[0])<0xe0 ) break;	// jisには出現しないコード
-		else ++p;
-	}
-
-	// eucかsjisかの確実な判別
-	p = iString;
-	while (*p!=NULL) {
-		if ( isascii(p[0]) )
-			++p;
-		else if ( area(byte(p[0]),0x81,0x9f) )
-			return	CS_SJIS;
-		else if ( area(byte(p[0]),0xa1,0xdf) && ( isascii(p[1]) || area(byte(p[1]),0x80,0xa0) ) )
-			return	CS_SJIS;
-		else if ( area(byte(p[0]),0xf0,0xfe) )
-			return	CS_EUC;
-		else
-			++p;
-	}
-
-	// eucかsjisか推測 → 無意味。確定できる文字が無いからここにきているのだ。
-	/*int	n_sjis=0, n_euc=0;
-	p = iString;
-	while (*p!='\0') {
-		int	n=1;
-		if ( area(p[1],0x80,0xFC) && (area(p[0],0x81,0x9f) || area(p[0],0xe0,0xef)) ) {	// sjis
-			++n_sjis;
-			n=2;
-		}
-		if ( area(p[0],0xa1,0xfe) && area(p[1],0xa1,0xfe) )	{// euc
-			++n_euc;
-			n=2;
-		}
-		p+=n;
-	}
-	if ( n_sjis>n_euc )
-		return	CS_SJIS;
-	else if ( n_euc>n_sjis )
-		return	CS_EUC;
-	*/
-
-	return	CS_NULL;	// わかんなかった
-}
-
-
-
-// 改行コードを \r\n に統一（未確認）
-string	 unification_return_code_for_windows(const string& in) {
-	stringstream	out;
-	const char* p=in.c_str();
-	while ( p[0]!='\0' ) {
-		if ( p[0]=='\r' ) {
-			if ( p[1]=='\n' ) {
-				out.put(*p++);
-				out.put(*p++);
-			}
-			else {
-				out.put(*p++);
-				out.put('\n');
-			}
-		}
-		else if ( p[0]=='\n' ) {
-			out.put('\r');
-			out.put(*p++);
-		}
-		else
-			out.put(*p++);
-	}
-	return	out.str();
-}
-
-
-
-// Shift-JISの１バイト目たりうる文字か？
-inline bool is_sjis1st(byte c) { return ((unsigned int) (c ^ 0x20) - 0xa1 < 0x3c); }
-
-// JISコードのエスケープ文字列
-static const char* SHIFT2B = "\x1b\x24\x42"; // ２バイトへ
-static const char* SHIFT1B = "\x1b\x28\x42"; // １バイトへ
-
-string sjis2jis(const string& in)
+static std::wstring	mb2w(const std::string& str, UINT cp)
 {
-	string out;
-	bool shift = false;
-	for(int i=0; i < in.size(); ++i)
-	{
-		byte c0 = in[i];
-		byte c1 = in[i+1];
+	if ( str.empty() ) { return std::wstring(); }
+	int len = ::MultiByteToWideChar(cp, 0, str.c_str(), (int)str.size(), NULL, 0);
+	if ( len <= 0 ) { return std::wstring(); }
+	std::wstring o(len, L'\0');
+	::MultiByteToWideChar(cp, 0, str.c_str(), (int)str.size(), &o[0], len);
+	return o;
+}
 
-		if (is_sjis1st(c0))
-		{
-			// 2bytes
-			if ( !shift )
-			{
-				out += SHIFT2B;
-				shift = true;
-			}
-			++i;
-			out += ((c0 - (c0 < 0xa0 ? 0x70 : 0xb0)) << 1) - (c1 < 0x9f);
-			out += c1 - ((c1 < 0x9f) ? (c1 > 0x7f ? 0x20 : 0x1f) : 0x7e);
+static std::string	w2mb(const std::wstring& str, UINT cp)
+{
+	if ( str.empty() ) { return std::string(); }
+	// 似た文字への置き換え（best fit）はさせず、変換できない文字は ? にする
+	int len = ::WideCharToMultiByte(cp, WC_NO_BEST_FIT_CHARS, str.c_str(), (int)str.size(), NULL, 0, NULL, NULL);
+	if ( len <= 0 ) { return std::string(); }
+	std::string o(len, '\0');
+	::WideCharToMultiByte(cp, WC_NO_BEST_FIT_CHARS, str.c_str(), (int)str.size(), &o[0], len, NULL, NULL);
+	return o;
+}
+
+std::wstring	SJIStoW(const std::string& str) { return mb2w(str, 932); }
+std::string		WtoSJIS(const std::wstring& str) { return w2mb(str, 932); }
+std::wstring	ACPtoW(const std::string& str) { return mb2w(str, CP_ACP); }
+std::string		WtoACP(const std::wstring& str) { return w2mb(str, CP_ACP); }
+
+#endif
+
+//----------------------------------------------------------------------
+
+std::wstring	MBtoW(const std::string& str, CharactorSet cs)
+{
+	if ( cs == CS_NULL ) {
+		cs = DetectCharset(str);
+	}
+	switch ( cs ) {
+	case CS_UTF8:
+		if ( HasUTF8BOM(str) ) {
+			return UTF8toW(str.substr(3));
 		}
-		else
-		{
-			// ASCII
-			if ( shift )
-			{
-				out += SHIFT1B;
-				shift = false;
-			}
-			out += c0;
+		return UTF8toW(str);
+	case CS_ACP:
+		return ACPtoW(str);
+	default:
+		return SJIStoW(str);
+	}
+}
+
+std::string		WtoMB(const std::wstring& str, CharactorSet cs)
+{
+	switch ( cs ) {
+	case CS_SJIS:
+		return WtoSJIS(str);
+	case CS_ACP:
+		return WtoACP(str);
+	default:
+		return WtoUTF8(str);
+	}
+}
+
+static bool	charset_name_equal(const std::wstring& name, const char* candidate)
+{
+	// 大文字小文字、'-' と '_' の有無を無視して比較する
+	std::wstring::const_iterator i = name.begin();
+	const char* p = candidate;
+	while ( true ) {
+		while ( i != name.end() && (*i == L'-' || *i == L'_' || *i == L' ') ) { ++i; }
+		while ( *p == '-' || *p == '_' ) { ++p; }
+		if ( i == name.end() || *p == '\0' ) {
+			return i == name.end() && *p == '\0';
 		}
+		wchar_t a = *i;
+		char b = *p;
+		if ( a >= L'A' && a <= L'Z' ) { a = a - L'A' + L'a'; }
+		if ( b >= 'A' && b <= 'Z' ) { b = b - 'A' + 'a'; }
+		if ( a != (wchar_t)b ) { return false; }
+		++i;
+		++p;
 	}
+}
 
-	// シフト状態のままなら戻しておく
-	if ( shift )
-	{
-		out += SHIFT1B;
+CharactorSet	CharsetFromName(const std::wstring& name)
+{
+	static const char* sjis_names[] = { "shift_jis", "sjis", "x-sjis", "cp932", "ms932", "windows-31j" };
+	static const char* utf8_names[] = { "utf-8", "utf8" };
+	size_t n;
+	for ( n = 0 ; n < sizeof(sjis_names)/sizeof(sjis_names[0]) ; ++n ) {
+		if ( charset_name_equal(name, sjis_names[n]) ) { return CS_SJIS; }
 	}
-	return out;
-}
-
-string euc2jis(const string& in)
-{
-	//return sjis2jis( euc2sjis(in) );
-
-	string out;
-	bool shift = false;
-	for(int i=0; i < in.size(); ++i)
-	{
-		byte c0 = in[i];
-		byte c1 = in[i+1];
-		
-		//if ( (c0 >= 0x00 && c0 <=0x7F) || c1 == '\0' ) // c0 >= 0x00 is always true
-		if ( c0 <=0x7F || c1 == '\0' )
-		{
-			// ASCII
-			if ( shift )
-			{
-				out += SHIFT1B;
-				shift = false;
-			}
-			out += c0;
-		}
-		else
-		{
-			// 2bytes
-			if ( !shift )
-			{
-				out += SHIFT2B;
-				shift = true;
-			}
-			++i;
-
-			// EUC半角カナをEUC全角カナに変換する（JISでは半角カナを扱えないため）
-			if ( c0 == 0x8E && c1 >= 0xA0 && c1 <= 0xDF )
-			{
-				static const word euckana_han2zen[16*4] = {	0xA1A1,0xA1A3,0xA1D6,0xA1D7,0xA1A2,0xA1A6,0xA5F2,0xA5A1,0xA5A3,0xA5A5,0xA5A7,0xA5A9,0xA5E3,0xA5E5,0xA5E7,0xA5C3,0xA1BC,0xA5A2,0xA5A4,0xA5A6,0xA5A8,0xA5AA,0xA5AB,0xA5AD,0xA5AF,0xA5B1,0xA5B3,0xA5B5,0xA5B7,0xA5B9,0xA5BB,0xA5BD,0xA5BF,0xA5C1,0xA5C4,0xA5C6,0xA5C8,0xA5CA,0xA5CB,0xA5CC,0xA5CD,0xA5CE,0xA5CF,0xA5D2,0xA5D5,0xA5D8,0xA5DB,0xA5DE,0xA5DF,0xA5E0,0xA5E1,0xA5E2,0xA5E4,0xA5E6,0xA5E8,0xA5E9,0xA5EA,0xA5EB,0xA5EC,0xA5ED,0xA5EF,0xA5F3,0xA1AB,0xA1AC };
-				word w = euckana_han2zen[c1 - 0xA0];
-				c0 = w >> 8;
-				c1 = w & 0x00ff;
-			}
-
-			out += c0 & 0x7F;
-			out += c1 & 0x7F;
-		}
+	for ( n = 0 ; n < sizeof(utf8_names)/sizeof(utf8_names[0]) ; ++n ) {
+		if ( charset_name_equal(name, utf8_names[n]) ) { return CS_UTF8; }
 	}
+	return CS_NULL;
+}
 
-	// シフト状態のままなら戻しておく
-	if ( shift )
-	{
-		out += SHIFT1B;
+const wchar_t*	CharsetName(CharactorSet cs)
+{
+	switch ( cs ) {
+	case CS_SJIS: return L"Shift_JIS";
+	case CS_UTF8: return L"UTF-8";
+	default: return L"UTF-8";
 	}
-	return out;
-
-
-}
-
-
-
-//
-// http://kamoland.com/comp/unicode.htmlから拝借。
-// 戻り値はfreeで解放しなければならない模様。
-//
-
-#include	<windows.h>
-
-class CUnicodeF {
-public:
-    static char* utf8_to_sjis(const char *pUtf8Str, int *nBytesOut);
-    static char* sjis_to_utf8(const char *pAnsiStr, int *nBytesOut);
-    static wchar_t* sjis_to_utf16be(const char *pAnsiStr, int *nBytesOut);
-    static char* utf16be_to_utf8(const wchar_t *pUcsStr, int *nBytesOut);
-    static char* utf16be_to_sjis(const wchar_t *pUcsStr, int *nBytesOut);
-    static wchar_t* utf8_to_utf16be(const char *pUtf8Str, int *nNumOut, BOOL bBigEndian);
-
-private:
-    static int utf16be_to_utf8_sub( char *pUtf8, const wchar_t *pUcs2, int nUcsNum, BOOL bCountOnly);
-    static int utf8_to_utf16be_sub( wchar_t *pUcs2, const char *pUtf8, int nUtf8Num, BOOL bCountOnly, BOOL bBigEndian);
-};
-
-//#include <stdio.h>
-//#include <string.h>
-//#include <stdlib.h>	// for mbstowcs(), wcstombs()
-//#include <locale.h>	// for setlocale()
-
-char *CUnicodeF::utf8_to_sjis(const char *pUtf8Str, int *nBytesOut)
-{
-    int nNum, nBytes;
-
-    wchar_t *pwcWork = utf8_to_utf16be( pUtf8Str, &nNum, TRUE);
-    char *pcSjis = utf16be_to_sjis( pwcWork, &nBytes);
-    free( pwcWork);
-
-    *nBytesOut = nBytes;
-    return pcSjis;
-}
-
-char *CUnicodeF::sjis_to_utf8(const char *pAnsiStr, int *nBytesOut)
-{
-    int nNum, nBytes;
-
-    wchar_t *pwcWork = sjis_to_utf16be( pAnsiStr, &nNum);
-    char *pcUtf8 = utf16be_to_utf8( pwcWork, &nBytes);
-    free( pwcWork);
-
-    *nBytesOut = nBytes;
-    return pcUtf8;
-}
-
-
-char *CUnicodeF::utf16be_to_sjis(const wchar_t *pUcsStr, int *nBytesOut)
-{
-    char *pAnsiStr = NULL;
-    int nLen;
-
-    if (!pUcsStr) return NULL;
-
-    _setmbcp(932);// これがないとUnicodeに変換されない！
-
-    nLen = wcslen( pUcsStr);
-
-    if ( pUcsStr[0] == 0xfeff || pUcsStr[0] == 0xfffe) {
-        pUcsStr++; // 先頭にBOM(byte Order Mark)があれば，スキップする
-        nLen--;
-    }
-
-    pAnsiStr = (char *)calloc((nLen+1), sizeof(wchar_t));
-    if (!pAnsiStr) return NULL;
-
-    // 1文字ずつ変換する。
-    // まとめて変換すると、変換不能文字への対応が困難なので
-    int nRet, i, nMbpos = 0;
-    char *pcMbchar = new char[MB_CUR_MAX];
-
-    for ( i=0; i < nLen; i++) {
-        nRet = wctomb( pcMbchar, pUcsStr[i]);
-        switch ( nRet) {
-        case 1:
-            pAnsiStr[nMbpos++] = pcMbchar[0];
-            break;
-
-        case 2:
-            pAnsiStr[nMbpos++] = pcMbchar[0];
-            pAnsiStr[nMbpos++] = pcMbchar[1];
-            break;
-
-        default: // 変換不能
-            pAnsiStr[nMbpos++] = ' ';
-            break;
-        }
-    }
-    pAnsiStr[nMbpos] = '\0';
-
-    delete [] pcMbchar;
-
-    *nBytesOut = nMbpos;
-
-    return pAnsiStr;
-}
-
-wchar_t *CUnicodeF::sjis_to_utf16be(const char *pAnsiStr, int *nBytesOut)
-{
-    int len;
-    wchar_t *pUcsStr = NULL;
-
-    if (!pAnsiStr) return NULL;
-
-    _setmbcp(932);  // これがないとUnicodeに変換されない！
-
-    len = strlen( pAnsiStr);
-    *nBytesOut = sizeof(wchar_t)*(len);
-
-    pUcsStr = (wchar_t *)calloc(*nBytesOut + 2, 1);
-    if (!pUcsStr) return NULL;
-
-    mbstowcs(pUcsStr, pAnsiStr, len+1);
-
-    return pUcsStr;
-}
-
-char *CUnicodeF::utf16be_to_utf8(const wchar_t *pUcsStr, int *nBytesOut)
-{
-    int nUcsNum;
-    char *pUtf8Str;
-
-    nUcsNum = wcslen(pUcsStr);
-
-    *nBytesOut = utf16be_to_utf8_sub( NULL, pUcsStr, nUcsNum, TRUE);
-
-    pUtf8Str = (char *)calloc(*nBytesOut + 3, 1);
-    utf16be_to_utf8_sub( pUtf8Str, pUcsStr, nUcsNum, FALSE);
-
-    return pUtf8Str;
-}
-
-// Unicode(UTF-16) -> UTF-8 下請け
-int CUnicodeF::utf16be_to_utf8_sub( char *pUtf8, const wchar_t *pUcs2, int nUcsNum, BOOL bCountOnly)
-{
-    int nUcs2, nUtf8 = 0;
-
-    for ( nUcs2=0; nUcs2 < nUcsNum; nUcs2++) {
-        if ( (unsigned short)pUcs2[nUcs2] <= 0x007f) {
-            if ( bCountOnly == FALSE) {
-                pUtf8[nUtf8] = (pUcs2[nUcs2] & 0x007f);
-            }
-            nUtf8 += 1;
-        } else if ( (unsigned short)pUcs2[nUcs2] <= 0x07ff) {
-            if ( bCountOnly == FALSE) {
-                pUtf8[nUtf8] = ((pUcs2[nUcs2] & 0x07C0) >> 6 ) | 0xc0; // 2002.08.17 修正
-                pUtf8[nUtf8+1] = (pUcs2[nUcs2] & 0x003f) | 0x80;
-            }
-            nUtf8 += 2;
-        } else {
-            if ( bCountOnly == FALSE) {
-                pUtf8[nUtf8] = ((pUcs2[nUcs2] & 0xf000) >> 12) | 0xe0; // 2002.08.04 修正
-                pUtf8[nUtf8+1] = ((pUcs2[nUcs2] & 0x0fc0) >> 6) | 0x80;
-                pUtf8[nUtf8+2] = (pUcs2[nUcs2] & 0x003f) | 0x80;
-            }
-            nUtf8 += 3;
-        }
-    }
-    if ( bCountOnly == FALSE) {
-        pUtf8[nUtf8] = '\0';
-    }
-
-    return nUtf8;
-}
-
-
-wchar_t *CUnicodeF::utf8_to_utf16be(const char *pUtf8Str, int *nNumOut, BOOL bBigEndian)
-{
-    int nUtf8Num;
-    wchar_t *pUcsStr;
-
-    nUtf8Num = strlen(pUtf8Str); // UTF-8文字列には，'\0' がない
-    *nNumOut = utf8_to_utf16be_sub( NULL, pUtf8Str, nUtf8Num, TRUE, bBigEndian);
-
-    pUcsStr = (wchar_t *)calloc((*nNumOut + 1), sizeof(wchar_t));
-    utf8_to_utf16be_sub( pUcsStr, pUtf8Str, nUtf8Num, FALSE, bBigEndian);
-
-    return pUcsStr;
-}
-
-// UTF-8 -> Unicode(UCS-2) 下請け
-int CUnicodeF::utf8_to_utf16be_sub( wchar_t *pUcs2, const char *pUtf8, int nUtf8Num,
-                          BOOL bCountOnly, BOOL bBigEndian)
-{
-    int nUtf8, nUcs2 = 0;
-    char cHigh, cLow;
-
-    for ( nUtf8=0; nUtf8 < nUtf8Num;) {
-        if ( ( pUtf8[nUtf8] & 0x80) == 0x00) { // 最上位ビット = 0
-            if ( bCountOnly == FALSE) {
-                pUcs2[nUcs2] = ( pUtf8[nUtf8] & 0x7f);
-            }
-            nUtf8 += 1;
-        } else if ( ( pUtf8[nUtf8] & 0xe0) == 0xc0) { // 上位3ビット = 110
-            if ( bCountOnly == FALSE) {
-                pUcs2[nUcs2] = ( pUtf8[nUtf8] & 0x1f) << 6;
-                pUcs2[nUcs2] |= ( pUtf8[nUtf8+1] & 0x3f);
-            }
-            nUtf8 += 2;
-        } else {
-            if ( bCountOnly == FALSE) {
-                pUcs2[nUcs2] = ( pUtf8[nUtf8] & 0x0f) << 12;
-                pUcs2[nUcs2] |= ( pUtf8[nUtf8+1] & 0x3f) << 6;
-                pUcs2[nUcs2] |= ( pUtf8[nUtf8+2] & 0x3f);
-            }
-            nUtf8 += 3;
-        }
-
-        if ( bCountOnly == FALSE) {
-            if ( !bBigEndian) {
-                // リトルエンディアンにする処理
-                cHigh = (pUcs2[nUcs2] & 0xff00) >> 8;
-                cLow = (pUcs2[nUcs2] & 0x00ff);
-                pUcs2[nUcs2] = (cLow << 8) | cHigh;
-            }
-        }
-
-        nUcs2 += 1;
-    }
-    if ( bCountOnly == FALSE) {
-        pUcs2[nUcs2] = L'\0';
-    }
-
-    return nUcs2;
-}
-
-string	SJIStoUTF8(const string& str) {
-	int	count;
-	char* buf = CUnicodeF::sjis_to_utf8(str.c_str(), &count);
-	string	ret(buf, count);
-	free(buf);
-	return	ret;
-}
-
-string	UTF8toSJIS(const string& str) {
-	// BOMスキップ。UTF-16についてはライブラリでやってくれてるみたい。
-	const char* p = str.c_str();
-	if ( p[0]==0xEF && p[1]==0xBB && p[2]==0xBF )
-		p += 3;
-
-	int	count;
-	char* buf = CUnicodeF::utf8_to_sjis(p, &count);
-	string	ret(buf, count);
-	free(buf);
-	return	ret;
-}
-
-string	UTF16BEtoSJIS(const wchar_t* mbp) {
-	int	count;
-	char* buf = CUnicodeF::utf16be_to_sjis(mbp, &count);
-	string	ret(buf, count);
-	free(buf);
-	return	ret;
-}
-
-string	UTF16LEtoSJIS(const wchar_t* mbp) {
-
-	// エンディアンを変更
-/*    setlocale(LC_ALL, "Japanese");// これがないとUnicodeに変換されない！
-    int len = wcslen(mbp);
-
-	int n=0;
-	for ( char* p = (char*)mbp ; n<len ; p+=2, ++n ) {
-		char temp = p[0];
-		p[0] = p[1];
-		p[1] = temp;
-	}
-*/
-	int	count;
-	char* buf = CUnicodeF::utf16be_to_sjis(mbp, &count);
-	string	ret(buf, count);
-	free(buf);
-	return	ret;
 }

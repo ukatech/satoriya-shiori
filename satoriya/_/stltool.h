@@ -21,13 +21,15 @@
 #include	<cstdlib>
 #include	<cstring>
 
-#if (defined(_MSC_VER) && (_MSC_VER >= 1200))
-#define stricmp _stricmp
-#define strnicmp _strnicmp
-#define strcasecmp _stricmp
-#elif defined(POSIX)
-#define stricmp strcasecmp
-#define strnicmp strncasecmp
+#include	<cwchar>
+#include	<cwctype>
+
+// ワイド文字版CRTのうちVC独自のものをPOSIXで補う
+#ifdef POSIX
+#define _wcsicmp wcscasecmp
+#define _wcsnicmp wcsncasecmp
+inline int _wtoi(const wchar_t* s) { return (int)wcstol(s,NULL,10); }
+inline long _wtol(const wchar_t* s) { return wcstol(s,NULL,10); }
 #endif
 
 #if defined(_MSC_VER) && _MSC_VER <= 1200
@@ -50,7 +52,8 @@ namespace std {
 #include	<deque>
 #include	<cassert>
 #include    <stdio.h>
-using std::string;
+#include	"charset.h"
+using std::wstring;
 
 #define const_strlen(s) ((sizeof(s) / sizeof(s[0]))-1)
 
@@ -73,13 +76,13 @@ public:
 	}
 }:*/
 
-typedef std::vector<string> strvec;
-typedef	std::map<string, string>	strmap;
-typedef	std::set<string>	stringset;
-typedef	std::list<string>	strlist;
-typedef	std::map<string, int>	strintmap;
+typedef std::vector<wstring> strvec;
+typedef	std::map<wstring, wstring>	strmap;
+typedef	std::set<wstring>	stringset;
+typedef	std::list<wstring>	strlist;
+typedef	std::map<wstring, int>	strintmap;
 typedef	unsigned char	byte;
-typedef	std::pair<string, string>	strpair;
+typedef	std::pair<wstring, wstring>	strpair;
 typedef std::vector<strpair> strpairvec;
 /*
 {
@@ -97,59 +100,57 @@ public:
 };
 */
 
-class inimap : public std::map<string, strmap>	{
+class inimap : public std::map<wstring, strmap>	{
 public:
-	bool	load(const string& iFileName);
-	bool	save(const string& iFileName) const;
-};
-class inivec : public std::vector< std::pair<string, strpairvec> > {
-public:
-	bool	load(const string& iFileName);
+	bool	load(const wstring& iFileName, CharactorSet cs=CS_NULL);
+	bool	save(const wstring& iFileName, CharactorSet cs=CS_UTF8) const;
 };
 
-// デリミタまで読み込み
-bool	getline(std::istream& i, string& o, int delimtier='\n');
-bool	getline(std::istream& i, int& o, int delimtier='\n');
+// ASCIIのみのバイト列をwstringにする（sprintf等の結果用）
+inline wstring	ascii_to_w(const char* p) { wstring r; while (*p) { r += static_cast<wchar_t>(static_cast<unsigned char>(*p++)); } return r; }
+// wstringの書式指定（ASCIIのみ）をバイト列にする
+inline std::string	w_to_ascii(const wchar_t* p) { std::string r; while (*p) { r += static_cast<char>(*p++); } return r; }
 
 // intとの相互変換
-inline long stoi_internal(const string& s) { return strtol(s.c_str(),NULL,10); }
-inline long stoi_internal(const char* s) { return strtol(s,NULL,10); }
-inline unsigned long stoui(const string& s) { return strtoul(s.c_str(),NULL,10); }
-inline unsigned long stoui(const char* s) { return strtoul(s,NULL,10); }
+inline long stoi_internal(const wstring& s) { return wcstol(s.c_str(),NULL,10); }
+inline long stoi_internal(const wchar_t* s) { return wcstol(s,NULL,10); }
+inline unsigned long stoui(const wstring& s) { return wcstoul(s.c_str(),NULL,10); }
+inline unsigned long stoui(const wchar_t* s) { return wcstoul(s,NULL,10); }
 
-inline string	itos(long i, const char* iFormat="%d") { char buf[32]; sprintf(buf,iFormat,i); return buf; }
-inline string	uitos(unsigned long i, const char* iFormat="%u") { char buf[32]; sprintf(buf,iFormat,i); return buf; }
+// 書式は数値1つを取るprintf書式（ASCIIのみ）
+inline wstring	itos(long i, const wchar_t* iFormat=L"%d") { char buf[64]; sprintf(buf,w_to_ascii(iFormat).c_str(),i); return ascii_to_w(buf); }
+inline wstring	uitos(unsigned long i, const wchar_t* iFormat=L"%u") { char buf[64]; sprintf(buf,w_to_ascii(iFormat).c_str(),i); return ascii_to_w(buf); }
 
-inline bool stobool(const char *s) { return ( stricmp(s,"true") == 0 || atoi(s) != 0 ); }
-inline bool stobool(const string &s) { return stobool(s.c_str()); }
+inline bool stobool(const wchar_t *s) { return ( _wcsicmp(s,L"true") == 0 || _wtoi(s) != 0 ); }
+inline bool stobool(const wstring &s) { return stobool(s.c_str()); }
 
 // それてなに。
-bool	aredigits(const char* p);
-inline bool	aredigits(const string& s) { return aredigits(s.c_str()); }
+bool	aredigits(const wchar_t* p);
+inline bool	aredigits(const wstring& s) { return aredigits(s.c_str()); }
 
-bool	arealphabets(const char* p);
-inline bool	arealphabets(const string& s) { return arealphabets(s.c_str()); }
+bool	arealphabets(const wchar_t* p);
+inline bool	arealphabets(const wstring& s) { return arealphabets(s.c_str()); }
 
-// target中の最初にfind文字列が出現する位置を返す。半角全角両対応
-const char*	strstr_hz(const char* target, const char* find);
-const char*	strstri_hz(const char* target, const char* find);
+// target中の最初にfind文字列が出現する位置を返す。（hz は旧SJIS版で全角半角対応だった名残）
+const wchar_t*	strstr_hz(const wchar_t* target, const wchar_t* find);
+const wchar_t*	strstri_hz(const wchar_t* target, const wchar_t* find);
 
 // 文字列置換
-bool	replace_first(string& str, const string& before, const string& after);
+bool	replace_first(wstring& str, const wstring& before, const wstring& after);
 
-int	replace(string& str, const char* before, const char* after);
-inline int	replace(string& str, const string& before, const string& after) {
+int	replace(wstring& str, const wchar_t* before, const wchar_t* after);
+inline int	replace(wstring& str, const wstring& before, const wstring& after) {
 	return replace(str,before.c_str(),after.c_str());
 }
-inline int	replace(string& str, const char* before, const string& after) {
+inline int	replace(wstring& str, const wchar_t* before, const wstring& after) {
 	return replace(str,before,after.c_str());
 }
-inline int	replace(string& str, const string& before, const char* after) {
+inline int	replace(wstring& str, const wstring& before, const wchar_t* after) {
 	return replace(str,before.c_str(),after);
 }
 
 template<class T>
-int	multi_replace(string& str, T* array1, T* array2, int array_size) {
+int	multi_replace(wstring& str, T* array1, T* array2, int array_size) {
 	int	count=0;
 	for (int i=0 ; i<array_size ; ++i)
 		count += replace(str, array1[i], array2[i]);
@@ -157,19 +158,19 @@ int	multi_replace(string& str, T* array1, T* array2, int array_size) {
 }
 
 // 文字列消去
-bool	erase_first(string& str, const string& before);
-int	erase_all(string& str, const string& before);
+bool	erase_first(wstring& str, const wstring& before);
+int	erase_all(wstring& str, const wstring& before);
 // 対象語句の数を数える
-int	count(const string& str, const string& target);
+int	count(const wstring& str, const wstring& target);
 // 対象語句の存在確認
-std::string::size_type find_hz(const char* str, const char* target, std::string::size_type find_pos = 0);
-inline std::string::size_type find_hz(const string& str, const string& target,std::string::size_type find_pos = 0) {
+std::wstring::size_type find_hz(const wchar_t* str, const wchar_t* target, std::wstring::size_type find_pos = 0);
+inline std::wstring::size_type find_hz(const wstring& str, const wstring& target,std::wstring::size_type find_pos = 0) {
 	return	find_hz(str.c_str(), target.c_str(), find_pos);
 }
-inline std::string::size_type find_hz(const char* str, const string& target,std::string::size_type find_pos = 0) {
+inline std::wstring::size_type find_hz(const wchar_t* str, const wstring& target,std::wstring::size_type find_pos = 0) {
 	return	find_hz(str, target.c_str(), find_pos);
 }
-inline std::string::size_type find_hz(const string& str, const char* target,std::string::size_type find_pos = 0)   {
+inline std::wstring::size_type find_hz(const wstring& str, const wchar_t* target,std::wstring::size_type find_pos = 0)   {
 	return	find_hz(str.c_str(), target, find_pos);
 }
 
@@ -180,44 +181,61 @@ T&	from_back(std::deque<T>& iDeque, int n) {
 	return	iDeque[iDeque.size()-1-n];
 }
 
-// ファイル←→string
-bool	string_from_file(string& o, const string& iFileName);
-bool	string_to_file(const string& i, const string& iFileName);
+// ファイルを開く。パスはワイド文字列（POSIXではUTF-8に変換して開く）
+FILE*	w_fopen(const wstring& iFileName, const wchar_t* iMode);
+
+// ファイル←→バイト列
+bool	bytes_from_file(std::string& o, const wstring& iFileName);
+bool	bytes_to_file(const std::string& i, const wstring& iFileName);
+// バイト列を行に分割する。改行は CRLF/LF 両対応で、改行文字は含まない。
+void	split_lines(const std::string& i, std::vector<std::string>& o);
+// 行群の文字コードを判定する（先頭行のBOM、全行が正しいUTF-8か）。BOMは取り除く。
+CharactorSet	detect_lines_charset(std::vector<std::string>& io);
+// 行群をwstringに変換する。cs==CS_NULLなら判定する。
+void	lines_to_strvec(std::vector<std::string>& i, strvec& o, CharactorSet cs);
+
 // ファイル←→strvec
-bool	strvec_from_file(strvec& o, const string& iFileName);
-bool	strvec_to_file(const strvec& i, const string& iFileName);
+// 読み込み時、cs==CS_NULLなら文字コードを判定する。
+bool	strvec_from_file(strvec& o, const wstring& iFileName, CharactorSet cs=CS_NULL);
+bool	strvec_to_file(const strvec& i, const wstring& iFileName, CharactorSet cs=CS_UTF8);
 // ファイル←→strmap
-bool	strmap_from_file(strmap& o, const string& iFileName, const string& dlmt=",", const string& front_comment_mark="#");
-bool	strmap_to_file(const strmap& i, const string& iFileName, const string& dlmt);
-// strvec utf8判定
-bool is_utf8_strvec(const strvec& in);
-void convert_utf8_to_sjis_strvec(strvec &in);
-// strmap utf8変換
-void convert_utf8_to_sjis_strmap(strmap &in);
+bool	strmap_from_file(strmap& o, const wstring& iFileName, const wstring& dlmt=L",", const wstring& front_comment_mark=L"#", CharactorSet cs=CS_NULL);
+bool	strmap_to_file(const strmap& i, const wstring& iFileName, const wstring& dlmt, CharactorSet cs=CS_UTF8);
 
+// テキストファイルの改行
+#ifdef POSIX
+static const char	FILE_NEWLINE[] = "\n";
+#else
+static const char	FILE_NEWLINE[] = "\r\n";
+#endif
 
-// 全角半角問わず一文字取得
-string	get_a_chr(const char*& p);
+// 一文字取得（サロゲートペアは1文字として扱う）
+wstring	get_a_chr(const wchar_t*& p);
+
+// 文字数（サロゲートペアは1文字として数える）
+size_t	count_chars(const wstring& str);
+// 文字単位の位置を wchar_t 単位の位置に変換する。文字数を超えたら str.size() を返す。
+size_t	char_pos_to_index(const wstring& str, size_t char_pos);
 
 // 文字単位に分割
 template<class T>
-int	split(const char* p, T& o) {
-	while ( *p != '\0' )
+int	split(const wchar_t* p, T& o) {
+	while ( *p != L'\0' )
 		o.push_back(get_a_chr(p));
 	return	o.size();
 }
 
 template<class T>
-inline int split(const string& i, T& o) {
+inline int split(const wstring& i, T& o) {
 	return split(i.c_str(),o);
 }
 
 // 分割(区切り文字列は1文字ずつ候補扱い) max_wordsは最大切り出し単語数。0なら制限しない。
 template<class T>
-int	split(const char* p, const char* dp, T& o, int max_words=0, bool split_one=false)
+int	split(const wchar_t* p, const wchar_t* dp, T& o, int max_words=0, bool split_one=false)
 {
-	std::set<string>	dlmt_set;
-	while ( *dp != '\0' )
+	std::set<wstring>	dlmt_set;
+	while ( *dp != L'\0' )
 		dlmt_set.insert(get_a_chr(dp));
 
 	if ( dlmt_set.empty() )
@@ -228,9 +246,9 @@ int	split(const char* p, const char* dp, T& o, int max_words=0, bool split_one=f
 		return	1;
 	}
 
-	string	word;
-	while ( *p != '\0' ) {
-		string	c = get_a_chr(p);
+	wstring	word;
+	while ( *p != L'\0' ) {
+		wstring	c = get_a_chr(p);
 		if ( dlmt_set.find(c) != dlmt_set.end() ) {
 			if ( word.size() > 0 || split_one ) {
 				o.push_back(word);
@@ -240,7 +258,7 @@ int	split(const char* p, const char* dp, T& o, int max_words=0, bool split_one=f
 					break;
 				}
 				else {
-					word="";
+					word=L"";
 				}
 			}
 		}
@@ -253,7 +271,7 @@ int	split(const char* p, const char* dp, T& o, int max_words=0, bool split_one=f
 	}
 
 	if ( o.size() == 0 ) { //ほんとになにもない場合の番兵
-		o.push_back("");
+		o.push_back(L"");
 		return 1;
 	}
 
@@ -261,18 +279,18 @@ int	split(const char* p, const char* dp, T& o, int max_words=0, bool split_one=f
 }
 
 template<class T>
-inline int split(const string& i, const string& dlmt, T& o, int max_words=0, bool split_one=false) { return split(i.c_str(),dlmt.c_str(),o,max_words,split_one); }
+inline int split(const wstring& i, const wstring& dlmt, T& o, int max_words=0, bool split_one=false) { return split(i.c_str(),dlmt.c_str(),o,max_words,split_one); }
 
 template<class T>
-inline int split(const char* p, const string& dlmt, T& o, int max_words=0, bool split_one=false) { return split(p,dlmt.c_str(),o,max_words,split_one); }
+inline int split(const wchar_t* p, const wstring& dlmt, T& o, int max_words=0, bool split_one=false) { return split(p,dlmt.c_str(),o,max_words,split_one); }
 
 template<class T>
-inline int split(const string& i, const char* dp, T& o, int max_words=0, bool split_one=false) { return split(i.c_str(),dp,o,max_words,split_one); }
+inline int split(const wstring& i, const wchar_t* dp, T& o, int max_words=0, bool split_one=false) { return split(i.c_str(),dp,o,max_words,split_one); }
 
 
 // 分割(単純分割) max_wordsは最大切り出し単語数。0なら制限しない。
 template<class T>
-int	split_string(const char* p, const char* dp, T& o, int max_words=0, bool split_one=false)
+int	split_string(const wchar_t* p, const wchar_t* dp, T& o, int max_words=0, bool split_one=false)
 {
 	if ( *dp == 0 ) {
 		return	split(p, o);
@@ -283,15 +301,15 @@ int	split_string(const char* p, const char* dp, T& o, int max_words=0, bool spli
 		return	1;
 	}
 
-	string	word;
-	const char *dpr = dp;
-	string  dpc = get_a_chr(dpr); //とりあえず1文字目をとっておく
-	size_t  dpl = strlen(dpr);
+	wstring	word;
+	const wchar_t *dpr = dp;
+	wstring  dpc = get_a_chr(dpr); //とりあえず1文字目をとっておく
+	size_t  dpl = wcslen(dpr);
 
-	while ( *p != '\0' ) {
-		string	c = get_a_chr(p);
+	while ( *p != L'\0' ) {
+		wstring	c = get_a_chr(p);
 
-		if ( c == dpc && strncmp(p,dpr,dpl) == 0 ) { //strncmpで2文字目以降を単純比較マッチ
+		if ( c == dpc && wcsncmp(p,dpr,dpl) == 0 ) { //strncmpで2文字目以降を単純比較マッチ
 			if ( word.size() > 0 || split_one ) {
 				o.push_back(word);
 
@@ -300,7 +318,7 @@ int	split_string(const char* p, const char* dp, T& o, int max_words=0, bool spli
 					break;
 				}
 				else {
-					word="";
+					word=L"";
 				}
 			}
 			p += dpl;
@@ -314,7 +332,7 @@ int	split_string(const char* p, const char* dp, T& o, int max_words=0, bool spli
 	}
 
 	if ( o.size() == 0 ) { //ほんとになにもない場合の番兵
-		o.push_back("");
+		o.push_back(L"");
 		return 1;
 	}
 
@@ -322,27 +340,27 @@ int	split_string(const char* p, const char* dp, T& o, int max_words=0, bool spli
 }
 
 template<class T>
-inline int split_string(const string& i, const string& dlmt, T& o, int max_words=0, bool split_one=false) { return split_string(i.c_str(),dlmt.c_str(),o,max_words,split_one); }
+inline int split_string(const wstring& i, const wstring& dlmt, T& o, int max_words=0, bool split_one=false) { return split_string(i.c_str(),dlmt.c_str(),o,max_words,split_one); }
 
 template<class T>
-inline int split_string(const char* p, const string& dlmt, T& o, int max_words=0, bool split_one=false) { return split_string(p,dlmt.c_str(),o,max_words,split_one); }
+inline int split_string(const wchar_t* p, const wstring& dlmt, T& o, int max_words=0, bool split_one=false) { return split_string(p,dlmt.c_str(),o,max_words,split_one); }
 
 template<class T>
-inline int split_string(const string& i, const char* dp, T& o, int max_words=0, bool split_one=false) { return split_string(i.c_str(),dp,o,max_words,split_one); }
+inline int split_string(const wstring& i, const wchar_t* dp, T& o, int max_words=0, bool split_one=false) { return split_string(i.c_str(),dp,o,max_words,split_one); }
 
 
-inline int	splitToSet(const string& iString, std::set<string>& oSet, int iDelimiter) {
+inline int	splitToSet(const wstring& iString, std::set<wstring>& oSet, int iDelimiter) {
 	oSet.clear();
-	const char* start=iString.c_str();
-	const char* p=start;
+	const wchar_t* start=iString.c_str();
+	const wchar_t* p=start;
 
-	for ( ; *p!='\0' ; ++p )
+	for ( ; *p!=L'\0' ; ++p )
 	{
 		if ( *p==iDelimiter )
 		{
 			if ( start<p )
 			{
-				oSet.insert( string(start, p-start) );
+				oSet.insert( wstring(start, p-start) );
 			}
 			start = p+1;
 		}
@@ -390,7 +408,7 @@ C	values(const std::map<K,V>& iMap) {
 
 // コンテナ要素を単一のstringに結合。dlmtを間に挟む。返値はstringの大きさ
 template<class T>
-int	combine(string& out, const T& in, const string& dlmt="", bool add_dlmt_on_final=false) {
+int	combine(wstring& out, const T& in, const wstring& dlmt=L"", bool add_dlmt_on_final=false) {
 	typename T::const_iterator i=in.begin();
 	if ( add_dlmt_on_final ) {
 		for (; i!=in.end() ;++i) {
@@ -409,8 +427,8 @@ int	combine(string& out, const T& in, const string& dlmt="", bool add_dlmt_on_fi
 	return	out.size();
 }
 template<class T>
-string	combine(const T& in, const string& dlmt="", bool add_dlmt_on_final=false) {
-	string	s;
+wstring	combine(const T& in, const wstring& dlmt=L"", bool add_dlmt_on_final=false) {
+	wstring	s;
 	combine(s, in, dlmt, add_dlmt_on_final);
 	return	s;
 }
@@ -418,64 +436,68 @@ string	combine(const T& in, const string& dlmt="", bool add_dlmt_on_final=false)
 
 
 // ファイルの存在を確認
-bool	is_exist_file(const string& iFileName);
+bool	is_exist_file(const wstring& iFileName);
+
+// strの先頭のheadと末尾のtailを取り除いた部分を返す。先頭・末尾が一致しているかは確認しない。
+inline wstring	strip_head_tail(const wstring& str, const wchar_t* head, const wchar_t* tail) {
+	const wstring::size_type h = wcslen(head), t = wcslen(tail);
+	if ( str.size() < h+t ) { return wstring(); }
+	return	str.substr(h, str.size()-h-t);
+}
 
 // strの先頭がheadであればtrue
-bool	compare_head_s(const char* str, const char* head);
+bool	compare_head_s(const wchar_t* str, const wchar_t* head);
 
-inline bool	compare_head(const string& str, const string& head) {
+inline bool	compare_head(const wstring& str, const wstring& head) {
 	return compare_head_s(str.c_str(),head.c_str());
 }
-inline bool	compare_head(const string& str, const char* head) {
+inline bool	compare_head(const wstring& str, const wchar_t* head) {
 	return compare_head_s(str.c_str(),head);
 }
-inline bool	compare_head(const char* str, const char* head) {
+inline bool	compare_head(const wchar_t* str, const wchar_t* head) {
 	return compare_head_s(str,head);
 }
 
-bool	compare_head_nocase_s(const char* str, const char* head);
+bool	compare_head_nocase_s(const wchar_t* str, const wchar_t* head);
 
-inline bool	compare_head_nocase(const string& str, const string& head) {
+inline bool	compare_head_nocase(const wstring& str, const wstring& head) {
 	return compare_head_nocase_s(str.c_str(),head.c_str());
 }
-inline bool	compare_head_nocase(const string& str, const char* head) {
+inline bool	compare_head_nocase(const wstring& str, const wchar_t* head) {
 	return compare_head_nocase_s(str.c_str(),head);
 }
-inline bool	compare_head_nocase(const char* str, const char* head) {
+inline bool	compare_head_nocase(const wchar_t* str, const wchar_t* head) {
 	return compare_head_nocase_s(str,head);
 }
 
 // strの末尾がtailであればtrue
-bool	compare_tail_s(const char* str, const char* tail);
+bool	compare_tail_s(const wchar_t* str, const wchar_t* tail);
 
-inline bool compare_tail(const string& str, const string& tail) {
+inline bool compare_tail(const wstring& str, const wstring& tail) {
 	return compare_tail_s(str.c_str(),tail.c_str());
 }	
-inline bool compare_tail(const string& str, const char* tail) {
+inline bool compare_tail(const wstring& str, const wchar_t* tail) {
 	return compare_tail_s(str.c_str(),tail);
 }	
-inline bool compare_tail(const char* str, const char* tail) {
+inline bool compare_tail(const wchar_t* str, const wchar_t* tail) {
 	return compare_tail_s(str,tail);
 }	
 
-bool	compare_tail_nocase_s(const char* str, const char* tail);
+bool	compare_tail_nocase_s(const wchar_t* str, const wchar_t* tail);
 	
-inline bool compare_tail_nocase(const string& str, const string& tail) {
+inline bool compare_tail_nocase(const wstring& str, const wstring& tail) {
 	return compare_tail_nocase_s(str.c_str(),tail.c_str());
 }	
-inline bool compare_tail_nocase(const string& str, const char* tail) {
+inline bool compare_tail_nocase(const wstring& str, const wchar_t* tail) {
 	return compare_tail_nocase_s(str.c_str(),tail);
 }	
-inline bool compare_tail_nocase(const char* str, const char* tail) {
+inline bool compare_tail_nocase(const wchar_t* str, const wchar_t* tail) {
 	return compare_tail_nocase_s(str,tail);
 }	
 
-// target中の最初にfind文字列が出現する位置を返す。半角全角両対応
-const char*	strstr_hz(const char* target, const char* find);
-
 // 特定の一文字が最後に出現する位置を返す
-const char*	find_final_char(const char* str, char c);
-inline char* find_final_char(char* str, char c) { return const_cast<char*>(find_final_char(static_cast<const char*>(str), c)); }
+const wchar_t*	find_final_char(const wchar_t* str, wchar_t c);
+inline wchar_t* find_final_char(wchar_t* str, wchar_t c) { return const_cast<wchar_t*>(find_final_char(static_cast<const wchar_t*>(str), c)); }
 /*#include	<mbctype.h>	// for _ismbblead,_ismbbtrail
 template<class T>
 T*	find_final_char(T* str, const T& c) {
@@ -486,14 +508,9 @@ T*	find_final_char(T* str, const T& c) {
 	return	last;
 }*/
 
-// 簡易暗号化
-string	encode(const string& s);
-string	decode(const string& s);
-
-// バイナリデータと16進数表現を相互変換
-string	binary_to_string(const byte* iArray, int iLength);
-void	string_to_binary(const string& iString, byte* oArray);
-								// oArray には iString.size()/2 バイトのメモリを確保してあること。
+// 簡易暗号化（バイト列の並べ替え）
+std::string	encode(const std::string& s);
+std::string	decode(const std::string& s);
 
 
 // コンテナ内を検索、存在有無をboolで返す
@@ -516,40 +533,32 @@ inline bool exists< set<T> >(const set<T>& iC, const E& iE) {
 }
 */
 
-// xor フィルタ
-void	xor_filter(byte* iArray, int iLength, byte _xor);
-
 // フルパスの分解
-string	get_file_name(const string& str);
-string	get_folder_name(const string& str);
-string	get_extention(const string& str);
+wstring	get_file_name(const wstring& str);
+wstring	get_folder_name(const wstring& str);
+wstring	get_extention(const wstring& str);
 // 拡張子を変更したものを返す
-string	set_extention(const string& str, const char* new_ext);
-inline string	set_extention(const string& str, const string& new_ext) { return set_extention(str, new_ext.c_str()); }
+wstring	set_extention(const wstring& str, const wchar_t* new_ext);
+inline wstring	set_extention(const wstring& str, const wstring& new_ext) { return set_extention(str, new_ext.c_str()); }
 // 拡張子を返す
-inline string	get_extension(const string& str) {
-	const char* p = find_final_char(str.c_str(), '.');
-	return p ? p+1 : "";
+inline wstring	get_extension(const wstring& str) {
+	const wchar_t* p = find_final_char(str.c_str(), L'.');
+	return p ? p+1 : L"";
 }
 // ファイル名部分を変更したものを返す
-string	set_filename(const string& str, const char* new_filename);
-inline string	set_filename(const string& str, const string& new_filename) { return set_filename(str, new_filename.c_str()); }
+wstring	set_filename(const wstring& str, const wchar_t* new_filename);
+inline wstring	set_filename(const wstring& str, const wstring& new_filename) { return set_filename(str, new_filename.c_str()); }
 
 // 出力
-std::ostream& operator<<(std::ostream& o, const strvec& i);
-std::ostream& operator<<(std::ostream& o, const strmap& i);
-std::ostream& operator<<(std::ostream& o, const strintmap& i);
-inline std::ostream& operator<<(std::ostream& o, const strpairvec& i) {
+std::wostream& operator<<(std::wostream& o, const strvec& i);
+std::wostream& operator<<(std::wostream& o, const strmap& i);
+std::wostream& operator<<(std::wostream& o, const strintmap& i);
+inline std::wostream& operator<<(std::wostream& o, const strpairvec& i) {
 	for ( strpairvec::const_iterator p=i.begin() ; p!=i.end() ; ++p )
-		o << p->first << ": " << p->second << std::endl;
+		o << p->first << L": " << p->second << std::endl;
 	return	o;
 }
 
-
-// 入力
-std::istream& operator>>(std::istream& i, strvec& o);
-std::istream& operator>>(std::istream& i, strmap& o);
-std::istream& operator>>(std::istream& i, strintmap& o);
 
 /*
 // なんか、あんまり使っていないもの。。
@@ -615,9 +624,6 @@ bool	write_text_file(
 }
 */
 
-// printf互換で文字列を生成し、string型で返す。
-extern string stringf(const char* iFormat, ...);
-
 // 任意の桁を四捨五入する。figure省略時は小数第一位を四捨五入。
 template<typename T>
 T	round(T num, const int figure=0) {
@@ -634,39 +640,39 @@ T	round(T num, const int figure=0) {
 	return	num;
 }
 
-string	int2zen(int i);
-string ul2zen(unsigned long i);
+wstring	int2zen(int i);
+wstring ul2zen(unsigned long i);
 
-int     zen2int(const char *str);
-inline int zen2int(const string &s)
+int     zen2int(const wchar_t *str);
+inline int zen2int(const wstring &s)
 {
 	return zen2int(s.c_str());
 }
 
-unsigned long zen2ul(const char *str);
-inline unsigned long zen2ul(const string &s)
+unsigned long zen2ul(const wchar_t *str);
+inline unsigned long zen2ul(const wstring &s)
 {
 	return zen2ul(s.c_str());
 }
 
-string  zen2han(const char *str);
-inline string zen2han(const string &s)
+wstring  zen2han(const wchar_t *str);
+inline wstring zen2han(const wstring &s)
 {
 	return zen2han(s.c_str()); 
 }
 
 // ディレクトリ区切り
 #ifdef POSIX
-  #define DIR_CHAR '/'
-  inline string unify_dir_char(const string& i_str) { string r=i_str; replace(r, "\\", "/"); return r; }
+  #define DIR_CHAR L'/'
+  inline wstring unify_dir_char(const wstring& i_str) { wstring r=i_str; replace(r, L"\\", L"/"); return r; }
 #else
-  #define DIR_CHAR '\\'
-  inline string unify_dir_char(const string& i_str) { string r=i_str; replace(r, "/", "\\"); return r; }
+  #define DIR_CHAR L'\\'
+  inline wstring unify_dir_char(const wstring& i_str) { wstring r=i_str; replace(r, L"/", L"\\"); return r; }
 #endif
 
 
 // DOS/WindowsやHTTPなどにおける行デリミタ
-static const string CRLF = "\x0d\x0a";
+static const wstring CRLF = L"\x0d\x0a";
 
 
 #endif	//	STLTOOL_H

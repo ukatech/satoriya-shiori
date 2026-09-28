@@ -2,11 +2,6 @@
 
 #include	<fstream>
 #include	<cassert>
-#ifdef POSIX
-#  include      "Utilities.h"
-#else
-#  include	<mbctype.h>
-#endif
 
 #include "random.h"
 
@@ -20,49 +15,49 @@
 #endif
 ////////////////////////////////////////
 
-void	diet_script(string& ioScript) {
+void	diet_script(wstring& ioScript) {
 	//replace(ioScript, "\\h", "\\0");
 	//replace(ioScript, "\\u", "\\1");
-	erase_all(ioScript, "\\_w[0]");
+	erase_all(ioScript, L"\\_w[0]");
 	int	count;
 	do {
 		count=0;
-		count += replace(ioScript, "\\1\\0", "\\0");
-		count += replace(ioScript, "\\0\\0", "\\0");
-		count += replace(ioScript, "\\0\\1", "\\1");
-		count += replace(ioScript, "\\1\\1", "\\1");
-		count += replace(ioScript, "\\n\\e", "\\e");
-		count += replace(ioScript, "\\n[half]\\e", "\\e");
-		count += replace(ioScript, "\\n\\-", "\\-");
-		count += replace(ioScript, "\\n[half]\\-", "\\-");
-		count += replace(ioScript, "\\e\\-", "\\-");
-		count += replace(ioScript, "\\e\\e", "\\e");
+		count += replace(ioScript, L"\\1\\0", L"\\0");
+		count += replace(ioScript, L"\\0\\0", L"\\0");
+		count += replace(ioScript, L"\\0\\1", L"\\1");
+		count += replace(ioScript, L"\\1\\1", L"\\1");
+		count += replace(ioScript, L"\\n\\e", L"\\e");
+		count += replace(ioScript, L"\\n[half]\\e", L"\\e");
+		count += replace(ioScript, L"\\n\\-", L"\\-");
+		count += replace(ioScript, L"\\n[half]\\-", L"\\-");
+		count += replace(ioScript, L"\\e\\-", L"\\-");
+		count += replace(ioScript, L"\\e\\e", L"\\e");
 	} while (count>0);
 
-	while ( compare_tail(ioScript, "\\n") )
+	while ( compare_tail(ioScript, L"\\n") )
 		ioScript.erase(ioScript.size()-2,2);
 		//ioScript.assign(ioScript.substr(0, ioScript.size()-2));
 }
 
-bool	Satori::FindEventTalk(string& ioevent) {
+bool	Satori::FindEventTalk(wstring& ioevent) {
 
 	static	strmap	replace_map;
 	static	bool	isinit=false;
 	if ( !isinit ) {
-		replace_map["OnBoot"]="起動";
-		replace_map["OnClose"]="終了";
-		replace_map["OnFirstBoot"]="初回";
-		replace_map["OnGhostChanged"]="他のゴーストから変更";
-		replace_map["OnGhostChanging"]="他のゴーストへ変更";
+		replace_map[L"OnBoot"]=L"起動";
+		replace_map[L"OnClose"]=L"終了";
+		replace_map[L"OnFirstBoot"]=L"初回";
+		replace_map[L"OnGhostChanged"]=L"他のゴーストから変更";
+		replace_map[L"OnGhostChanging"]=L"他のゴーストへ変更";
 		//replace_map["OnMouseDoubleClick"]="OnTalk";
-		replace_map["初回"]="OnBoot";
-		replace_map["他のゴーストから変更"]="OnBoot";
-		replace_map["他のゴーストへ変更"]="OnClose";
-		replace_map["OnVanishSelecting"]="消滅指示";
-		replace_map["OnVanishCancel"]="消滅撤回";
-		replace_map["OnVanishSelected"]="消滅決定";
-		replace_map["OnVanishButtonHold"]="消滅中断";
-		replace_map["OnTalk"]="";
+		replace_map[L"初回"]=L"OnBoot";
+		replace_map[L"他のゴーストから変更"]=L"OnBoot";
+		replace_map[L"他のゴーストへ変更"]=L"OnClose";
+		replace_map[L"OnVanishSelecting"]=L"消滅指示";
+		replace_map[L"OnVanishCancel"]=L"消滅撤回";
+		replace_map[L"OnVanishSelected"]=L"消滅決定";
+		replace_map[L"OnVanishButtonHold"]=L"消滅中断";
+		replace_map[L"OnTalk"]=L"";
 		//replace_map[""]="";
 		isinit = true;
 	}
@@ -72,7 +67,7 @@ bool	Satori::FindEventTalk(string& ioevent) {
 			return	true;	// イベントが存在、それに決定
 		if ( replace_map.find(ioevent) == replace_map.end() )
 			return	false;	// 置き換え対象がもう無い
-		GetSender().sender() << "event replaced " << ioevent <<  " → " <<  replace_map[ioevent] << std::endl;
+		GetSender().sender() << L"event replaced " << ioevent <<  L" → " <<  replace_map[ioevent] << std::endl;
 		ioevent = replace_map[ioevent];
 	}
 }
@@ -80,16 +75,16 @@ bool	Satori::FindEventTalk(string& ioevent) {
 
 
 
-string	Satori::GetSentence(const string& name)
+wstring	Satori::GetSentence(const wstring& name)
 {
-	string script, sentence=name;
+	wstring script, sentence=name;
 
 	// トークをさくらスクリプトに変換
 	const Talk *pTalk = GetSentenceInternal(sentence);
 	if ( pTalk ) {
 		Sender::nest_object smo(2); 
 		script = SentenceToSakuraScriptExec(*pTalk);
-		GetSender().sender() << "return: " << script << "" << std::endl;
+		GetSender().sender() << L"return: " << script << L"" << std::endl;
 	}
 	return	script;
 }
@@ -99,7 +94,7 @@ string	Satori::GetSentence(const string& name)
 // 自動挿入ウェイト
 // 2=一般 1=里々 0=無効
 #define	character_wait_clear(wait_quantity)	\
-	if ( mRequestID == "OnHeadlinesense.OnFind" || mRequestID == "OnTranslate" ) { chars_spoken = 0;	} \
+	if ( mRequestID == L"OnHeadlinesense.OnFind" || mRequestID == L"OnTranslate" ) { chars_spoken = 0;	} \
 	else if( chars_spoken > 0 ) { \
 		if ( ! is_quick_section ) { \
 			if ( type_of_auto_insert_wait >= 2 ) { \
@@ -115,21 +110,21 @@ string	Satori::GetSentence(const string& name)
 // 実際の挿入処理
 #define character_wait_exec \
 	if ( next_wait_value ) { \
-		result += "\\_w[" + itos(next_wait_value) + "]"; \
+		result += L"\\_w[" + itos(next_wait_value) + L"]"; \
 		next_wait_value = 0; \
 	}
 
 
-string Satori::SentenceToSakuraScriptExec(const Talk& vec)
+wstring Satori::SentenceToSakuraScriptExec(const Talk& vec)
 {
-	string jump_to;
-	string result;
+	wstring jump_to;
+	wstring result;
 	std::ptrdiff_t ip = 0;
 	const Talk* pVec = &vec;
-	bool comAndMode = mRequestID!="OnCommunicate";
+	bool comAndMode = mRequestID!=L"OnCommunicate";
 
 	//実行環境初期化
-	string allresult = "\\1";
+	wstring allresult = L"\\1";
 
 	//question_num = 0;	// 選択肢番号
 	chars_spoken = 0;	// 喋った字数
@@ -145,13 +140,13 @@ string Satori::SentenceToSakuraScriptExec(const Talk& vec)
 
 	while ( TRUE ) {
 		if ( speaker != 1 && ! jump_inited ) {
-			allresult += "\\1";
+			allresult += L"\\1";
 			speaker = 1;	// 本体は 0 うにゅうは 1
 			jump_inited = true;
 		}
 
-		result = "";
-		jump_to = "";
+		result = L"";
+		jump_to = L"";
 
 		kakko_replace_history.top().clear();
 		int resp = SentenceToSakuraScriptInternal(*pVec,result,jump_to,ip);
@@ -165,12 +160,12 @@ string Satori::SentenceToSakuraScriptExec(const Talk& vec)
 
 		//それ以外はどこかにジャンプを示す
 		if ( resp == 1 ) {
-			string jump = jump_to;
+			wstring jump = jump_to;
 			m_escaper.unescape(jump);
 
 			const Talk* pTR = GetSentenceInternal(jump);
 			if ( ! pTR ) {
-				GetSender().sender() << "＞" << jump_to << " not found." << std::endl;
+				GetSender().sender() << L"＞" << jump_to << L" not found." << std::endl;
 			}
 			else {
 				pVec = pTR;
@@ -179,7 +174,7 @@ string Satori::SentenceToSakuraScriptExec(const Talk& vec)
 			}
 		}
 		else if ( resp == 2 || resp == 3 ) {
-			string jump = jump_to;
+			wstring jump = jump_to;
 			m_escaper.unescape(jump);
 
 			FamilyComSearchType search_type = type_of_communicate_search;
@@ -193,11 +188,11 @@ string Satori::SentenceToSakuraScriptExec(const Talk& vec)
 			if ( ! pTR ) {
 				if (resp == 3)
 				{
-					GetSender().sender() << "≧" << jump_to << " not found." << std::endl;
+					GetSender().sender() << L"≧" << jump_to << L" not found." << std::endl;
 				}
 				else
 				{
-					GetSender().sender() << "≫" << jump_to << " not found." << std::endl;
+					GetSender().sender() << L"≫" << jump_to << L" not found." << std::endl;
 				}
 			}
 			else {
@@ -209,7 +204,7 @@ string Satori::SentenceToSakuraScriptExec(const Talk& vec)
 		++jumpcount;
 
 		if ( m_jump_limit > 0 && jumpcount >= m_jump_limit ) {
-			GetSender().sender() << "ジャンプ回数超過" << std::endl;
+			GetSender().sender() << L"ジャンプ回数超過" << std::endl;
 			break;
 		}
 	}
@@ -220,7 +215,7 @@ string Satori::SentenceToSakuraScriptExec(const Talk& vec)
 	return allresult;
 }
 
-int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,string &jump_to, std::ptrdiff_t &ip)
+int Satori::SentenceToSakuraScriptInternal(const strvec &vec,wstring &result,wstring &jump_to, std::ptrdiff_t &ip)
 {
 	// 再帰管理
 	static	int nest_count=0;
@@ -228,7 +223,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 	//DBG(GetSender().sender() << "enter SentenceToSakuraScriptInternal, nest-count: " << nest_count << ", vector_size: " << vec.size() << std::endl);
 
 	if ( m_nest_limit > 0 && nest_count > m_nest_limit ) {
-		GetSender().sender() << "呼び出し回数超過" << std::endl;
+		GetSender().sender() << L"呼び出し回数超過" << std::endl;
 		--nest_count;
 		return 0;
 	}
@@ -238,24 +233,24 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 	strvec::const_iterator it = vec.begin();
 	std::advance(it,ip);
 
-	string line;
-	string kakko_result;
+	wstring line;
+	wstring kakko_result;
 
 	for ( ; it != vec.end() ; ++it) {
 		line = *it;
-		const char*	p = line.c_str();
+		const wchar_t*	p = line.c_str();
 		//DBG(GetSender().sender() << nest_count << " '" << p << "'" << std::endl);
 
-		if ( it==vec.begin() && strncmp(p, "→", 2)==0 ) {
-			p+=2;
+		if ( it==vec.begin() && *p==L'→' ) {
+			p+=1;
 			//updateGhostsInfo();	// ゴースト情報を更新 -> いらない
 
 			if ( otherghostname.size()>=1 ) {	// そもそも自分以外にゴーストはいるのか 自分自身はotherghostnameには含まない
-				string	temp = p;
-				std::set<string>::iterator i = otherghostname.begin();
+				wstring	temp = p;
+				std::set<wstring>::iterator i = otherghostname.begin();
 				for ( ; i != otherghostname.end() ; ++i ) { 
-					string	name = *i;
-					GetSender().sender() << "ghost: " << name <<std::endl;
+					wstring	name = *i;
+					GetSender().sender() << L"ghost: " << name <<std::endl;
 					if ( compare_head(temp, name) ) {// 相手を特定
 						mCommunicateFor = name;
 						p += mCommunicateFor.size();
@@ -276,32 +271,32 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 		}
 
 		// 選択肢	\q?[id,string]
-		if ( strncmp(p, "＿", 2)==0 ) {
-			size_t len = strlen(p);
-			if ( len <= 2 ) {
-				GetSender().sender() << "選択肢記法の後に文字列が存在しないので、無視して続行します。" << std::endl;
+		if ( *p==L'＿' ) {
+			size_t len = wcslen(p);
+			if ( len <= 1 ) {
+				GetSender().sender() << L"選択肢記法の後に文字列が存在しないので、無視して続行します。" << std::endl;
 				continue;
 			}
 			if ( len>1023 ) {
-				GetSender().sender() << "選択肢記法が長すぎるので、無視して続行します。" << std::endl;
+				GetSender().sender() << L"選択肢記法が長すぎるので、無視して続行します。" << std::endl;
 				continue;
 			}
-			char	buf[1024];
-			strncpy(buf, p+2, sizeof(buf) / sizeof(buf[0]));
+			wchar_t	buf[1024];
+			wcsncpy(buf, p+1, sizeof(buf) / sizeof(buf[0]));
 
-			char*	choiced = buf;
-			char*	id = (char*)strstr_hz(buf, "\t"); // 選択肢ラベルとジャンプ先の区切り
+			wchar_t*	choiced = buf;
+			wchar_t*	id = (wchar_t*)strstr_hz(buf, L"\t"); // 選択肢ラベルとジャンプ先の区切り
 
 			result += append_at_choice_start;
 			if ( id == NULL ) {
-				string	str=UnKakko(choiced);
+				wstring	str=UnKakko(choiced);
 				//result += string("\\q")+itos(question_num++)+"["+str+"]["+str+"]";
-				result += "\\q["+str+","+str+"]";
+				result += L"\\q["+str+L","+str+L"]";
 			} else {
-				*id++='\0';
-				while ( *id=='\t' ) ++id; // 選択肢ラベルとジャンプ先の区切り
+				*id++=L'\0';
+				while ( *id==L'\t' ) ++id; // 選択肢ラベルとジャンプ先の区切り
 				//result += string("\\q")+itos(question_num++)+"["+UnKakko(id)+"]["+UnKakko(choiced)+"]";
-				result += "\\q["+UnKakko(choiced)+","+UnKakko(id)+"]";
+				result += L"\\q["+UnKakko(choiced)+L","+UnKakko(id)+L"]";
 			}
 			result += append_at_choice_end;
 
@@ -309,18 +304,18 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 		}
 
 		// ジャンプ
-		if ( strncmp(p, "＞", 2)==0 || strncmp(p, "≫", 2)==0 || strncmp(p, "≧", 2) == 0 ) {
+		if ( *p==L'＞' || *p==L'≫' || *p==L'≧' ) {
 			strvec	words;
-			split(p+2, "\t", words, 2); // ジャンプ先とジャンプ条件の区切り
+			split(p+1, L"\t", words, 2); // ジャンプ先とジャンプ条件の区切り
 
 			if ( words.size()>=2 ) {
-				string	r;
+				wstring	r;
 				if ( !calculate(words[1], r) ) {
-					GetSender().sender() << "計算式が異常なので、無視して続行します。" << std::endl;
+					GetSender().sender() << L"計算式が異常なので、無視して続行します。" << std::endl;
 					continue;
 				}
 				if ( zen2int(r) == 0 ) {
-					GetSender().sender() << "計算結果が０だったため、続行します。" << std::endl;
+					GetSender().sender() << L"計算結果が０だったため、続行します。" << std::endl;
 					continue;
 				}
 			}
@@ -332,12 +327,12 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 				jump_to.erase();
 			}
 
-			if ( strncmp(p, "≫", 2)==0 ) {
+			if ( *p==L'≫' ) {
 				ip = std::distance(vec.begin(),it) + 1;
 				--nest_count;
 				return 2;
 			}
-			else if (strncmp(p, "≧", 2) == 0){
+			else if (*p==L'≧'){
 				ip = std::distance(vec.begin(), it) + 1;
 				--nest_count;
 				return 3;
@@ -350,31 +345,31 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 		}
 
 		// 変数を設定
-		if ( strncmp(p, "＄", 2)==0 ) {
-			const char* v;
-			string	value;
+		if ( *p==L'＄' ) {
+			const wchar_t* v;
+			wstring	value;
 			bool	do_calc=false;
-			p+=2;
+			p+=1;
 
-			if ( (v=strstr_hz(p, "\t"))!=NULL ) { // 変数名と変数に設定する内容の区切り
+			if ( (v=strstr_hz(p, L"\t"))!=NULL ) { // 変数名と変数に設定する内容の区切り
 				value = UnKakko(v+1,false,true);
 			}
-			else if ( (v=strstr_hz(p, "＝"))!=NULL || (v=strstr_hz(p, "="))!=NULL ) {
-				value = UnKakko(v+((*v=='=') ? 1 : 2),false,true);
+			else if ( (v=strstr_hz(p, L"＝"))!=NULL || (v=strstr_hz(p, L"="))!=NULL ) {
+				value = UnKakko(v+1,false,true);
 				do_calc=true;
 			}
 			else {
 				//v = p+strlen(p);
 				//value="";
-				result += "\\n※　＄による変数代入文には、タブによる区切りか、＝による計算式が必要です　※\\n\\n[half]'" + value +"'";
+				result += L"\\n※　＄による変数代入文には、タブによる区切りか、＝による計算式が必要です　※\\n\\n[half]'" + value +L"'";
 				break;
 			}
 
-			string	key(p, v-p);
+			wstring	key(p, v-p);
 			key = UnKakko(key.c_str(),false,true);
 
-			if ( key=="" ) {
-				result += "＄"; // ＄そのまま表示
+			if ( key==L"" ) {
+				result += L"＄"; // ＄そのまま表示
 				speaked_speaker.insert(speaker);
 			}
 			else {
@@ -389,24 +384,24 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 
 		// 括弧置換後の文字列に余分な処理（スコープ切り替え）を行わないようにするための細工
 		// このポインタより後ろは処理可
-		const char *p_do_not_process_end = p;
+		const wchar_t *p_do_not_process_end = p;
 
-		while ( p[0] != '\0' ) {
+		while ( p[0] != L'\0' ) {
 			bool do_process = (p >= p_do_not_process_end);
 
-			string	c=get_a_chr(p);	// 全角半角問わず一文字取得し、pを一文字すすめる
+			wstring	c=get_a_chr(p);	// 全角半角問わず一文字取得し、pを一文字すすめる
 
-			if ( do_process && (c=="（") ) {	// 何かを取得・挿入
+			if ( do_process && (c==L"（") ) {	// 何かを取得・挿入
 				character_wait_exec;
-				const char *pe = p;
+				const wchar_t *pe = p;
 				kakko_result = KakkoSection(pe);
 
 				//括弧分を引く
-				p -= 2;
+				p -= c.size();
 
 				//括弧位置を確認して置き換え
-				string::size_type index = p - line.c_str();
-				string::size_type size  = pe - p;
+				wstring::size_type index = p - line.c_str();
+				wstring::size_type size  = pe - p;
 
 				line.replace(index,size,kakko_result);
 
@@ -414,40 +409,40 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 				p = line.c_str() + index;
 				p_do_not_process_end = p + kakko_result.size();
 			}
-			else if ( c=="\xff" ) {	//内部特殊表現 (カッコ遅延評価もあるのでdo_process判定はスキップ)
+			else if ( c==INTERNAL_MARK_STR ) {	//内部特殊表現 (カッコ遅延評価もあるのでdo_process判定はスキップ)
 				c = get_a_chr(p);
 
-				if ( c == "\x01" || c == "\x02" ) {
-					string cmd = c;
+				if ( c == L"\x01" || c == L"\x02" ) {
+					wstring cmd = c;
 
-					string param;
+					wstring param;
 
 					while (true) {
 						c=get_a_chr(p);
-						if ( c=="\xff" ) { break; }
+						if ( c==INTERNAL_MARK_STR ) { break; }
 						param += c;
 					}
 
-					if ( cmd == "\x01" ) { //スコープ切り替え
+					if ( cmd == L"\x01" ) { //スコープ切り替え
 						int speaker_tmp = stoi_internal(param.c_str());
 						if ( is_speaked(speaker) && speaker != speaker_tmp ) {
 							result += append_at_scope_change;
-							chars_spoken += 2;
+							chars_spoken += 1;
 						}
 						speaker = speaker_tmp;
 						character_wait_clear(2);
 						character_wait_exec;	// スコープ切り替えタグの前にウエイトを吐き出す
 						if ( speaker == 0 ) {
-							result += "\\0";
+							result += L"\\0";
 						}
 						else if ( speaker == 1 ) {
-							result += "\\1";
+							result += L"\\1";
 						}
 						else {
-							result += "\\p[" + itos(speaker_tmp) + "]";
+							result += L"\\p[" + itos(speaker_tmp) + L"]";
 						}
 					}
-					else if ( cmd == "\x02" ) { //サーフェス加算のための遅延評価
+					else if ( cmd == L"\x02" ) { //サーフェス加算のための遅延評価
 						int s = stoi_internal(param.c_str());
 						if ( s != -1 ) { // -1は「消し」なので特別扱い
 							s += surface_add_value[speaker];
@@ -465,49 +460,49 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 							}
 						}
 
-						result += "\\s[" + itos(s) + "]";
+						result += L"\\s[" + itos(s) + L"]";
 					}
 				}
 
 			}
-			else if ( do_process && (c=="：") ) {	// スコープ切り替え - ここは二人を想定。
+			else if ( do_process && (c==L"：") ) {	// スコープ切り替え - ここは二人を想定。
 				if ( is_speaked(speaker) ) {
 					result += append_at_scope_change;
-					chars_spoken += 2;
+					chars_spoken += 1;
 				}
 				speaker = (speaker==0) ? 1 : 0;
 				character_wait_clear(2);
 				character_wait_exec;	// スコープ切り替えタグの前にウエイトを吐き出す
-				result += (speaker ? "\\1" : "\\0");
+				result += (speaker ? L"\\1" : L"\\0");
 			}
-			else if ( c=="\\" ) {	// さくらスクリプトの解釈、というか解釈のスキップ。
+			else if ( c==L"\\" ) {	// さくらスクリプトの解釈、というか解釈のスキップ。
 
-				if ( *p=='\\' ) {	// エスケープ
+				if ( *p==L'\\' ) {	// エスケープ
 					result += c + *p++;
 					continue;
 				}
 
-				const char*	start=p;
-				string	cmd="",opt="";
+				const wchar_t*	start=p;
+				wstring	cmd=L"",opt=L"";
 
 				//複数個のアンダースコアと、1個の文字
-				while (!_ismbblead(*p) && *p=='_') {
+				while (*p==L'_') {
 					++p;
 				}
-				if (!_ismbblead(*p) && (isalpha(*p)||isdigit(*p)||*p=='!'||*p=='-'||*p=='*'||*p=='&'||*p=='?'||*p=='+')) {
-					char c = *p;
+				if (*p < 0x80 && (iswalpha(*p)||iswdigit(*p)||*p==L'!'||*p==L'-'||*p==L'*'||*p==L'&'||*p==L'?'||*p==L'+')) {
+					wchar_t c = *p;
 					++p;
-					if (!_ismbblead(*p) && (c == 'w' || c == 's' || c == 'p')) {
-						if ( isdigit(*p) ) {
+					if (c == L'w' || c == L's' || c == L'p') {
+						if ( iswdigit(*p) ) {
 							++p;
 						}
 					}
 				}
 				cmd.assign(start, p-start);
 				
-				if ( cmd == "_?" || cmd == "_!" ) { //エスケープ処理 この間に自動タグ挿入はしない
-					const char* e1 = strstr(p,"\\_?");
-					if ( ! e1 ) { e1 = strstr(p,"\\_!"); }
+				if ( cmd == L"_?" || cmd == L"_!" ) { //エスケープ処理 この間に自動タグ挿入はしない
+					const wchar_t* e1 = wcsstr(p,L"\\_?");
+					if ( ! e1 ) { e1 = wcsstr(p,L"\\_!"); }
 
 					if ( e1 ) {
 						character_wait_exec;
@@ -524,28 +519,29 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 					}
 				}
 
-				if (*p=='[') {
-					const char* opt_start = ++p;
-					while (*p!=']') {
-						if (p[0]=='\\' && p[1]==']')	// エスケープされた]
+				if (*p==L'[') {
+					const wchar_t* opt_start = ++p;
+					while (*p && *p!=L']') {
+						if (p[0]==L'\\' && p[1]==L']')	// エスケープされた]
 							++p;
-						p += _ismbblead(*p) ? 2 : 1;
+						++p;
 					}
-					opt.assign(opt_start, p++ -opt_start);
+					opt.assign(opt_start, p-opt_start);
+					if ( *p ) { ++p; }
 					opt=UnKakko(opt.c_str());
 				}
 
-				if ( cmd=="n" ) {
+				if ( cmd==L"n" ) {
 					// 改行
 					character_wait_clear(2);
 				}
-				else if ( (cmd=="0" || cmd=="h") || (cmd=="1" || cmd=="u") || (cmd=="p" && aredigits(opt)) ) {
+				else if ( (cmd==L"0" || cmd==L"h") || (cmd==L"1" || cmd==L"u") || (cmd==L"p" && aredigits(opt)) ) {
 					int spktmp;
 
-					if (cmd=="0" || cmd=="h") {
+					if (cmd==L"0" || cmd==L"h") {
 						spktmp = 0;
 					}
-					else if (cmd=="1" || cmd=="u") {
+					else if (cmd==L"1" || cmd==L"u") {
 						spktmp = 1;
 					}
 					else {
@@ -556,14 +552,14 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 						// スコープ切り替え
 						if ( is_speaked(speaker) ) {
 							result += append_at_scope_change_with_sakura_script;
-							chars_spoken += 2;
+							chars_spoken += 1;
 						}
 						speaker = spktmp;
 						character_wait_clear(2);
 						character_wait_exec;	// スコープ切り替えタグの前にウエイトを吐き出す
 					}
 				}
-				else if ( cmd=="s" ) { //ここをいじったら0xff0x02 (内部特殊表現) も更新すること
+				else if ( cmd==L"s" ) { //ここをいじったらINTERNAL_MARK 0x02 (内部特殊表現) も更新すること
 
 					//サーフィス切り替えの前にウェイトは済ませておくこと
 					character_wait_exec;
@@ -575,16 +571,16 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 						}
 					}
 				}
-				else if ( cmd=="_q" ) {
+				else if ( cmd==L"_q" ) {
 					if ( ! is_quick_section ) { //これからクイックセクションなのでウエイトを全部消化
 						character_wait_exec;
 					}
 					is_quick_section = ! is_quick_section;
 				}
 
-				if ( opt!="" ) {
+				if ( opt!=L"" ) {
 					//GetSender().sender() << "ss_cmd: " << c << "," << cmd << "," << opt << std::endl;
-					result += c + cmd + "[" + opt + "]";
+					result += c + cmd + L"[" + opt + L"]";
 				} else {
 					//GetSender().sender() << "ss_cmd: " << c << "," << cmd << std::endl;
 					result += c + cmd;
@@ -593,46 +589,47 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 
 				//result += string(start, p-start);
 			}
-			else if ( c=="%" ) {	// さくらスクリプトの解釈、というか解釈のスキップ。
+			else if ( c==L"%" ) {	// さくらスクリプトの解釈、というか解釈のスキップ。
 
-				if ( *p=='%' || *p=='*' ) {	// エスケープされた%か、%*
+				if ( *p==L'%' || *p==L'*' ) {	// エスケープされた%か、%*
 					result += c + *p++;
 					continue;
 				}
 
-				string cmd="";
+				wstring cmd=L"";
 
-				static const char* tag_pattern[] = {
-					"month","day","hour","minute","second","username","selfname","selfname2","keroname","screenwidth","screenheight",
-					"exh","et","wronghour","ms","mz","mc","mh","mt","me","mp","m?","dms","lastghostname","lastobjectname","property"
+				static const wchar_t* tag_pattern[] = {
+					L"month",L"day",L"hour",L"minute",L"second",L"username",L"selfname",L"selfname2",L"keroname",L"screenwidth",L"screenheight",
+					L"exh",L"et",L"wronghour",L"ms",L"mz",L"mc",L"mh",L"mt",L"me",L"mp",L"m?",L"dms",L"lastghostname",L"lastobjectname",L"property"
 				};
 				static unsigned int tag_pattern_count = sizeof(tag_pattern)/sizeof(tag_pattern[0]);
 
 				for ( unsigned int tg = 0 ; tg < tag_pattern_count ; ++tg ) {
-					int len = strlen(tag_pattern[tg]);
+					int len = wcslen(tag_pattern[tg]);
 
-					if ( strncmp(p,tag_pattern[tg],len) == 0 ) {
+					if ( wcsncmp(p,tag_pattern[tg],len) == 0 ) {
 						cmd = tag_pattern[tg];
 						p += len;
 					}
 				}
 
-				string opt="";
+				wstring opt=L"";
 
-				if ( (cmd=="property") && (*p=='[') ) {
-					const char* opt_start = ++p;
-					while (*p!=']') {
-						if (p[0]=='\\' && p[1]==']')	// エスケープされた]
+				if ( (cmd==L"property") && (*p==L'[') ) {
+					const wchar_t* opt_start = ++p;
+					while (*p && *p!=L']') {
+						if (p[0]==L'\\' && p[1]==L']')	// エスケープされた]
 							++p;
-						p += _ismbblead(*p) ? 2 : 1;
+						++p;
 					}
-					opt.assign(opt_start, p++ -opt_start);
+					opt.assign(opt_start, p-opt_start);
+					if ( *p ) { ++p; }
 					opt=UnKakko(opt.c_str());
 				}
 
-				if ( opt!="" ) {
+				if ( opt!=L"" ) {
 					//GetSender().sender() << "ss_cmd: " << c << "," << cmd << "," << opt << std::endl;
-					result += c + cmd + "[" + opt + "]";
+					result += c + cmd + L"[" + opt + L"]";
 				} else {
 					//GetSender().sender() << "ss_cmd: " << c << "," << cmd << std::endl;
 					result += c + cmd;
@@ -645,9 +642,9 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 
 				speaked_speaker.insert(speaker);
 				result += c;
-				chars_spoken += c.size();
-				if ( c=="。" || c=="、" ) {
-					character_wait_clear(c=="、"?1:2);
+				chars_spoken += 1;
+				if ( c==L"。" || c==L"、" ) {
+					character_wait_clear(c==L"、"?1:2);
 				}
 			}
 
@@ -655,7 +652,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 		character_wait_clear(2);
 
 		if ( auto_newline_enable_onetime ) { //onetimeのほうのチェックだけで良い
-			result += "\\n";
+			result += L"\\n";
 		}
 	}
 
@@ -664,23 +661,23 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,string &result,stri
 	return 0;
 }
 
-bool Satori::SubstVariable(const string &key,string &value,string &result,bool do_calc)
+bool Satori::SubstVariable(const wstring &key,wstring &value,wstring &result,bool do_calc)
 {
 	if ( aredigits(zen2han(key)) ) {
-		GetSender().sender() << "＄" << key << "　数字のみの変数名は扱えません." << std::endl;
+		GetSender().sender() << L"＄" << key << L"　数字のみの変数名は扱えません." << std::endl;
 		erase_var(key);	// 存在抹消
 	}
-	else if ( value=="" ) {
-		GetSender().sender() << "＄" << key << "／cleared." << std::endl;
+	else if ( value==L"" ) {
+		GetSender().sender() << L"＄" << key << L"／cleared." << std::endl;
 		erase_var(key);	// 存在抹消
-		system_variable_operation(key, "", &result);//存在抹消したものがシステム変数かも！
+		system_variable_operation(key, L"", &result);//存在抹消したものがシステム変数かも！
 	}
 	else {
 		if ( words.is_exist(key) ) {
-			GetSender().sender() << "変数「" << key << "」と同じ名前の単語群があります。トラブルの元なので避けましょう。" << std::endl;
+			GetSender().sender() << L"変数「" << key << L"」と同じ名前の単語群があります。トラブルの元なので避けましょう。" << std::endl;
 		}
 		if ( talks.is_exist(key) ) {
-			GetSender().sender() << "変数「" << key << "」と同じ名前の文があります。トラブルの元なので避けましょう。" << std::endl;
+			GetSender().sender() << L"変数「" << key << L"」と同じ名前の文があります。トラブルの元なので避けましょう。" << std::endl;
 		}
 
 		if ( system_variable_operation(key, value, &result) >= 0 ) {
@@ -688,7 +685,7 @@ bool Satori::SubstVariable(const string &key,string &value,string &result,bool d
 			bool isSysValue;
 
 			// "0"は代入先を先に参照する時、エラーを返さないように。
-			string *pstr = GetValue(key,isSysValue,true,&isOverwritten,"0");
+			wstring *pstr = GetValue(key,isSysValue,true,&isOverwritten,L"0");
 
 			if ( do_calc ) {
 				if ( !calculate(value, value) ) {
@@ -699,8 +696,8 @@ bool Satori::SubstVariable(const string &key,string &value,string &result,bool d
 				}
 			}
 
-			GetSender().sender() << "＄" << key << "＝" << value << "／" << 
-				(isOverwritten ? "written." : "overwritten.")<< std::endl;
+			GetSender().sender() << L"＄" << key << L"＝" << value << L"／" << 
+				(isOverwritten ? L"written." : L"overwritten.")<< std::endl;
 
 			if ( pstr ) { *pstr = value; }
 		}
@@ -714,7 +711,7 @@ bool Satori::SubstVariable(const string &key,string &value,string &result,bool d
 // 指定された名前に該当する候補からランダムで一つ選び、
 // さくらスクリプトに展開して返す。
 // 再帰をカウントしてるので不用意なreturnは厳禁。
-const Talk* Satori::GetSentenceInternal(string& ioSentenceName)
+const Talk* Satori::GetSentenceInternal(wstring& ioSentenceName)
 {
 	// 再帰管理
 	static	int nest_count=0;
@@ -724,14 +721,14 @@ const Talk* Satori::GetSentenceInternal(string& ioSentenceName)
 	static	bool	reserved_talk_processed;
 	if ( nest_count==1 )
 		reserved_talk_processed=false;
-	if ( !reserved_talk_processed && (ioSentenceName=="" || ioSentenceName=="OnTalk") )
+	if ( !reserved_talk_processed && (ioSentenceName==L"" || ioSentenceName==L"OnTalk") )
 	{
 		reserved_talk_processed = true;
 
-		string	reserved_talk_name;	// 今回話すべきトークがあれば、その名前になる
+		wstring	reserved_talk_name;	// 今回話すべきトークがあれば、その名前になる
 		if ( !reserved_talk.empty() ) {
 			// 予約トークの添字を1ずつデクリメント
-			std::map<int, string>::iterator	it = reserved_talk.begin();
+			std::map<int, wstring>::iterator	it = reserved_talk.begin();
 			while ( it!=reserved_talk.end() )
 			{
 				reserved_talk[it->first-1] = it->second;
@@ -746,19 +743,19 @@ const Talk* Satori::GetSentenceInternal(string& ioSentenceName)
 			}
 		}
 
-		if ( ioSentenceName=="OnTalk" && talks.is_exist("OnTalk") ) {	
+		if ( ioSentenceName==L"OnTalk" && talks.is_exist(L"OnTalk") ) {	
 			// OnTalkであり、かつ定義されてる場合
 			if (mReferences.size() < 2)
 			{
 				mReferences.resize(2);
 			}
 			if ( reserved_talk_name.empty() ) {	// 話すべきトークはない＝ランダムトークでいい
-				mRequestMap["Reference0"]=mReferences[0]="0";
-				mRequestMap["Reference1"]=mReferences[1]="";
+				mRequestMap[L"Reference0"]=mReferences[0]=L"0";
+				mRequestMap[L"Reference1"]=mReferences[1]=L"";
 			}
 			else {	// 今回、話すべき予約トークが存在する
-				mRequestMap["Reference0"]=mReferences[0]="1";
-				mRequestMap["Reference1"]=mReferences[1]=reserved_talk_name;
+				mRequestMap[L"Reference0"]=mReferences[0]=L"1";
+				mRequestMap[L"Reference1"]=mReferences[1]=reserved_talk_name;
 			}
 		}
 		else {
@@ -769,11 +766,11 @@ const Talk* Satori::GetSentenceInternal(string& ioSentenceName)
 	}
 
 	// mapから指定名を持つトーク群を検索
-	GetSender().sender() << "＊" << ioSentenceName << std::endl;
+	GetSender().sender() << L"＊" << ioSentenceName << std::endl;
 	const Talk* talk = talks.select(ioSentenceName, *this);
 	if ( talk == NULL )
 	{
-		GetSender().sender() << " not matched." << std::endl; // 条件に一致するものがなかった。
+		GetSender().sender() << L" not matched." << std::endl; // 条件に一致するものがなかった。
 		--nest_count;
 		return NULL;
 	}

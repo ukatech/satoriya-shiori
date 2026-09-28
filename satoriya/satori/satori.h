@@ -23,7 +23,7 @@
 //---------------------------------------------------------------------------
 // 辞書を格納する構造
 
-typedef string Word;
+typedef wstring Word;
 typedef strvec Talk;
 
 #include "Families.h"
@@ -43,18 +43,23 @@ typedef Families<Talk> AllTalks;
 //---------------------------------------------------------------------------
 // 定数的な
 
-static const char	ret_dlmt[3] = { 13, 10, 0 };
-static const char	byte1_dlmt[2] = { 1, 0 };
+static const wchar_t	ret_dlmt[3] = { 13, 10, 0 };
+static const wchar_t	byte1_dlmt[2] = { 1, 0 };
+
+// 内部特殊表現の開始・終了を表す文字（私用領域）。SJIS時代の 0xff の代わり。
+// 使い方： INTERNAL_MARK \x01(スコープ切り替え) or \x02(サーフェス加算) 数値 INTERNAL_MARK
+static const wchar_t	INTERNAL_MARK = 0xE0FF;
+static const wchar_t	INTERNAL_MARK_STR[2] = { INTERNAL_MARK, 0 };
 
 // バージョン文字列とか
-extern const char* gSatoriName;
-extern const char* gSatoriNameW;
-extern const char* gSatoriCraftman;
-extern const char* gSatoriCraftmanW;
-extern const char* gSatoriVersion;
-extern const char* gSatoriLicense;
-extern const char* gShioriVersion;
-extern const char* gSaoriVersion;
+extern const wchar_t* gSatoriName;
+extern const wchar_t* gSatoriNameW;
+extern const wchar_t* gSatoriCraftman;
+extern const wchar_t* gSatoriCraftmanW;
+extern const wchar_t* gSatoriVersion;
+extern const wchar_t* gSatoriLicense;
+extern const wchar_t* gShioriVersion;
+extern const wchar_t* gSaoriVersion;
 
 static const int RESPONSE_HISTORY_SIZE=64;
 
@@ -71,18 +76,18 @@ class escaper
 {
 	// エスケープ後文字。
 	// 置き換え機能を持たないカッコは、一旦これ+id+半角空白に置き換える。
-	// 文字コード上はsjisの一文字として扱われるが、該当する文字は無い。ダメな案。
-	static const char sm_escape_sjis_code[3];
+	// 私用領域の文字を使っている。
+	static const wchar_t sm_escape_code[2];
 
 	//map<string, int> m_str2id;
-	std::vector<string> m_id2str;
+	std::vector<wstring> m_id2str;
 
 public:
 	// 引数文字列を受け取り、メンバに格納し、「エスケープされた文字列」を返す。
-	string insert(const string& i_str);
+	wstring insert(const wstring& i_str);
 	// 対象文字列中に含まれる「エスケープされた文字列」を元に戻す。
-	void unescape(string& io_str);
-	void unescape_for_dic(string& io_str);
+	void unescape(wstring& io_str);
+	void unescape_for_dic(wstring& io_str);
 	// メンバをクリア
 	void clear();
 };
@@ -92,20 +97,20 @@ public:
 //プラグイン。（ShioriPluginじゃなくて、ベースウェアに関連付けられるPLUGIN）
 struct PluginInfo
 {
-	string plugin_name;
-	string plugin_id;
+	wstring plugin_name;
+	wstring plugin_id;
 };
 
 //使ってるぞグラフの情報。
 struct RateOfUseGraph
 {
-	string ghost_name;
-	string sakura_name;
-	string kero_name;
-	string boot_count;
-	string boot_minutes;
-	string boot_percent;
-	string status;
+	wstring ghost_name;
+	wstring sakura_name;
+	wstring kero_name;
+	wstring boot_count;
+	wstring boot_minutes;
+	wstring boot_percent;
+	wstring status;
 };
 
 //---------------------------------------------------------------------------
@@ -113,16 +118,16 @@ class Satori : public Evalcator, public SakuraDLLHost
 {
 
 private:
-	string	mBaseFolder;	// satori.dllの存在するフォルダ
-	string	mExeFolder;		// 本体.exeの存在するフォルダ
+	wstring	mBaseFolder;	// satori.dllの存在するフォルダ
+	wstring	mExeFolder;		// 本体.exeの存在するフォルダ
 
 	// リクエスト内容
-	string	mStatusLine;	// リクエストの一行目
+	wstring	mStatusLine;	// リクエストの一行目
 	strmap	mRequestMap;	// : セパレートされてたkey:value
-	string	mRequestID;		// SHIORI/3.0 ID
-	string	mRequestCommand;	// GET, NOTIFY, ...
-	string	mRequestType;		// SHIORI / SAORI / MAKOTO
-	string	mRequestVersion;	// 1.0, 2.x, 3.0
+	wstring	mRequestID;		// SHIORI/3.0 ID
+	wstring	mRequestCommand;	// GET, NOTIFY, ...
+	wstring	mRequestType;		// SHIORI / SAORI / MAKOTO
+	wstring	mRequestVersion;	// 1.0, 2.x, 3.0
 	bool	mIsMateria;	// まてりあは特殊処理が要る
 	bool    mIsStatusHeaderExist; //ステータスヘッダ対応してるかどうか
 	strvec	mReferences;
@@ -131,7 +136,7 @@ private:
 	// 格納されたメンバからResponseを作成。返値はステータスコード。
 	int		CreateResponse(strmap& oResponse);
 	// SHIORI/3.0 IDがOnで始まってた場合、CreateResponseから呼ばれる
-	int		EventOperation(string iEvent, std::map<string,string> &oResponse);
+	int		EventOperation(wstring iEvent, std::map<wstring,wstring> &oResponse);
 
 	// 戻り値map
 	strmap mResponseMap;
@@ -146,7 +151,7 @@ private:
 	escaper m_escaper;
 
 	// SAORI/内部命令を呼び出す際の引数区切りとなる文字列群
-	std::set<string>	mDelimiters;
+	std::set<wstring>	mDelimiters;
 
 	// 全ての＊トーク
 	AllTalks	talks;
@@ -157,16 +162,16 @@ private:
 	// ＄変数
 	strmap	variables;
 	// 自動アンカー
-	std::vector<string>	anchors;
+	std::vector<wstring>	anchors;
 
 	// 変数の消去。何かと問題があるらしいよ？
-	void	erase_var(const string& key);
+	void	erase_var(const wstring& key);
 
 	// 動的に登録された単語。wordsにも収録する。satori_savedata.txtに保存するのが目的。
-	std::map<string, std::vector<Word> >	mAppendedWords;
+	std::map<wstring, std::vector<Word> >	mAppendedWords;
 
 	// 戻したトークの履歴
-	std::deque<string>	mResponseHistory;
+	std::deque<wstring>	mResponseHistory;
 
 	// call引数stack 実装自体は再帰。
 	simple_stack<strvec>	mCallStack;
@@ -177,7 +182,7 @@ private:
 
 	// 選択分岐の記録    map<ID, pair<NUMBER, LABEL> >　
 	// よく考えたら、選択項目とるだけなら全く不要だった。まぁ全体取得できても悪くは無いけど
-	std::map<string, std::pair<int, string> >	question_record;
+	std::map<wstring, std::pair<int, wstring> >	question_record;
 
 	int	second_from_last_talk;	// 最後に喋ってからの経過時間
 
@@ -218,12 +223,12 @@ private:
 	FamilyComSearchType type_of_communicate_search;
 
 	// 付加文字列
-	string	append_at_scope_change;
-	string	append_at_scope_change_with_sakura_script;
-	string	append_at_talk_start;
-	string	append_at_talk_end;
-	string	append_at_choice_start;
-	string	append_at_choice_end;
+	wstring	append_at_scope_change;
+	wstring	append_at_scope_change_with_sakura_script;
+	wstring	append_at_talk_start;
+	wstring	append_at_talk_end;
+	wstring	append_at_choice_start;
+	wstring	append_at_choice_end;
 
 	// しゃべり管理。SentenceToSakuraScriptExecの未再帰呼び出し時に初期化。
 	int		speaker;		// 話者
@@ -255,12 +260,12 @@ private:
 	bool auto_newline_enable;
 	bool auto_newline_enable_onetime;
 
-	string load_savedata_status;
+	wstring load_savedata_status;
 
 	std::map<int, int>	default_surface;
 	std::map<int, int>	surface_add_value;
 	std::map<int, int>	next_default_surface; // 途中でdef_surfaceを切り換えても、そのrequestでは使わない
-	string	surface_restore_string();
+	wstring	surface_restore_string();
 
 	// 返り値抑止
 	bool return_empty;
@@ -269,7 +274,7 @@ private:
 	bool is_quick_section;
 
 	// スクリプトヘッダ
-	string header_script;
+	wstring header_script;
 
 	// 無限呼び出し抑止
 	int m_nest_limit;
@@ -280,13 +285,13 @@ private:
 
 	// ばるーん位置
 	std::map<int, bool>	validBalloonOffset;	// 1回でも設定されたら有効 つーか片方だけだと意味無かった。むぅ。
-	std::map<int, string>	BalloonOffset;
+	std::map<int, wstring>	BalloonOffset;
 
 	// 時間系情報取得用
 	unsigned long sec_count_at_load, sec_count_total;
 
 	// 辞書拡張子・接頭辞
-	string dic_load_ext, dic_load_prefix;
+	wstring dic_load_ext, dic_load_prefix;
 
 	// 外部から実行可能なイベントの接頭辞
 	strvec allow_external_event_prefixes;
@@ -304,11 +309,11 @@ private:
 	bool	updateGhostsInfo();	// FMOから情報取得
 #endif
 	std::vector<strmap>	ghosts_info;	// FMOの内容そのまま。0は自分自身、1～は順番どおり 自分自身はghosts_infoには *含まれる*
-	std::set<string>    otherghostname; // NOTIFY otherghostnameから拾ったsakura名 自分自身はotherghostnameには *含まない*
-	strmap*	find_ghost_info(string name);	// ghosts_infoを検索、特定のゴーストの情報を得る
+	std::set<wstring>    otherghostname; // NOTIFY otherghostnameから拾ったsakura名 自分自身はotherghostnameには *含まない*
+	strmap*	find_ghost_info(wstring name);	// ghosts_infoを検索、特定のゴーストの情報を得る
 
-	string	mCommunicateFor;	// 話しかけ対象ゴースト。→で設定されresponseにToをつける
-	std::set<string>	mCommunicateLog;	// 会話ログ。繰り返しがあった場合は会話打ち切り
+	wstring	mCommunicateFor;	// 話しかけ対象ゴースト。→で設定されresponseにToをつける
+	std::set<wstring>	mCommunicateLog;	// 会話ログ。繰り返しがあった場合は会話打ち切り
 
 	// でばぐもーど
 	bool    fDebugMode;
@@ -323,24 +328,24 @@ private:
 	strvec	dic_folder;
 
 	// TEACHされる変数名
-	string	teach_genre;
+	wstring	teach_genre;
 
 	// タイマ名：発話までの秒数
 	strintmap	timer_sec;
 
 	// トークの予約
-	std::map<int, string>	reserved_talk;
+	std::map<int, wstring>	reserved_talk;
 
 	// 「独自イベントによるmateriaイベントの置き換え」のためのスクリプト入れ
-	string	on_loaded_script;
-	string	on_unloading_script;
+	wstring	on_loaded_script;
+	wstring	on_unloading_script;
 
 	// 栞プラグイン
 	ShioriPlugins	*mShioriPlugins;
-	string	inc_call(const string&, const strvec&, strvec&, bool is_secure);
-	string	special_call(const string&, const strvec&, bool for_calc, bool for_non_talk, bool is_secure);
-	bool calc_argument(const string &iExpression, int &oResult, bool for_non_talk);
-	std::set<string> special_commands;
+	wstring	inc_call(const wstring&, const strvec&, strvec&, bool is_secure);
+	wstring	special_call(const wstring&, const strvec&, bool for_calc, bool for_non_talk, bool is_secure);
+	bool calc_argument(const wstring &iExpression, int &oResult, bool for_non_talk);
+	std::set<wstring> special_commands;
 
 	// 安全？
 	bool	secure_flag;
@@ -349,7 +354,7 @@ private:
 	bool	is_dic_loaded;
 
 	// 直前の表示選択肢
-	string	last_choice_name;
+	wstring	last_choice_name;
 
 	// セーブデータ保存時の暗号化有無
 	bool	fEncodeSavedata;
@@ -367,13 +372,13 @@ private:
 		numDictionary, numDictionarySize;
 
 	//Notifyの保存
-	std::set<string> installed_ghost_name;
-	std::set<string> installed_shell_name;
-	std::set<string> installed_balloon_name;
-	std::set<string> installed_headline_name;
-	std::set<string> installed_font_name;
-	std::map<string, PluginInfo> installed_plugin;
-	std::map<string, RateOfUseGraph> rate_of_use_graph;
+	std::set<wstring> installed_ghost_name;
+	std::set<wstring> installed_shell_name;
+	std::set<wstring> installed_balloon_name;
+	std::set<wstring> installed_headline_name;
+	std::set<wstring> installed_font_name;
+	std::map<wstring, PluginInfo> installed_plugin;
+	std::map<wstring, RateOfUseGraph> rate_of_use_graph;
 
 	//Notifyの収拾
 	bool is_save_notify;
@@ -400,65 +405,65 @@ private:
 	std::map<int, void*>	characters_hwnd;
 
 	// ループ時のカウンタ参照用
-	simple_stack<string> mLoopCounters; //バグを誘発させそうなのでstring
+	simple_stack<wstring> mLoopCounters; //バグを誘発させそうなのでstring
 
 	// メンバ関数
 
 	void	InitMembers();
 
-	int	 LoadDicFolder(const string& path);
-	bool LoadDictionary(const string& filename,bool warnFileName,bool isUTF8);
+	int	 LoadDicFolder(const wstring& path);
+	bool LoadDictionary(const wstring& filename,bool warnFileName,bool isUTF8);
 
-	string	GetWord(const string& name);
+	wstring	GetWord(const wstring& name);
 
-	string	KakkoSection(const char*& p,bool for_calc = false,bool for_non_talk = false);
-	string	UnKakko(const char* p,bool for_calc = false,bool for_non_talk = false);
+	wstring	KakkoSection(const wchar_t*& p,bool for_calc = false,bool for_non_talk = false);
+	wstring	UnKakko(const wchar_t* p,bool for_calc = false,bool for_non_talk = false);
 
-	bool	GetURLList(const string& name, string& result);
-	bool	GetRecommendsiteSentence(const string& name, string& result);
+	bool	GetURLList(const wstring& name, wstring& result);
+	bool	GetRecommendsiteSentence(const wstring& name, wstring& result);
 
 	// 指定イベント無い場合、イベント名の置き換えもしてioeventを返す。それでも無いならfalse
-	bool	FindEventTalk(string& ioevent);
+	bool	FindEventTalk(wstring& ioevent);
 
 	// Communicate形式検索。該当なしならfalse。and_modeがtrueなら全単語一致以外は無効とする
-	bool	TalkSearch(const string& iSentence, string& oScript, bool iAndMode);
+	bool	TalkSearch(const wstring& iSentence, wstring& oScript, bool iAndMode);
 
 	// システム変数設定時の動作
 	// return = 0(処理なし) / 1(処理した) / -1(処理したけど変数設定してはだめ)
-	int	system_variable_operation(string key, string value, string* result=NULL);
-	int	system_variable_operation_real(string key, string value, string* result); //内部処理用(直接使わないで)
+	int	system_variable_operation(wstring key, wstring value, wstring* result=NULL);
+	int	system_variable_operation_real(wstring key, wstring value, wstring* result); //内部処理用(直接使わないで)
 
 	// 内部。返値は続行の有無。続行時はSentenceNameをGetSentence。
-	const Talk* GetSentenceInternal(string& ioSentenceName);
+	const Talk* GetSentenceInternal(wstring& ioSentenceName);
 
 	// 式を評価し、結果の真偽値を返す
 	bool evalcate_to_bool(const Condition& i_cond);
 
 	// 引数に渡されたものを何かの名前であるとし、置き換え対象があれば置き換える。
-	bool	CallReal(const string& word, string& result, bool for_calc, bool for_non_talk, bool use_arg_callstack);
+	bool	CallReal(const wstring& word, wstring& result, bool for_calc, bool for_non_talk, bool use_arg_callstack);
 
-	string* GetValue(const string &key,bool &oIsSysValue,bool iIsExpand = false,bool *oIsExpanded = NULL,const char *pDefault = "");
-	bool IsArrayValue(const string &iName,int &ref,char &firstChar);
+	wstring* GetValue(const wstring &key,bool &oIsSysValue,bool iIsExpand = false,bool *oIsExpanded = NULL,const wchar_t *pDefault = L"");
+	bool IsArrayValue(const wstring &iName,int &ref,wchar_t &firstChar);
 
-	void surface_restore_string_addfunc(string &str, std::map<int, int>::const_iterator &i);
+	void surface_restore_string_addfunc(wstring &str, std::map<int, int>::const_iterator &i);
 
 	// 辞書読み込み内部実装用関数
-	bool select_dict_and_load_to_vector(const string& iFileName, strvec& oFileBody, bool warnFileName);
+	bool select_dict_and_load_to_vector(const wstring& iFileName, strvec& oFileBody, bool warnFileName, CharactorSet cs);
 
 	// SentenceToSakuraScriptExecの実体。
-	int SentenceToSakuraScriptInternal(const Talk &vec,string &result,string &jumpto,std::ptrdiff_t &ip);
+	int SentenceToSakuraScriptInternal(const Talk &vec,wstring &result,wstring &jumpto,std::ptrdiff_t &ip);
 
 	// 変数代入
-	bool SubstVariable(const string &key,string &value,string &result,bool do_calc);
+	bool SubstVariable(const wstring &key,wstring &value,wstring &result,bool do_calc);
 
 	// ウインドウ探索
-	unsigned long FindTopLevelWindow(const char* txt,bool isPartial);
+	unsigned long FindTopLevelWindow(const wchar_t* txt,bool isPartial);
 
 	// プロセス探索
-	unsigned long FindProcessName(const char* txt,bool isPartial);
+	unsigned long FindProcessName(const wchar_t* txt,bool isPartial);
 
 	// count
-	int count_func(const string &name);
+	int count_func(const wstring &name);
 
 public:
 
@@ -466,35 +471,35 @@ public:
 	virtual ~Satori();
 
 	// SHIORI/3.0インタフェース
-	virtual bool load(const string& i_base_folder);
+	virtual bool load(const wstring& i_base_folder);
 	virtual bool unload();
-	virtual string getversionlist(const string& i_base_folder);
+	virtual wstring getversionlist(const wstring& i_base_folder);
 	virtual int	request(
-		const string& i_protocol,
-		const string& i_protocol_version,
-		const string& i_command,
+		const wstring& i_protocol,
+		const wstring& i_protocol_version,
+		const wstring& i_command,
 		const strpairvec& i_data,
 		
-		string& o_protocol,
-		string& o_protocol_version,
+		wstring& o_protocol,
+		wstring& o_protocol_version,
 		strpairvec& o_data);
 
 	// 変数等のデータをファイルに保存
 	bool	Save(bool isOnUnload=false);	
 
 	// strvecからさくらスクリプトを生成する
-	string	SentenceToSakuraScriptExec(const strvec& vec);
+	wstring	SentenceToSakuraScriptExec(const strvec& vec);
 	// strvecにプリプロセスを掛けた後、さくらスクリプトを生成する。さとりて用
-	string	SentenceToSakuraScriptExec_with_PreProcess(const strvec& vec);
+	wstring	SentenceToSakuraScriptExec_with_PreProcess(const strvec& vec);
 	// 指定された名前の＊文を取得する
-	string	GetSentence(const string& name);
+	wstring	GetSentence(const wstring& name);
 	// 引数に渡されたものを何かの名前であるとし、置き換え対象があれば置き換える。
-	bool	Call(const string& word, string& result, bool for_calc = false, bool for_non_talk = false, bool use_arg_callstack = false);
+	bool	Call(const wstring& word, wstring& result, bool for_calc = false, bool for_non_talk = false, bool use_arg_callstack = false);
 	// 里々レベルでの計算を行う。戻り値は成否。
-	bool calculate(const string& iExpression, string& oResult);
+	bool calculate(const wstring& iExpression, wstring& oResult);
 
 	// 最終置き換え処理。置換後のスクリプトが中身が無い（実行してもしなくても一緒）と判断したらfalseを返す。
-	bool	Translate(string& script);
+	bool	Translate(wstring& script);
 
 	void SetCharacterHWnd(void* hWnd)
 	{
@@ -507,8 +512,8 @@ public:
 
 //---------------------------------------------------------------------------
 
-bool	calc(string&,bool isStrict = false);
-void	diet_script(string&);
+bool	calc(wstring&,bool isStrict = false);
+void	diet_script(wstring&);
 
 //---------------------------------------------------------------------------
 #endif

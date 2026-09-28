@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "SATORI_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /MT /W3 /GX /O2 /Oy- /Ob2 /I "..\_" /D "_WINDOWS" /D "_USRDLL" /D "SATORI_DLL" /D WINVER=0x400 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "STRICT" /FD /Zm800 /GA /QI0f /c
+# ADD CPP /nologo /MT /W3 /GX /O2 /Oy- /Ob2 /I "..\_" /D "_WINDOWS" /D "_USRDLL" /D "SATORI_DLL" /D "WIN32" /D "NDEBUG" /D "UNICODE" /D "_UNICODE" /D WINVER=0x0500 /D _WIN32_WINNT=0x0500 /D _WIN32_IE=0x0500 /D "STRICT" /FD /Zm800 /GA /QI0f /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x411 /d "NDEBUG"
@@ -70,7 +70,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "SATORI_EXPORTS" /YX /FD /GZ /c
-# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I "..\_" /D "_WINDOWS" /D "_USRDLL" /D "SATORI_DLL" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "STRICT" /FR /FD /Zm800 /GZ /c
+# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I "..\_" /D "_WINDOWS" /D "_USRDLL" /D "SATORI_DLL" /D "WIN32" /D "_DEBUG" /D "UNICODE" /D "_UNICODE" /D WINVER=0x0500 /D _WIN32_WINNT=0x0500 /D _WIN32_IE=0x0500 /D "STRICT" /FR /FD /Zm800 /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x411 /d "_DEBUG"

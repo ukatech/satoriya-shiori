@@ -38,31 +38,30 @@ const int BUFFER_SIZE = 1024;
 #endif
 ////////////////////////////////////////
 
-void	add_characters(const char* p, int& chars_spoken) {
+void	add_characters(const wchar_t* p, int& chars_spoken) {
 	// さくらスクリプトとそれ以外を分割して処理を加える
 	while (*p) {
-		if (*p=='\\'||*p=='%') {
+		if (*p==L'\\'||*p==L'%') {
 			++p;
-			if (*p=='\\'||*p=='%')	// エスケープされた\, %
+			if (*p==L'\\'||*p==L'%')	// エスケープされた\, %
 				continue;
-			while (!_ismbblead(*p) && (isalpha(*p)||isdigit(*p)||*p=='!'||*p=='*'||*p=='&'||*p=='?'||*p=='_'))
+			while ( *p < 0x80 && (iswalpha(*p)||iswdigit(*p)||*p==L'!'||*p==L'*'||*p==L'&'||*p==L'?'||*p==L'_') )
 				++p;
-			if (*p=='[') {
+			if (*p==L'[') {
 				p += 1;
-				while ( *p && *p!=']' ) {
-					if (p[0]=='\\' && p[1]==']') {	// エスケープされた]
+				while ( *p && *p!=L']' ) {
+					if (p[0]==L'\\' && p[1]==L']') {	// エスケープされた]
 						++p;
 					}
 					else {
-						p += _ismbblead(*p) ? 2 : 1;
+						get_a_chr(p);
 					}
 				}
 			}
 		}
 		else {
-			int len = _ismbblead(*p) ? 2 : 1;
-			p += len;
-			chars_spoken += len;
+			get_a_chr(p);
+			chars_spoken += 1;
 		}
 	}
 }
@@ -81,7 +80,7 @@ static	SYSTEMTIME	DwordToSystemTime(DWORD dw) {
 //get_property関数用のハンドラと結果格納
 #ifdef POSIX
 
-static std::string SendDataUsingUnixSocket(const std::string &path, std::string request, bool has_header) {
+static std::string SendDataUsingUnixSocket(const std::string &path, const std::string &request, bool has_header) {
 	sockaddr_un addr = {};
 	if (path.length() >= sizeof(addr.sun_path)) {
 		return "";
@@ -133,9 +132,9 @@ static std::string SendDataUsingUnixSocket(const std::string &path, std::string 
 	return data;
 }
 
-static bool SendDirectSSTP(const void* targetHWnd, const std::string &sendText, std::string &result)
+static bool SendDirectSSTP(const void* targetHWnd, const std::wstring &sendText, std::wstring &result)
 {
-    result = "";
+    result = L"";
     shm_t *shm;
     int fd = shm_open("/ninix", O_RDWR, 0);
     if (fd == -1) {
@@ -178,16 +177,16 @@ static bool SendDirectSSTP(const void* targetHWnd, const std::string &sendText, 
             break;
         }
     }
-    std::string request;
-	request = request + "EXECUTE SSTP/1.1\r\n" + sendText + "Sender: Satori\r\nCharset: Shift_JIS\r\n\r\n";
+    std::string request = "EXECUTE SSTP/1.1\r\nCharset: UTF-8\r\n" + WtoUTF8(sendText) + "Sender: Satori\r\n\r\n";
     data = SendDataUsingUnixSocket(path + uuid, request, false);
-    std::string header = cut_token(data, CRLF);
-    cut_token(header, " ");
-    if (header == "200 OK")
+    std::wstring response = MBtoW(data, CharsetFromName(UTF8toW(find_charset_header(data))));
+    std::wstring header = cut_token(response, CRLF);
+    cut_token(header, L" ");
+    if (header == L"200 OK")
     {
         //1行文読み捨て
-        cut_token(data, CRLF);
-        result = cut_token(data, CRLF);
+        cut_token(response, CRLF);
+        result = cut_token(response, CRLF);
         return true;
     }
     else {
@@ -197,7 +196,7 @@ static bool SendDirectSSTP(const void* targetHWnd, const std::string &sendText, 
 
 #else
 
-std::string execute_result;
+std::wstring execute_result;
 bool execute_succeeded;
 
 static LRESULT CALLBACK GetPropertyHandler(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
@@ -205,11 +204,12 @@ static LRESULT CALLBACK GetPropertyHandler(HWND hwnd, UINT message, WPARAM wpara
 	if (message == WM_COPYDATA)
 	{
 		const COPYDATASTRUCT* cds = (const COPYDATASTRUCT*)lparam;
-		string recv_str((const char*)cds->lpData, cds->cbData);
+		std::string recv_bytes((const char*)cds->lpData, cds->cbData);
+		wstring recv_str = MBtoW(recv_bytes, CharsetFromName(UTF8toW(find_charset_header(recv_bytes))));
 		
-		string header = cut_token(recv_str, CRLF);
-		cut_token(header, " ");
-		if (header == "200 OK")
+		wstring header = cut_token(recv_str, CRLF);
+		cut_token(header, L" ");
+		if (header == L"200 OK")
 		{
 			//1行文読み捨て
 			cut_token(recv_str, CRLF);
@@ -220,13 +220,13 @@ static LRESULT CALLBACK GetPropertyHandler(HWND hwnd, UINT message, WPARAM wpara
 	return CallWindowProc(DefWindowProc, hwnd, message, wparam, lparam);
 }
 
-static bool SendDirectSSTP(const void* targetHWnd, std::string sendText, std::string &result)
+static bool SendDirectSSTP(const void* targetHWnd, std::wstring sendText, std::wstring &result)
 {
-	execute_result = "";
+	execute_result = L"";
 	execute_succeeded = false;
 
 	//結果受信用ウインドウ作成: リソースの仕様を局所化してみたけどオーバーヘッドがでかい場合はSHIORIの初期化周辺に絡めるといいのかも
-	const char* windowname = "satori_get_property";
+	const wchar_t* windowname = L"satori_get_property";
 	
 	WNDCLASSEX windowClass;
 	ZeroMemory(&windowClass,sizeof(windowClass));
@@ -240,10 +240,7 @@ static bool SendDirectSSTP(const void* targetHWnd, std::string sendText, std::st
 
 	HWND propertyWindow = ::CreateWindow(windowname, windowname, 0, 0, 0, 100, 100, NULL, NULL, windowClass.hInstance, NULL);
 
-	std::ostringstream ost;
-	ost << "EXECUTE SSTP/1.1\r\n" << sendText << "Sender: Satori\r\nCharset: Shift_JIS\r\n\r\n";
-
-	std::string sendData = ost.str();
+	std::string sendData = "EXECUTE SSTP/1.1\r\nCharset: UTF-8\r\n" + WtoUTF8(sendText) + "Sender: Satori\r\n\r\n";
 
 	//メッセージ転送
 	COPYDATASTRUCT cds;
@@ -265,30 +262,42 @@ static bool SendDirectSSTP(const void* targetHWnd, std::string sendText, std::st
 }
 #endif
 
-string	Satori::inc_call(
-	const string& iCallName, 
+wstring	Satori::inc_call(
+	const wstring& iCallName, 
 	const strvec& iArgv, 
 	strvec& oResults, 
 	bool iIsSecure) 
 {
 
-	if ( iCallName == "バイト値" ) {
+	if ( iCallName == L"バイト値" ) {
 		if ( iArgv.size() ) {
-			char bytes[2] = {0,0};
-			bytes[0] = zen2int(iArgv[0]);
-			return bytes;
+			// Unicodeのコードポイントとして扱う
+			unsigned long cp = zen2ul(iArgv[0]);
+			wstring r;
+			if ( cp >= 0xD800 && cp <= 0xDFFF ) {
+				return L"";	// サロゲート単体は文字ではない
+			}
+			if ( sizeof(wchar_t) == 2 && cp >= 0x10000 && cp <= 0x10FFFF ) {
+				cp -= 0x10000;
+				r += (wchar_t)(0xD800 + (cp >> 10));
+				r += (wchar_t)(0xDC00 + (cp & 0x3FF));
+			}
+			else {
+				r += (wchar_t)cp;
+			}
+			return r;
 		}
 		else {
-			GetSender().sender() << "error: 'バイト値' : 引数が不正です。" << std::endl;
-			return "";
+			GetSender().sender() << L"error: 'バイト値' : 引数が不正です。" << std::endl;
+			return L"";
 		}
 	}
 
-	if ( iCallName=="nop" ) {
-		return "";
+	if ( iCallName==L"nop" ) {
+		return L"";
 	}
 
-	if ( iCallName == "合成単語群" ) {
+	if ( iCallName == L"合成単語群" ) {
 		if ( iArgv.size() ) {
 			std::vector<const Word*> vt;
 			for ( strvec::const_iterator it = iArgv.begin() ; it != iArgv.end() ; ++it ) {
@@ -298,32 +307,32 @@ string	Satori::inc_call(
 				return *(vt[random(vt.size())]);
 			}
 			else {
-				return "";
+				return L"";
 			}
 		}
 		else {
-			GetSender().sender() << "error: '合成単語群' : 引数が不正です。" << std::endl;
-			return "";
+			GetSender().sender() << L"error: '合成単語群' : 引数が不正です。" << std::endl;
+			return L"";
 		}
 	}
 
 	if ( !iIsSecure ) {
-		GetSender().sender() << "local/Localでないので蹴りました: " << iCallName << std::endl;
-		return	"";
+		GetSender().sender() << L"local/Localでないので蹴りました: " << iCallName << std::endl;
+		return	L"";
 	}
 
-	if ( iCallName=="set" ) {
+	if ( iCallName==L"set" ) {
 		if ( iArgv.size()==2 ) {
-			string	result, key=iArgv[0], value=iArgv[1];
+			wstring	result, key=iArgv[0], value=iArgv[1];
 
 			SubstVariable(key,value,result,false);
 
 			return	result;
 		}
-		return	"";
+		return	L"";
 	}
 	
-	if ( iCallName=="loop" ) {
+	if ( iCallName==L"loop" ) {
 		int	init=1, max=0, step=1, arg_size=iArgv.size();
 		if ( arg_size==2 ) {
 			max=zen2int(iArgv[1]);
@@ -338,78 +347,78 @@ string	Satori::inc_call(
 			step=zen2int(iArgv[3]);
 		}
 		else
-			return	"";
-		string	name=iArgv[0];
-		string	ret,temp;
+			return	L"";
+		wstring	name=iArgv[0];
+		wstring	ret,temp;
 
 		if ( step==0 )
-			return	"";
+			return	L"";
 		else if ( step>0 ) {
 			if ( init>max )
-				return	"";
+				return	L"";
 			for (int i=init ; i<=max ; i+=step ) {
-				variables[name+"カウンタ"] = itos(i);
+				variables[name+L"カウンタ"] = itos(i);
 				if ( !Call(name, temp) )
-					return	"";
+					return	L"";
 				ret += temp;
 			}
 		}
 		else {
 			if ( init<max )
-				return	"";
+				return	L"";
 			for (int i=init ; i>=max ; i+=step ) {
-				variables[name+"カウンタ"] = itos(i);
+				variables[name+L"カウンタ"] = itos(i);
 				if ( !Call(name, temp) )
-					return	"";
+					return	L"";
 				ret += temp;
 			}
 		}
-		variables.erase(name+"カウンタ");
+		variables.erase(name+L"カウンタ");
 		return	ret;
 	}
 	
-	if ( iCallName=="sync" ) {
-		string	str = "\\![raise,OnDirectSaoriCall";
+	if ( iCallName==L"sync" ) {
+		wstring	str = L"\\![raise,OnDirectSaoriCall";
 		if ( !iArgv.empty() ) {
-			string	arg;
-			combine(arg, iArgv, ",");
-			str += ",";
+			wstring	arg;
+			combine(arg, iArgv, L",");
+			str += L",";
 			str += arg;
 		}
-		str += "]";
+		str += L"]";
 		return	str;
 	}
 	
-	if ( iCallName=="remember" ) {
+	if ( iCallName==L"remember" ) {
 		if ( iArgv.size() == 1 ) {
 			int	n = zen2int(iArgv[0]);
 			if ( mResponseHistory.size() > n ) {
 				return	mResponseHistory[n];
 			}
 		}
-		return	"";
+		return	L"";
 	}
 	
-	if ( iCallName=="call" ) {
+	if ( iCallName==L"call" ) {
 		if ( iArgv.size() >= 1 ) {
 			mCallStack.push( strvec() );
 			strvec&	v = mCallStack.top();
 			for ( int i=1 ; i<iArgv.size() ; ++i )
 				v.push_back( iArgv[i] );
-			string	r;
+			wstring	r;
 			Call(iArgv[0],r,false,false,true);
 			mCallStack.pop();
 			return	r;
 		}
-		return	"";
+		return	L"";
 	}
 
-	if (iCallName == "vncall")
+	if (iCallName == L"vncall")
 	{
 		if (iArgv.size() >= 1) {
 			
 			strvec	v;// = mCallStack.top();
-			string	r;
+			wstring	r;
 
 			for (int i = 1; i < iArgv.size(); ++i){
 				Call(iArgv[i], r);
@@ -422,63 +431,63 @@ string	Satori::inc_call(
 			mCallStack.pop();
 			return	r;
 		}
-		return	"";
+		return	L"";
 	}
 
-	if (iCallName == "get_property")
+	if (iCallName == L"get_property")
 	{
 		if (iArgv.size() >= 1)
 		{
 			const void* targetHWnd = characters_hwnd[0];
-			std::ostringstream ost;
-			ost << "Command: GetProperty\r\nReference0: " << iArgv[0] << "\r\n";
-			std::string sendData = ost.str();
+			std::wostringstream ost;
+			ost << L"Command: GetProperty\r\nReference0: " << iArgv[0] << L"\r\n";
+			std::wstring sendData = ost.str();
 
-			std::string result;
+			std::wstring result;
 			if (SendDirectSSTP(targetHWnd, sendData, result)) {
 				return result;
 			}
-			return (iArgv.size() >= 2) ? iArgv[1] : "";
+			return (iArgv.size() >= 2) ? iArgv[1] : L"";
 		}
 	}
 
-	if (iCallName == "set_property")
+	if (iCallName == L"set_property")
 	{
 		if (iArgv.size() >= 2)
 		{
 			const void* targetHWnd = characters_hwnd[0];
-			std::ostringstream ost;
-			ost << "Command: SetProperty\r\nReference0: " << iArgv[0] << "\r\nReference1: " << iArgv[1] << "\r\n";
-			std::string sendData = ost.str();
+			std::wostringstream ost;
+			ost << L"Command: SetProperty\r\nReference0: " << iArgv[0] << L"\r\nReference1: " << iArgv[1] << L"\r\n";
+			std::wstring sendData = ost.str();
 
-			std::string result;
+			std::wstring result;
 			SendDirectSSTP(targetHWnd, sendData, result);
 			return result;
 		}
 	}
 
 
-	if (iCallName == "load_saori")
+	if (iCallName == L"load_saori")
 	{
 		if (iArgv.size() >= 2)
 		{
-			string load_line = iArgv[0];
+			wstring load_line = iArgv[0];
 			for (int i = 1; i < iArgv.size(); ++i)
-				load_line += "," + iArgv[i];
+				load_line += L"," + iArgv[i];
 
 			mShioriPlugins->load_a_plugin(load_line);
 		}
 	}
 
-	if (iCallName == "equal") {
+	if (iCallName == L"equal") {
 		if (iArgv.size() == 2) {
-			const string &lhs = iArgv[0], &rhs = iArgv[1];
+			const wstring &lhs = iArgv[0], &rhs = iArgv[1];
 			return itos(lhs == rhs);
 		}
-		return	"";
+		return	L"";
 	}
 	
-	if ( iCallName == "単語の追加" ) {
+	if ( iCallName == L"単語の追加" ) {
 
 		if ( iArgv.size() == 2 )
 		{
@@ -486,25 +495,25 @@ string	Satori::inc_call(
 			if ( f == NULL || false == f->is_exist_element(iArgv[1]) )
 			{
 				mAppendedWords[ iArgv[0] ].push_back( words.add_element(iArgv[0],iArgv[1],Condition()) );
-				GetSender().sender() << "単語群「" << iArgv[0] << "」に単語「" << iArgv[1] << "」が追加されました。" << std::endl;
+				GetSender().sender() << L"単語群「" << iArgv[0] << L"」に単語「" << iArgv[1] << L"」が追加されました。" << std::endl;
 			}
 			else
 			{
-				GetSender().sender() << "単語群「" << iArgv[0] << "」に単語「" << iArgv[1] << "」は既に存在します。" << std::endl;
+				GetSender().sender() << L"単語群「" << iArgv[0] << L"」に単語「" << iArgv[1] << L"」は既に存在します。" << std::endl;
 			}
 		}
 		else {
-			GetSender().sender() << "error: '単語の追加' : 引数が不正です。" << std::endl;
+			GetSender().sender() << L"error: '単語の追加' : 引数が不正です。" << std::endl;
 		}
-		return	"";
+		return	L"";
 	}
 
-	if ( iCallName == "追加単語の削除" ) {
+	if ( iCallName == L"追加単語の削除" ) {
 		if ( iArgv.size() == 2 )
 		{
 			Family<Word>* f = words.get_family(iArgv[0]);
 			if ( f && f->is_exist_element(iArgv[1]) ) { //すでに存在し…
-				std::map<string, std::vector<Word> >::iterator it = mAppendedWords.find(iArgv[0]);
+				std::map<wstring, std::vector<Word> >::iterator it = mAppendedWords.find(iArgv[0]);
 				if ( it != mAppendedWords.end() ) { //しかも「単語の追加」で追加したもので…
 					std::vector<Word> &setword = it->second;
 					
@@ -516,7 +525,7 @@ string	Satori::inc_call(
 						if ( setword.empty() ) {
 							mAppendedWords.erase(it);
 						}
-						GetSender().sender() << "単語群「" << iArgv[0] << "」の単語「" << iArgv[1] << "」が削除されました。" << std::endl;
+						GetSender().sender() << L"単語群「" << iArgv[0] << L"」の単語「" << iArgv[1] << L"」が削除されました。" << std::endl;
 						if ( f->empty() ) {
 							words.erase(iArgv[0]);
 						}
@@ -525,17 +534,17 @@ string	Satori::inc_call(
 			}
 		}
 		else {
-			GetSender().sender() << "error: '追加単語の削除' : 引数が不正です。" << std::endl;
+			GetSender().sender() << L"error: '追加単語の削除' : 引数が不正です。" << std::endl;
 		}
-		return	"";
+		return	L"";
 	}
 	
-	if ( iCallName == "追加単語の全削除" ) {
+	if ( iCallName == L"追加単語の全削除" ) {
 		if ( iArgv.size() == 1 )
 		{
 			Family<Word>* f = words.get_family(iArgv[0]);
 			if ( f ) { //すでに存在し…
-				std::map<string, std::vector<Word> >::iterator it = mAppendedWords.find(iArgv[0]);
+				std::map<wstring, std::vector<Word> >::iterator it = mAppendedWords.find(iArgv[0]);
 				if ( it != mAppendedWords.end() ) { //しかも「単語の追加」で追加したもので…
 					std::vector<Word> &setword = it->second;
 					for ( std::vector<Word>::const_iterator its = setword.begin(); its != setword.end() ; ++its ) {
@@ -543,7 +552,7 @@ string	Satori::inc_call(
 					}
 					mAppendedWords.erase(it);
 
-					GetSender().sender() << "単語群「" << iArgv[0] << "」に追加された単語は全て削除されました。" << std::endl;
+					GetSender().sender() << L"単語群「" << iArgv[0] << L"」に追加された単語は全て削除されました。" << std::endl;
 				}
 				if ( f->empty() ) {
 					words.erase(iArgv[0]);
@@ -551,22 +560,20 @@ string	Satori::inc_call(
 			}
 		}
 		else {
-			GetSender().sender() << "error: '単語の削除' : 引数が不正です。" << std::endl;
+			GetSender().sender() << L"error: '単語の削除' : 引数が不正です。" << std::endl;
 		}
-		return	"";
+		return	L"";
 	}
-	return	"";
+	return	L"";
 }
 
 // R・H・A・S・Cを判定
-bool Satori::IsArrayValue(const string &iName,int &ref,char &firstChar)
+bool Satori::IsArrayValue(const wstring &iName,int &ref,wchar_t &firstChar)
 {
-	if ( ((iName[0]=='R' || iName[0]=='H' || iName[0]=='A' || iName[0]=='S' || iName[0]=='C') && iName.size() >= 2) ||
-		((iName.compare(0,2,"Ｒ") == 0 || iName.compare(0,2,"Ｈ") == 0 ||
-		iName.compare(0,2,"Ａ") == 0 || iName.compare(0,2,"Ｓ") == 0 ||
-		iName.compare(0,2,"Ｃ") == 0) && iName.size() >= 3) ) {
+	if ( ((iName[0]==L'R' || iName[0]==L'H' || iName[0]==L'A' || iName[0]==L'S' || iName[0]==L'C') && iName.size() >= 2) ||
+		((iName[0]==L'Ｒ' || iName[0]==L'Ｈ' || iName[0]==L'Ａ' || iName[0]==L'Ｓ' || iName[0]==L'Ｃ') && iName.size() >= 2) ) {
 
-		string hankaku=zen2han(iName);
+		wstring hankaku=zen2han(iName);
 
 		if ( aredigits(hankaku.c_str()+1) ) {
 			firstChar = hankaku[0];
@@ -579,16 +586,16 @@ bool Satori::IsArrayValue(const string &iName,int &ref,char &firstChar)
 
 
 // 変数取得
-string* Satori::GetValue(const string &iName,bool &oIsSysValue,bool iIsExpand,bool *oIsExpanded,const char *pDefault)
+wstring* Satori::GetValue(const wstring &iName,bool &oIsSysValue,bool iIsExpand,bool *oIsExpanded,const wchar_t *pDefault)
 {
 	if ( oIsExpanded ) { *oIsExpanded = false; }
 	oIsSysValue = false;
 
 	int ref;
-	char firstChar;
+	wchar_t firstChar;
 
 	if ( IsArrayValue(iName,ref,firstChar) ) {
-		if ( firstChar=='R' ) {
+		if ( firstChar==L'R' ) {
 			oIsSysValue = true;
 
 			// Event通知時の引数取得
@@ -604,7 +611,7 @@ string* Satori::GetValue(const string &iName,bool &oIsSysValue,bool iIsExpand,bo
 				return NULL;
 			}
 		}
-		else if ( firstChar=='H' ) {
+		else if ( firstChar==L'H' ) {
 			oIsSysValue = true;
 
 			// 過去の置き換え履歴を参照
@@ -621,7 +628,7 @@ string* Satori::GetValue(const string &iName,bool &oIsSysValue,bool iIsExpand,bo
 				return NULL;
 			}
 		}
-		else if ( firstChar=='A' ) {
+		else if ( firstChar==L'A' ) {
 			oIsSysValue = true;
 
 			if ( mCallStack.empty() ) { return NULL; }
@@ -635,7 +642,7 @@ string* Satori::GetValue(const string &iName,bool &oIsSysValue,bool iIsExpand,bo
 				return NULL;
 			}
 		}
-		else if ( firstChar=='S' ) {
+		else if ( firstChar==L'S' ) {
 			oIsSysValue = true;
 
 			// SAORIなどコール時の結果処理
@@ -651,7 +658,7 @@ string* Satori::GetValue(const string &iName,bool &oIsSysValue,bool iIsExpand,bo
 				return NULL;
 			}
 		}
-		else if ( firstChar=='C' ) {
+		else if ( firstChar==L'C' ) {
 			oIsSysValue = true;
 
 			if ( 0 <= ref && ref < mLoopCounters.size() ) {
@@ -669,7 +676,7 @@ string* Satori::GetValue(const string &iName,bool &oIsSysValue,bool iIsExpand,bo
 	}
 
 	if ( iIsExpand ) {
-		variables[iName] = string(pDefault);
+		variables[iName] = wstring(pDefault);
 		if ( oIsExpanded ) { *oIsExpanded = true; }
 		return &(variables[iName]);
 	}
@@ -678,7 +685,7 @@ string* Satori::GetValue(const string &iName,bool &oIsSysValue,bool iIsExpand,bo
 
 
 // 引数に渡されたものを何かの名前であるとし、置き換え対象があれば置き換える。
-bool	Satori::Call(const string& iName, string& oResult, bool for_calc, bool for_non_talk, bool use_arg_callstack)
+bool	Satori::Call(const wstring& iName, wstring& oResult, bool for_calc, bool for_non_talk, bool use_arg_callstack)
 {
 	if ( for_calc ) {
 		for_non_talk = true;
@@ -687,8 +694,8 @@ bool	Satori::Call(const string& iName, string& oResult, bool for_calc, bool for_
 	++m_nest_count;
 
 	if ( m_nest_limit > 0 && m_nest_count > m_nest_limit ) {
-		GetSender().sender() << "呼び出し回数超過：" << iName << std::endl;
-		oResult = "（" + iName + "）";
+		GetSender().sender() << L"呼び出し回数超過：" << iName << std::endl;
+		oResult = L"（" + iName + L"）";
 		--m_nest_count;
 		return false;
 	}
@@ -698,13 +705,13 @@ bool	Satori::Call(const string& iName, string& oResult, bool for_calc, bool for_
 
 	if ( r && oResult.empty() ) {
 		if ( for_calc ) {
-			oResult = "０";
+			oResult = L"０";
 		}
 	}
 	return r;
 }
 
-bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool for_non_talk, bool use_arg_callstack)
+bool	Satori::CallReal(const wstring& iName, wstring& oResult, bool for_calc, bool for_non_talk, bool use_arg_callstack)
 {
 	simple_stack<strvec>::size_type stack_size_before_call = kakko_replace_history.size();
 
@@ -712,10 +719,10 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 
 	// SAORI対応, 内蔵関数呼び出しもここで
 	{
-		string	thePluginName="";
-		std::set<string>::const_iterator theDelimiter = mDelimiters.end();
+		wstring	thePluginName=L"";
+		std::set<wstring>::const_iterator theDelimiter = mDelimiters.end();
 
-		const char* p = NULL;
+		const wchar_t* p = NULL;
 		enum { NO_CALL, SAORI_CALL, INC_CALL, SPECIAL_CALL } state = NO_CALL;
 
 		if ( mShioriPlugins->find(iName) ) {
@@ -723,25 +730,25 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 			state = SAORI_CALL;
 		} else {
 
-			static std::set<string> inner_commands;
+			static std::set<wstring> inner_commands;
 			if ( inner_commands.empty() ) {
 				// 本当はstd::map<name, function>だなー　むー
-				inner_commands.insert("set");
-				inner_commands.insert("get_property");
-				inner_commands.insert("set_property");
-				inner_commands.insert("nop");
-				inner_commands.insert("sync");
-				inner_commands.insert("loop");
-				inner_commands.insert("remember");
-				inner_commands.insert("call");
-				inner_commands.insert("vncall");
-				inner_commands.insert("equal");
-				inner_commands.insert("バイト値");
-				inner_commands.insert("文の数");
-				inner_commands.insert("単語の追加");
-				inner_commands.insert("合成単語群");
-				inner_commands.insert("追加単語の削除");
-				inner_commands.insert("追加単語の全削除");
+				inner_commands.insert(L"set");
+				inner_commands.insert(L"get_property");
+				inner_commands.insert(L"set_property");
+				inner_commands.insert(L"nop");
+				inner_commands.insert(L"sync");
+				inner_commands.insert(L"loop");
+				inner_commands.insert(L"remember");
+				inner_commands.insert(L"call");
+				inner_commands.insert(L"vncall");
+				inner_commands.insert(L"equal");
+				inner_commands.insert(L"バイト値");
+				inner_commands.insert(L"文の数");
+				inner_commands.insert(L"単語の追加");
+				inner_commands.insert(L"合成単語群");
+				inner_commands.insert(L"追加単語の削除");
+				inner_commands.insert(L"追加単語の全削除");
 			}
 
 			if (use_arg_callstack)
@@ -762,11 +769,11 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 			}
 			else
 			{
-				for (std::set<string>::const_iterator i = mDelimiters.begin(); i != mDelimiters.end(); ++i) {
+				for (std::set<wstring>::const_iterator i = mDelimiters.begin(); i != mDelimiters.end(); ++i) {
 					p = strstr_hz(iName.c_str(), i->c_str());
 					if (p == NULL)
 						continue;
-					string	str(iName.c_str(), p - iName.c_str());
+					wstring	str(iName.c_str(), p - iName.c_str());
 					if (mShioriPlugins->find(str)) {	// 存在確認
 						thePluginName = str;
 						theDelimiter = i;
@@ -812,42 +819,42 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 					if (state == SPECIAL_CALL) {
 						int level = 0;
 						get_a_chr(p);
-						const char *p_start = p;
+						const wchar_t *p_start = p;
 						while (true){
-							if (*p == '\0'){
-								theArguments.push_back(string(p_start, p - p_start));
+							if (*p == L'\0'){
+								theArguments.push_back(wstring(p_start, p - p_start));
 								break;
 							}
-							string c = get_a_chr(p);
-							if (c == "（") {
+							wstring c = get_a_chr(p);
+							if (c == L"（") {
 								level++;
 							}
-							if (c == "）") {
+							if (c == L"）") {
 								level--;
 							}
 							if (level < 0) {
-								theArguments.push_back(string(p_start, p - p_start - 2));
+								theArguments.push_back(wstring(p_start, p - p_start - c.size()));
 								break;
 							}
 							if (level == 0) {
 								if (c == *theDelimiter) {
-									theArguments.push_back(string(p_start, p - p_start - c.size()));
-									p_start = (char *)p;
+									theArguments.push_back(wstring(p_start, p - p_start - c.size()));
+									p_start = (wchar_t *)p;
 								}
 							}
 						}
 					}
 					else{
-						string argstr = UnKakko(p, false, true);
+						wstring argstr = UnKakko(p, false, true);
 						while (true)
 						{
 							p += theDelimiter->size();
-							const char* pdlmt = strstr_hz(p, theDelimiter->c_str());
+							const wchar_t* pdlmt = strstr_hz(p, theDelimiter->c_str());
 							if (pdlmt == NULL) {
 								theArguments.push_back(p);
 								break;
 							}
-							theArguments.push_back(string(p, pdlmt - p));
+							theArguments.push_back(wstring(p, pdlmt - p));
 							p = pdlmt;
 						}
 
@@ -857,11 +864,11 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 									continue;
 								if (mSaoriArgumentCalcMode == SACM_AUTO) {
 									int	c = zen2han(*i).at(0);
-									if (c != '+' && c != '-' && !(c >= '0' && c <= '9'))
+									if (c != L'+' && c != L'-' && !(c >= L'0' && c <= L'9'))
 										continue;
 								}
 
-								string	exp = *i;
+								wstring	exp = *i;
 								if (calc(exp, true)) {
 									if (state == SAORI_CALL && aredigits(zen2han(exp))) {
 										*i = zen2han(exp);
@@ -884,7 +891,7 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 				for ( strvec::iterator i=theArguments.begin() ; i!=theArguments.end() ; ++i ) {
 					m_escaper.unescape(*i);
 				}
-				oResult = mShioriPlugins->request(thePluginName, theArguments, mKakkoCallResults, secure_flag ? "Local" : "External" );
+				oResult = mShioriPlugins->request(thePluginName, theArguments, mKakkoCallResults, secure_flag ? L"Local" : L"External" );
 			}
 			else if ( state==SPECIAL_CALL ) {
 				oResult = special_call(thePluginName, theArguments, false, true, secure_flag);
@@ -897,9 +904,9 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	}
 
 	const Word* w;
-	string hankaku=zen2han(iName);
+	wstring hankaku=zen2han(iName);
 	bool isSysValue;
-	string *pstr = GetValue(iName,isSysValue);
+	wstring *pstr = GetValue(iName,isSysValue);
 
 	if ( _pre_called_ ) {
 		// 前段階ですでに対応カッコ展開済み
@@ -907,10 +914,10 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	else if ( (w = words.select(iName, *this)) != NULL )
 	{
 		// 単語を選択した
-		GetSender().sender() << "＠" << iName << std::endl;
+		GetSender().sender() << L"＠" << iName << std::endl;
 
 		if ( talks.is_exist(iName) ) {
-			GetSender().sender() << "同じ名前「" << iName << "」の単語群と文があります。トラブルの元なので避けましょう。" << std::endl;
+			GetSender().sender() << L"同じ名前「" << iName << L"」の単語群と文があります。トラブルの元なので避けましょう。" << std::endl;
 		}
 
 		oResult = UnKakko( w->c_str() );
@@ -932,13 +939,13 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 			oResult = *pstr;
 		}
 		else {
-			oResult = "";
+			oResult = L"";
 		}
 	}
-	else if ( aredigits(hankaku) || (hankaku[0]=='-' && aredigits(hankaku.c_str()+1)) ) {
+	else if ( aredigits(hankaku) || (hankaku[0]==L'-' && aredigits(hankaku.c_str()+1)) ) {
 		// サーフェス切り替え
 		int	s = stoi_internal(hankaku);
-		oResult = string("\xff\x02") + itos(s) + "\xff"; //内部特殊表現に一旦変換して、後でサーフェス加算処理をする
+		oResult = wstring(INTERNAL_MARK_STR) + L"\x02" + itos(s) + INTERNAL_MARK_STR; //内部特殊表現に一旦変換して、後でサーフェス加算処理をする
 		/* 展開後に処理される
 		if ( !is_speaked(speaker) ) {
 			if ( surface_changed_before_speak.find(speaker) == surface_changed_before_speak.end() ) {
@@ -946,27 +953,28 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 			}
 		}*/
 	}
-	else if ( hankaku=="Aの数" ) {
+	else if ( hankaku==L"Aの数" ) {
 		if ( ! mCallStack.empty() ) {
 			oResult = itos(mCallStack.top().size());
 		}
 		else {
-			oResult = "0";
+			oResult = L"0";
 		}
 	}
-	else if ( hankaku=="Rの数" ) {
+	else if ( hankaku==L"Rの数" ) {
 		oResult = itos(mReferences.size());
 	}
-	else if ( hankaku=="Sの数" ) {
+	else if ( hankaku==L"Sの数" ) {
 		oResult = itos(mKakkoCallResults.size());
 	}
-	else if ( strncmp(iName.c_str(), "乱数", 4)==0 && iName.size()>6 ) { 
+	else if ( compare_head(iName, L"乱数") && iName.size()>const_strlen(L"乱数")+1 ) {
 		strvec	vec;
-		if ( split( iName.c_str()+4, "～", vec ) != 2 ) {
-			oResult = "※　乱数の指定が変です　※";
+		// 区切りは FULLWIDTH TILDE(U+FF5E, CP932の0x8160) と WAVE DASH(U+301C) の両方を受け付ける
+		if ( split( iName.c_str()+const_strlen(L"乱数"), L"\xFF5E\x301C", vec ) != 2 ) {
+			oResult = L"※　乱数の指定が変です　※";
 		}
 		else {
-			string vec0 = zen2han(vec[0]);
+			wstring vec0 = zen2han(vec[0]);
 			int	bottom = stoi_internal(vec0);
 			int	top = zen2int(vec[1]);
 			if ( bottom > top )
@@ -986,14 +994,14 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 			}
 		}
 	}
-	else if ( iName == "里々のバージョン" ) {
+	else if ( iName == L"里々のバージョン" ) {
 		oResult = gSatoriVersion;
 	}
-	else if ( iName == "里々のライセンス" ) {
+	else if ( iName == L"里々のライセンス" ) {
 		oResult = gSatoriLicense;
-		replace(oResult, "\n", "\\n");
+		replace(oResult, L"\n", L"\\n");
 	}
-	else if ( iName == "現在年" ) {
+	else if ( iName == L"現在年" ) {
 #ifdef POSIX
 	        time_t st = time(NULL);
 	        oResult = int2zen(localtime(&st)->tm_year + 1900);
@@ -1001,45 +1009,45 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		SYSTEMTIME st; ::GetLocalTime(&st); oResult=int2zen(st.wYear);
 #endif
 	}
-	else if ( iName == "現在曜日" ) {
+	else if ( iName == L"現在曜日" ) {
 #ifdef POSIX
 	        time_t st = time(NULL);
 		struct tm* st_tm = localtime(&st);
-		static const char* const ary[7]={"日","月","火","水","木","金","土"};
-		oResult = (st_tm->tm_wday >= 0 && st_tm->tm_wday < 7) ? ary[st_tm->tm_wday] : "？";
+		static const wchar_t* const ary[7]={L"日",L"月",L"火",L"水",L"木",L"金",L"土"};
+		oResult = (st_tm->tm_wday >= 0 && st_tm->tm_wday < 7) ? ary[st_tm->tm_wday] : L"？";
 #else
 		SYSTEMTIME st; ::GetLocalTime(&st);
-		static const char* const ary[7]={"日","月","火","水","木","金","土"};
-		oResult = ( st.wDayOfWeek >= 0 && st.wDayOfWeek < 7 ) ? ary[st.wDayOfWeek] : "？";
+		static const wchar_t* const ary[7]={L"日",L"月",L"火",L"水",L"木",L"金",L"土"};
+		oResult = ( st.wDayOfWeek >= 0 && st.wDayOfWeek < 7 ) ? ary[st.wDayOfWeek] : L"？";
 #endif
 	}
 #ifdef POSIX
-	else if ( iName == "現在月" ) { time_t st = time(NULL); oResult = int2zen(localtime(&st)->tm_mon + 1); }
-	else if ( iName == "現在日" ) { time_t st = time(NULL); oResult = int2zen(localtime(&st)->tm_mday); }
-	else if ( iName == "現在時" ) { time_t st = time(NULL); oResult = int2zen(localtime(&st)->tm_hour); }
-	else if ( iName == "現在分" ) { time_t st = time(NULL); oResult = int2zen(localtime(&st)->tm_min); }
-	else if ( iName == "現在秒" ) { time_t st = time(NULL); oResult = int2zen(localtime(&st)->tm_sec); }
+	else if ( iName == L"現在月" ) { time_t st = time(NULL); oResult = int2zen(localtime(&st)->tm_mon + 1); }
+	else if ( iName == L"現在日" ) { time_t st = time(NULL); oResult = int2zen(localtime(&st)->tm_mday); }
+	else if ( iName == L"現在時" ) { time_t st = time(NULL); oResult = int2zen(localtime(&st)->tm_hour); }
+	else if ( iName == L"現在分" ) { time_t st = time(NULL); oResult = int2zen(localtime(&st)->tm_min); }
+	else if ( iName == L"現在秒" ) { time_t st = time(NULL); oResult = int2zen(localtime(&st)->tm_sec); }
 #else
-	else if ( iName == "現在月" ) { SYSTEMTIME st; ::GetLocalTime(&st); oResult=int2zen(st.wMonth); }
-	else if ( iName == "現在日" ) { SYSTEMTIME st; ::GetLocalTime(&st); oResult=int2zen(st.wDay); }
-	else if ( iName == "現在時" ) { SYSTEMTIME st; ::GetLocalTime(&st); oResult=int2zen(st.wHour); }
-	else if ( iName == "現在分" ) { SYSTEMTIME st; ::GetLocalTime(&st); oResult=int2zen(st.wMinute); }
-	else if ( iName == "現在秒" ) { SYSTEMTIME st; ::GetLocalTime(&st); oResult=int2zen(st.wSecond); }
+	else if ( iName == L"現在月" ) { SYSTEMTIME st; ::GetLocalTime(&st); oResult=int2zen(st.wMonth); }
+	else if ( iName == L"現在日" ) { SYSTEMTIME st; ::GetLocalTime(&st); oResult=int2zen(st.wDay); }
+	else if ( iName == L"現在時" ) { SYSTEMTIME st; ::GetLocalTime(&st); oResult=int2zen(st.wHour); }
+	else if ( iName == L"現在分" ) { SYSTEMTIME st; ::GetLocalTime(&st); oResult=int2zen(st.wMinute); }
+	else if ( iName == L"現在秒" ) { SYSTEMTIME st; ::GetLocalTime(&st); oResult=int2zen(st.wSecond); }
 #endif
 	//起動
-	else if (iName == "起動時") {
+	else if (iName == L"起動時") {
 	    time_t sec = posix_get_current_sec() - sec_count_at_load;
 	    time_t hour = sec / 60 / 60;
 	    oResult = int2zen(hour);
 	}
-	else if (iName == "起動分") {
+	else if (iName == L"起動分") {
 	    time_t sec = posix_get_current_sec() - sec_count_at_load;
 	    time_t hour = sec / 60 / 60;
 	    sec -= hour * 60 * 60;
 	    time_t minute = sec / 60;
 	    oResult = int2zen(minute);
 	}
-	else if (iName == "起動秒" ) {
+	else if (iName == L"起動秒" ) {
 	    time_t sec = posix_get_current_sec() - sec_count_at_load;
 	    time_t hour = sec / 60 / 60;
 	    sec -= hour * 60 * 60;
@@ -1047,32 +1055,32 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	    sec -= minute * 60;
 	    oResult = int2zen(sec);
 	}
-	else if (iName == "単純起動秒" ) {
+	else if (iName == L"単純起動秒" ) {
 	    time_t sec = posix_get_current_sec() - sec_count_at_load;
 	    oResult = int2zen(sec);
 	}
-	else if (iName == "単純起動分") {
+	else if (iName == L"単純起動分") {
 	    time_t sec = posix_get_current_sec() - sec_count_at_load;
 	    oResult = int2zen(sec / 60);
 	}
-	else if (iName == "単純起動時") {
+	else if (iName == L"単純起動時") {
 	    time_t sec = posix_get_current_sec() - sec_count_at_load;
 	    oResult = int2zen(sec / 60 / 60);
 	}
 	//OS起動
-	else if (iName == "OS起動時" || iName == "ＯＳ起動時") {
+	else if (iName == L"OS起動時" || iName == L"ＯＳ起動時") {
 	    time_t sec = posix_get_current_sec();
 	    time_t hour = sec / 60 / 60;
 	    oResult = int2zen(hour);
 	}
-	else if (iName == "OS起動分" || iName == "ＯＳ起動分" ) {
+	else if (iName == L"OS起動分" || iName == L"ＯＳ起動分" ) {
 	    time_t sec = posix_get_current_sec();
 	    time_t hour = sec / 60 / 60;
 	    sec -= hour * 60 * 60;
 	    time_t minute = sec / 60;
 	    oResult = int2zen(minute);
 	}
-	else if (iName == "OS起動秒" || iName == "ＯＳ起動秒") {
+	else if (iName == L"OS起動秒" || iName == L"ＯＳ起動秒") {
 	    time_t sec = posix_get_current_sec();
 	    time_t hour = sec / 60 / 60;
 	    sec -= hour * 60 * 60;
@@ -1080,32 +1088,32 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	    sec -= minute * 60;
 	    oResult = int2zen(sec);
 	}
-	else if (iName == "単純OS起動秒" || iName == "単純ＯＳ起動秒") {
+	else if (iName == L"単純OS起動秒" || iName == L"単純ＯＳ起動秒") {
 	    time_t sec = posix_get_current_sec();
 	    oResult = int2zen(sec);
 	}
-	else if (iName == "単純OS起動分" || iName == "単純ＯＳ起動分") {
+	else if (iName == L"単純OS起動分" || iName == L"単純ＯＳ起動分") {
 	    time_t sec = posix_get_current_sec();
 	    oResult = int2zen(sec / 60);
 	}
-	else if (iName == "単純OS起動時" || iName == "単純ＯＳ起動時") {
+	else if (iName == L"単純OS起動時" || iName == L"単純ＯＳ起動時") {
 	    time_t sec = posix_get_current_sec();
 	    oResult = int2zen(sec / 60 / 60);
 	}
 	//累計
-	else if (iName == "累計時") {
+	else if (iName == L"累計時") {
 	    unsigned long sec = posix_get_current_sec() - sec_count_at_load + sec_count_total;
 		unsigned long hour = sec / 60 / 60;
 	    oResult = ul2zen(hour);
 	}
-	else if (iName == "累計分" ) {
+	else if (iName == L"累計分" ) {
 		unsigned long  sec = posix_get_current_sec() - sec_count_at_load + sec_count_total;
 		unsigned long  hour = sec / 60 / 60;
 	    sec -= hour * 60 * 60;
 		unsigned long  minute = sec / 60;
 		oResult = ul2zen(minute);
 	}
-	else if (iName == "累計秒") {
+	else if (iName == L"累計秒") {
 		unsigned long  sec = posix_get_current_sec() - sec_count_at_load + sec_count_total;
 		unsigned long  hour = sec / 60 / 60;
 	    sec -= hour * 60 * 60;
@@ -1113,30 +1121,30 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 	    sec -= minute * 60;
 		oResult = ul2zen(sec);
 	}
-	else if (iName == "単純累計秒") {
+	else if (iName == L"単純累計秒") {
 		unsigned long  sec = posix_get_current_sec() - sec_count_at_load + sec_count_total;
 		oResult = ul2zen(sec);
 	}
-	else if (iName == "単純累計分") {
+	else if (iName == L"単純累計分") {
 		unsigned long  sec = posix_get_current_sec() - sec_count_at_load + sec_count_total;
 		oResult = ul2zen(sec / 60);
 	}
-	else if (iName == "単純累計時") {
+	else if (iName == L"単純累計時") {
 		unsigned long  sec = posix_get_current_sec() - sec_count_at_load + sec_count_total;
 		oResult = ul2zen(sec / 60 / 60);
 	}
-	else if ( hankaku == "time_t" ) { time_t tm; time(&tm); oResult=int2zen(tm); }
-	else if ( iName == "最終トークからの経過秒" ) { oResult=int2zen(second_from_last_talk); }
+	else if ( hankaku == L"time_t" ) { time_t tm; time(&tm); oResult=int2zen(tm); }
+	else if ( iName == L"最終トークからの経過秒" ) { oResult=int2zen(second_from_last_talk); }
 
-	else if ( compare_head(iName, "サーフェス") && aredigits(iName.c_str()+10) ) {
-		oResult=itos(cur_surface[ zen2int(iName.c_str()+10) ]);
+	else if ( compare_head(iName, L"サーフェス") && aredigits(iName.c_str()+const_strlen(L"サーフェス")) ) {
+		oResult=itos(cur_surface[ zen2int(iName.c_str()+const_strlen(L"サーフェス")) ]);
 	}
-	else if ( compare_head(iName, "前回終了時サーフェス") && iName.length() > 20 ) {
-		oResult=itos(last_talk_exiting_surface[ zen2int(iName.c_str()+20) ]);
+	else if ( compare_head(iName, L"前回終了時サーフェス") && iName.length() > const_strlen(L"前回終了時サーフェス") ) {
+		oResult=itos(last_talk_exiting_surface[ zen2int(iName.c_str()+const_strlen(L"前回終了時サーフェス")) ]);
 	}
 
-	else if ( compare_head(iName, "ウィンドウハンドル") && iName.length() > 18 ) {
-		int character = zen2int(iName.c_str()+18);
+	else if ( compare_head(iName, L"ウィンドウハンドル") && iName.length() > const_strlen(L"ウィンドウハンドル") ) {
+		int character = zen2int(iName.c_str()+const_strlen(L"ウィンドウハンドル"));
 		std::map<int,void*>::const_iterator found = characters_hwnd.find(character);
 		if ( found != characters_hwnd.end() ) {
             // NOTE: sizeof(void *) == sizeof(long)
@@ -1148,25 +1156,25 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		}
 	}
 
-	else if ( iName == "隣で起動しているゴースト" ) { 
-		oResult = ( otherghostname.size()>=1 ) ? *otherghostname.begin() : ""; //自分自身はotherghostnameには含まない
+	else if ( iName == L"隣で起動しているゴースト" ) { 
+		oResult = ( otherghostname.size()>=1 ) ? *otherghostname.begin() : L""; //自分自身はotherghostnameには含まない
 	}
-	else if ( iName == "起動しているゴースト数" ) { 
+	else if ( iName == L"起動しているゴースト数" ) { 
 		oResult = int2zen(otherghostname.size()+1); //自分自身はotherghostnameには含まないので +1 
 	}
-	else if ( compare_head(iName, "isempty") && iName.size()>=8 ) {
-		const char* p = iName.c_str()+7;
-		mbinc(p);
-		oResult = (*p=='\0') ? "1" : "0";
+	else if ( compare_head(iName, L"isempty") && iName.size()>=8 ) {
+		const wchar_t* p = iName.c_str()+7;
+		get_a_chr(p);
+		oResult = (*p==L'\0') ? L"1" : L"0";
 	}
 
-	else if ( compare_head(iName, "文「") ) {
-		if ( compare_tail(iName, "」の存在") ) {
-			string	str(iName, 4, iName.length()-4-8);
-			oResult = talks.is_exist(str) ? "1" : "0";
+	else if ( compare_head(iName, L"文「") ) {
+		if ( compare_tail(iName, L"」の存在") ) {
+			wstring	str = strip_head_tail(iName, L"文「", L"」の存在");
+			oResult = talks.is_exist(str) ? L"1" : L"0";
 		}
-		else if ( compare_tail(iName, "」の数") ) {
-			string	str(iName, 4, iName.length()-4-6);
+		else if ( compare_tail(iName, L"」の数") ) {
+			wstring	str = strip_head_tail(iName, L"文「", L"」の数");
 
 			Family<Talk>* f = talks.get_family(str);
 
@@ -1174,17 +1182,17 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 				oResult = itos(f->size_of_element());
 			}
 			else {
-				oResult = "0";
+				oResult = L"0";
 			}
 		}
 	}
-	else if ( compare_head(iName, "単語群「") ) {
-		if ( compare_tail(iName, "」の存在") ) {
-			string	str(iName, 8, iName.length()-8-8);
-			oResult = words.is_exist(str) ? "1" : "0";
+	else if ( compare_head(iName, L"単語群「") ) {
+		if ( compare_tail(iName, L"」の存在") ) {
+			wstring	str = strip_head_tail(iName, L"単語群「", L"」の存在");
+			oResult = words.is_exist(str) ? L"1" : L"0";
 		}
-		else if ( compare_tail(iName, "」の数") ) {
-			string	str(iName, 8, iName.length()-8-6);
+		else if ( compare_tail(iName, L"」の数") ) {
+			wstring	str = strip_head_tail(iName, L"単語群「", L"」の数");
 
 			int count = 0;
 
@@ -1195,8 +1203,8 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 
 			oResult = int2zen(count);
 		}
-		else if (compare_tail(iName, "」の重複回避枯渇")) {
-			string str(iName, 8, iName.length() - 8 - 16);
+		else if (compare_tail(iName, L"」の重複回避枯渇")) {
+			wstring str = strip_head_tail(iName, L"単語群「", L"」の重複回避枯渇");
 			Family<Word>* f = words.get_family(str);
 			bool is_used_all = false;
 			if (f) {
@@ -1205,217 +1213,217 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 				}
 			}
 			if (is_used_all){
-				oResult = "1";
+				oResult = L"1";
 			}
 			else {
-				oResult = "0";
+				oResult = L"0";
 			}
 		}
 	}
 
 
-	else if ( compare_head(iName, "変数「") && compare_tail(iName, "」の存在") ) {
-		string	str(iName, 6, iName.length()-6-8);
+	else if ( compare_head(iName, L"変数「") && compare_tail(iName, L"」の存在") ) {
+		wstring	str = strip_head_tail(iName, L"変数「", L"」の存在");
 		bool isSysValue;
-		string *v = GetValue(str,isSysValue); //こっちはシステム変数かどうかどっちでもいい
-		oResult = v ? "1" : "0";
+		wstring *v = GetValue(str,isSysValue); //こっちはシステム変数かどうかどっちでもいい
+		oResult = v ? L"1" : L"0";
 	}
-	else if ( compare_head(iName, "変数「") && compare_tail(iName, "」か０") ) {
-		string	str(iName, 6, iName.length()-6-6);
+	else if ( compare_head(iName, L"変数「") && compare_tail(iName, L"」か０") ) {
+		wstring	str = strip_head_tail(iName, L"変数「", L"」か０");
 		bool isSysValue;
-		string *v = GetValue(str,isSysValue); //こっちはシステム変数かどうかどっちでもいい
-		oResult = v ? *v : "０";
+		wstring *v = GetValue(str,isSysValue); //こっちはシステム変数かどうかどっちでもいい
+		oResult = v ? *v : L"０";
 	}
-	else if ( compare_head(iName, "変数「") && compare_tail(iName, "」か空文字列") ) {
-		string	str(iName, 6, iName.length()-6-12);
+	else if ( compare_head(iName, L"変数「") && compare_tail(iName, L"」か空文字列") ) {
+		wstring	str = strip_head_tail(iName, L"変数「", L"」か空文字列");
 		bool isSysValue;
-		string *v = GetValue(str,isSysValue); //こっちはシステム変数かどうかどっちでもいい
-		oResult = v ? *v : "";
+		wstring *v = GetValue(str,isSysValue); //こっちはシステム変数かどうかどっちでもいい
+		oResult = v ? *v : L"";
 	}
 
 
-	else if (compare_head(iName, "導入済みゴースト「") && compare_tail(iName, "」の存在")){
-		string	str(iName, 18, iName.length() - 18 - 8);
-		oResult = installed_ghost_name.count(str) ? "1" : "0";
+	else if (compare_head(iName, L"導入済みゴースト「") && compare_tail(iName, L"」の存在")){
+		wstring	str = strip_head_tail(iName, L"導入済みゴースト「", L"」の存在");
+		oResult = installed_ghost_name.count(str) ? L"1" : L"0";
 	}
-	else if (compare_head(iName, "導入済みシェル「") && compare_tail(iName, "」の存在")){
-		string	str(iName, 16, iName.length() - 16 - 8);
-		oResult = installed_shell_name.count(str) ? "1" : "0";
+	else if (compare_head(iName, L"導入済みシェル「") && compare_tail(iName, L"」の存在")){
+		wstring	str = strip_head_tail(iName, L"導入済みシェル「", L"」の存在");
+		oResult = installed_shell_name.count(str) ? L"1" : L"0";
 	}
-	else if (compare_head(iName, "導入済みバルーン「") && compare_tail(iName, "」の存在")){
-		string	str(iName, 18, iName.length() - 18 - 8);
-		oResult = installed_balloon_name.count(str) ? "1" : "0";
+	else if (compare_head(iName, L"導入済みバルーン「") && compare_tail(iName, L"」の存在")){
+		wstring	str = strip_head_tail(iName, L"導入済みバルーン「", L"」の存在");
+		oResult = installed_balloon_name.count(str) ? L"1" : L"0";
 	}
-	else if (compare_head(iName, "導入済みヘッドライセンサ「") && compare_tail(iName, "」の存在")){
-		string	str(iName, 26, iName.length() - 26 - 8);
-		oResult = installed_headline_name.count(str) ? "1" : "0";
+	else if (compare_head(iName, L"導入済みヘッドライセンサ「") && compare_tail(iName, L"」の存在")){
+		wstring	str = strip_head_tail(iName, L"導入済みヘッドライセンサ「", L"」の存在");
+		oResult = installed_headline_name.count(str) ? L"1" : L"0";
 	}
-	else if (compare_head(iName, "導入済みフォント「") && compare_tail(iName, "」の存在")){
-		string	str(iName, 18, iName.length() - 18 - 8);
-		oResult = installed_font_name.count(str) ? "1" : "0";
+	else if (compare_head(iName, L"導入済みフォント「") && compare_tail(iName, L"」の存在")){
+		wstring	str = strip_head_tail(iName, L"導入済みフォント「", L"」の存在");
+		oResult = installed_font_name.count(str) ? L"1" : L"0";
 	}
-	else if (compare_head(iName, "導入済みプラグイン「") && compare_tail(iName, "」の存在")){
-		string	str(iName, 20, iName.length() - 20 - 8);
-		oResult = installed_plugin.count(str) ? "1" : "0";
+	else if (compare_head(iName, L"導入済みプラグイン「") && compare_tail(iName, L"」の存在")){
+		wstring	str = strip_head_tail(iName, L"導入済みプラグイン「", L"」の存在");
+		oResult = installed_plugin.count(str) ? L"1" : L"0";
 	}
-	else if (compare_head(iName, "導入済みプラグイン「") && compare_tail(iName, "」のID")){
-		string	str(iName, 20, iName.length() - 20 - 6);
+	else if (compare_head(iName, L"導入済みプラグイン「") && compare_tail(iName, L"」のID")){
+		wstring	str = strip_head_tail(iName, L"導入済みプラグイン「", L"」のID");
 		if (installed_plugin.count(str)){
 			oResult = installed_plugin[str].plugin_id;
 		}
 	}
-	else if (compare_head(iName, "使ってるぞグラフ「") && compare_tail(iName, "」の本体側の名前")){
-		string	str(iName, 18, iName.length() - 18 - 16);
+	else if (compare_head(iName, L"使ってるぞグラフ「") && compare_tail(iName, L"」の本体側の名前")){
+		wstring	str = strip_head_tail(iName, L"使ってるぞグラフ「", L"」の本体側の名前");
 		if (rate_of_use_graph.count(str)){
 			oResult = rate_of_use_graph[str].sakura_name;
 		}
 	}
-	else if (compare_head(iName, "使ってるぞグラフ「") && compare_tail(iName, "」の相方側の名前")){
-		string	str(iName, 18, iName.length() - 18 - 16);
+	else if (compare_head(iName, L"使ってるぞグラフ「") && compare_tail(iName, L"」の相方側の名前")){
+		wstring	str = strip_head_tail(iName, L"使ってるぞグラフ「", L"」の相方側の名前");
 		if (rate_of_use_graph.count(str)){
 			oResult = rate_of_use_graph[str].kero_name;
 		}
 	}
-	else if (compare_head(iName, "使ってるぞグラフ「") && compare_tail(iName, "」の起動回数")){
-		string	str(iName, 18, iName.length() - 18 - 12);
+	else if (compare_head(iName, L"使ってるぞグラフ「") && compare_tail(iName, L"」の起動回数")){
+		wstring	str = strip_head_tail(iName, L"使ってるぞグラフ「", L"」の起動回数");
 		if (rate_of_use_graph.count(str)){
 			oResult = rate_of_use_graph[str].boot_count;
 		}
 	}
-	else if (compare_head(iName, "使ってるぞグラフ「") && compare_tail(iName, "」の単純累計分")){
-		string	str(iName, 18, iName.length() - 18 - 14);
+	else if (compare_head(iName, L"使ってるぞグラフ「") && compare_tail(iName, L"」の単純累計分")){
+		wstring	str = strip_head_tail(iName, L"使ってるぞグラフ「", L"」の単純累計分");
 		if (rate_of_use_graph.count(str)){
 			oResult = rate_of_use_graph[str].boot_minutes;
 		}
 	}
-	else if (compare_head(iName, "使ってるぞグラフ「") && compare_tail(iName, "」の起動割合")){
-		string	str(iName, 18, iName.length() - 18 - 12);
+	else if (compare_head(iName, L"使ってるぞグラフ「") && compare_tail(iName, L"」の起動割合")){
+		wstring	str = strip_head_tail(iName, L"使ってるぞグラフ「", L"」の起動割合");
 		if (rate_of_use_graph.count(str)){
 			oResult = rate_of_use_graph[str].boot_percent;
 		}
 	}
-	else if (compare_head(iName, "使ってるぞグラフ「") && compare_tail(iName, "」の状態")){
-		string	str(iName, 18, iName.length() - 18 - 8);
+	else if (compare_head(iName, L"使ってるぞグラフ「") && compare_tail(iName, L"」の状態")){
+		wstring	str = strip_head_tail(iName, L"使ってるぞグラフ「", L"」の状態");
 		if (rate_of_use_graph.count(str)){
 			oResult = rate_of_use_graph[str].status;
 		}
 	}
-	else if (compare_head(iName, "ウインドウ「") && compare_tail(iName, "」の存在")){
-		string	str(iName, 12, iName.length() - 12 - 8);
+	else if (compare_head(iName, L"ウインドウ「") && compare_tail(iName, L"」の存在")){
+		wstring	str = strip_head_tail(iName, L"ウインドウ「", L"」の存在");
 
 		oResult = ul2zen(FindTopLevelWindow(str.c_str(),false));
 	}
-	else if (compare_head(iName, "「") && compare_tail(iName, "」を含むウインドウの存在")){
-		string	str(iName, 2, iName.length() - 2 - 24);
+	else if (compare_head(iName, L"「") && compare_tail(iName, L"」を含むウインドウの存在")){
+		wstring	str = strip_head_tail(iName, L"「", L"」を含むウインドウの存在");
 
 		oResult = ul2zen(FindTopLevelWindow(str.c_str(),true));
 	}
-	else if (compare_head(iName, "プロセス「") && compare_tail(iName, "」の存在")){
-		string	str(iName, 10, iName.length() - 10 - 8);
+	else if (compare_head(iName, L"プロセス「") && compare_tail(iName, L"」の存在")){
+		wstring	str = strip_head_tail(iName, L"プロセス「", L"」の存在");
 
 		oResult = ul2zen(FindProcessName(str.c_str(),false));
 	}
-	else if (compare_head(iName, "「") && compare_tail(iName, "」を含むプロセスの存在")){
-		string	str(iName, 2, iName.length() - 2 - 22);
+	else if (compare_head(iName, L"「") && compare_tail(iName, L"」を含むプロセスの存在")){
+		wstring	str = strip_head_tail(iName, L"「", L"」を含むプロセスの存在");
 
 		oResult = ul2zen(FindProcessName(str.c_str(),true));
 	}
 
-	else if (compare_head(iName, "起動中ゴースト「") && compare_tail(iName, "」の存在")){
-		string	str(iName, 16, iName.length() - 16 - 8);
-		oResult = otherghostname.count(str) ? "1" : "0"; //自分自身はotherghostnameには含まない
+	else if (compare_head(iName, L"起動中ゴースト「") && compare_tail(iName, L"」の存在")){
+		wstring	str = strip_head_tail(iName, L"起動中ゴースト「", L"」の存在");
+		oResult = otherghostname.count(str) ? L"1" : L"0"; //自分自身はotherghostnameには含まない
 	}
 
-	else if ( compare_tail(iName, "の存在") ) {
+	else if ( compare_tail(iName, L"の存在") ) {
 		updateGhostsInfo();	// ゴースト情報を更新
 		std::vector<strmap>::iterator i=ghosts_info.begin();
 		for ( ; i!=ghosts_info.end() ; ++i )
-			if ( compare_head(iName, (*i)["name"]) )
+			if ( compare_head(iName, (*i)[L"name"]) )
 				break;
-			else if ( compare_head(iName, (*i)["keroname"]) )
+			else if ( compare_head(iName, (*i)[L"keroname"]) )
 				break;
-		oResult = ( i==ghosts_info.end() ) ? "0" : "1";
+		oResult = ( i==ghosts_info.end() ) ? L"0" : L"1";
 	}
-	else if ( compare_tail(iName, "のサーフェス") ) {
+	else if ( compare_tail(iName, L"のサーフェス") ) {
 		updateGhostsInfo();	// ゴースト情報を更新
 		std::vector<strmap>::iterator i=ghosts_info.begin();
 		for ( ; i!=ghosts_info.end() ; ++i )
-			if ( compare_head(iName, (*i)["name"]) ) {
-				oResult = (*i)["sakura.surface"];
+			if ( compare_head(iName, (*i)[L"name"]) ) {
+				oResult = (*i)[L"sakura.surface"];
 				break;
-			} else if ( compare_head(iName, (*i)["keroname"]) ) {
-				oResult = (*i)["kero.surface"];
+			} else if ( compare_head(iName, (*i)[L"keroname"]) ) {
+				oResult = (*i)[L"kero.surface"];
 				break;
 			}
 
 		if ( i==ghosts_info.end() ) {
-			oResult = "-1";
+			oResult = L"-1";
 		}
 	}
-	else if ( compare_head(hankaku, "FMO") && hankaku.size()>4 ) { // FMO?head
+	else if ( compare_head(hankaku, L"FMO") && hankaku.size()>4 ) { // FMO?head
 		updateGhostsInfo();	// ゴースト情報を更新
 		unsigned int digit = 3;
-		while ( isdigit(hankaku[digit]) ) { ++digit; }
+		while ( hankaku[digit] >= L'0' && hankaku[digit] <= L'9' ) { ++digit; }
 
 		if ( digit > 3 ) {
-			unsigned int index = strtoul(hankaku.c_str()+3,NULL,10);
+			unsigned int index = wcstoul(hankaku.c_str()+3,NULL,10);
 			if ( index < ghosts_info.size() ) {
 				strmap&	m=ghosts_info[index];
-				string	value(hankaku.c_str()+digit);
+				wstring	value(hankaku.c_str()+digit);
 				if ( m.find(value) != m.end() ) {
 					oResult = m[value];
 				}
 			}
 		}
 	}
-	else if ( compare_head(hankaku, "count") )
+	else if ( compare_head(hankaku, L"count") )
 	{
-		string	name(hankaku.c_str()+5);
+		wstring	name(hankaku.c_str()+5);
 		int r = count_func(name);
 		if ( r >= 0 ) {
 			oResult = int2zen(r);
 		}
 	}
-	else if ( iName=="セーブデータ読み込み" ) {
+	else if ( iName==L"セーブデータ読み込み" ) {
 		oResult = load_savedata_status;
 	}
-	else if ( iName=="次のトーク" ) {
-		std::map<int,string>::const_iterator it = reserved_talk.find(1);
+	else if ( iName==L"次のトーク" ) {
+		std::map<int,wstring>::const_iterator it = reserved_talk.find(1);
 		if ( it != reserved_talk.end() ) 
 			oResult = it->second;
 	}
-	else if ( compare_head(iName,"次から") && compare_tail(iName,"回目のトーク") ) {
-		int	count = zen2int( string(iName.c_str()+6, iName.length()-6-12) );
-		std::map<int,string>::const_iterator it = reserved_talk.find(count);
+	else if ( compare_head(iName,L"次から") && compare_tail(iName,L"回目のトーク") ) {
+		int	count = zen2int( strip_head_tail(iName, L"次から", L"回目のトーク") );
+		std::map<int,wstring>::const_iterator it = reserved_talk.find(count);
 		if ( it != reserved_talk.end() ) {
 			oResult = it->second;
 		}
 	}
-	else if ( compare_head(iName, "トーク「") && compare_tail(iName, "」の予\x96\xf1有無") ) { // 「約」には\が含まれる。
-		string	str(iName, 8, iName.length()-8-12);
-		oResult = "0";
-		for (std::map<int, string>::const_iterator it=reserved_talk.begin(); it!=reserved_talk.end() ; ++it) {
+	else if ( compare_head(iName, L"トーク「") && compare_tail(iName, L"」の予約有無") ) { // 「約」には\が含まれる。
+		wstring	str = strip_head_tail(iName, L"トーク「", L"」の予約有無");
+		oResult = L"0";
+		for (std::map<int, wstring>::const_iterator it=reserved_talk.begin(); it!=reserved_talk.end() ; ++it) {
 			if ( str == it->second ) {
-				oResult = "1";
+				oResult = L"1";
 				break;
 			}
 		}
 	}
-	else if ( iName == "予\x96\xf1トーク数" ) { // 「約」には\が含まれる。
+	else if ( iName == L"予約トーク数" ) { // 「約」には\が含まれる。
 		oResult = int2zen( reserved_talk.size() );
 	}
-	else if ( iName == "イベント名" ) { oResult=mRequestID; }
-	else if ( iName == "直前の選択肢名" ) { oResult=last_choice_name; }
-	else if ( hankaku == "pwd" ) { oResult=mBaseFolder; }
-	else if ( iName == "本体の所在" ) { oResult=mExeFolder; }
+	else if ( iName == L"イベント名" ) { oResult=mRequestID; }
+	else if ( iName == L"直前の選択肢名" ) { oResult=last_choice_name; }
+	else if ( hankaku == L"pwd" ) { oResult=mBaseFolder; }
+	else if ( iName == L"本体の所在" ) { oResult=mExeFolder; }
 	else if ( mRequestMap.find(iName) != mRequestMap.end() ) {
 		oResult = mRequestMap[iName];
 	}
-	else if (iName == "全変数列挙"){
+	else if (iName == L"全変数列挙"){
 		if (fDebugMode && secure_flag) {
-			oResult = "";
+			oResult = L"";
 			for (strmap::iterator i = variables.begin(); i != variables.end(); i++){
-				oResult += string("＄") + i->first + "\t" + i->second + "\\n";
+				oResult += wstring(L"＄") + i->first + L"\t" + i->second + L"\\n";
 			}
 		}
 	}
@@ -1424,54 +1432,54 @@ bool	Satori::CallReal(const string& iName, string& oResult, bool for_calc, bool 
 		//括弧展開後にチェックするようになったのでここは無効化
 		//speaked_speaker.insert(speaker);
 		//chars_spoken += oResult.size();
-		GetSender().sender() << "（" << iName << "） not found." << std::endl;
+		GetSender().sender() << L"（" << iName << L"） not found." << std::endl;
 		return	false;
 	}
 
 	if ( stack_size_before_call != 0 && stack_size_before_call <= kakko_replace_history.size() ) {
 		kakko_replace_history[stack_size_before_call-1].push_back(oResult);
 	}
-	GetSender().sender() << "（" << iName << "）→" << oResult << "" << std::endl;
+	GetSender().sender() << L"（" << iName << L"）→" << oResult << L"" << std::endl;
 	return	true;
 }
 
 //countコール・getaistate互換用
-int Satori::count_func(const string &name)
+int Satori::count_func(const wstring &name)
 {
-	if ( name=="Words" ) { return words.size_of_family(); }
-	else if ( name=="Variable" ) { return variables.size(); }
-	else if ( name=="Anchor" ) { return anchors.size(); }
-	else if ( name=="Talk" ) { return talks.size_of_element(); }
-	else if ( name=="Word" ) { return words.size_of_element(); }
-	else if ( name=="NoNameTalk" )
+	if ( name==L"Words" ) { return words.size_of_family(); }
+	else if ( name==L"Variable" ) { return variables.size(); }
+	else if ( name==L"Anchor" ) { return anchors.size(); }
+	else if ( name==L"Talk" ) { return talks.size_of_element(); }
+	else if ( name==L"Word" ) { return words.size_of_element(); }
+	else if ( name==L"NoNameTalk" )
 	{
-		Family<Talk>* f = talks.get_family("");
+		Family<Talk>* f = talks.get_family(L"");
 		return ( f==0 ) ? 0 : f->size_of_element();
 	}
-	else if ( name=="EventTalk" )
+	else if ( name==L"EventTalk" )
 	{
 		int	n=0;
-		for ( std::map< string, Family<Talk> >::const_iterator it = talks.compatible().begin() ; it != talks.compatible().end() ; ++it ) {
-			if ( compare_head(it->first, "On") ) {
+		for ( std::map< wstring, Family<Talk> >::const_iterator it = talks.compatible().begin() ; it != talks.compatible().end() ; ++it ) {
+			if ( compare_head(it->first, L"On") ) {
 				n += it->second.size_of_element();
 			}
 		}
 		return n;
 	}
-	else if ( name=="OtherTalk" )
+	else if ( name==L"OtherTalk" )
 	{
 		int	n=0;
-		for ( std::map< string, Family<Talk> >::const_iterator it = talks.compatible().begin() ; it != talks.compatible().end() ; ++it ) {
-			if ( !compare_head(it->first, "On") && !it->first.empty() ) {
+		for ( std::map< wstring, Family<Talk> >::const_iterator it = talks.compatible().begin() ; it != talks.compatible().end() ; ++it ) {
+			if ( !compare_head(it->first, L"On") && !it->first.empty() ) {
 				n += it->second.size_of_element();
 			}
 		}
 		return n;
 	}
-	else if ( name=="Line" )
+	else if ( name==L"Line" )
 	{
 		int	n=0;
-		for ( std::map< string, Family<Talk> >::const_iterator it = talks.compatible().begin() ; it != talks.compatible().end() ; ++it )
+		for ( std::map< wstring, Family<Talk> >::const_iterator it = talks.compatible().begin() ; it != talks.compatible().end() ; ++it )
 		{
 			std::vector<const Talk*> v;
 			it->second.get_elements_pointers(v);
@@ -1480,16 +1488,16 @@ int Satori::count_func(const string &name)
 				n += (*el_it)->size();
 			}
 		}
-		for ( std::map< string, Family<Word> >::const_iterator it = words.compatible().begin() ; it != words.compatible().end() ; ++it )
+		for ( std::map< wstring, Family<Word> >::const_iterator it = words.compatible().begin() ; it != words.compatible().end() ; ++it )
 		{
 			n += it->second.size_of_element();
 		}
 		return n;
 	}
-	else if ( name=="Parenthesis" )
+	else if ( name==L"Parenthesis" )
 	{
 		int	n=0;
-		for ( std::map< string, Family<Talk> >::const_iterator it = talks.compatible().begin() ; it != talks.compatible().end() ; ++it )
+		for ( std::map< wstring, Family<Talk> >::const_iterator it = talks.compatible().begin() ; it != talks.compatible().end() ; ++it )
 		{
 			std::vector<const Talk*> v;
 			it->second.get_elements_pointers(v);
@@ -1497,17 +1505,17 @@ int Satori::count_func(const string &name)
 			{
 				for ( Talk::const_iterator tk_it = (*el_it)->begin() ; tk_it != (*el_it)->end() ; ++tk_it )
 				{
-					n += count(*tk_it, "（");
+					n += count(*tk_it, L"（");
 				}
 			}
 		}
-		for ( std::map< string, Family<Word> >::const_iterator it = words.compatible().begin() ; it != words.compatible().end() ; ++it )
+		for ( std::map< wstring, Family<Word> >::const_iterator it = words.compatible().begin() ; it != words.compatible().end() ; ++it )
 		{
 			std::vector<const Word*> v;
 			it->second.get_elements_pointers(v);
 			for ( std::vector<const Word*>::const_iterator el_it = v.begin() ; el_it != v.end() ; ++el_it )
 			{
-				n += count(**el_it, "（");
+				n += count(**el_it, L"（");
 			}
 		}
 		return n;
@@ -1519,8 +1527,8 @@ int Satori::count_func(const string &name)
 #ifndef POSIX
 typedef struct EnumWindowsInfo
 {
-	const char* txt;
-	char title[1024];
+	const wchar_t* txt;
+	wchar_t title[1024];
 	bool isPartial;
 	HWND hWnd;
 } EnumWindowsInfo;
@@ -1529,7 +1537,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd,LPARAM lParam)
 {
 	EnumWindowsInfo &inf = *reinterpret_cast<EnumWindowsInfo*>(lParam);
 
-	::GetWindowText(hwnd,inf.title,sizeof(inf.title)-1);
+	::GetWindowText(hwnd,inf.title,sizeof(inf.title)/sizeof(inf.title[0])-1);
 
 	if ( inf.title[0] ) {
 		if ( inf.isPartial ) {
@@ -1539,7 +1547,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd,LPARAM lParam)
 			}
 		}
 		else {
-			if ( stricmp(inf.title,inf.txt) == 0 ) {
+			if ( _wcsicmp(inf.title,inf.txt) == 0 ) {
 				inf.hWnd = hwnd;
 				return FALSE;
 			}
@@ -1551,7 +1559,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd,LPARAM lParam)
 #endif
 
 //ウインドウ探索　ウインドウ存在判定で使う
-unsigned long Satori::FindTopLevelWindow(const char* txt,bool isPartial)
+unsigned long Satori::FindTopLevelWindow(const wchar_t* txt,bool isPartial)
 {
 #ifdef POSIX
 	return 0;
@@ -1571,7 +1579,7 @@ unsigned long Satori::FindTopLevelWindow(const char* txt,bool isPartial)
 }
 
 //プロセス探索　ウインドウ存在判定で使う
-unsigned long Satori::FindProcessName(const char* txt,bool isPartial)
+unsigned long Satori::FindProcessName(const wchar_t* txt,bool isPartial)
 {
 #ifdef POSIX
 	return 0;
@@ -1588,7 +1596,7 @@ unsigned long Satori::FindProcessName(const char* txt,bool isPartial)
 
 	if ( ::Process32First(hSnap,&pinfo) ) {
 		do {
-			const char *pName = strrchr(pinfo.szExeFile,'\\');
+			const wchar_t *pName = wcsrchr(pinfo.szExeFile,L'\\');
 			if ( pName ) {
 				pName += 1;
 			}
@@ -1603,7 +1611,7 @@ unsigned long Satori::FindProcessName(const char* txt,bool isPartial)
 				}
 			}
 			else {
-				if ( stricmp(pName,txt) == 0 ) {
+				if ( _wcsicmp(pName,txt) == 0 ) {
 					pid = pinfo.th32ProcessID;
 					break;
 				}

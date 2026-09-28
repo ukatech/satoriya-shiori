@@ -1,9 +1,4 @@
 #include	"satori.h"
-#ifdef POSIX
-#  include "Utilities.h"
-#else
-#  include	<mbctype.h>
-#endif
 
 //////////DEBUG/////////////////////////
 #include "warning.h"
@@ -16,51 +11,52 @@
 ////////////////////////////////////////
 
 
-bool	Satori::Translate(string& ioScript) {
+bool	Satori::Translate(wstring& ioScript) {
 
 	if ( ioScript.empty() )
 		return	false;
 
-	const bool is_OnTranslate = (mRequestID=="OnTranslate");
-	const bool is_AnchorEnable = mRequestID.empty() || (mRequestID.compare(0,2,"On") == 0); //reqidがempty＝さとりてcall
+	const bool is_OnTranslate = (mRequestID==L"OnTranslate");
+	const bool is_AnchorEnable = mRequestID.empty() || (mRequestID.compare(0,2,L"On") == 0); //reqidがempty＝さとりてcall
 
 	// さくらスクリプトとそれ以外を分割して処理を加える
-	std::vector<string>	vec;
-	string	acum;
+	std::vector<wstring>	vec;
+	wstring	acum;
 	bool	content=false;	// 文に中身があるのか
 	bool	is_first_question = true; // 選択分岐記録の消去処理用。
 	int	last_speaker=0;
-	const char* p = ioScript.c_str();
+	const wchar_t* p = ioScript.c_str();
 	while (*p) {
-		string	c=get_a_chr(p);	// 全角半角問わず一文字取得し、pを一文字すすめる
+		wstring	c=get_a_chr(p);	// 全角半角問わず一文字取得し、pを一文字すすめる
 		
-		if ( c=="\\" || c=="%" ) {
-			if (*p=='\\'||*p=='%') {	// エスケープされた\, %
+		if ( c==L"\\" || c==L"%" ) {
+			if (*p==L'\\'||*p==L'%') {	// エスケープされた\, %
 				acum += c + *p++;
 				continue;
 			}
 			
-			const char*	start=p;
-			string	cmd="",opt="";
+			const wchar_t*	start=p;
+			wstring	cmd=L"",opt=L"";
 	
-			while (!_ismbblead(*p) && (isalpha(*p)||isdigit(*p)||*p=='!'||*p=='*'||*p=='&'||*p=='?'||*p=='_'))
+			while (*p < 0x80 && (iswalpha(*p)||iswdigit(*p)||*p==L'!'||*p==L'*'||*p==L'&'||*p==L'?'||*p==L'_'))
 				++p;
 			cmd.assign(start, p-start);
 	
-			if (*p=='[') {
-				const char* opt_start = ++p;
-				while (*p!=']') {
-					if (p[0]=='\\' && p[1]==']')	// エスケープされた]
+			if (*p==L'[') {
+				const wchar_t* opt_start = ++p;
+				while (*p && *p!=L']') {
+					if (p[0]==L'\\' && p[1]==L']')	// エスケープされた]
 						++p;
-					p += _ismbblead(*p) ? 2 : 1;
+					++p;
 				}
-				opt.assign(opt_start, p++ -opt_start);
+				opt.assign(opt_start, p-opt_start);
+				if ( *p ) { ++p; }
 			}
 			
 			// 選択分岐ラベルに対する特殊処理
 			if ( !is_OnTranslate && 
-				cmd=="q" && opt!="" && count(opt, ",")>0 && 
-				mRequestID!="OnHeadlinesense.OnFind") {
+				cmd==L"q" && opt!=L"" && count(opt, L",")>0 && 
+				mRequestID!=L"OnHeadlinesense.OnFind") {
 
 				// 選択分岐があるスクリプトであれば、その初回で選択分岐記録をクリア
 				if ( is_first_question ) {
@@ -71,72 +67,72 @@ bool	Satori::Translate(string& ioScript) {
 				// 選択分岐を記録
 				{
 					strvec	vec;
-					split(opt, ",", vec);
+					split(opt, L",", vec);
 					if ( vec.size()==1 )	// countとsplitの罠。
-						vec.push_back("");	// 
-					string	label=vec[0], id=vec[1];
+						vec.push_back(L"");	// 
+					wstring	label=vec[0], id=vec[1];
 
-					if ( false == compare_head(id, "On") &&
-						 false == compare_head(id, "http://") &&
-						 false == compare_head(id, "https://") 
+					if ( false == compare_head(id, L"On") &&
+						 false == compare_head(id, L"http://") &&
+						 false == compare_head(id, L"https://") 
 						)
 					{ 
 						// Onで始まるものはOnChoiceSelectを経由されないため、対象外とする
-						if (!compare_head(id, "script:") && !compare_head(id, "\"script:"))
+						if (!compare_head(id, L"script:") && !compare_head(id, L"\"script:"))
 						{
 							//script: も対象外
 
 							int	count = question_record.size() + 1;
-							question_record[id] = std::pair<int, string>(count, label);
+							question_record[id] = std::pair<int, wstring>(count, label);
 
 							//idも分離
 							strvec vec_id;
 							if ( id.size() == 0 ) {
-								vec_id.push_back("");
+								vec_id.push_back(L"");
 							}
 							else {
-								split(id,"\1",vec_id);
+								split(id,L"\1",vec_id);
 							}
 
 							// ラベルＩＤに書き戻し
-							opt = label + "," + vec_id[0] + byte1_dlmt + label + byte1_dlmt + itos(count);
+							opt = label + L"," + vec_id[0] + byte1_dlmt + label + byte1_dlmt + itos(count);
 							for (int i = 2; i < vec.size(); ++i)
-								opt += string(",") + vec[i];
+								opt += wstring(L",") + vec[i];
 						}
 					}
 				}
 			}
-			else if ( cmd=="0" || cmd=="h" ) { last_speaker=0; }
-			else if ( cmd=="1" || cmd=="u" ) { last_speaker=1; }
-			else if ( cmd=="p" && aredigits(opt) ) {
+			else if ( cmd==L"0" || cmd==L"h" ) { last_speaker=0; }
+			else if ( cmd==L"1" || cmd==L"u" ) { last_speaker=1; }
+			else if ( cmd==L"p" && aredigits(opt) ) {
 				last_speaker=stoi_internal(opt);
 				if ( mIsMateria || last_speaker<=1 ) {
-					cmd = (opt=="0") ? "0" : "1";
-					opt = "";
+					cmd = (opt==L"0") ? L"0" : L"1";
+					opt = L"";
 				}
 			}
-			else if ( cmd=="s" && !opt.empty() ) {
+			else if ( cmd==L"s" && !opt.empty() ) {
 				last_talk_exiting_surface[last_speaker]=stoi_internal(opt);
 			}
-			else if ( cmd.size()==2 && cmd[0]=='s' && isdigit(cmd[1]) ) {
-				last_talk_exiting_surface[last_speaker]=cmd[1]-'0';
+			else if ( cmd.size()==2 && cmd[0]==L's' && iswdigit(cmd[1]) ) {
+				last_talk_exiting_surface[last_speaker]=cmd[1]-L'0';
 			}
 						
 			if ( !acum.empty() )
 				vec.push_back(acum);
 
-			if ( opt=="" )
+			if ( opt==L"" )
 				vec.push_back(c + cmd);
 			else
-				vec.push_back(c + cmd + "[" + opt + "]");
-			acum="";
+				vec.push_back(c + cmd + L"[" + opt + L"]");
+			acum=L"";
 
-			static	std::set<string>	nc_cmd;	// 有効と数えないさくらスクリプト群
+			static	std::set<wstring>	nc_cmd;	// 有効と数えないさくらスクリプト群
 			static	bool	initialized=false;
 			if (!initialized) {
 				initialized=true;
-				nc_cmd.insert("0"); nc_cmd.insert("1"); nc_cmd.insert("h"); nc_cmd.insert("u"); nc_cmd.insert("p");
-				nc_cmd.insert("n"); nc_cmd.insert("w"); nc_cmd.insert("_w"); nc_cmd.insert("e");
+				nc_cmd.insert(L"0"); nc_cmd.insert(L"1"); nc_cmd.insert(L"h"); nc_cmd.insert(L"u"); nc_cmd.insert(L"p");
+				nc_cmd.insert(L"n"); nc_cmd.insert(L"w"); nc_cmd.insert(L"_w"); nc_cmd.insert(L"e");
 			}
 			if ( nc_cmd.find(cmd)==nc_cmd.end() )
 				content = true;
@@ -153,26 +149,26 @@ bool	Satori::Translate(string& ioScript) {
 	if (!content)
 		return	false;	// 中身の無いスクリプト（実行してもしなくても一緒）と判断。
 
-	ioScript="";
-	string repstr;
+	ioScript=L"";
+	wstring repstr;
 
-	for (std::vector<string>::iterator i=vec.begin() ; i!=vec.end() ; ++i) {
-		if ( i->at(0)!='\\' && i->at(0)!='%' ) {
+	for (std::vector<wstring>::iterator i=vec.begin() ; i!=vec.end() ; ++i) {
+		if ( i->at(0)!=L'\\' && i->at(0)!=L'%' ) {
 			// さくらスクリプト以外の文への処理
 
 			// アンカー挿入
 			if ( auto_anchor_enable_onetime ) { //onetimeとの比較だけでよい
 				if ( is_AnchorEnable && !is_OnTranslate ) {
-					string::size_type n = i->size();
-					for ( string::size_type c=0 ; c<n ; ++c ) {
-						for ( std::vector<string>::iterator j=anchors.begin() ; j!=anchors.end() ; ++j ) {
+					wstring::size_type n = i->size();
+					for ( wstring::size_type c=0 ; c<n ; ++c ) {
+						for ( std::vector<wstring>::iterator j=anchors.begin() ; j!=anchors.end() ; ++j ) {
 							if ( n - c >= j->size() ) {
 								if ( i->compare(c,j->size(),*j) == 0 ) {
-									repstr = "\\_a[";
+									repstr = L"\\_a[";
 									repstr += *j;
-									repstr += "]";
+									repstr += L"]";
 									repstr += *j;
-									repstr += "\\_a";
+									repstr += L"\\_a";
 
 									i->replace(c,j->size(),repstr);
 									c += repstr.size();
@@ -181,7 +177,7 @@ bool	Satori::Translate(string& ioScript) {
 								}
 							}
 						}
-						if ( c < n && _ismbblead(i->at(c)) ) {
+						if ( c < n && IsHighSurrogate(i->at(c)) ) {
 							++c;
 						}
 					}

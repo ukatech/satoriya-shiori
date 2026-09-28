@@ -15,24 +15,18 @@
 	return	const_cast<char*>(FindFinalChar(start,c));
 }*/
 
-// 文字列中から指定の1byte文字が最後に出現する位置を返す。
-const char*	FindFinalChar( const char* start, char c ) {
-	const char*	last = NULL, *ptr = start;
-	while ( *ptr != '\0' ) {
-		if ( *ptr == c )
-			last = ptr;
-		mbinc(ptr);
-	}
-	return	last;
+// 文字列中から指定の文字が最後に出現する位置を返す。
+const wchar_t*	FindFinalChar( const wchar_t* start, wchar_t c ) {
+	return	wcsrchr(start, c);
 }
 
 
-bool	CutExtention(char* iFileName) {
+bool	CutExtention(wchar_t* iFileName) {
 	assert(iFileName != NULL);
-	char*	dot = FindFinalChar(iFileName, '.');
+	wchar_t*	dot = FindFinalChar(iFileName, L'.');
 	if ( dot == NULL )
 		return	false;
-	*dot='\0';
+	*dot=L'\0';
 	return	true;
 }
 /*
@@ -48,9 +42,9 @@ void	SetExtention(char* iFileName, const char* iNewExtention) {
 
 
 // iStringの位置から半角スペース及び半角タブを飛ばした位置を返す
-const char*	SkipDelimiter(const char* p) {
+const wchar_t*	SkipDelimiter(const wchar_t* p) {
 	assert(p!=NULL);
-	while ( *p==' ' || *p=='\t' )
+	while ( *p==L' ' || *p==L'\t' )
 		p++;
 	return	p;
 }

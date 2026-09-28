@@ -5,60 +5,36 @@
 
 #include	<assert.h>
 #include	<string.h>
+#include	<wchar.h>
 
-#ifdef POSIX
-inline bool _ismbblead(char c) {
-    // 多分、Shift_JIS固定で良いのだろう。
-    unsigned char _c = c;
-    return (_c >= 0x81 && _c <= 0x9f) || (_c >= 0xe0 && _c <= 0xfc);
-}
-inline bool _ismbbtrail(char c) {
-    unsigned char _c = c;
-    return (_c >= 0x40 && _c <= 0x7e) || (_c >= 0x80 && _c <= 0xec);
-}
-#else
-#  include	<mbctype.h>	// for _ismbblead,_ismbbtrail
-#endif
-
-// ポインタの指す位置を１文字インクリメント。全角・半角両対応
-inline void	mbinc(const char*& p) {
-	//p += _ismbblead(*p) ? 2 : 1; 
-	if ( _ismbblead(p[0]) ) { 
-		assert(_ismbbtrail(p[1]));
-		p+=2;
-	} 
-	else
-		p++;
-}
-
-// 文字列中から指定の1byte文字が最後に出現する位置を返す。
+// 文字列中から指定の文字が最後に出現する位置を返す。
 // 見つからなかった場合は NULL を返す
-const char*	FindFinalChar(const char* iString, char iC);
-inline char*	FindFinalChar(char* iString, char iC) {
-	return	const_cast<char*>(FindFinalChar( static_cast<const char*>(iString), iC ));
+const wchar_t*	FindFinalChar(const wchar_t* iString, wchar_t iC);
+inline wchar_t*	FindFinalChar(wchar_t* iString, wchar_t iC) {
+	return	const_cast<wchar_t*>(FindFinalChar( static_cast<const wchar_t*>(iString), iC ));
 }
 
 // ファイル名から拡張子を削除する
-bool	CutExtention(char* iFileName);
+bool	CutExtention(wchar_t* iFileName);
 // 拡張子を変更または追加する
-void	SetExtention(char* iFileName, const char* iNewExtention);
+void	SetExtention(wchar_t* iFileName, const wchar_t* iNewExtention);
 // ファイル名の拡張子部分を取得する
-char*	GetExtention(char* iFileName);
+wchar_t*	GetExtention(wchar_t* iFileName);
 
 // iStringの位置から半角スペース及び半角タブを飛ばした位置を返す
-const char*	SkipDelimiter(const char* iString);
-inline char*	SkipDelimiter(char* iString) {
-	return	const_cast<char*>(SkipDelimiter( static_cast<const char*>(iString)));
+const wchar_t*	SkipDelimiter(const wchar_t* iString);
+inline wchar_t*	SkipDelimiter(wchar_t* iString) {
+	return	const_cast<wchar_t*>(SkipDelimiter( static_cast<const wchar_t*>(iString)));
 }
 
 
 // str1とstr2は等しいか？
-inline bool CompareStr( const char* str1, const char* str2 ) {
-	return	(::strcmp( str1, str2 ) == 0 );
+inline bool CompareStr( const wchar_t* str1, const wchar_t* str2 ) {
+	return	(::wcscmp( str1, str2 ) == 0 );
 }
 // str内にpartが存在するか？
-inline bool FindStr( const char* str, const char* part ) {
-	return	(::strstr( str, part ) != NULL );
+inline bool FindStr( const wchar_t* str, const wchar_t* part ) {
+	return	(::wcsstr( str, part ) != NULL );
 }
 
 /*
@@ -94,9 +70,9 @@ void Swap( T* a, T* b ) { assert( a!=NULL && b!=NULL ); T temp; temp=*a; *a=*b; 
 template<class T>
 T&	Area( T& t, T a, T b ) { return t = Max( a, Min( b, t ) ); }
 
-inline bool Compare( const char* a, const char *b ) {
+inline bool Compare( const wchar_t* a, const wchar_t *b ) {
 	assert( a != NULL && b != NULL );
-	return	( strcmp( a, b ) == 0 );
+	return	( wcscmp( a, b ) == 0 );
 }
 
 // 符号を反転
@@ -129,11 +105,6 @@ typedef	signed __int64	int64;
 typedef	uchar	byte;
 typedef	ushort	word;
 typedef	ulong	dword;
-
-#ifdef POSIX
-#define stricmp strcasecmp
-#define strnicmp strncasecmp
-#endif
 
 // 第１引数の指定bitをon/offし、参照を返す。演算子的に用いる。
 template<class T>
@@ -182,14 +153,14 @@ T	GetDecimal( T d ) { return d-(int)d; }
 
 #define	once(f)	static int __first__=true; if (__first__) { __first__=false; f; } else NULL
 
-inline	bool	isHexDigit(int c) { return ( (c>='0'&&c<='9') || (c>='A'&&c<='F') || (c>='a'&&c<='f') ); }
+inline	bool	isHexDigit(int c) { return ( (c>=L'0'&&c<=L'9') || (c>=L'A'&&c<=L'F') || (c>=L'a'&&c<=L'f') ); }
 inline	int	Hex2Num(int c) {
 	assert(isHexDigit(c));
-	if ( c>='0'&&c<='9' )
-		return	c-'0';
-	if ( c>='A'&&c<='F' )
-		return	c-'A'+10;
-	return	c-'a'+10;
+	if ( c>=L'0'&&c<=L'9' )
+		return	c-L'0';
+	if ( c>=L'A'&&c<=L'F' )
+		return	c-L'A'+10;
+	return	c-L'a'+10;
 }
 
 // 二乗さん

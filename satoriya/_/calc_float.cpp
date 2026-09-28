@@ -21,38 +21,38 @@ typedef	double	VALUE_TYPE;
 // ’P€‰‰Zq +,-,!
 // ”í‰‰Zq ®”’l, ƒJƒbƒRB
 // ‘S‚Ä”¼Šp‚Å‚ ‚é‚±‚ÆB‹ó”’“™‚Í”F‚ß‚È‚¢
-extern bool calc_float(const char* iExpression, int* oResult);
+extern bool calc_float(const wchar_t* iExpression, int* oResult);
 // ”¼Šp‘SŠpƒXƒy[ƒX‚Æƒ^ƒu‹L†‚ÌÁ‹A”šE‹L†‚Ì”¼Šp‰»‚Ü‚Å‘S•”‚â‚Á‚½‚°‚é
-extern	bool calc_float(string& ioString);
+extern	bool calc_float(wstring& ioString);
 
 
 struct calc_element {
-	string	str;
+	wstring	str;
 	int		priority;
-	calc_element(string _str, int _priority) : str(_str), priority(_priority) {}
+	calc_element(wstring _str, int _priority) : str(_str), priority(_priority) {}
 	calc_element() : str(), priority(0) {}
 };
 
-static bool	make_array(const char*& p, std::vector<calc_element>& oData) {
+static bool	make_array(const wchar_t*& p, std::vector<calc_element>& oData) {
 
 	while (true) {
 
 		// ”í‰‰Zq‚Ü‚½‚Í’P€‰‰Zq‚ğæ“¾
 
-		if ( *p == '(' ) {
-			oData.push_back( calc_element("(", 110) );
+		if ( *p == L'(' ) {
+			oData.push_back( calc_element(L"(", 110) );
 			if ( !make_array(++p, oData) )	// ƒJƒbƒR“à‚ğÄ‹Aˆ—
 				return	false;	// ƒGƒ‰[‚Íƒgƒbƒv‚Ü‚Å“`‚¦‚é
-			if ( *p++ !=')' )
+			if ( *p++ !=L')' )
 				return	false;
-			oData.push_back( calc_element(")", 10) );
+			oData.push_back( calc_element(L")", 10) );
 		}
 		else {
-			if ( !isdigit(*p) && (*p)!='.') {
-				string	str;
-				if ( *p=='!' ) str="!";
-				else if ( *p=='+' ) str="+";
-				else if ( *p=='-' ) str="-";
+			if ( !iswdigit(*p) && (*p)!=L'.') {
+				wstring	str;
+				if ( *p==L'!' ) str=L"!";
+				else if ( *p==L'+' ) str=L"+";
+				else if ( *p==L'-' ) str=L"-";
 				else return false;	// ’P€‰‰Zq‚¶‚á‚È‚¢A‡”Ô‚ª•Ï
 				++p;
 				oData.push_back( calc_element(str, 90) );
@@ -60,46 +60,46 @@ static bool	make_array(const char*& p, std::vector<calc_element>& oData) {
 			}
 
 			int	len=0;
-			while (isdigit(p[len]) || p[len]=='.') ++len;
+			while (iswdigit(p[len]) || p[len]==L'.') ++len;
 
-			string	str(p,len);
-			if ( count(str,".")>=2 )
+			wstring	str(p,len);
+			if ( count(str,L".")>=2 )
 				return	false;	// ¬”“_‚ª‚QŒÂˆÈã‚ ‚é
 			oData.push_back( calc_element(str, 100) );
 			p+=len;
 		}
 
 		// ”í‰‰Zq‚ÌŒã‚É‚Ì‚İA³í’Eo
-		if ( *p=='\0' || *p==')' )
+		if ( *p==L'\0' || *p==L')' )
 			return	true;
 
 		// ‚Q€‰‰Zq‚ğæ“¾
 
-		const char*	oprs[] = { // ’·‚¢‚à‚Ì‡‚É”äŠr‚·‚é‚ÌB
-			"&&","||","==","!=","<=",">=","<",">","+","-","*","/"/*,"."*/};
+		const wchar_t*	oprs[] = { // ’·‚¢‚à‚Ì‡‚É”äŠr‚·‚é‚ÌB
+			L"&&",L"||",L"==",L"!=",L"<=",L">=",L"<",L">",L"+",L"-",L"*",L"/"/*,"."*/};
 
 		int	len=0, i=0;
 		for (i=0 ; i<sizeof(oprs)/sizeof(oprs[0]) ; ++i) {
-			len = strlen(oprs[i]);
-			if ( strncmp(p, oprs[i], len) == 0 )
+			len = wcslen(oprs[i]);
+			if ( wcsncmp(p, oprs[i], len) == 0 )
 				break;
 		}
 		if ( i==sizeof(oprs)/sizeof(oprs[0]) )
 			return	false;	// ‚Ç‚Ì‰‰Zq‚Å‚à‚È‚¢
 
 		// ‰‰Zq‚É‰‚¶‚Ä—Dæ“x‚ğİ’è
-		string	str(p,len);
+		wstring	str(p,len);
 		p+=len;
 		int	priority;
 
 		/*if ( str=="." ) { priority=85; }	// ¬”“_
-		else */if ( str=="^" ) { priority=80; }
-		else if ( str=="*" || str=="/" || str=="%" ) { priority=70; }
-		else if ( str=="+" || str=="-" ) { priority=60; }
-		else if ( str=="<" || str==">" || str=="<=" || str==">=" ) { priority=50; }
-		else if ( str=="==" || str=="!=" ) { priority=45; }
-		else if ( str=="&&" ) { priority=40; }
-		else if ( str=="||" ) { priority=35; }
+		else */if ( str==L"^" ) { priority=80; }
+		else if ( str==L"*" || str==L"/" || str==L"%" ) { priority=70; }
+		else if ( str==L"+" || str==L"-" ) { priority=60; }
+		else if ( str==L"<" || str==L">" || str==L"<=" || str==L">=" ) { priority=50; }
+		else if ( str==L"==" || str==L"!=" ) { priority=45; }
+		else if ( str==L"&&" ) { priority=40; }
+		else if ( str==L"||" ) { priority=35; }
 		else return	false;
 
 		oData.push_back( calc_element(str, priority) );
@@ -108,7 +108,7 @@ static bool	make_array(const char*& p, std::vector<calc_element>& oData) {
 
 // ‚Q€‰‰Z
 #define	a_op_b(op)	\
-	else if ( el.str == #op ) {	\
+	else if ( el.str == ascii_to_w(#op) ) {	\
 		assert(stack.size()>=2); \
 		VALUE_TYPE	result = stack.from_top(1) op stack.from_top(0); \
 		stack.pop(2); stack.push(result); }
@@ -118,13 +118,13 @@ static VALUE_TYPE	calc_polish(simple_stack<calc_element>& polish) {
 	for ( int n=0 ; n<polish.size()-1 ; n++ ) {
 		calc_element&	el=polish[n];
 		if ( el.priority==100 ) { // ”í‰‰Zq
-			stack.push( atof(el.str.c_str()) );
+			stack.push( wcstod(el.str.c_str(), NULL) );
 		}
 		else if ( el.priority==90 ) {	// ’P€‰‰Zq
 			assert(stack.size()>=1);
-			if ( el.str=="!" ) stack.push( !stack.pop() );
-			else if (el.str == "+") /*NOOP*/;
-			else if ( el.str=="-" ) stack.push( -stack.pop() );
+			if ( el.str==L"!" ) stack.push( !stack.pop() );
+			else if (el.str == L"+") /*NOOP*/;
+			else if ( el.str==L"-" ) stack.push( -stack.pop() );
 			else assert(0);
 		}
 		/*else if ( el.priority==85 ) {	// ¬”“_
@@ -155,21 +155,21 @@ static VALUE_TYPE	calc_polish(simple_stack<calc_element>& polish) {
 	return	stack.pop();
 }
 
-bool calc_float(const char* iExpression, VALUE_TYPE* oResult) {
+bool calc_float(const wchar_t* iExpression, VALUE_TYPE* oResult) {
 	std::vector<calc_element>	org;
 	if ( !make_array(iExpression, org) )
 		return	false;
-	if ( *iExpression!='\0' )
+	if ( *iExpression!=L'\0' )
 		return	false;	// ‚È‚ñ‚©ƒSƒ~‚ªc‚Á‚Ä‚½H
 
 	simple_stack<calc_element>	stack,polish;
-	stack.push(calc_element("Guard", 0));	// ”Ô•º
+	stack.push(calc_element(L"Guard", 0));	// ”Ô•º
 
 	std::vector<calc_element>::const_iterator i;
 	for ( i=org.begin() ; i!=org.end() ; ++i ) {
-		while ( i->priority <= stack.top().priority && stack.top().str != "(" )
+		while ( i->priority <= stack.top().priority && stack.top().str != L"(" )
 			polish.push(stack.pop());
-		if ( i->str != ")" ) stack.push(*i); else stack.pop();
+		if ( i->str != L")" ) stack.push(*i); else stack.pop();
 	}
 
 	// stack‚©‚çc‚è‚ğæ‚èo‚·
@@ -182,46 +182,47 @@ bool calc_float(const char* iExpression, VALUE_TYPE* oResult) {
 }
 
 
-bool calc_float(string& ioString) {
-	erase_all(ioString, "@");
-	erase_all(ioString, " ");
-	erase_all(ioString, "\t");
-	replace(ioString, "{", "+");
-	replace(ioString, "|", "-");
-	replace(ioString, "–", "*");
-	replace(ioString, "~", "*");
-	replace(ioString, "^", "/");
-	replace(ioString, "€", "/");
-	replace(ioString, "ƒ", "<");
-	replace(ioString, "„", ">");
-	replace(ioString, "", "=");
-	replace(ioString, "I", "!");
-	replace(ioString, "•", "&");
-	replace(ioString, "b", "|");
-	replace(ioString, "i", "(");
-	replace(ioString, "j", ")");
-	replace(ioString, "‚O", "0");
-	replace(ioString, "‚P", "1");
-	replace(ioString, "‚Q", "2");
-	replace(ioString, "‚R", "3");
-	replace(ioString, "‚S", "4");
-	replace(ioString, "‚T", "5");
-	replace(ioString, "‚U", "6");
-	replace(ioString, "‚V", "7");
-	replace(ioString, "‚W", "8");
-	replace(ioString, "‚X", "9");
-	replace(ioString, "D", ".");
+bool calc_float(wstring& ioString) {
+	erase_all(ioString, L"@");
+	erase_all(ioString, L" ");
+	erase_all(ioString, L"\t");
+	replace(ioString, L"{", L"+");
+	replace(ioString, L"|", L"-");
+	replace(ioString, L"\x2212", L"-");	// MINUS SIGNiUTF-8«‘‚Åg‚í‚ê‚â‚·‚¢j
+	replace(ioString, L"–", L"*");
+	replace(ioString, L"~", L"*");
+	replace(ioString, L"^", L"/");
+	replace(ioString, L"€", L"/");
+	replace(ioString, L"ƒ", L"<");
+	replace(ioString, L"„", L">");
+	replace(ioString, L"", L"=");
+	replace(ioString, L"I", L"!");
+	replace(ioString, L"•", L"&");
+	replace(ioString, L"b", L"|");
+	replace(ioString, L"i", L"(");
+	replace(ioString, L"j", L")");
+	replace(ioString, L"‚O", L"0");
+	replace(ioString, L"‚P", L"1");
+	replace(ioString, L"‚Q", L"2");
+	replace(ioString, L"‚R", L"3");
+	replace(ioString, L"‚S", L"4");
+	replace(ioString, L"‚T", L"5");
+	replace(ioString, L"‚U", L"6");
+	replace(ioString, L"‚V", L"7");
+	replace(ioString, L"‚W", L"8");
+	replace(ioString, L"‚X", L"9");
+	replace(ioString, L"D", L".");
 	VALUE_TYPE	result;
 	if ( !calc_float(ioString.c_str(), &result) )
 		return	false;
 
 	char	buf[128];
 	sprintf(buf, "%f", result);
-	ioString = buf;
+	ioString = ascii_to_w(buf);
 
-	while ( compare_tail(ioString, "0") )
+	while ( compare_tail(ioString, L"0") )
 		ioString.assign(ioString.c_str(), ioString.size()-1);
-	if ( compare_tail(ioString, ".") )
+	if ( compare_tail(ioString, L".") )
 		ioString.assign(ioString.c_str(), ioString.size()-1);
 
 	return	true;

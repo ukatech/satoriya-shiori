@@ -1,6 +1,7 @@
 #include "SakuraDLLClient.h"
 #include "../_/Sender.h"
 #include <assert.h>
+
 #ifdef POSIX
 #  include <dlfcn.h>
 #  include <string.h>
@@ -18,10 +19,14 @@
 #endif
 ////////////////////////////////////////
 
+
 SakuraDLLClient::SakuraDLLClient()
 {
 	mModule = NULL;
 	mLoad = NULL;
+#ifndef POSIX
+	mLoadU = NULL;
+#endif
 	mRequest = NULL;
 	mUnload = NULL;
 }
@@ -31,15 +36,21 @@ SakuraDLLClient::~SakuraDLLClient()
 	unload();
 }
 
-string	SakuraDLLClient::request(const string& iRequestString)
+wstring	SakuraDLLClient::request(const wstring& iRequestString)
 {
 	if ( mRequest==NULL )
 	{
-		GetSender().errsender() << "SakuraDLLClient::request: ロードしていないライブラリにrequestしようとしました。" << satori::endl;
-		return	"";
+		GetSender().errsender() << L"SakuraDLLClient::request: ロードしていないライブラリにrequestしようとしました。" << satori::endl;
+		return	L"";
 	}
 
-	long len = iRequestString.length();
+	CharactorSet cs = CharsetFromName(m_charset);
+	if ( cs == CS_NULL ) {
+		cs = CS_UTF8;
+	}
+	const std::string theRequest = WtoMB(iRequestString, cs);
+
+	long len = theRequest.length();
 
 #ifdef POSIX
 	char* h = static_cast<char*>(malloc(len + 1));
@@ -47,62 +58,64 @@ string	SakuraDLLClient::request(const string& iRequestString)
 	HGLOBAL h = ::GlobalAlloc(GMEM_FIXED, len + 1);
 #endif
 
-	memcpy(h, iRequestString.c_str(), len + 1); //ZeroTermまで
+	memcpy(h, theRequest.c_str(), len + 1); //ZeroTermまで
 	h = mRequest(h, &len);
 
+	std::string theResponse;
 	if ( h ) {
 	#ifdef POSIX
-		string theResponse(static_cast<char*>(h), len);
+		theResponse.assign(static_cast<char*>(h), len);
 		free(h);
 	#else
 		void *pLock = ::GlobalLock(h);
 		if ( pLock ) {
-			string theResponse(static_cast<char*>(pLock), len);
+			theResponse.assign(static_cast<char*>(pLock), len);
 			::GlobalFree(h);
-			return theResponse;
 		}
 		else { //バグ対策 - GlobalAllocで確保してないポインタ向け
-			return string(static_cast<char*>(h), len);
+			theResponse.assign(reinterpret_cast<char*>(h), len);
 		}
 	#endif
-
 	}
 	else {
-		return string("");
+		return wstring(L"");
 	}
+
+	// 返答はCharsetヘッダに従う。無ければ判定する。
+	CharactorSet response_cs = CharsetFromName(UTF8toW(find_charset_header(theResponse)));
+	return MBtoW(theResponse, response_cs);
 }
 
 // バージョン取得。GET Versionして"SAORI/1.0" みたいのを返す。
-string SakuraDLLClient::get_version(const string& i_security_level)
+wstring SakuraDLLClient::get_version(const wstring& i_security_level)
 {
 	strpairvec data;
-	data.push_back( strpair("Sender", m_sender) );
-	data.push_back( strpair("Charset", m_charset) );
-	data.push_back( strpair("SecurityLevel", i_security_level) );
+	data.push_back( strpair(L"Sender", m_sender) );
+	data.push_back( strpair(L"Charset", m_charset) );
+	data.push_back( strpair(L"SecurityLevel", i_security_level) );
 
-	string r_protocol, r_protocol_version;
+	wstring r_protocol, r_protocol_version;
 	strpairvec r_data;
 	this->SakuraClient::request(
 		m_protocol,
 		m_protocol_version,
-		"GET Version",
+		L"GET Version",
 		data,
 		r_protocol,
 		r_protocol_version,
 		r_data);
-
-	return r_protocol + "/" + r_protocol_version;
+	return r_protocol + L"/" + r_protocol_version;
 }
 
 // リクエストを送り、レスポンスを受け取る。戻り値はリターンコード。
 int SakuraDLLClient::request(
-	const string& i_command,
+	const wstring& i_command,
 	const strpairvec& i_data,
 	strpairvec& o_data)
 {
 	if ( ! mRequest ) { return 204; }
 
-	string r_protocol, r_protocol_version;
+	wstring r_protocol, r_protocol_version;
 	int return_code = this->SakuraClient::request(
 		m_protocol,
 		m_protocol_version,
@@ -128,19 +141,21 @@ void	SakuraDLLClient::unload()
 #endif
 	mModule = NULL;
 	mLoad = NULL;
+#ifndef POSIX
+	mLoadU = NULL;
+#endif
 	mRequest = NULL;
 	mUnload = NULL;
 }
 
 
-
 bool	SakuraDLLClient::load(
-	const string& i_sender,
-	const string& i_charset,
-	const string& i_protocol,
-	const string& i_protocol_version,
-	const string& i_work_folder,
-	const string& i_dll_fullpath)
+	const wstring& i_sender,
+	const wstring& i_charset,
+	const wstring& i_protocol,
+	const wstring& i_protocol_version,
+	const wstring& i_work_folder,
+	const wstring& i_dll_fullpath)
 {
 	unload();
 
@@ -148,22 +163,24 @@ bool	SakuraDLLClient::load(
 	m_charset = i_charset;
 	m_protocol = i_protocol;
 	m_protocol_version = i_protocol_version;
-	string work_folder = unify_dir_char(i_work_folder);
-	string dll_fullpath = unify_dir_char(i_dll_fullpath);
 
-	GetSender().sender() << "SakuraDLLClient::load '" << dll_fullpath << "' ...";
+	wstring work_folder = unify_dir_char(i_work_folder);
+	wstring dll_fullpath = unify_dir_char(i_dll_fullpath);
+
+	GetSender().sender() << L"SakuraDLLClient::load '" << dll_fullpath << L"' ...";
+
 #ifdef POSIX
-	mModule = dlopen(dll_fullpath.c_str(), RTLD_LAZY);
+	mModule = dlopen(WtoUTF8(dll_fullpath).c_str(), RTLD_LAZY);
 	if (mModule == NULL) {
-	    GetSender().sender() << "failed." << std::endl;
-	    GetSender().errsender() << dlerror() << satori::endl;
+	    GetSender().sender() << L"failed." << std::endl;
+	    GetSender().errsender() << UTF8toW(dlerror()) << satori::endl;
 	    return false;
 	}
 #else
 	mModule = ::LoadLibraryEx(dll_fullpath.c_str(),NULL,LOAD_WITH_ALTERED_SEARCH_PATH);
 	if ( mModule==NULL ) {
-		GetSender().sender() << "failed." << std::endl;
-		GetSender().errsender() << dll_fullpath + ": LoadLibraryで失敗。" << satori::endl;
+		GetSender().sender() << L"failed." << std::endl;
+		GetSender().errsender() << dll_fullpath + L": LoadLibraryで失敗。" << satori::endl;
 		return	false;
 	}
 #endif
@@ -177,44 +194,56 @@ bool	SakuraDLLClient::load(
 	if ( ! mLoad ) {
 		mLoad = (BOOL (*)(HGLOBAL, long))::GetProcAddress(mModule, "_load");
 	}
-
+	mLoadU = (BOOL (*)(HGLOBAL, long))::GetProcAddress(mModule, "loadu");
+	if ( ! mLoadU ) {
+		mLoadU = (BOOL (*)(HGLOBAL, long))::GetProcAddress(mModule, "_loadu");
+	}
 	mRequest = (HGLOBAL (*)(HGLOBAL, long*))::GetProcAddress(mModule, "request");
 	if ( ! mRequest ) {
 		mRequest = (HGLOBAL (*)(HGLOBAL, long*))::GetProcAddress(mModule, "_request");
 	}
-
 	mUnload = (BOOL (*)())::GetProcAddress(mModule, "unload");
 	if ( ! mUnload ) {
 		mUnload = (BOOL (*)())::GetProcAddress(mModule, "_unload");
 	}
-
 #endif
+
 	if ( mRequest==NULL )
 	{
-		GetSender().sender() << "failed." << std::endl;
+		GetSender().sender() << L"failed." << std::endl;
 		unload();
-		GetSender().errsender() << dll_fullpath + ": requestがエクスポートされていません。" << satori::endl;
+		GetSender().errsender() << dll_fullpath + L": requestがエクスポートされていません。" << satori::endl;
 		return	false;
 	}
-	if ( mLoad!=NULL )
+
+#ifdef POSIX
+	bool (*theLoad)(char*, long) = mLoad;
+	const std::string theFolder = WtoUTF8(work_folder);
+#else
+	// loaduがあればUTF-8でパスを渡す。無ければOSの既定コードページで渡す。
+	BOOL (*theLoad)(HGLOBAL, long) = mLoadU ? mLoadU : mLoad;
+	const std::string theFolder = mLoadU ? WtoUTF8(work_folder) : WtoACP(work_folder);
+#endif
+
+	if ( theLoad!=NULL )
 	{
-		long len = work_folder.length();
+		long len = theFolder.length();
 #ifdef POSIX
 		char* h = static_cast<char*>(malloc(len + 1));
 #else
 		HGLOBAL h = ::GlobalAlloc(GMEM_FIXED, len + 1);
 #endif
-		memcpy(h, work_folder.c_str(), len + 1); //ZeroTermまで
-		if ( mLoad(h, len) == FALSE )
+		memcpy(h, theFolder.c_str(), len + 1); //ZeroTermまで
+
+		if ( theLoad(h, len) == FALSE )
 		{
-			GetSender().sender() << "failed." << std::endl;
+			GetSender().sender() << L"failed." << std::endl;
 			unload();
-			GetSender().errsender() << dll_fullpath + ": load()がFALSEを返しました。" << satori::endl;
+			GetSender().errsender() << dll_fullpath + L": load()がFALSEを返しました。" << satori::endl;
 			return	false;
 		}
 	}
 
-	GetSender().sender() << "succeed." <<std::endl;
+	GetSender().sender() << L"succeed." <<std::endl;
 	return	true;
 }
-

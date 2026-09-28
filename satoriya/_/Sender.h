@@ -8,7 +8,7 @@
 #include	<list>
 #include      <stdio.h>
 #include      <wchar.h>
-using std::string;
+using std::wstring;
 
 #ifndef POSIX
 #include <windows.h> // for HWND
@@ -36,61 +36,64 @@ namespace SenderConst {
 		E_UTF8 = 17,	/* マルチバイト文字コード＝UTF-8 */
 		E_DEFAULT = 32,	/* マルチバイト文字コード＝OSデフォルトのコード */
 	};
+
+	// satori::endl がストリームに流す区切り（私用領域の文字）
+	static const wchar_t FLUSH_MARK = 0xE0FE;
 };
 
-class sender_buf : public std::basic_streambuf<char>
+class sender_buf : public std::basic_streambuf<wchar_t>
 {
 public:
-	sender_buf() { line[0]='\0'; pos=0; }
-	virtual int overflow(int c=EOF);
+	sender_buf() { line[0]=L'\0'; pos=0; }
+	virtual int_type overflow(int_type c=traits_type::eof());
 
 private:
-	char	line[SenderConst::MAX+1];
+	wchar_t	line[SenderConst::MAX+1];
 	int		pos;
 };
 
-class error_buf : public std::basic_streambuf<char>
+class error_buf : public std::basic_streambuf<wchar_t>
 {
 public:
-	error_buf() { line[0]='\0'; pos=0; log_mode=true; } //初期logmodeはtrueでないとload時をカバーできない
-	virtual int overflow(int c=EOF);
+	error_buf() { line[0]=L'\0'; pos=0; log_mode=true; } //初期logmodeはtrueでないとload時をカバーできない
+	virtual int_type overflow(int_type c=traits_type::eof());
 
 	void set_log_mode(bool is_log);
 	bool get_log_mode(void) { return log_mode; }
 
-	const std::vector<string> & get_log(void) { return log_data; }
+	const std::vector<wstring> & get_log(void) { return log_data; }
 	void clear_log(void) { log_data.clear(); }
 
 private:
-	void send(const char* str);
+	void send(const wchar_t* str);
 	void flush(void);
 
-	char	line[SenderConst::MAX+1];
+	wchar_t	line[SenderConst::MAX+1];
 	int		pos;
 
 	bool    log_mode;
 
-	std::vector<string> log_data;
-	std::vector<string> log_tmp_buffer;
+	std::vector<wstring> log_data;
+	std::vector<wstring> log_tmp_buffer;
 };
 
-class sender_stream : public std::basic_ostream<char>
+class sender_stream : public std::basic_ostream<wchar_t>
 {
 	sender_buf buf;
 public:
-	sender_stream() : std::basic_ostream<char>( &buf ) {}
+	sender_stream() : std::basic_ostream<wchar_t>( &buf ) {}
 };
 
-class error_stream : public std::basic_ostream<char>
+class error_stream : public std::basic_ostream<wchar_t>
 {
 	error_buf buf;
 public:
-	error_stream() : std::basic_ostream<char>( &buf ) {}
+	error_stream() : std::basic_ostream<wchar_t>( &buf ) {}
 
 	void set_log_mode(bool is_log) { buf.set_log_mode(is_log); }
 	bool get_log_mode(void) { return buf.get_log_mode(); }
 
-	const std::vector<string> & get_log(void) { return buf.get_log(); }
+	const std::vector<wstring> & get_log(void) { return buf.get_log(); }
 	void clear_log(void) { buf.clear_log(); }
 };
 
@@ -110,14 +113,13 @@ class Sender
 	sender_stream	send_stream;
 	error_stream	err_stream;
 
-	std::list< std::list<std::string> > delay_send_list;
+	std::list< std::list<std::wstring> > delay_send_list;
 	int delay_send_event_max;	//遅延送信最大数。
 	int delay_send_string_max;  //イベント内にためこむ文字列リスト最大数
 
-	void add_delay_text(const char* text);
+	void add_delay_text(const wchar_t* text);
 
-	char buffer_to_send[SenderConst::MAX+SenderConst::NEST_MAX+1];
-	wchar_t buffer_to_sendw[SenderConst::MAX+SenderConst::NEST_MAX+3]; //\r\n分増やす
+	wchar_t buffer_to_send[SenderConst::MAX+SenderConst::NEST_MAX+1];
 
 	bool sm_sender_flag;		// 動作有効可否
 	bool sm_buffering_flag;		// バッファリングモード
@@ -126,7 +128,7 @@ class Sender
 	Sender();
 
 	bool initialize();
-	bool send_to_window(const int mode,const char* text);
+	bool send_to_window(const int mode,const wchar_t* text);
 
 	bool auto_init();
 
@@ -148,7 +150,7 @@ public:
 	};
 
 	bool reinit(bool isEnable);
-	bool send(int mode,const char* iString);
+	bool send(int mode,const wchar_t* iString);
 
 	void validate(bool i_flag=true) { sm_sender_flag = i_flag; }
 	bool is_validated() { return sm_sender_flag; }
@@ -187,7 +189,7 @@ public:
 namespace satori {
 	template<class CharT, class Traits>
 		std::basic_ostream<CharT, Traits>& endl(std::basic_ostream<CharT, Traits>& os) {
-		return os << '\n' << '\xfe' << std::flush;
+		return os << L'\n' << SenderConst::FLUSH_MARK << std::flush;
 	}
 }
 

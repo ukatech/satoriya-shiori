@@ -1,20 +1,22 @@
 #include <string>
-using std::string;
+#include <vector>
+#include "../_/charset.h"
+using std::wstring;
 
 #ifndef POSIX
 #  include <windows.h>
 #endif
 
 // コンソールアプリケーションを呼び出す
-inline string // エラーメッセージ。""なら正常終了
+inline wstring // エラーメッセージ。""なら正常終了
 call_console_application(
-	const string& i_command_line,   // コマンドと引数
-	const string& i_boot_directory, // 実行時のディレクトリ
-	string& o_stdout // 標準出力内容
+	const wstring& i_command_line,   // コマンドと引数
+	const wstring& i_boot_directory, // 実行時のディレクトリ
+	wstring& o_stdout // 標準出力内容
 	)
 {
 #ifdef POSIX
-	return ""; // 未サポート。この関数は呼ばれない。
+	return L""; // 未サポート。この関数は呼ばれない。
 
 #else /* POSIX */   
 	SECURITY_ATTRIBUTES	sa; 
@@ -38,14 +40,14 @@ call_console_application(
 	Handle stdout_read, stdout_write;
 	if ( !::CreatePipe(stdout_read.p(), stdout_write.p(), &sa, 0) )
 	{
-		return	"CreatePipeで失敗。";
+		return	L"CreatePipeで失敗。";
 	}
 	
 	if ( !::DuplicateHandle(
 		::GetCurrentProcess(), stdout_write, 
 		::GetCurrentProcess(), NULL, 0, FALSE, DUPLICATE_SAME_ACCESS) )
 	{
-		return "DuplicateHandleで失敗。";
+		return L"DuplicateHandleで失敗。";
 	}
 
 	STARTUPINFO si; 
@@ -58,19 +60,21 @@ call_console_application(
 	PROCESS_INFORMATION	pi; 
 	memset(&pi, 0, sizeof(pi)); 
 
-	char	command_line[4096];
-	strcpy(command_line, i_command_line.c_str());
+	// CreateProcessは書き換え可能なバッファを要求する
+	std::vector<wchar_t> command_line(i_command_line.begin(), i_command_line.end());
+	command_line.push_back(L'\0');
 
-	if ( !::CreateProcess(NULL, command_line,
+	if ( !::CreateProcess(NULL, &command_line[0],
 	 NULL, NULL, TRUE, 0, NULL, i_boot_directory.c_str(), &si, &pi))
 	{ 
-		return	"CreateProcessで失敗。";
+		return	L"CreateProcessで失敗。";
 	}
 	if ( ::WaitForSingleObject(pi.hProcess, 10000)==WAIT_TIMEOUT )
 	{
-		return	"呼び出しタイムアウト。";
+		return	L"呼び出しタイムアウト。";
 	}
 
+	std::string out_bytes;
 	while (true)
 	{
 		DWORD	dwResult;
@@ -80,16 +84,18 @@ call_console_application(
 			break;
 		if (dwResult > 0)
 		{ 
-			char szBuf[256]; 
-			ReadFile(stdout_read, szBuf, sizeof(szBuf) - 1, &dwResult, NULL); 
-			szBuf[dwResult] = '\0'; 
-			o_stdout += szBuf;
+			char szBuf[256];
+			ReadFile(stdout_read, szBuf, sizeof(szBuf), &dwResult, NULL);
+			out_bytes.append(szBuf, dwResult);
 		}
 	}
 
 	::CloseHandle(pi.hThread);
 	::CloseHandle(pi.hProcess);
 
-	return	"";
+	// 出力の文字コードは不明なので判定する
+	o_stdout += MBtoW(out_bytes, CS_NULL);
+
+	return	L"";
 #endif /* POSIX */
 }

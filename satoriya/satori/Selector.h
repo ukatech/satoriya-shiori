@@ -3,7 +3,7 @@
 #include <exception>
 #include <stdexcept>
 #include <typeinfo>
-using std::string;
+using std::wstring;
 
 #include "OverlapController.h"
 

@@ -27,4 +27,4 @@ satorite.dat
 *.psess
 /.claude
 .mcp.json
-CLAUDE.md
+temp-doc-*.md

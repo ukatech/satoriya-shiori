@@ -11,7 +11,7 @@ class Satori;
 class ShioriPlugins {
 
 	struct CallData {	// 呼び出し名ごとの情報
-		string	mDllPath;
+		wstring	mDllPath;
 		strvec	mPreDefinedArguments;
 		bool	mIsBasic;
 
@@ -33,10 +33,10 @@ class ShioriPlugins {
 		SaoriClient	*m_pSaoriClient;
 		int	mRefCount;
 	};
-	std::map<string, CallData>	mCallData;	// 呼び出し名；呼び出し名ごとの情報
-	std::map<string, DllData>	mDllData;	// DLLのフルパス；DLLごとの情報
+	std::map<wstring, CallData>	mCallData;	// 呼び出し名；呼び出し名ごとの情報
+	std::map<wstring, DllData>	mDllData;	// DLLのフルパス；DLLごとの情報
 
-	string	mBaseFolder;
+	wstring	mBaseFolder;
 
 	Satori *pSatori;
 
@@ -46,14 +46,14 @@ public:
 	ShioriPlugins(Satori *pSat) : pSatori(pSat) {
 	}
 
-	bool	load(const string& iBaseFolder);
-	bool	load_a_plugin(const string& iPluginLine);
+	bool	load(const wstring& iBaseFolder);
+	bool	load_a_plugin(const wstring& iPluginLine);
 	void	load_default_entry(void);
 
-	string	request(const string& iCallName, const strvec& iArguments, strvec& oResults, const string& iSecurityLevel);
+	wstring	request(const wstring& iCallName, const strvec& iArguments, strvec& oResults, const wstring& iSecurityLevel);
 	void	unload();
 
-	bool	find(string iCallName) {
+	bool	find(wstring iCallName) {
 		return (mCallData.find(iCallName) != mCallData.end() );
 	}
 };
