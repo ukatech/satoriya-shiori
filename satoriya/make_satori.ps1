@@ -5,6 +5,7 @@
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 2
+. (Join-Path $PSScriptRoot 'make_zip_common.ps1')
 
 $root = $PSScriptRoot
 
@@ -15,29 +16,12 @@ $files = [ordered]@{
 	'saori\ssu.dll' = 'satori\Release_SU\ssu.dll'
 }
 
-# 7z を探す
-$sevenZip = Get-Command 7z -ErrorAction SilentlyContinue
-if ( $sevenZip ) {
-	$sevenZip = $sevenZip.Source
-}
-else {
-	$sevenZip = Join-Path $env:ProgramFiles '7-Zip\7z.exe'
-	if ( -not (Test-Path $sevenZip) ) {
-		throw '7z が見つかりません。7-Zip を入れて PATH を通してください。'
-	}
-}
+Test-ZipFiles $root $files
 
-# ファイルの存在とファイルバージョン
+# 3つのファイルバージョンがそろっているか
 $versions = @()
 foreach ( $name in $files.Keys ) {
-	$path = Join-Path $root $files[$name]
-	if ( -not (Test-Path $path) ) {
-		throw "$path がありません。Release でビルドしてください。"
-	}
-	$item = Get-Item $path
-	$v = $item.VersionInfo.FileVersion -replace '\s', ''
-	$versions += $v
-	Write-Host ('{0,-14} {1,-12} {2}' -f $name, $v, $item.LastWriteTime)
+	$versions += (Get-Item (Join-Path $root $files[$name])).VersionInfo.FileVersion -replace '\s', ''
 }
 if ( @($versions | Select-Object -Unique).Count -ne 1 ) {
 	throw 'ファイルバージョンがそろっていません。3つともビルドし直してください。'
@@ -66,28 +50,5 @@ foreach ( $name in @('satori.dll', 'satorite.exe') ) {
 	}
 }
 
-# tmp\satori に並べて zip にする
-$tmp = Join-Path $root 'tmp'
-$stage = Join-Path $tmp 'satori'
-$zip = Join-Path $tmp 'satori.zip'
-if ( Test-Path $stage ) { Remove-Item $stage -Recurse -Force }
-if ( Test-Path $zip ) { Remove-Item $zip -Force }
-
-foreach ( $name in $files.Keys ) {
-	$dest = Join-Path $stage $name
-	New-Item -ItemType Directory -Force (Split-Path $dest) | Out-Null
-	Copy-Item (Join-Path $root $files[$name]) $dest
-}
-
-Push-Location $stage
-try {
-	& $sevenZip a -y -tzip -mx=9 -mmt=on $zip * | Out-Null
-	if ( $LASTEXITCODE -ne 0 ) {
-		throw "7z が失敗しました（終了コード $LASTEXITCODE）。"
-	}
-}
-finally {
-	Pop-Location
-}
-
+$zip = New-ReleaseZip $root 'satori' $files
 Write-Host "$zip を作りました（$mc）。"
