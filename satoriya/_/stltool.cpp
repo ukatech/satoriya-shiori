@@ -290,6 +290,39 @@ size_t	count_chars(const wstring& str) {
 	return	n;
 }
 
+// 1•¶š‚Ì”¼ŠpŠ·Z‚Ì•
+static size_t	char_width(unsigned int c) {
+	if ( c < 0x80 )
+		return	1;
+	if ( c <= 0x24F ) {
+		// ƒ‰ƒeƒ“•¶š‚ÌŠg’£‚ÍSJIS‚É–³‚¢‚Ì‚Å”¼Špˆµ‚¢BSJIS‚É‚ ‚é‹L†‚¾‚¯‘SŠpB
+		switch ( c ) {
+		case 0xA7: case 0xA8: case 0xB0: case 0xB1: case 0xB4: case 0xB6: case 0xD7: case 0xF7:
+			return	2;
+		}
+		return	1;
+	}
+	if ( c >= 0xFF61 && c <= 0xFF9F )	// ”¼ŠpƒJƒi
+		return	1;
+	if ( c >= 0xFFE8 && c <= 0xFFEE )	// ”¼Šp‹L†
+		return	1;
+	return	2;
+}
+
+size_t	count_width(const wstring& str) {
+	size_t	n = 0;
+	for ( wstring::size_type i=0 ; i<str.size() ; ++i ) {
+		if ( IsHighSurrogate(str[i]) && i+1<str.size() && IsLowSurrogate(str[i+1]) ) {
+			++i;
+			n += 2;	// •â•–Ê‚Í‘SŠpˆµ‚¢
+		}
+		else {
+			n += char_width(str[i]);
+		}
+	}
+	return	n;
+}
+
 size_t	char_pos_to_index(const wstring& str, size_t char_pos) {
 	wstring::size_type	i = 0;
 	while ( char_pos > 0 && i < str.size() ) {

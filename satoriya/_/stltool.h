@@ -214,6 +214,8 @@ wstring	get_a_chr(const wchar_t*& p);
 
 // 文字数（サロゲートペアは1文字として数える）
 size_t	count_chars(const wstring& str);
+// 半角換算の幅（半角文字は1、全角文字は2。SJIS時代のバイト数に相当）
+size_t	count_width(const wstring& str);
 // 文字単位の位置を wchar_t 単位の位置に変換する。文字数を超えたら str.size() を返す。
 size_t	char_pos_to_index(const wstring& str, size_t char_pos);
 

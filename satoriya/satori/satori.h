@@ -47,9 +47,12 @@ static const wchar_t	ret_dlmt[3] = { 13, 10, 0 };
 static const wchar_t	byte1_dlmt[2] = { 1, 0 };
 
 // 内部特殊表現の開始・終了を表す文字（私用領域）。SJIS時代の 0xff の代わり。
-// 使い方： INTERNAL_MARK \x01(スコープ切り替え) or \x02(サーフェス加算) 数値 INTERNAL_MARK
+// 使い方： INTERNAL_MARK 種別(INTERNAL_MARK_SCOPE か INTERNAL_MARK_SURFACE) 数値 INTERNAL_MARK
+// 種別はSJIS時代は \x01 / \x02 だったが、（バイト値、１）などの引数区切りと衝突するので私用領域の文字にした。
 static const wchar_t	INTERNAL_MARK = 0xE0FF;
 static const wchar_t	INTERNAL_MARK_STR[2] = { INTERNAL_MARK, 0 };
+static const wchar_t	INTERNAL_MARK_SCOPE_STR[2] = { 0xE0FD, 0 };		// スコープ切り替え
+static const wchar_t	INTERNAL_MARK_SURFACE_STR[2] = { 0xE0FC, 0 };	// サーフェス加算のための遅延評価
 
 // バージョン文字列とか
 extern const wchar_t* gSatoriName;

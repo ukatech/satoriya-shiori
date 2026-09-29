@@ -945,7 +945,7 @@ bool	Satori::CallReal(const wstring& iName, wstring& oResult, bool for_calc, boo
 	else if ( aredigits(hankaku) || (hankaku[0]==L'-' && aredigits(hankaku.c_str()+1)) ) {
 		// サーフェス切り替え
 		int	s = stoi_internal(hankaku);
-		oResult = wstring(INTERNAL_MARK_STR) + L"\x02" + itos(s) + INTERNAL_MARK_STR; //内部特殊表現に一旦変換して、後でサーフェス加算処理をする
+		oResult = wstring(INTERNAL_MARK_STR) + INTERNAL_MARK_SURFACE_STR + itos(s) + INTERNAL_MARK_STR; //内部特殊表現に一旦変換して、後でサーフェス加算処理をする
 		/* 展開後に処理される
 		if ( !is_speaked(speaker) ) {
 			if ( surface_changed_before_speak.find(speaker) == surface_changed_before_speak.end() ) {

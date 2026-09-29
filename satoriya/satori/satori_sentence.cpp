@@ -412,7 +412,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,wstring &result,wst
 			else if ( c==INTERNAL_MARK_STR ) {	//内部特殊表現 (カッコ遅延評価もあるのでdo_process判定はスキップ)
 				c = get_a_chr(p);
 
-				if ( c == L"\x01" || c == L"\x02" ) {
+				if ( c == INTERNAL_MARK_SCOPE_STR || c == INTERNAL_MARK_SURFACE_STR ) {
 					wstring cmd = c;
 
 					wstring param;
@@ -423,7 +423,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,wstring &result,wst
 						param += c;
 					}
 
-					if ( cmd == L"\x01" ) { //スコープ切り替え
+					if ( cmd == INTERNAL_MARK_SCOPE_STR ) { //スコープ切り替え
 						int speaker_tmp = stoi_internal(param.c_str());
 						if ( is_speaked(speaker) && speaker != speaker_tmp ) {
 							result += append_at_scope_change;
@@ -442,7 +442,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,wstring &result,wst
 							result += L"\\p[" + itos(speaker_tmp) + L"]";
 						}
 					}
-					else if ( cmd == L"\x02" ) { //サーフェス加算のための遅延評価
+					else if ( cmd == INTERNAL_MARK_SURFACE_STR ) { //サーフェス加算のための遅延評価
 						int s = stoi_internal(param.c_str());
 						if ( s != -1 ) { // -1は「消し」なので特別扱い
 							s += surface_add_value[speaker];
@@ -512,6 +512,28 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,wstring &result,wst
 						opt.assign(p,e1-p+3);
 						opt = UnKakko(opt.c_str());
 
+						// 括弧展開で生じた内部特殊表現は、自動処理はせずにタグの文字列にだけ変換する（そのままだと内部表現が漏れる）
+						wstring::size_type mark_start;
+						while ( (mark_start = opt.find(INTERNAL_MARK)) != wstring::npos ) {
+							const wstring::size_type mark_end = opt.find(INTERNAL_MARK, mark_start+1);
+							if ( mark_end == wstring::npos || mark_end < mark_start+2 ) {
+								opt.erase(mark_start, 1);
+								continue;
+							}
+							const wchar_t mark_cmd = opt[mark_start+1];
+							const int mark_param = stoi_internal(opt.substr(mark_start+2, mark_end-mark_start-2));
+							wstring tag;
+							if ( mark_cmd == INTERNAL_MARK_SCOPE_STR[0] ) {
+								if ( mark_param == 0 ) { tag = L"\\0"; }
+								else if ( mark_param == 1 ) { tag = L"\\1"; }
+								else { tag = L"\\p[" + itos(mark_param) + L"]"; }
+							}
+							else if ( mark_cmd == INTERNAL_MARK_SURFACE_STR[0] ) {
+								tag = L"\\s[" + itos(mark_param == -1 ? -1 : mark_param + surface_add_value[speaker]) + L"]";
+							}
+							opt.replace(mark_start, mark_end-mark_start+1, tag);
+						}
+
 						p = e1 + 3; //endtag
 
 						result += opt;
@@ -559,7 +581,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,wstring &result,wst
 						character_wait_exec;	// スコープ切り替えタグの前にウエイトを吐き出す
 					}
 				}
-				else if ( cmd==L"s" ) { //ここをいじったらINTERNAL_MARK 0x02 (内部特殊表現) も更新すること
+				else if ( cmd==L"s" ) { //ここをいじったらINTERNAL_MARK_SURFACE (内部特殊表現) も更新すること
 
 					//サーフィス切り替えの前にウェイトは済ませておくこと
 					character_wait_exec;

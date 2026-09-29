@@ -103,6 +103,11 @@ static bool	make_array(const wchar_t*& p, std::vector<calc_element>& oData) {
 				return	false;
 			oData.push_back( calc_element(L")", 10) );
 		}
+		else if ( *p==L'-' && (len=check_number(p+1))!=0 ) {	// 負の数値
+			// 単項演算子と数値に分けると -2147483648 の 2147483648 が読めないので、符号ごと数値として扱う
+			oData.push_back( calc_element(wstring(p,len+1), 100) );
+			p+=len+1;
+		}
 		else if (*p==L'!' || *p==L'+' || *p==L'-') {	// 単項演算子
 			oData.push_back( calc_element(wstring(p++, 1), 90) );
 			continue;

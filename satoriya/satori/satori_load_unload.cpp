@@ -258,10 +258,10 @@ bool	Satori::load(const wstring& iBaseFolder)
 		// 置換辞書に追加
 		j = m.find(L"popular-name");
 		if ( j != m.end() && j->second.size()>0 ) 
-			replace_before_dic[j->second + L"："] = wstring(INTERNAL_MARK_STR) + L"\x01" + zen2han(i->first) + INTERNAL_MARK_STR; //INTERNAL_MARK 0x01(数値) INTERNAL_MARK はあとで変換
+			replace_before_dic[j->second + L"："] = wstring(INTERNAL_MARK_STR) + INTERNAL_MARK_SCOPE_STR + zen2han(i->first) + INTERNAL_MARK_STR; //INTERNAL_MARK SCOPE(数値) INTERNAL_MARK はあとで変換
 		j = m.find(L"initial-letter");
 		if ( j != m.end() && j->second.size()>0 ) 
-			replace_before_dic[j->second + L"："] = wstring(INTERNAL_MARK_STR) + L"\x01" + zen2han(i->first) + INTERNAL_MARK_STR; //INTERNAL_MARK 0x01(数値) INTERNAL_MARK はあとで変換
+			replace_before_dic[j->second + L"："] = wstring(INTERNAL_MARK_STR) + INTERNAL_MARK_SCOPE_STR + zen2han(i->first) + INTERNAL_MARK_STR; //INTERNAL_MARK SCOPE(数値) INTERNAL_MARK はあとで変換
 
 		j = m.find(L"base-surface");
 		if ( j != m.end() && j->second.size()>0 )

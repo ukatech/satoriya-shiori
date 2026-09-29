@@ -302,13 +302,26 @@ bool	printf_format(const wchar_t*& p, std::deque<wstring>& iArguments, std::wstr
 	case L's':
 	case L'S':
 		{
+			// 幅は半角換算（全角文字は2）で数える。streamはwchar_t単位で埋めるので差分だけ幅を減らす。
+			if ( width > 0 ) {
+				const int	extra = (int)count_width(str) - (int)str.size();
+				os.width( width > extra ? width - extra : 0 );
+			}
 			os << str;
 			break;
 		}
 	case L'c':
 	case L'C':
 		{
-			os << (wchar_t)zen2int(str);
+			const unsigned long code = (unsigned long)zen2int(str);
+			if ( sizeof(wchar_t) == 2 && code >= 0x10000 && code <= 0x10FFFF ) {
+				// 補助面の文字はサロゲートペアにする
+				wchar_t pair[3] = { (wchar_t)(0xD800 + ((code - 0x10000) >> 10)), (wchar_t)(0xDC00 + ((code - 0x10000) & 0x3FF)), 0 };
+				os << pair;
+			}
+			else {
+				os << (wchar_t)code;
+			}
 			break;
 		}
 	case L'd':
@@ -702,7 +715,7 @@ SRV _is_digit(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {
 
 	int dot_count = 0;
 	if ( iArguments.size()>=2 ) {
-		if ( wcsstr(iArguments[1].c_str(),L"整数") || wcscmp(iArguments[1].c_str(),L"int")==0 ) {
+		if ( wcsstr(iArguments[1].c_str(),L"整数") || iArguments[1]==L"integer" || iArguments[1]==L"int" ) {
 			dot_count = 1;
 		}
 	}
