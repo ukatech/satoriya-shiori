@@ -40,6 +40,59 @@ extern bool calc(const wchar_t* iExpression, wstring& oResult,bool isStrict);
 extern	bool calc(wstring& ioString,bool isStrict = false);
 
 
+// 数値は64bit整数（VC6には long long が無いので __int64）
+#if defined(_MSC_VER) && _MSC_VER <= 1200
+typedef __int64				calc_int;
+typedef unsigned __int64	calc_uint;
+#else
+typedef long long			calc_int;
+typedef unsigned long long	calc_uint;
+#endif
+
+static const calc_uint	CALC_INT_MAX = ~static_cast<calc_uint>(0) >> 1;
+
+// 10進数の文字列を数値に。範囲外は wcstol と同じく最大値・最小値にする
+static calc_int	stoi64(const wstring& s) {
+	const wchar_t*	p = s.c_str();
+	const bool	minus = ( *p==L'-' );
+	if ( minus || *p==L'+' )
+		++p;
+	const calc_uint	limit = minus ? CALC_INT_MAX+1 : CALC_INT_MAX;
+	calc_uint	n = 0;
+	for ( ; *p>=L'0' && *p<=L'9' ; ++p ) {
+		const calc_uint	d = *p - L'0';
+		if ( n > (limit-d)/10 ) {
+			n = limit;
+			break;
+		}
+		n = n*10 + d;
+	}
+	return	static_cast<calc_int>( minus ? 0-n : n );
+}
+
+static wstring	i64tos(calc_int i) {
+	wchar_t	buf[24];
+	wchar_t*	p = buf + sizeof(buf)/sizeof(buf[0]) - 1;
+	*p = L'\0';
+	// 最小値は符号を反転できないので、符号なしで桁を求める
+	calc_uint	n = static_cast<calc_uint>(i);
+	if ( i<0 )
+		n = 0-n;
+	do {
+		*--p = static_cast<wchar_t>(L'0' + static_cast<int>(n%10));
+		n /= 10;
+	} while ( n!=0 );
+	if ( i<0 )
+		*--p = L'-';
+	return	p;
+}
+
+// 符号反転（最小値はそのまま）
+static calc_int	neg64(calc_int i) {
+	return	static_cast<calc_int>( 0-static_cast<calc_uint>(i) );
+}
+
+
 struct calc_element {
 	wstring	str;
 	int		priority;
@@ -104,7 +157,7 @@ static bool	make_array(const wchar_t*& p, std::vector<calc_element>& oData) {
 			oData.push_back( calc_element(L")", 10) );
 		}
 		else if ( *p==L'-' && (len=check_number(p+1))!=0 ) {	// 負の数値
-			// 単項演算子と数値に分けると -2147483648 の 2147483648 が読めないので、符号ごと数値として扱う
+			// 単項演算子と数値に分けると -9223372036854775808 の 9223372036854775808 が読めないので、符号ごと数値として扱う
 			oData.push_back( calc_element(wstring(p,len+1), 100) );
 			p+=len+1;
 		}
@@ -171,26 +224,26 @@ static bool	make_array(const wchar_t*& p, std::vector<calc_element>& oData) {
 	else if ( el.str == ascii_to_w(#op) ) {	\
 		assert_special(stack.size()>=2); \
 		if ( !aredigits(stack.from_top(0)) || !aredigits(stack.from_top(1)) ){ return false; }\
-		int	result = stoi_internal(stack.from_top(1)) op stoi_internal(stack.from_top(0)); \
-		stack.pop(2); stack.push(itos(result)); }
+		calc_int	result = stoi64(stack.from_top(1)) op stoi64(stack.from_top(0)); \
+		stack.pop(2); stack.push(i64tos(result)); }
 
 // ２項演算（stringとして扱う != と == 用）
 #define	even_a_op_b(op)	\
 	else if ( el.str == ascii_to_w(#op) ) {	\
 		assert_special(stack.size()>=2); \
-		int	result = stack.from_top(1) op stack.from_top(0); \
-		stack.pop(2); stack.push(itos(result)); }
+		calc_int	result = stack.from_top(1) op stack.from_top(0); \
+		stack.pop(2); stack.push(i64tos(result)); }
 
 // ２項演算（stringとして扱う != と == 用）
 #define	length_a_op_b(op)	\
 	else if ( el.str == ascii_to_w(#op) ) {	\
 		assert_special(stack.size()>=2); \
 		if ( aredigits(stack.from_top(0)) && aredigits(stack.from_top(1)) ){\
-			int	result = stoi_internal(stack.from_top(1)) op stoi_internal(stack.from_top(0)); \
-			stack.pop(2); stack.push(itos(result)); \
+			calc_int	result = stoi64(stack.from_top(1)) op stoi64(stack.from_top(0)); \
+			stack.pop(2); stack.push(i64tos(result)); \
 		} else {\
-			int	result = count_chars(stack.from_top(1)) op count_chars(stack.from_top(0)); \
-			stack.pop(2); stack.push(itos(result)); \
+			calc_int	result = count_chars(stack.from_top(1)) op count_chars(stack.from_top(0)); \
+			stack.pop(2); stack.push(i64tos(result)); \
 		} \
 	}
 
@@ -206,18 +259,18 @@ static bool	calc_polish(simple_stack<calc_element>& polish, wstring& oResult,boo
 			assert_special(stack.size()>=1);
 			if ( !aredigits(stack.top()) )
 				return	false;
-			if ( el.str==L"!" ) stack.push( itos(!stoi_internal(stack.pop())) );
+			if ( el.str==L"!" ) stack.push( i64tos(!stoi64(stack.pop())) );
 			else if ( el.str==L"+" ) /*NOOP*/;
-			else if ( el.str==L"-" ) stack.push( itos(-stoi_internal(stack.pop())) );
+			else if ( el.str==L"-" ) stack.push( i64tos(neg64(stoi64(stack.pop()))) );
 			else assert_special(0);
 		}
 		else if ( el.str == L"^" ) {
 			assert_special(stack.size()>=2);
 			wstring	rhs=stack.pop(), lhs=stack.pop();
 			if ( !aredigits(lhs) || !aredigits(rhs) ) { return false; }
-			const int	base = stoi_internal(lhs);
-			const int	exponent = stoi_internal(rhs);
-			int	result = 1;
+			const calc_int	base = stoi64(lhs);
+			const calc_int	exponent = stoi64(rhs);
+			calc_int	result = 1;
 			if ( exponent < 0 ) {
 				// negative exponent: integer result
 				if ( base == 0 ) { return false; }
@@ -226,24 +279,24 @@ static bool	calc_polish(simple_stack<calc_element>& polish, wstring& oResult,boo
 				else { result = 0; }
 			}
 			else {
-				unsigned int	r = 1, b = (unsigned int)base;
-				for ( int e = exponent ; e > 0 ; e >>= 1 ) {
+				calc_uint	r = 1, b = (calc_uint)base;
+				for ( calc_int e = exponent ; e > 0 ; e >>= 1 ) {
 					if ( e & 1 ) { r *= b; }
 					b *= b;
 				}
-				result = (int)r;
+				result = (calc_int)r;
 			}
-			stack.push(itos(result));
+			stack.push(i64tos(result));
 		}
 		else if ( el.str == L"*" ) {
 			assert_special(stack.size()>=2);
 			wstring	rhs=stack.pop(), lhs=stack.pop();
 			if ( aredigits(lhs) && aredigits(rhs) ) {
-				stack.push(itos( stoi_internal(lhs)*stoi_internal(rhs) )); 
+				stack.push(i64tos( stoi64(lhs)*stoi64(rhs) )); 
 			} else if ( aredigits(rhs) && ! isStrict ) {
-				int	num = stoi_internal(rhs);
+				calc_int	num = stoi64(rhs);
 				stack.push(L"");
-				for (int i=0;i<num;++i)
+				for (calc_int i=0;i<num;++i)
 					stack.top() += lhs;
 			} else {
 				return	false;
@@ -252,8 +305,10 @@ static bool	calc_polish(simple_stack<calc_element>& polish, wstring& oResult,boo
 		else if (el.str == L"/") {
 			assert_special(stack.size() >= 2);
 			wstring	rhs = stack.pop(), lhs = stack.pop();
-			if (aredigits(lhs) && aredigits(rhs) && stoi_internal(rhs) != 0) {
-				stack.push(itos(stoi_internal(lhs) / stoi_internal(rhs)));
+			if (aredigits(lhs) && aredigits(rhs) && stoi64(rhs) != 0) {
+				// 最小値 / -1 はCPU例外になるので、-1 で割るのは符号反転で済ませる
+				const calc_int	r = stoi64(rhs);
+				stack.push(i64tos(r == -1 ? neg64(stoi64(lhs)) : stoi64(lhs) / r));
 			}
 			else {
 				return false;
@@ -262,8 +317,10 @@ static bool	calc_polish(simple_stack<calc_element>& polish, wstring& oResult,boo
 		else if (el.str == L"%") {
 			assert_special(stack.size() >= 2);
 			wstring	rhs = stack.pop(), lhs = stack.pop();
-			if (aredigits(lhs) && aredigits(rhs) && stoi_internal(rhs) != 0) {
-				stack.push(itos(stoi_internal(lhs) % stoi_internal(rhs)));
+			if (aredigits(lhs) && aredigits(rhs) && stoi64(rhs) != 0) {
+				// 最小値 % -1 もCPU例外になる。-1 で割った余りは常に 0
+				const calc_int	r = stoi64(rhs);
+				stack.push(i64tos(r == -1 ? 0 : stoi64(lhs) % r));
 			}
 			else {
 				return false;
@@ -273,7 +330,7 @@ static bool	calc_polish(simple_stack<calc_element>& polish, wstring& oResult,boo
 			assert_special(stack.size()>=2);
 			wstring	rhs=stack.pop(), lhs=stack.pop();
 			if ( aredigits(lhs) && aredigits(rhs) ) {
-				stack.push(itos( stoi_internal(lhs)+stoi_internal(rhs) )); 
+				stack.push(i64tos( stoi64(lhs)+stoi64(rhs) )); 
 			} else if ( ! isStrict ) {
 				stack.push(lhs+rhs); 
 			} else {
@@ -284,7 +341,7 @@ static bool	calc_polish(simple_stack<calc_element>& polish, wstring& oResult,boo
 			assert_special(stack.size()>=2);
 			wstring	rhs=stack.pop(), lhs=stack.pop();
 			if ( aredigits(lhs) && aredigits(rhs) ) {
-				stack.push(itos( stoi_internal(lhs)-stoi_internal(rhs) )); 
+				stack.push(i64tos( stoi64(lhs)-stoi64(rhs) )); 
 			} else if ( ! isStrict ) {
 				erase_all(lhs, rhs);
 				stack.push(lhs);
