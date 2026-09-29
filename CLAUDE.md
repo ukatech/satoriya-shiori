@@ -91,6 +91,7 @@ ssu は変更前から警告5件（STLヘッダ由来）が出ます。
 ### 動作確認
 - satori.dll を `LoadLibrary` して `loadu` / `request` / `unload` を直接呼ぶ小さなハーネスを VC6 で作ると、SSP を起動せずにリクエスト単位で確認できる。
 - 変更前の DLL は `git worktree` で master を別に展開してビルドすると比較しやすい。
+  - 自動ウェイト（`\_w[n]`）は master と値が違うのが正しい。master は `chars_spoken` を SJIS のバイト数で数えていたため全角1文字が2だったが、unicode 版は1文字=1（全角の自動ウェイトは master の半分になる）。これは仕様として受け入れ済みなので、比較では `\_w[...]` を除いて見る。
 - SSP での確認：
   - 起動は `ssp.exe --option readonly --ghost <ゴーストのフォルダ名>` で行う（readonly ならユーザー環境を変更しない）。仕様は https://ssp.shillest.net/ukadoc/ssphelp/option.html
   - TCP 9801 に `NOTIFY SSTP/1.1` と `Event: ...` を送ると、応答の `Script:` にゴーストが返したスクリプトが入るので、画面を見なくても内容を確認できる。
