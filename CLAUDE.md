@@ -57,9 +57,9 @@ ssu は変更前から警告5件（STLヘッダ由来）が出ます。
 | 変更した場所 | 更新するページ（`satori-docs` 内） |
 |--------------|------------------------------------|
 | ssu の関数（`ssu.cpp`） | `ssu/<関数名>.md`、`ssu/index.md`、`INDEX.md` |
-| （）内蔵関数（`Satori_Kakko.cpp` の `inc_call`、`satori_tool.cpp` の `special_call`） | `functions/<関数名>.md`、`functions/index.md`、`INDEX.md`（ローカル専用かどうかも） |
-| ＄システム変数（`system_variable_operation_real`） | `system/vars-*.md`（分類に合うページ）、`system/index.md` |
-| （）の組み込み名（`CallReal`） | `system/names-*.md` |
+| （）内蔵関数（`satori_builtin.cpp` の `func_*`、表は `function_table`） | `functions/<関数名>.md`、`functions/index.md`、`INDEX.md`（ローカル専用かどうかも） |
+| ＄システム変数（`satori_builtin.cpp` の `sysvar_*`、表は `system_variable_operation_real`） | `system/vars-*.md`（分類に合うページ）、`system/index.md` |
+| （）の組み込み名（`satori_builtin.cpp` の `var_*`、表は `GetBuiltinValue`） | `system/names-*.md` |
 | イベントの処理（`satori_EventOperation.cpp`、`satori_sentence.cpp` の `FindEventTalk`） | `shiori/events.md`、`shiori/default-behaviors.md`、`shiori/satori-events.md` |
 | リクエスト・応答の処理（`satori_AnalyzeRequest.cpp`、`satori_CreateResponce.cpp`） | `shiori/protocol.md` |
 | 辞書の書式・読み込み（`satori_load_dict.cpp`、`satori_load_unload.cpp`） | `grammar/01-dictionary-files.md`〜`grammar/04-script-lines.md` |
@@ -90,7 +90,7 @@ ssu は変更前から警告5件（STLヘッダ由来）が出ます。
   - SHIORI/SAORI の受け側：`SakuraDLLHost::request_bytes`、`load`/`loadu`
   - SAORI の呼び出し側：`SakuraDLLClient`
   - ファイル：`stltool` の `bytes_from_file` / `strvec_from_file` など
-  - SSTP：`Satori_Kakko.cpp` の `SendDirectSSTP`、`SSTPClient`、`dsstp`
+  - SSTP：`satori_builtin.cpp` の `SendDirectSSTP`、`SSTPClient`、`dsstp`
   - FMO：`SakuraFMO`
   - ログ：`Sender`
 - 日本語リテラルの長さを数値で書かない。`const_strlen(L"...")` や `strip_head_tail(str, L"頭", L"尻")` を使う（旧コードはSJISのバイト数を直書きしていた）。
@@ -103,8 +103,11 @@ ssu は変更前から警告5件（STLヘッダ由来）が出ます。
 - 辞書の前処理（φエスケープ、＃コメント、カッコ内改行の連結、replace.txt 適用）：`satori_load_dict.cpp` の `pre_process`
 - ＊／＠の単位への分割：`satori_load_dict.cpp` の `lines_to_units`
 - （）の展開：`satori_tool.cpp` の `KakkoSection` / `UnKakko`
-- 組み込みの（）名前：`Satori_Kakko.cpp` の `inc_call` と `Call`
-- ＄システム変数：`satori_tool.cpp` の `system_variable_operation_real`
+- （）の名前の解決：`Satori_Kakko.cpp` の `Call` / `CallReal`。SAORI・内蔵関数 → 単語群 → 文 → 変数 → 内蔵変数の順に探す。
+- 内蔵関数・内蔵変数・＄システム変数：`satori_builtin.cpp`
+  - 名前と処理の対応は表になっている（内蔵関数は `function_table`、内蔵変数は `GetBuiltinValue`、システム変数は `system_variable_operation_real`）。足すときは処理を書いて `satori.h` に宣言し、表に1行加える。
+  - 完全一致の名前は map で引き、`文「…」の存在` のような前後で決まる名前は、表の上から順に調べる（順番に意味がある。汎用の `…の存在` は最後のほう）。
+  - 内蔵関数の表の「localのみ」が真のものは、`SecurityLevel: local` 以外では実行されない。
 - トーク本文からさくらスクリプトへの変換（自動ウェイト、スコープ切り替え）：`satori_sentence.cpp`
 - 最終変換（自動アンカー、replace_after）：`satoriTranslate.cpp`
 - ssu の実装：`ssu.cpp`

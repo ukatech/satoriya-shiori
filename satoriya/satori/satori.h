@@ -117,6 +117,11 @@ struct RateOfUseGraph
 };
 
 //---------------------------------------------------------------------------
+
+// 内蔵関数の表（satori_builtin.cpp）
+struct SatoriFunction;
+struct SatoriFunctionTable;
+
 class Satori : public Evalcator, public SakuraDLLHost
 {
 
@@ -345,10 +350,7 @@ private:
 
 	// 栞プラグイン
 	ShioriPlugins	*mShioriPlugins;
-	wstring	inc_call(const wstring&, const strvec&, strvec&, bool is_secure);
-	wstring	special_call(const wstring&, const strvec&, bool for_calc, bool for_non_talk, bool is_secure);
 	bool calc_argument(const wstring &iExpression, int &oResult, bool for_non_talk);
-	std::set<wstring> special_commands;
 
 	// 安全？
 	bool	secure_flag;
@@ -431,8 +433,9 @@ private:
 	// Communicate形式検索。該当なしならfalse。and_modeがtrueなら全単語一致以外は無効とする
 	bool	TalkSearch(const wstring& iSentence, wstring& oScript, bool iAndMode);
 
-	// システム変数設定時の動作
-	// return = 0(処理なし) / 1(処理した) / -1(処理したけど変数設定してはだめ)
+	// システム変数設定時の動作（satori_builtin.cpp）
+	// return = SYSVAR_NONE(処理なし) / SYSVAR_SET(処理した) / SYSVAR_NOSET(処理したけど変数設定してはだめ)
+	enum { SYSVAR_NONE = 0, SYSVAR_SET = 1, SYSVAR_NOSET = -1 };
 	int	system_variable_operation(wstring key, wstring value, wstring* result=NULL);
 	int	system_variable_operation_real(wstring key, wstring value, wstring* result); //内部処理用(直接使わないで)
 
@@ -467,6 +470,140 @@ private:
 
 	// count
 	int count_func(const wstring &name);
+
+	//---------------------------------------------------------------------------
+	// 内蔵関数・内蔵変数・システム変数（satori_builtin.cpp）
+	// 名前と処理の対応はsatori_builtin.cppの表にある。足すときは処理をここに宣言し、表に1行加える。
+
+	// iNameがSAORIか内蔵関数の呼び出しなら呼んでoResultに結果を入れ、trueを返す。
+	bool	CallFunction(const wstring& iName, wstring& oResult, bool use_arg_callstack);
+	// 文章中の（の直後pが「特殊形式の名前＋区切り」なら呼び出してtrueを返す。
+	bool	CallSpecialFunction(const wchar_t*& p, wstring& oResult, bool for_calc, bool for_non_talk);
+	// iNameが内蔵変数なら値をoResultに入れ、trueを返す。
+	bool	GetBuiltinValue(const wstring& iName, wstring& oResult);
+
+	static const SatoriFunctionTable&	function_table();
+	static const SatoriFunction*	find_function(const wstring& iName);
+
+	// 内蔵関数：（名前、引数…）
+	wstring	func_set(const strvec& iArgv, bool for_calc, bool for_non_talk);
+	wstring	func_loop(const strvec& iArgv, bool for_calc, bool for_non_talk);
+	wstring	func_call(const strvec& iArgv, bool for_calc, bool for_non_talk);
+	wstring	func_vncall(const strvec& iArgv, bool for_calc, bool for_non_talk);
+	wstring	func_equal(const strvec& iArgv, bool for_calc, bool for_non_talk);
+	wstring	func_nop(const strvec& iArgv, bool for_calc, bool for_non_talk);
+	wstring	func_sync(const strvec& iArgv, bool for_calc, bool for_non_talk);
+	wstring	func_remember(const strvec& iArgv, bool for_calc, bool for_non_talk);
+	wstring	func_byte_value(const strvec& iArgv, bool for_calc, bool for_non_talk);
+	wstring	func_synthesized_words(const strvec& iArgv, bool for_calc, bool for_non_talk);
+	wstring	func_talk_count(const strvec& iArgv, bool for_calc, bool for_non_talk);
+	wstring	func_add_word(const strvec& iArgv, bool for_calc, bool for_non_talk);
+	wstring	func_remove_added_word(const strvec& iArgv, bool for_calc, bool for_non_talk);
+	wstring	func_remove_all_added_words(const strvec& iArgv, bool for_calc, bool for_non_talk);
+	wstring	func_get_property(const strvec& iArgv, bool for_calc, bool for_non_talk);
+	wstring	func_set_property(const strvec& iArgv, bool for_calc, bool for_non_talk);
+	wstring	func_load_saori(const strvec& iArgv, bool for_calc, bool for_non_talk);
+	// 特殊形式：引数を展開せずに受け取る
+	wstring	func_when(const strvec& iArgv, bool for_calc, bool for_non_talk);
+	wstring	func_whenlist(const strvec& iArgv, bool for_calc, bool for_non_talk);
+	wstring	func_times(const strvec& iArgv, bool for_calc, bool for_non_talk);
+	wstring	func_while(const strvec& iArgv, bool for_calc, bool for_non_talk);
+	wstring	func_for(const strvec& iArgv, bool for_calc, bool for_non_talk);
+
+	// 内蔵変数：（名前）。iNameは名前全体、iArgは名前から前後の決まった部分を除いたもの、iParamは表で指定した値。
+	enum { TIME_YEAR, TIME_MONTH, TIME_DAY, TIME_HOUR, TIME_MINUTE, TIME_SECOND, TIME_WEEKDAY };
+	enum {
+		UPTIME_HOUR, UPTIME_MINUTE, UPTIME_SECOND, UPTIME_TOTAL_HOURS, UPTIME_TOTAL_MINUTES, UPTIME_TOTAL_SECONDS,
+		UPTIME_KIND_MASK = 0x0F,
+		UPTIME_FROM_LOAD = 0x00, UPTIME_FROM_OS = 0x10, UPTIME_TOTAL = 0x20,
+		UPTIME_FROM_MASK = 0xF0
+	};
+	enum { VARIABLE_EXISTS, VARIABLE_OR_ZERO, VARIABLE_OR_EMPTY };
+	enum { INSTALLED_GHOST, INSTALLED_SHELL, INSTALLED_BALLOON, INSTALLED_HEADLINE, INSTALLED_FONT, INSTALLED_PLUGIN };
+	enum { GRAPH_SAKURA_NAME, GRAPH_KERO_NAME, GRAPH_BOOT_COUNT, GRAPH_BOOT_MINUTES, GRAPH_BOOT_PERCENT, GRAPH_STATUS };
+	bool	var_version(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_license(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_current_time(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_uptime(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_time_t(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_seconds_from_last_talk(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_random(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_isempty(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_argument_count(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_surface(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_last_exiting_surface(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_window_handle(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_neighbor_ghost(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_ghost_count(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_running_ghost_exists(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_ghost_exists(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_ghost_surface(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_fmo(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_talk_exists(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_talk_count(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_word_exists(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_word_count(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_word_used_all(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_variable(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_count(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_savedata_status(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_next_talk(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_reserved_talk(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_is_talk_reserved(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_reserved_talk_count(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_event_name(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_last_choice_name(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_base_folder(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_exe_folder(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_installed(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_plugin_id(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_rate_of_use_graph(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_window_exists(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_process_exists(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+
+	// システム変数：＄名前＝値。iKeyは変数名全体、iArgは変数名から前後の決まった部分を除いたもの。
+	int	sysvar_talk_interval(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_talk_interval_random(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_header_script(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_nest_limit(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_kakko_size_limit(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_jump_limit(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_surface_restore(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_surface_restore_onetime(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_auto_anchor(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_auto_newline(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_auto_insert_wait_rate(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_auto_insert_wait_type(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_stroked_event(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_nade_valid_time(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_nade_sensitivity(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_log(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_sender(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_delay_save_count(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_communicate_search(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_dic_folder(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_reload(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_savedata_status(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_save(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_auto_save_interval(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_save_notify(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_word_overlap(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_talk_overlap(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_teach(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_next_talk(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_reserve_talk(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_cancel_reserved_talk(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_clear_timers(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_timer(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_surface_add_value(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_default_surface(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_balloon_offset(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_saori_argument_calc(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_add_delimiter(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_remove_delimiter(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_response_value(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_response_header(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_external_event_prefixes(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
 
 public:
 

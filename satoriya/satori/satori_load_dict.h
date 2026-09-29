@@ -149,12 +149,6 @@ void	Satori::InitMembers() {
 	mReferences.clear();
 	mKakkoCallResults.clear();
 
-	special_commands.insert(L"when");
-	special_commands.insert(L"whenlist");
-	special_commands.insert(L"times");
-	special_commands.insert(L"while");
-	special_commands.insert(L"for");
-
 	mLoopCounters.clear();
 
 #ifndef POSIX

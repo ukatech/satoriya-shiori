@@ -124,6 +124,10 @@ SOURCE=.\satori_load_unload.cpp
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\satori_builtin.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\satori_CreateResponce.cpp
 # End Source File
 # Begin Source File

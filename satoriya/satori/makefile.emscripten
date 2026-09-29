@@ -39,6 +39,7 @@ LIBSATORI_OBJ = \
 	satori.o \
 	satoriTranslate.o \
 	satori_AnalyzeRequest.o \
+	satori_builtin.o \
 	satori_CreateResponce.o \
 	satori_EventOperation.o \
 	satori_Kakko.o \
