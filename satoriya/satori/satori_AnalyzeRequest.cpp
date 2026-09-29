@@ -163,6 +163,7 @@ int	Satori::request(
 		if ( split(info, byte1_dlmt, vec)==3 ) // \1‹æØ‚è‚Ì‚R•¶š—ñ‚Å‚ ‚é‚È‚ç‚Î
 		{
 			info=mReferences[ref_no]=variables[L"‘I‘ğ‚h‚c"]=vec[0];
+			last_choice_name=vec[0];
 			variables[L"‘I‘ğƒ‰ƒxƒ‹"]=vec[1];
 			variables[L"‘I‘ğ”Ô†"]=vec[2];
 		}

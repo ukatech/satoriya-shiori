@@ -53,7 +53,7 @@ struct calc_element {
 inline int check_operator(const wchar_t* p) {
 
 	static const wchar_t*	oprs[] = { // 長いもの順に比較するの。
-		L"&&",L"||",L"==",L"!=",L"<=",L">=",L"=~",L"!~",L"<",L">",L"+",L"-",L"*",L"/",L"%"};
+		L"&&",L"||",L"==",L"!=",L"<=",L">=",L"=~",L"!~",L"<",L">",L"+",L"-",L"*",L"/",L"%",L"^"};
 	static const int	num_oprs = sizeof(oprs)/sizeof(oprs[0]);
 
 	for (int i=0 ; i<num_oprs ; ++i) {
@@ -211,7 +211,30 @@ static bool	calc_polish(simple_stack<calc_element>& polish, wstring& oResult,boo
 			else if ( el.str==L"-" ) stack.push( itos(-stoi_internal(stack.pop())) );
 			else assert_special(0);
 		}
-		a_op_b(^)
+		else if ( el.str == L"^" ) {
+			assert_special(stack.size()>=2);
+			wstring	rhs=stack.pop(), lhs=stack.pop();
+			if ( !aredigits(lhs) || !aredigits(rhs) ) { return false; }
+			const int	base = stoi_internal(lhs);
+			const int	exponent = stoi_internal(rhs);
+			int	result = 1;
+			if ( exponent < 0 ) {
+				// negative exponent: integer result
+				if ( base == 0 ) { return false; }
+				if ( base == 1 ) { result = 1; }
+				else if ( base == -1 ) { result = (exponent % 2 == 0) ? 1 : -1; }
+				else { result = 0; }
+			}
+			else {
+				unsigned int	r = 1, b = (unsigned int)base;
+				for ( int e = exponent ; e > 0 ; e >>= 1 ) {
+					if ( e & 1 ) { r *= b; }
+					b *= b;
+				}
+				result = (int)r;
+			}
+			stack.push(itos(result));
+		}
 		else if ( el.str == L"*" ) {
 			assert_special(stack.size()>=2);
 			wstring	rhs=stack.pop(), lhs=stack.pop();
@@ -272,9 +295,10 @@ static bool	calc_polish(simple_stack<calc_element>& polish, wstring& oResult,boo
 		else if ( el.str == L"=~" || el.str == L"!~" ) {
 			// パターンマッチ
 			assert_special(stack.size()>=2);
-			wstring	target=stack.pop(), re=stack.pop();
+			wstring	rhs=stack.pop(), lhs=stack.pop();
 
-			stack.push(L"0");
+			const bool	found = ( lhs.find(rhs) != wstring::npos );
+			stack.push( ((el.str == L"=~") == found) ? L"1" : L"0" );
 		}
 		length_a_op_b(<)
 		length_a_op_b(>)
@@ -306,7 +330,8 @@ bool calc(const wchar_t* iExpression, wstring& oResult,bool isStrict) {
 
 	std::vector<calc_element>::const_iterator i;
 	for ( i=org.begin() ; i!=org.end() ; ++i ) {
-		while ( i->priority <= stack.top().priority && stack.top().str != L"(" )
+		// ^ is right-associative
+		while ( (i->str == L"^" ? i->priority < stack.top().priority : i->priority <= stack.top().priority) && stack.top().str != L"(" )
 			polish.push(stack.pop());
 		if ( i->str != L")" ) stack.push(*i); else stack.pop();
 	}

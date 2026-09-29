@@ -47,6 +47,33 @@ ssu は変更前から警告5件（STLヘッダ由来）が出ます。
    - 公開前にノートの文面をユーザーに見せて確認する。
    - Mc2XX（Unicode 版）は当面 `--prerelease` を付けてベータとして出す。検証が進んだらユーザーの指示で外す（`gh release edit McXYY-Z --prerelease=false`）。指示があるまでは外さない。
 
+## ドキュメント
+
+マニュアルは兄弟リポジトリ `../satori-docs`（https://github.com/ukatech/satori-docs 、公開先 https://ukatech.github.io/satori-docs/ ）にあります。書き方・ビルド・実機での確認手順はそちらの `CLAUDE.md` を参照してください。`main` に push すると GitHub Pages に自動で公開されます。
+
+仕様変更・機能の新設・バグ修正をしたら、ソースのコミットと合わせて `satori-docs` も更新します（`satori-docs` 側で commit & push）。更新先は次のとおりです。
+
+| 変更した場所 | 更新するページ（`satori-docs` 内） |
+|--------------|------------------------------------|
+| ssu の関数（`ssu.cpp`） | `ssu/<関数名>.md`、`ssu/index.md`、`INDEX.md` |
+| （）内蔵関数（`Satori_Kakko.cpp` の `inc_call`、`satori_tool.cpp` の `special_call`） | `functions/<関数名>.md`、`functions/index.md`、`INDEX.md`（ローカル専用かどうかも） |
+| ＄システム変数（`system_variable_operation_real`） | `system/vars-*.md`（分類に合うページ）、`system/index.md` |
+| （）の組み込み名（`CallReal`） | `system/names-*.md` |
+| イベントの処理（`satori_EventOperation.cpp`、`satori_sentence.cpp` の `FindEventTalk`） | `shiori/events.md`、`shiori/default-behaviors.md`、`shiori/satori-events.md` |
+| リクエスト・応答の処理（`satori_AnalyzeRequest.cpp`、`satori_CreateResponce.cpp`） | `shiori/protocol.md` |
+| 辞書の書式・読み込み（`satori_load_dict.cpp`、`satori_load_unload.cpp`） | `grammar/01-dictionary-files.md`〜`grammar/04-script-lines.md` |
+| 式（`calc.cpp`、`calc_float.cpp`） | `ssu/calc.md`、`ssu/calc_float.md`、`grammar/07-expressions.md` |
+| 自動ウェイト・アンカー・改行（`satori_sentence.cpp`、`satoriTranslate.cpp`） | `grammar/11-auto-insert.md`、`grammar/13-sakura-script.md` |
+| 重複回避（`Families.h`、`OverlapController.h`） | `grammar/12-overlap-avoidance.md` |
+| 文字コード（`charset.cpp`） | `grammar/14-charset.md`、`other/unicode-changes.md` |
+| セーブデータ | `grammar/15-save-data.md` |
+| SAORI（`shiori_plugin.cpp`） | `other/saori.md` |
+| ログに出すメッセージの追加・変更 | `other/error-messages.md` |
+
+- 新しい関数・変数を作ったら、ページの新規作成に加えて、`INDEX.md` と各 `index.md` の表にも追加します。
+- バグ修正で挙動が変わるときは、該当ページを直し、`other/unicode-changes.md` の「McXYY-Z での修正」に追記します（ページの本文には `Mc201-2以降` のようにバージョンを書きます）。
+- リリースのバージョン記号（`McXYY-Z`）を上げるときは、`satori-docs` に書いたバージョンとずれていないか確認します。
+
 ## ソースを読む・編集するときのヒント
 
 ### 編集時の注意

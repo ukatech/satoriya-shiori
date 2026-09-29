@@ -2,6 +2,7 @@
 #include	"simple_stack.h"
 
 #include <ctype.h>
+#include <math.h>
 
 //////////DEBUG/////////////////////////
 #include "warning.h"
@@ -76,7 +77,7 @@ static bool	make_array(const wchar_t*& p, std::vector<calc_element>& oData) {
 		// ‚Q€‰‰Zq‚ğæ“¾
 
 		const wchar_t*	oprs[] = { // ’·‚¢‚à‚Ì‡‚É”äŠr‚·‚é‚ÌB
-			L"&&",L"||",L"==",L"!=",L"<=",L">=",L"<",L">",L"+",L"-",L"*",L"/"/*,"."*/};
+			L"&&",L"||",L"==",L"!=",L"<=",L">=",L"<",L">",L"+",L"-",L"*",L"/",L"^"/*,"."*/};
 
 		int	len=0, i=0;
 		for (i=0 ; i<sizeof(oprs)/sizeof(oprs[0]) ; ++i) {
@@ -135,6 +136,10 @@ static VALUE_TYPE	calc_polish(simple_stack<calc_element>& polish) {
 			stack.pop(2);
 			stack.push( atof(buf) );
 		}*/
+		else if ( el.str == L"^" ) {
+			assert(stack.size()>=2);
+			VALUE_TYPE	result = pow( stack.from_top(1), stack.from_top(0) );
+			stack.pop(2); stack.push(result); }
 		a_op_b(*)
 		a_op_b(/)
 		a_op_b(+)
@@ -167,7 +172,8 @@ bool calc_float(const wchar_t* iExpression, VALUE_TYPE* oResult) {
 
 	std::vector<calc_element>::const_iterator i;
 	for ( i=org.begin() ; i!=org.end() ; ++i ) {
-		while ( i->priority <= stack.top().priority && stack.top().str != L"(" )
+		// ^ is right-associative
+		while ( (i->str == L"^" ? i->priority < stack.top().priority : i->priority <= stack.top().priority) && stack.top().str != L"(" )
 			polish.push(stack.pop());
 		if ( i->str != L")" ) stack.push(*i); else stack.pop();
 	}

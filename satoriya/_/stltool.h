@@ -316,7 +316,7 @@ int	split_string(const wchar_t* p, const wchar_t* dp, T& o, int max_words=0, boo
 				o.push_back(word);
 
 				if ( max_words>0 && static_cast<int>(o.size()+1) >= max_words ) {	// ’PŒê”§ŒÀ
-					word = p;
+					word = p + dpl;
 					break;
 				}
 				else {

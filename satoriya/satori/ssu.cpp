@@ -269,6 +269,7 @@ bool	printf_format(const wchar_t*& p, std::deque<wstring>& iArguments, std::wstr
 
 	// 精度指定読み込み
 	int	precision = 0;
+	bool	hasPrecision = false;
 	if ( *p == L'.' ) {
 		++p;
 		while ( *p>=L'0' && *p<=L'9' ) {
@@ -276,6 +277,7 @@ bool	printf_format(const wchar_t*& p, std::deque<wstring>& iArguments, std::wstr
 			++p;
 		}
 		os.precision(precision);
+		hasPrecision = true;
 	}
 
 	// フォーマット設定 - #フラグ
@@ -303,6 +305,10 @@ bool	printf_format(const wchar_t*& p, std::deque<wstring>& iArguments, std::wstr
 	case L'S':
 		{
 			// 幅は半角換算（全角文字は2）で数える。streamはwchar_t単位で埋めるので差分だけ幅を減らす。
+			if ( hasPrecision ) {
+				const wchar_t* end_p = char_at(str.c_str(), precision);
+				if ( end_p != NULL ) { str.erase(end_p - str.c_str()); }
+			}
 			if ( width > 0 ) {
 				const int	extra = (int)count_width(str) - (int)str.size();
 				os.width( width > extra ? width - extra : 0 );
@@ -324,14 +330,10 @@ bool	printf_format(const wchar_t*& p, std::deque<wstring>& iArguments, std::wstr
 			}
 			break;
 		}
+	case L'i':
 	case L'd':
 		{
 			os << zen2int(str);
-			break;
-		}
-	case L'i':
-		{
-			os << std::oct << zen2int(str);
 			break;
 		}
 	case L'o':
