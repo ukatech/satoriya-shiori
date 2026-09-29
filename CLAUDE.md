@@ -68,7 +68,8 @@ ssu は変更前から警告5件（STLヘッダ由来）が出ます。
 - 日本語リテラルの長さを数値で書かない。`const_strlen(L"...")` や `strip_head_tail(str, L"頭", L"尻")` を使う（旧コードはSJISのバイト数を直書きしていた）。
 - 1文字取得は `get_a_chr`、文字数は `count_chars`（サロゲートペアを1文字として扱う）。
 - さくらスクリプトのコマンド名判定は ASCII に限る（`iswalpha` はかなや漢字でも真になる）。
-- 内部特殊表現は私用領域の文字：`INTERNAL_MARK`(U+E0FF)、escaper(U+E09E)、Sender の flush 区切り(U+E0FE)。
+- 内部特殊表現は私用領域の文字：`INTERNAL_MARK`(U+E0FF)、その種別 `INTERNAL_MARK_SCOPE`(U+E0FD) / `INTERNAL_MARK_SURFACE`(U+E0FC)、escaper(U+E09E)、Sender の flush 区切り(U+E0FE)。
+  - 種別は master では `\x01` / `\x02` だったが、（バイト値、１）などの引数区切りと衝突して「引数の個数が正しくありません」になるので私用領域に移した。制御文字を内部表現に使わないこと。
 
 ### どこに何があるか
 - 辞書の前処理（φエスケープ、＃コメント、カッコ内改行の連結、replace.txt 適用）：`satori_load_dict.cpp` の `pre_process`
@@ -89,7 +90,9 @@ ssu は変更前から警告5件（STLヘッダ由来）が出ます。
   - errsender（ `GetSender().errsender() << ... << satori::endl` ）は E_E で送られ、`capability` で `response.errorlevel` 非対応と分かった後は MessageBox になる。
 
 ### 動作確認
-- satori.dll を `LoadLibrary` して `loadu` / `request` / `unload` を直接呼ぶ小さなハーネスを VC6 で作ると、SSP を起動せずにリクエスト単位で確認できる。
+- `satoriya/test/harness/harness.c` で satori.dll の `load` / `request` / `unload` を直接呼べる（SSP を起動せずにリクエスト単位で確認できる）。使い方は同じフォルダの README.md。
+  - リクエストも応答も生のバイト列のまま扱う（文字コード変換なし）ので、master の DLL には SJIS、unicode 版には Charset ヘッダに合わせたバイト列を渡して公平に比較できる。tamac は unicode 版からの E_UTF8 通知で UTF-8 に切り替わるので、master との比較には向かない。
+  - トーク名をそのまま ID に指定した場合、`On` で始まらない ID では冒頭のデフォルトサーフェス（`\0\s[0]\1\s[10]`）と末尾の `\e` が付かない。サーフェス関係を見るときは `On` で始まる名前のトークにする。
 - 変更前の DLL は `git worktree` で master を別に展開してビルドすると比較しやすい。
   - 自動ウェイト（`\_w[n]`）は master と値が違うのが正しい。master は `chars_spoken` を SJIS のバイト数で数えていたため全角1文字が2だったが、unicode 版は1文字=1（全角の自動ウェイトは master の半分になる）。これは仕様として受け入れ済みなので、比較では `\_w[...]` を除いて見る。
 - SSP での確認：
