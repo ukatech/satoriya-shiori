@@ -389,7 +389,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,wstring &result,wst
 		while ( p[0] != L'\0' ) {
 			bool do_process = (p >= p_do_not_process_end);
 
-			wstring	c=get_a_chr(p);	// 全角半角問わず一文字取得し、pを一文字すすめる
+			a_chr	c=next_a_chr(p);	// 全角半角問わず一文字取得し、pを一文字すすめる
 
 			if ( do_process && (c==L"（") ) {	// 何かを取得・挿入
 				character_wait_exec;
@@ -410,15 +410,15 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,wstring &result,wst
 				p_do_not_process_end = p + kakko_result.size();
 			}
 			else if ( c==INTERNAL_MARK_STR ) {	//内部特殊表現 (カッコ遅延評価もあるのでdo_process判定はスキップ)
-				c = get_a_chr(p);
+				c = next_a_chr(p);
 
 				if ( c == INTERNAL_MARK_SCOPE_STR || c == INTERNAL_MARK_SURFACE_STR ) {
-					wstring cmd = c;
+					wstring cmd = c.str();
 
 					wstring param;
 
 					while (true) {
-						c=get_a_chr(p);
+						c=next_a_chr(p);
 						if ( c==INTERNAL_MARK_STR ) { break; }
 						param += c;
 					}

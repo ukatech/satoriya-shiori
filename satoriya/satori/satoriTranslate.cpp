@@ -27,7 +27,7 @@ bool	Satori::Translate(wstring& ioScript) {
 	int	last_speaker=0;
 	const wchar_t* p = ioScript.c_str();
 	while (*p) {
-		wstring	c=get_a_chr(p);	// 全角半角問わず一文字取得し、pを一文字すすめる
+		a_chr	c=next_a_chr(p);	// 全角半角問わず一文字取得し、pを一文字すすめる
 		
 		if ( c==L"\\" || c==L"%" ) {
 			if (*p==L'\\'||*p==L'%') {	// エスケープされた\, %
@@ -184,7 +184,7 @@ bool	Satori::Translate(wstring& ioScript) {
 				}
 			}
 		}
-		ioScript += *i;
+		append_grow(ioScript, *i);
 	}
 
 

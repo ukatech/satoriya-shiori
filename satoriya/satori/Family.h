@@ -83,11 +83,44 @@ class Family
 	// Word/Talkへのポインタを候補として保持する。
 	Selector<const T*> m_selector;
 
+	// m_selector に渡した候補が今の要素と同じか。
+	// 無条件の群だけのときは要素が変わるまで候補も変わらないので、渡し直さずに済ませる。
+	bool m_candidates_cached;
+
+	bool is_unconditional() const
+	{
+		return m_conds_map.size() == 1 && m_conds_map.begin()->first.empty();
+	}
+
+	// 条件式を評価して候補を選び、選択係に渡す。渡した候補を返す（候補が無ければ NULL）。
+	// o_work は候補を作るための作業用。
+	const std::list<const T*>* update_selector(Evalcator& i_evalcator, std::list<const T*>& o_work)
+	{
+		if ( m_candidates_cached && is_unconditional() && !m_selector.candidates().empty() ) {
+			// 要素はアドレス順（ソート済み）で渡しているので、選択係の候補は前回渡したものと同じ
+			return &m_selector.candidates();
+		}
+
+		select_all(i_evalcator, o_work);
+		if ( o_work.empty() ) {
+			return NULL;
+		}
+		switch (m_selector.type()) {
+		case 200:
+		case 300:
+			o_work.sort();
+			break;
+		}
+		m_selector.update_candidates(o_work);
+		m_candidates_cached = is_unconditional();
+		return &o_work;
+	}
 
 public:
 	Family() {
 		//cout << "Family()" << endl;
 		ComNameFound = false;
+		m_candidates_cached = false;
 	}
 	//~Family() { cout << "~Family()" << endl; }
 
@@ -178,6 +211,7 @@ public:
 	// 登録
 	const T& add_element(const T& i_t, const Condition& i_condition = Condition())
 	{
+		m_candidates_cached = false;
 		Elements& lt = m_conds_map[i_condition];
 		lt.push_back(i_t);
 		return lt.back();
@@ -187,6 +221,7 @@ public:
 	{
 		typename CondsMap::iterator it = m_conds_map.find(i_condition);
 		if ( it == m_conds_map.end() ) { return; }
+		m_candidates_cached = false;
 		Elements& lt = it->second;
 		lt.erase(std::remove(lt.begin(),lt.end(),i_t),lt.end());
 		if ( lt.empty() ) {
@@ -197,6 +232,7 @@ public:
 	// 重複回避を設定
 	void set_OC(OverlapController<const T*>* i_oc)
 	{
+		m_candidates_cached = false;
 		m_selector.attach_OC(i_oc);
 	}
 	// 重複回避状況をクリア
@@ -207,26 +243,11 @@ public:
 	// 重複回避を全部使ってしまったか
 	bool is_OC_used_all(Evalcator& i_evalcator)
 	{
-		std::list<const T*> candidates;
-		select_all(i_evalcator, candidates);
-
-		if (candidates.empty()) {
+		std::list<const T*> work;
+		if ( update_selector(i_evalcator, work) == NULL ) {
 			return false;
 		}
-		//重複回避枯渇取得のために m_selector を必ず動くようにする
-		//else if ( candidates.size() == 1 ) {
-		//	return *candidates.begin();
-		//}
-		else {
-			switch (m_selector.type()) {
-			case 200:
-			case 300:
-				candidates.sort();
-				break;
-			}
-			m_selector.update_candidates(candidates);
-			return m_selector.isOCUsedAll();
-		}
+		return m_selector.isOCUsedAll();
 	}
 
 	// 条件式を評価して候補をすべて選ぶ。
@@ -246,7 +267,6 @@ public:
 		}
 		else {
 			//  候補を選択
-			std::wcout << L"selecting" << std::endl;
 			for ( typename CondsMap::const_iterator i = m_conds_map.begin() ; i != m_conds_map.end() ; ++i )
 			{
 				// 「無条件」であるか「条件式を評価した結果、0/０を返さなかったもの」を採用
@@ -255,7 +275,6 @@ public:
 					for ( typename std::vector<T>::const_iterator j = i->second.begin() ; j != i->second.end() ; ++j )
 					{
 						candidates.push_back( &(*j) );
-						std::wcout << L"[" << *j << L"]" << std::endl;
 					}
 				}
 			}
@@ -266,73 +285,30 @@ public:
 	// 引数は「評価者」。
 	const T* select(Evalcator& i_evalcator)
 	{
-		std::list<const T*> candidates;
-		select_all(i_evalcator,candidates);
-
-		if ( candidates.empty() ) {
+		//重複回避枯渇取得のために、候補が1つでも m_selector を必ず動くようにする
+		std::list<const T*> work;
+		if ( update_selector(i_evalcator, work) == NULL ) {
 			return NULL;
 		}
-		//重複回避枯渇取得のために m_selector を必ず動くようにする
-		//else if ( candidates.size() == 1 ) {
-		//	return *candidates.begin();
-		//}
-		else {
-			switch (m_selector.type()) {
-			case 200:
-			case 300:
-				candidates.sort();
-				break;
-			}
-			m_selector.update_candidates(candidates);
-			return	m_selector.select();
-		}
+		return	m_selector.select();
 	}
 
 	void getSelectables(Evalcator& i_evalcator, std::list<const T*>& o_result)
 	{
-		std::list<const T*> candidates;
-		select_all(i_evalcator, candidates);
-
-		if (candidates.empty()) {
+		std::list<const T*> work;
+		if ( update_selector(i_evalcator, work) == NULL ) {
 			return;
 		}
-		//重複回避枯渇取得のために m_selector を必ず動くようにする
-		//else if ( candidates.size() == 1 ) {
-		//	return *candidates.begin();
-		//}
-		else {
-			switch (m_selector.type()) {
-			case 200:
-			case 300:
-				candidates.sort();
-				break;
-			}
-			m_selector.update_candidates(candidates);
-			m_selector.getSelectables(o_result);
-		}
+		m_selector.getSelectables(o_result);
 	}
 
 	void applySelectedOC(Evalcator& i_evalcator, const T* selected)
 	{
-		std::list<const T*> candidates;
-		select_all(i_evalcator, candidates);
-
-		if (candidates.empty()) {
+		std::list<const T*> work;
+		const std::list<const T*>* candidates = update_selector(i_evalcator, work);
+		if ( candidates == NULL ) {
 			return;
 		}
-		//重複回避枯渇取得のために m_selector を必ず動くようにする
-		//else if ( candidates.size() == 1 ) {
-		//	return *candidates.begin();
-		//}
-		else {
-			switch (m_selector.type()) {
-			case 200:
-			case 300:
-				candidates.sort();
-				break;
-			}
-			m_selector.update_candidates(candidates);
-			m_selector.applySelected(candidates, selected);
-		}
+		m_selector.applySelected(*candidates, selected);
 	}
 };

@@ -212,6 +212,52 @@ static const char	FILE_NEWLINE[] = "\r\n";
 // 一文字取得（サロゲートペアは1文字として扱う）
 wstring	get_a_chr(const wchar_t*& p);
 
+// 文字列の末尾に追加する。
+// VC6のbasic_stringは容量を32文字ずつしか増やさず、少しずつ追加すると長さの2乗の時間がかかるので、足りなければ倍々に確保する。
+inline wstring&	append_grow(wstring& s, const wchar_t* p, size_t n) {
+	const size_t need = s.size() + n;
+	if ( need > s.capacity() ) {
+		s.reserve(need * 2);
+	}
+	return s.append(p, n);
+}
+inline wstring&	append_grow(wstring& s, const wstring& t) {
+	return append_grow(s, t.c_str(), t.size());
+}
+
+// 一文字（サロゲートペアは2単位）を、ヒープを使わずに持つ。
+// VC6のbasic_stringは1文字でもヒープを確保するので、1文字ずつ回すループでは get_a_chr の代わりに next_a_chr を使う。
+class a_chr {
+	wchar_t	m_buf[3];
+	size_t	m_len;
+	friend a_chr	next_a_chr(const wchar_t*& p);
+public:
+	a_chr() : m_len(0) { m_buf[0] = L'\0'; }
+	const wchar_t*	c_str() const { return m_buf; }
+	size_t	size() const { return m_len; }
+	wstring	str() const { return wstring(m_buf, m_len); }
+	bool	operator==(const wchar_t* s) const { return wcscmp(m_buf, s) == 0; }
+	bool	operator!=(const wchar_t* s) const { return !(*this == s); }
+	bool	operator==(const wstring& s) const { return s.size() == m_len && wcscmp(m_buf, s.c_str()) == 0; }
+	bool	operator!=(const wstring& s) const { return !(*this == s); }
+};
+
+// 一文字取得（サロゲートペアは1文字として扱う）。get_a_chr と同じだが a_chr で返す。
+inline a_chr	next_a_chr(const wchar_t*& p) {
+	a_chr	c;
+	if ( *p == L'\0' )
+		return	c;
+	c.m_buf[c.m_len++] = *p++;
+	if ( IsHighSurrogate(c.m_buf[0]) && IsLowSurrogate(*p) )
+		c.m_buf[c.m_len++] = *p++;
+	c.m_buf[c.m_len] = L'\0';
+	return	c;
+}
+
+inline wstring&	operator+=(wstring& s, const a_chr& c) { return append_grow(s, c.c_str(), c.size()); }
+inline wstring	operator+(const a_chr& c, const wstring& s) { wstring r(c.c_str(), c.size()); r += s; return r; }
+inline wstring	operator+(const a_chr& c, wchar_t w) { wstring r(c.c_str(), c.size()); r += w; return r; }
+
 // 文字数（サロゲートペアは1文字として数える）
 size_t	count_chars(const wstring& str);
 // 半角換算の幅（半角文字は1、全角文字は2。SJIS時代のバイト数に相当）

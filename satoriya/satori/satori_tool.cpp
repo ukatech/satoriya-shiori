@@ -461,7 +461,7 @@ wstring	Satori::KakkoSection(const wchar_t*& p,bool for_calc,bool for_non_talk)
 	for (std::set<wstring>::iterator it = special_commands.begin(); it != special_commands.end(); ++it) {
 		if ( wcsncmp(it->c_str(), p, it->size()) == 0 ) {
 			pp = p + it->size();
-			wstring c = get_a_chr(pp);
+			const wstring c = next_a_chr(pp).str();
 			//引数がない場合はスペシャルフォームにする必要はない。
 			if ( mDelimiters.find(c) != mDelimiters.end() ){
 				specialFlag = true;
@@ -480,7 +480,7 @@ wstring	Satori::KakkoSection(const wchar_t*& p,bool for_calc,bool for_non_talk)
 			if ( *pp == L'\0' ){
 				return wstring(L"（"); // 閉じカッコが無かった
 			}
-			wstring c = get_a_chr(pp);
+			a_chr c = next_a_chr(pp);
 			if ( c == L"（" ) {
 				level++;
 			}
@@ -506,11 +506,11 @@ wstring	Satori::KakkoSection(const wchar_t*& p,bool for_calc,bool for_non_talk)
 			if ( p[0] == L'\0' )
 				return	wstring(L"（") + kakko_str;	// 閉じカッコが無かった
 			
-			wstring c = get_a_chr(p);
+			a_chr c = next_a_chr(p);
 			if ( c==L"）" )
 				break;
 			else if ( c==L"（" ) {
-				kakko_str += KakkoSection(p,false,for_non_talk); //内側の括弧は0に置き換えしない
+				append_grow(kakko_str, KakkoSection(p,false,for_non_talk)); //内側の括弧は0に置き換えしない
 			}
 			else
 				kakko_str += c;
@@ -531,10 +531,10 @@ wstring	Satori::UnKakko(const wchar_t* p,bool for_calc,bool for_non_talk)
 	wstring	result;
 
 	while ( p[0] != L'\0' ) {
-		wstring c=get_a_chr(p);
+		a_chr c=next_a_chr(p);
 
 		if ( c == L"（" ) {
-			result += KakkoSection(p,for_calc,for_non_talk);
+			append_grow(result, KakkoSection(p,for_calc,for_non_talk));
 		}
 		else {
 			result += c;

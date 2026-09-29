@@ -818,14 +818,14 @@ bool	Satori::CallReal(const wstring& iName, wstring& oResult, bool for_calc, boo
 
 					if (state == SPECIAL_CALL) {
 						int level = 0;
-						get_a_chr(p);
+						next_a_chr(p);
 						const wchar_t *p_start = p;
 						while (true){
 							if (*p == L'\0'){
 								theArguments.push_back(wstring(p_start, p - p_start));
 								break;
 							}
-							wstring c = get_a_chr(p);
+							a_chr c = next_a_chr(p);
 							if (c == L"i") {
 								level++;
 							}
@@ -845,7 +845,6 @@ bool	Satori::CallReal(const wstring& iName, wstring& oResult, bool for_calc, boo
 						}
 					}
 					else{
-						wstring argstr = UnKakko(p, false, true);
 						while (true)
 						{
 							p += theDelimiter->size();

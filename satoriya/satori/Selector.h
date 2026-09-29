@@ -159,6 +159,12 @@ public:
 		return m_OC->select(m_candidates);
 	}
 
+	// Œ»İ‚Ì‘I‘ğ‘ÎÛŒó•â
+	const std::list<T>& candidates() const
+	{
+		return m_candidates;
+	}
+
 	bool isOCUsedAll()
 	{
 		return m_OC->is_used_all(m_candidates);
