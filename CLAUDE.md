@@ -38,7 +38,7 @@ ssu は変更前から警告5件（STLヘッダ由来）が出ます。
 1. 前回のタグからの変更を `git log <前回タグ>..HEAD` で確認し、Y と Z のどちらを上げるか決める（怪しければ質問）。
 2. 上の2箇所を書き換える。
 3. msdev で satori / satorite / ssu を Release でリビルドし、エラー 0 を確認する（上の「ビルド」参照）。
-4. `satoriya` で `make_satori.bat` を実行する（cmd 経由。7z が必要）。`satoriya\tmp\satori.zip` ができる。中身は satori.dll、satorite.exe、saori\ssu.dll、satori_license.txt。
+4. `satoriya` で `make_satori.bat` を実行する（cmd 経由。7z が必要）。`satoriya\tmp\satori.zip` ができる。中身は satori.dll、satorite.exe、saori\ssu.dll。
 5. バージョン更新をコミットする。コミットメッセージは「変更の要約 McXYY-Z」（例：「2問題修正 Mc172-3」）。
 6. X=2 は unicode ブランチ、X=1 は master でリリースする。push してから、同名のタグ `McXYY-Z` を打って push する。
 7. `gh release create McXYY-Z satoriya/tmp/satori.zip --title McXYY-Z --target <ブランチ> --notes ...` で公開する。
