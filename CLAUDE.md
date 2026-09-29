@@ -16,6 +16,36 @@ msdev satori.dsw /MAKE "ssu - Win32 Release" /REBUILD /OUT "$env:TEMP\claude\sat
 
 ログは `Get-Content <log> -Encoding oem` で読めます。最終行に「ｴﾗｰ n、警告 n」が出ます。
 ssu は変更前から警告5件（STLヘッダ由来）が出ます。
+出力先は satori が `Release\`、satorite が `Release_ST\`、ssu が `Release_SU\` です（`satori\Release\satorite.exe` などは古い残骸）。
+
+## リリース
+
+### バージョン記号 `McXYY-Z`
+- X：1 = ACP 版（master）、2 = Unicode 版（unicode ブランチ）
+- YY：機能追加で上げる（2桁）。上げたら Z は 1 に戻す（例：Mc171-4 → Mc172-1）。
+- Z：バグフィックスで上げる。
+- 機能追加かバグフィックスか判断が怪しいときは、どちらで上げるかユーザーに質問する。
+- 接頭辞は常に `Mc`（`Tc` と書かれていても `Mc`）。
+
+### 書き換える場所（2箇所）
+- `satoriya/satori/resource.rc`（satori / satorite / ssu 共通、Shift_JIS）
+  - `FILEVERSION X,XYY,Z,1` と `VALUE "FileVersion", "X, XYY, Z, 1\0"`
+  - 例：Mc172-3 → `1,172,3,1`、Mc201-1 → `2,201,1,1`
+  - `PRODUCTVERSION` は 1,0,0,1 のまま触らない。
+- `satoriya/satori/satori.cpp` の `gSatoriVersion = L"phase McXYY-Z";`
+
+### 手順
+1. 前回のタグからの変更を `git log <前回タグ>..HEAD` で確認し、Y と Z のどちらを上げるか決める（怪しければ質問）。
+2. 上の2箇所を書き換える。
+3. msdev で satori / satorite / ssu を Release でリビルドし、エラー 0 を確認する（上の「ビルド」参照）。
+4. `satoriya` で `make_satori.bat` を実行する（cmd 経由。7z が必要）。`satoriya\tmp\satori.zip` ができる。中身は satori.dll、satorite.exe、saori\ssu.dll、satori_license.txt。
+5. バージョン更新をコミットする。コミットメッセージは「変更の要約 McXYY-Z」（例：「2問題修正 Mc172-3」）。
+6. X=2 は unicode ブランチ、X=1 は master でリリースする。push してから、同名のタグ `McXYY-Z` を打って push する。
+7. `gh release create McXYY-Z satoriya/tmp/satori.zip --title McXYY-Z --target <ブランチ> --notes ...` で公開する。
+   - ノートは日本語の箇条書き（`- ○○の問題修正`、`- ○○を追加`）。外部の PR によるものは末尾に ` by @ユーザー名` を付ける。
+   - 過去の例は `gh release view Mc172-3` で見られる。
+   - 公開前にノートの文面をユーザーに見せて確認する。
+   - Mc2XX（Unicode 版）は当面 `--prerelease` を付けてベータとして出す。検証が進んだらユーザーの指示で外す（`gh release edit McXYY-Z --prerelease=false`）。指示があるまでは外さない。
 
 ## ソースを読む・編集するときのヒント
 
