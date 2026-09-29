@@ -361,6 +361,50 @@ std::string	decode(const std::string& s) {
 	return	ret;
 }
 
+static int	charactor_to_binary(char c) {
+	if ( c>='0' && c<='9' )
+		return	c-'0';
+	else if ( c>='a' && c<='f' )
+		return	c-'a'+10;
+	else if ( c>='A' && c<='F' )
+		return	c-'A'+10;
+	else {
+		assert(0);
+		return	0;
+	}
+}
+
+void	string_to_binary(const std::string& iString, byte* oArray) {
+	int	len = iString.size()/2;
+	for ( int i=0 ; i<len ; ++i)
+		oArray[i] = charactor_to_binary(iString[i*2])*16 + charactor_to_binary(iString[i*2+1]);
+}
+
+static char	binary_to_charactor(int b) {
+	if ( b<10 )
+		return	'0'+b;
+	else if ( b<16 )
+		return	'a'+(b-10);
+	else {
+		assert(0);
+		return	0;
+	}
+}
+
+std::string	binary_to_string(const byte* iArray, int iLength) {
+	std::string	str;
+	for ( int i=0 ; i<iLength ; ++i) {
+		str += binary_to_charactor(iArray[i]/16);
+		str += binary_to_charactor(iArray[i]%16);
+	}
+	return	str;
+}
+
+void	xor_filter(byte* ioArray, int iLength, byte iXorValue) {
+	for ( int i=0 ; i<iLength ; ++i)
+		ioArray[i] ^= iXorValue;
+}
+
 const wchar_t*	strstr_hz(const wchar_t* target, const wchar_t* find) {
 	return	wcsstr(target, find);
 }

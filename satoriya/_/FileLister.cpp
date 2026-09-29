@@ -24,10 +24,10 @@ FileLister::~FileLister() {
 
 //------------------------------------------------------------------------
 // 列挙パスを指定。ワイルドカード使用可。
-BOOL	FileLister::Open( LPCSTR iFindPath ) {
+BOOL	FileLister::Open( LPCWSTR iFindPath ) {
 	assert(iFindPath != NULL);
 	Close();
-	::lstrcpy( mPath, iFindPath );
+	::lstrcpynW( mPath, iFindPath, MAX_PATH );
 	return	TRUE;
 }
 
@@ -35,16 +35,16 @@ BOOL	FileLister::Open( LPCSTR iFindPath ) {
 // 次のファイルを列挙。
 BOOL	FileLister::Next() {
 
-	if ( mPath[0] == '\0' )
+	if ( mPath[0] == L'\0' )
 		return	FALSE;
 
 	if ( mHandle == INVALID_HANDLE_VALUE ) {
-		mHandle = ::FindFirstFile( mPath, &mData );
+		mHandle = ::FindFirstFileW( mPath, &mData );
 		if ( mHandle == INVALID_HANDLE_VALUE )
 			return	FALSE;
 	}
 	else {
-		if ( !::FindNextFile( mHandle, &mData ) ) {
+		if ( !::FindNextFileW( mHandle, &mData ) ) {
 			mHandle = INVALID_HANDLE_VALUE;
 			return	FALSE;
 		}
@@ -54,13 +54,13 @@ BOOL	FileLister::Next() {
 
 //------------------------------------------------------------------------
 // 現在のファイル名を取得。
-LPCSTR	FileLister::Name() {
+LPCWSTR	FileLister::Name() {
 	return	mData.cFileName;
 }
 
 //------------------------------------------------------------------------
 // 現在のファイルの詳細データを取得。
-const WIN32_FIND_DATA*	FileLister::Data() {
+const WIN32_FIND_DATAW*	FileLister::Data() {
 	return	&mData;
 }
 
@@ -73,30 +73,31 @@ BOOL	FileLister::isFolder() {
 //------------------------------------------------------------------------
 // 現在のファイル名は . のみで構成されている？
 BOOL	FileLister::isDots() {
-	char*	p = mData.cFileName;
-	if (*p != '.') 
+	wchar_t*	p = mData.cFileName;
+	if (*p != L'.') 
 		return FALSE;
-	for ( ; *p != '\0' ; p++ )
-		if ( *p != '.' )
+	for ( ; *p != L'\0' ; p++ )
+		if ( *p != L'.' )
 			return	FALSE;
 	return	TRUE;
 }
 
 //------------------------------------------------------------------------
 // 指定の拡張子か？
-BOOL	FileLister::isExt( LPCSTR iExtention ) {
+BOOL	FileLister::isExt( LPCWSTR iExtention ) {
 	assert(iExtention != NULL);
 
-	int	len = strlen(mData.cFileName);
-	char*	p = mData.cFileName;
-	for ( int i=len-1 ; i>=0 ; i-- )
-		if ( p[i] == '.' )
+	int	len = wcslen(mData.cFileName);
+	wchar_t*	p = mData.cFileName;
+	int i=len-1;
+	for ( ; i>=0 ; i-- )
+		if ( p[i] == L'.' )
 			break;
 
 	if ( i>=0 )
-		return ( stricmp( iExtention, p+i+1 ) == 0 );// 見つけたとき
+		return ( _wcsicmp( iExtention, p+i+1 ) == 0 );// 見つけたとき
 	else
-		return ( iExtention[0] == '\0' );			// 無かったとき
+		return ( iExtention[0] == L'\0' );			// 無かったとき
 }
 
 //------------------------------------------------------------------------

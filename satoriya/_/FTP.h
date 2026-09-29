@@ -16,7 +16,6 @@
 #include	<iostream>
 #include	<map>
 #include	<cassert>
-using namespace std;
 
 class WinInetHandle
 {
@@ -25,11 +24,11 @@ public:
 	WinInetHandle() : h(NULL) {}
 	~WinInetHandle() { close(); }
 
-	bool open(string i_client_name)
+	bool open(const std::wstring& i_client_name)
 	{
 		if ( h == NULL )
 		{
-			h = ::InternetOpen(
+			h = ::InternetOpenW(
 				i_client_name.c_str(),
 				INTERNET_OPEN_TYPE_PROXY,//INTERNET_OPEN_TYPE_DIRECT,
 				NULL,
@@ -56,17 +55,17 @@ public:
 	FTP(HINTERNET iInternet);
 	~FTP();
 
-	bool	open(const string& host, const string& id, const string& password, bool is_passive=false);
+	bool	open(const std::wstring& host, const std::wstring& id, const std::wstring& password, bool is_passive=false);
 	void	close();
 	
-	bool	cd(const string& subdir);
-	bool	pwd(string& o_dir);
-	bool	mkdir(const string& subdir);
-	bool	put(const string& local_filepath, const string& upload_filename, bool isBinary=true);
-	bool	get(const string& local_filepath, const string& upload_filename, bool isBinary=true);
+	bool	cd(const std::wstring& subdir);
+	bool	pwd(std::wstring& o_dir);
+	bool	mkdir(const std::wstring& subdir);
+	bool	put(const std::wstring& local_filepath, const std::wstring& upload_filename, bool isBinary=true);
+	bool	get(const std::wstring& local_filepath, const std::wstring& upload_filename, bool isBinary=true);
 	
 	// これに限り、同一セッション中（openしてからcloseするまで）１回しか実行できない
-	void	ls(map<string, WIN32_FIND_DATA>& oFileList);
+	void	ls(std::map<std::wstring, WIN32_FIND_DATAW>& oFileList);
 
 private:
 	HINTERNET	mInternet;

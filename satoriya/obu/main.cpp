@@ -8,6 +8,7 @@ using namespace std;
 #pragma warning( disable : 4503 ) //「装飾された名前の長さが限界を越えました。名前は切り捨てられます。」
 
 #include "get_browser_info.h"
+#include "../_/charset.h"
 
 int main()
 {
@@ -20,7 +21,7 @@ int main()
 		}
 		else {
 			for ( int i = 0 ; i < url.size() ; ++i ) {
-				cout << url[i].first << " | " << url[i].second << endl;
+				cout << WtoACP(url[i].first) << " | " << WtoACP(url[i].second) << endl;
 			}
 		}
 		cout << "---------------" << endl;

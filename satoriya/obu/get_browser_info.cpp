@@ -7,6 +7,7 @@
 	include
 --------------------------*/
 #include "get_browser_info.h"
+#include "../_/charset.h"
 
 /*--------------------------
 	define
@@ -34,10 +35,11 @@ CBrowserInfo::CBrowserInfo()
 	m_server_num = -1;
 
 	m_dwDDEID = 0;
-	::DdeInitialize(&m_dwDDEID, DDECallback, CBF_SKIP_ALLNOTIFICATIONS | APPCMD_CLIENTONLY, 0L);
+	// ブラウザとのやりとりはANSI（CF_TEXT）で行い、取得した文字列を ACPtoW する
+	::DdeInitializeA(&m_dwDDEID, DDECallback, CBF_SKIP_ALLNOTIFICATIONS | APPCMD_CLIENTONLY, 0L);
 
-	m_hszTopic = ::DdeCreateStringHandle(m_dwDDEID,"WWW_GetWindowInfo", CODEPAGE);
-	m_hszListWindows = ::DdeCreateStringHandle(m_dwDDEID,"WWW_ListWindows", CODEPAGE);
+	m_hszTopic = ::DdeCreateStringHandleA(m_dwDDEID,"WWW_GetWindowInfo", CODEPAGE);
+	m_hszListWindows = ::DdeCreateStringHandleA(m_dwDDEID,"WWW_ListWindows", CODEPAGE);
 }
 
 CBrowserInfo::~CBrowserInfo()
@@ -54,12 +56,13 @@ CBrowserInfo::~CBrowserInfo()
 #include	<mbctype.h>
 //DDEでブラウザから取得した情報を URL , Title , Frame に展開する
 //	"http://hoge.com/","hoge","Frame"
-static void __fastcall GetDDEStr(char *buf, std::string &URL, std::string &Title)
+static void __fastcall GetDDEStr(char *buf, std::wstring &oURL, std::wstring &oTitle)
 {
 	char *p = (char *)buf;
 
-	URL.erase();
-	Title.erase();
+	std::string URL, Title;
+	oURL.erase();
+	oTitle.erase();
 
 	//URL
 	if(*p == '\"'){
@@ -75,18 +78,22 @@ static void __fastcall GetDDEStr(char *buf, std::string &URL, std::string &Title
 	}
 
 	//Title
-	if ( *p == 0 ) { return; }
-	for(;(*p == '\"' || *p == ',') && *p != '\0';p++);
-	if ( *p == 0 ) { return; }
-
-	for( ;*p != '\"' && *p != '\0';p++){
-		if(IsDBCSLeadByte((BYTE)*p) == TRUE){
-			Title += *(p++);
-		}else if(*p == '\\'){
-			p++;
-		}
-		Title += *p;
+	if ( *p != 0 ) {
+		for(;(*p == '\"' || *p == ',') && *p != '\0';p++);
 	}
+	if ( *p != 0 ) {
+		for( ;*p != '\"' && *p != '\0';p++){
+			if(IsDBCSLeadByte((BYTE)*p) == TRUE){
+				Title += *(p++);
+			}else if(*p == '\\'){
+				p++;
+			}
+			Title += *p;
+		}
+	}
+
+	oURL = ACPtoW(URL);
+	oTitle = ACPtoW(Title);
 }
 
 //============================================================================
@@ -96,7 +103,7 @@ static const char*	DDE_ServerNames[] =
 	"MBROWSER", "SLEIPNIR", "MDIBROWSER", "TaBrowser", "Donut", "fub", "fub.net", "Cuam" };
 static const int max_svr = sizeof(DDE_ServerNames)/sizeof(DDE_ServerNames[0]);
 
-bool CBrowserInfo::Get(std::string& URL, std::string& Title)
+bool CBrowserInfo::Get(std::wstring& URL, std::wstring& Title)
 {
 	if ( m_dwDDEID == 0 ) { return false; }
 
@@ -177,7 +184,7 @@ bool CBrowserInfo::GetMultiImpl(const char *iDDE_ServerName,
 {
 	if ( m_dwDDEID == 0 ) { return false; }
 
-	HSZ hszService = ::DdeCreateStringHandle(m_dwDDEID, iDDE_ServerName, CODEPAGE);
+	HSZ hszService = ::DdeCreateStringHandleA(m_dwDDEID, iDDE_ServerName, CODEPAGE);
 
 	DWORD listWindows[100] = {0};
 	if ( ! isActiveOnly ) {
@@ -205,8 +212,8 @@ bool CBrowserInfo::GetMultiImpl(const char *iDDE_ServerName,
 		return false;
 	}
 
-	std::string URL;
-	std::string Title;
+	std::wstring URL;
+	std::wstring Title;
 
 	HSZ hszParam;
 	UINT count = 0;
@@ -214,7 +221,7 @@ bool CBrowserInfo::GetMultiImpl(const char *iDDE_ServerName,
 
 	while ( listWindows[count] ) {
 		sprintf(num,"%#x",listWindows[count]);
-		hszParam = ::DdeCreateStringHandle(m_dwDDEID, num, CODEPAGE);
+		hszParam = ::DdeCreateStringHandleA(m_dwDDEID, num, CODEPAGE);
 
 		//Client Transaction
 		HDDEDATA hDDEData = ::DdeClientTransaction(NULL, 0, hConv, hszParam, CF_TEXT, XTYP_REQUEST, 10000L, NULL);

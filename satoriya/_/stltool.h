@@ -514,6 +514,12 @@ T*	find_final_char(T* str, const T& c) {
 std::string	encode(const std::string& s);
 std::string	decode(const std::string& s);
 
+// バイト列と16進文字列の相互変換
+std::string	binary_to_string(const byte* iArray, int iLength);
+void	string_to_binary(const std::string& iString, byte* oArray);
+// xor フィルタ
+void	xor_filter(byte* ioArray, int iLength, byte iXorValue);
+
 
 // コンテナ内を検索、存在有無をboolで返す
 /*template<typename C, typename E>

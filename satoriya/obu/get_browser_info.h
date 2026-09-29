@@ -8,7 +8,7 @@
 #include	<vector>
 #include	<utility>
 
-typedef std::pair<std::string,std::string> str_pair;
+typedef std::pair<std::wstring,std::wstring> str_pair;
 
 class CBrowserInfo {
 private:
@@ -28,6 +28,6 @@ public:
 	CBrowserInfo();
 	~CBrowserInfo();
 
-	bool Get(std::string& URL, std::string& Title);
+	bool Get(std::wstring& URL, std::wstring& Title);
 	bool GetMulti(std::vector< str_pair > & URLV);
 };
