@@ -611,11 +611,62 @@ SRV _join(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {
 	return	r;
 }
 
+// befores[n]をafters[n]に置き換える（afters[n]がNULLなら取り除く）。
+// 先頭から一度だけ走査するので、置き換えた後の文字列が再び置き換えられることはない。
+// 同じ位置で複数一致したら長いほうを、長さも同じなら前にあるほうを使う。
+static wstring	replace_at_once(const wstring& str, const std::vector<const wstring*>& befores, const std::vector<const wstring*>& afters)
+{
+	const size_t	count = befores.size();
+	size_t	n;
+	std::vector<wstring::size_type>	next(count);	// 各置換前が次に現れる位置
+	for ( n=0 ; n<count ; ++n ) {
+		next[n] = befores[n]->empty() ? wstring::npos : str.find(*befores[n]);
+	}
+
+	wstring	result;
+	wstring::size_type	start = 0;
+	while ( true ) {
+		size_t	hit = count;
+		for ( n=0 ; n<count ; ++n ) {
+			if ( next[n] == wstring::npos ) {
+				continue;
+			}
+			if ( hit == count || next[n] < next[hit] || (next[n] == next[hit] && befores[n]->size() > befores[hit]->size()) ) {
+				hit = n;
+			}
+		}
+		if ( hit == count ) {
+			break;
+		}
+		const wstring::size_type	pos = next[hit];
+		result.append(str, start, pos-start);
+		if ( afters[hit] != NULL ) {
+			result += *afters[hit];
+		}
+		start = pos + befores[hit]->size();
+		for ( n=0 ; n<count ; ++n ) {
+			if ( next[n] != wstring::npos && next[n] < start ) {
+				next[n] = str.find(*befores[n], start);
+			}
+		}
+	}
+	result.append(str, start, wstring::npos);
+	return	result;
+}
+
 SRV _replace(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {
-	if ( iArguments.size()!=3 )
+	if ( iArguments.size()<3 || iArguments.size()%2==0 )
 		return	SRV(400, L"引数の個数が正しくありません。");
-	replace(iArguments[0], iArguments[1], iArguments[2]);
-	return	SRV(200, iArguments[0]);
+	if ( iArguments.size()==3 ) {
+		replace(iArguments[0], iArguments[1], iArguments[2]);
+		return	SRV(200, iArguments[0]);
+	}
+	std::vector<const wstring*>	befores, afters;
+	for ( int n=1 ; n+1<iArguments.size() ; n+=2 ) {
+		befores.push_back(&iArguments[n]);
+		afters.push_back(&iArguments[n+1]);
+	}
+	return	SRV(200, replace_at_once(iArguments[0], befores, afters));
 }
 
 SRV _replace_first(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {
@@ -626,10 +677,18 @@ SRV _replace_first(std::deque<wstring>& iArguments, std::deque<wstring>& oValues
 }
 
 SRV _erase(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {
-	if ( iArguments.size()!=2 )
+	if ( iArguments.size()<2 )
 		return	SRV(400, L"引数の個数が正しくありません。");
-	erase_all(iArguments[0], iArguments[1]);
-	return	iArguments[0];
+	if ( iArguments.size()==2 ) {
+		erase_all(iArguments[0], iArguments[1]);
+		return	iArguments[0];
+	}
+	std::vector<const wstring*>	befores, afters;
+	for ( int n=1 ; n<iArguments.size() ; ++n ) {
+		befores.push_back(&iArguments[n]);
+		afters.push_back(NULL);
+	}
+	return	replace_at_once(iArguments[0], befores, afters);
 }
 
 SRV _erase_first(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {

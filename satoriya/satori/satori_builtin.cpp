@@ -139,6 +139,10 @@ const SatoriFunctionTable&	Satori::function_table()
 			{ L"loop",				{ &Satori::func_loop,				false,	true } },
 			{ L"sync",				{ &Satori::func_sync,				false,	true } },
 			{ L"remember",			{ &Satori::func_remember,			false,	true } },
+			{ L"変数の一括削除",	{ &Satori::func_erase_variables,	false,	true } },
+			{ L"変数の一括コピー",	{ &Satori::func_copy_variables,		false,	true } },
+			{ L"変数の列挙",		{ &Satori::func_list_variables,		false,	false } },
+			{ L"split_to",			{ &Satori::func_split_to,			false,	true } },
 			{ L"call",				{ &Satori::func_call,				false,	true } },
 			{ L"vncall",			{ &Satori::func_vncall,				false,	true } },
 			{ L"equal",				{ &Satori::func_equal,				false,	true } },
@@ -489,6 +493,128 @@ wstring	Satori::func_remember(const strvec& iArgv, bool, bool)
 			return	mResponseHistory[n];
 		}
 	}
+	return	L"";
+}
+
+//---------------------------------------------------------------------------
+// 変数の一括操作
+
+// 名前が iPrefix で始まる変数の名前を、名前順に oNames に入れる
+static void	variable_names_with_prefix(const strmap& iVariables, const wstring& iPrefix, strvec& oNames)
+{
+	for ( strmap::const_iterator it=iVariables.lower_bound(iPrefix) ; it!=iVariables.end() ; ++it ) {
+		if ( !compare_head(it->first, iPrefix) ) {
+			break;
+		}
+		oNames.push_back(it->first);
+	}
+}
+
+// （変数の一括削除、接頭辞）＄名前＝（空）と同じように消す。消した個数を返す。
+wstring	Satori::func_erase_variables(const strvec& iArgv, bool, bool)
+{
+	if ( iArgv.size()<1 || iArgv[0].empty() ) {
+		return	L"0";	// 空の接頭辞で全部消す事故を防ぐ
+	}
+	strvec	names;
+	variable_names_with_prefix(variables, iArgv[0], names);
+	for ( strvec::const_iterator it=names.begin() ; it!=names.end() ; ++it ) {
+		wstring	value, result;
+		SubstVariable(*it, value, result, false);
+	}
+	return	itos(names.size());
+}
+
+// （変数の一括コピー、元の接頭辞、先の接頭辞）元の接頭辞を先の接頭辞に付け替えた名前へ代入する。コピーした個数を返す。
+wstring	Satori::func_copy_variables(const strvec& iArgv, bool, bool)
+{
+	if ( iArgv.size()<2 || iArgv[0].empty() || iArgv[0]==iArgv[1] ) {
+		return	L"0";
+	}
+	const wstring&	from = iArgv[0];
+	const wstring&	to = iArgv[1];
+
+	// 先に全部集めてから代入する（先の接頭辞が元の接頭辞で始まるときに、コピーした変数を再びコピーしないように）
+	strvec	names, values;
+	variable_names_with_prefix(variables, from, names);
+	strvec::const_iterator it;
+	for ( it=names.begin() ; it!=names.end() ; ++it ) {
+		values.push_back(variables[*it]);
+	}
+	for ( int i=0 ; i<names.size() ; ++i ) {
+		wstring	key = to + names[i].substr(from.size());
+		wstring	result;
+		SubstVariable(key, values[i], result, false);
+	}
+	return	itos(names.size());
+}
+
+// （変数の列挙、接頭辞[、区切り]）名前が接頭辞で始まる変数の名前を、名前順に区切りでつないで返す。
+wstring	Satori::func_list_variables(const strvec& iArgv, bool, bool)
+{
+	if ( iArgv.size()<1 ) {
+		return	L"";
+	}
+	const wstring	delimiter = ( iArgv.size()>=2 ) ? iArgv[1] : wstring(L",");
+	strvec	names;
+	variable_names_with_prefix(variables, iArgv[0], names);
+	wstring	result;
+	for ( strvec::const_iterator it=names.begin() ; it!=names.end() ; ++it ) {
+		if ( it!=names.begin() ) {
+			result += delimiter;
+		}
+		result += *it;
+	}
+	return	result;
+}
+
+// （split_to、接頭辞、文字列[、区切り文字[、最大個数[、空要素を残す]]]）
+// ssuのsplitと同じように分けて、接頭辞0、接頭辞1…と接頭辞の数に入れる。S0などは変えない。
+wstring	Satori::func_split_to(const strvec& iArgv, bool, bool)
+{
+	if ( iArgv.size()<2 || iArgv[0].empty() ) {
+		return	L"";
+	}
+	const wstring&	prefix = iArgv[0];
+	int	ref;
+	wchar_t	firstChar;
+	if ( IsArrayValue(prefix+L"0", ref, firstChar) ) {
+		// S0やA0は変数ではないので、接頭辞には使えない
+		GetSender().errsender() << L"split_to: 接頭辞「" << prefix << L"」は使えません（" << prefix << L"0 がS0などと同じ扱いになるため）。" << satori::endl;
+		return	L"";
+	}
+
+	strvec	vec;
+	if ( iArgv.size()==2 ) {
+		split(iArgv[1], vec);
+	}
+	else {
+		int max_words = 0;
+		if ( iArgv.size() > 3 ) {
+			max_words = zen2int(iArgv[3]);
+		}
+		bool split_one = false;
+		if ( iArgv.size() > 4 ) {
+			split_one = zen2int(iArgv[4]) != 0;
+		}
+		split(iArgv[1].c_str(), iArgv[2].c_str(), vec, max_words, split_one);
+	}
+
+	// 前回の結果が今回より多かったら、余った分を消す
+	const wstring	count_name = prefix + L"の数";
+	strmap::const_iterator	old = variables.find(count_name);
+	if ( old != variables.end() ) {
+		const int	old_count = zen2int(old->second);
+		for ( int k=vec.size() ; k<old_count ; ++k ) {
+			variables.erase(prefix + itos(k));
+		}
+	}
+
+	for ( int i=0 ; i<vec.size() ; ++i ) {
+		variables[prefix + itos(i)] = vec[i];
+	}
+	variables[count_name] = itos(vec.size());
+	GetSender().sender() << L"split_to: " << prefix << L"0～ に " << itos(vec.size()) << L"個" << std::endl;
 	return	L"";
 }
 

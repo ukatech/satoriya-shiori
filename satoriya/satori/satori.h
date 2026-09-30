@@ -494,6 +494,10 @@ private:
 	wstring	func_nop(const strvec& iArgv, bool for_calc, bool for_non_talk);
 	wstring	func_sync(const strvec& iArgv, bool for_calc, bool for_non_talk);
 	wstring	func_remember(const strvec& iArgv, bool for_calc, bool for_non_talk);
+	wstring	func_erase_variables(const strvec& iArgv, bool for_calc, bool for_non_talk);
+	wstring	func_copy_variables(const strvec& iArgv, bool for_calc, bool for_non_talk);
+	wstring	func_list_variables(const strvec& iArgv, bool for_calc, bool for_non_talk);
+	wstring	func_split_to(const strvec& iArgv, bool for_calc, bool for_non_talk);
 	wstring	func_byte_value(const strvec& iArgv, bool for_calc, bool for_non_talk);
 	wstring	func_synthesized_words(const strvec& iArgv, bool for_calc, bool for_non_talk);
 	wstring	func_talk_count(const strvec& iArgv, bool for_calc, bool for_non_talk);
