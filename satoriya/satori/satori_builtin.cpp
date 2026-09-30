@@ -171,6 +171,16 @@ const SatoriFunctionTable&	Satori::function_table()
 	return	table;
 }
 
+// 繰り返しの結果が括弧展開サイズ制限を超えたら、警告してtrueを返す（呼び出し側は繰り返しを打ち切る）
+bool	Satori::loop_result_too_large(const wstring& iResult)
+{
+	if ( m_kakko_size_limit > 0 && iResult.size() > static_cast<wstring::size_type>(m_kakko_size_limit) ) {
+		GetSender().sender() << L"繰り返しの結果が大きすぎるので、打ち切りました：" << iResult.size() << L"文字" << std::endl;
+		return	true;
+	}
+	return	false;
+}
+
 // 特殊形式の引数を分ける。pは最初の引数の先頭。
 // 対応する）で終われば、pをその次へ進めてtrueを返す。
 // 文字列の終わりに達したら、残りを最後の引数にしてfalseを返す。
@@ -402,21 +412,34 @@ wstring	Satori::func_loop(const strvec& iArgv, bool, bool)
 	else if ( step>0 ) {
 		if ( init>max )
 			return	L"";
-		for (int i=init ; i<=max ; i+=step ) {
+		for (int i=init ; ; ) {
 			variables[name+L"カウンタ"] = itos(i);
 			if ( !Call(name, temp) )
 				return	L"";
 			ret += temp;
+			if ( loop_result_too_large(ret) )
+				break;
+			// i+=step が int を越えないように、残りの幅と比べる
+			if ( static_cast<unsigned int>(step) > static_cast<unsigned int>(max) - static_cast<unsigned int>(i) )
+				break;
+			i += step;
 		}
 	}
 	else {
 		if ( init<max )
 			return	L"";
-		for (int i=init ; i>=max ; i+=step ) {
+		// 減らす幅。INT_MINは符号を反転できないので INT_MAX にする
+		const unsigned int down = ( step==INT_MIN ) ? static_cast<unsigned int>(INT_MAX) : static_cast<unsigned int>(-step);
+		for (int i=init ; ; ) {
 			variables[name+L"カウンタ"] = itos(i);
 			if ( !Call(name, temp) )
 				return	L"";
 			ret += temp;
+			if ( loop_result_too_large(ret) )
+				break;
+			if ( down > static_cast<unsigned int>(i) - static_cast<unsigned int>(max) )
+				break;
+			i -= static_cast<int>(down);
 		}
 	}
 	variables.erase(name+L"カウンタ");
@@ -1055,7 +1078,13 @@ wstring	Satori::func_times(const strvec& iArgv, bool for_calc, bool for_non_talk
 			if ( !calc_argument(iArgv[1], count, for_non_talk) ) throw(L"' 式が計算不能です。");
 			mLoopCounters.top() = itos(count);
 			if ( !calc_argument(iArgv[0], max, for_non_talk) ) throw(L"' 式が計算不能です。");
-			max += count;
+			// max += count が int を越えないように（越えるときは上限にする）
+			if ( count > 0 && max > INT_MAX - count ) {
+				max = INT_MAX;
+			}
+			else {
+				max += count;
+			}
 			body = 2;
 		}
 		else{
@@ -1064,6 +1093,9 @@ wstring	Satori::func_times(const strvec& iArgv, bool for_calc, bool for_non_talk
 		for(int i=count; i<max; i++){
 			mLoopCounters.top() = itos(i);
 			ret += UnKakko(iArgv[body].c_str(), for_calc, for_non_talk);
+			if ( loop_result_too_large(ret) ) {
+				break;
+			}
 		}
 	}
 	catch( const wchar_t *str ){
@@ -1102,6 +1134,9 @@ wstring	Satori::func_while(const strvec& iArgv, bool for_calc, bool for_non_talk
 				break;
 			}
 			ret += UnKakko(iArgv[body].c_str(), for_calc, for_non_talk);
+			if ( loop_result_too_large(ret) ) {
+				break;
+			}
 		}
 	}
 	catch(const wchar_t * str){
@@ -1140,17 +1175,33 @@ wstring	Satori::func_for(const strvec& iArgv, bool for_calc, bool for_non_talk)
 		if ( step == 0 ) {
 			throw(L"forの増分に0が指定されました。");
 		}
-		step = abs(step);
+		// 増分の大きさ。INT_MINは符号を反転できないので INT_MAX にする
+		const unsigned int width = ( step==INT_MIN ) ? static_cast<unsigned int>(INT_MAX) : static_cast<unsigned int>( step<0 ? -step : step );
 		if ( start <= end ) {
-			for(int i=start; i<=end; i+=step) {
+			for(int i=start; ; ) {
 				mLoopCounters.top() = itos(i);
 				ret += UnKakko(iArgv[body].c_str(), for_calc, for_non_talk);
+				if ( loop_result_too_large(ret) ) {
+					break;
+				}
+				// i+=step が int を越えないように、残りの幅と比べる
+				if ( width > static_cast<unsigned int>(end) - static_cast<unsigned int>(i) ) {
+					break;
+				}
+				i += static_cast<int>(width);
 			}
 		}
 		else {
-			for(int i=start; end<=i; i-=step) {
+			for(int i=start; ; ) {
 				mLoopCounters.top() = itos(i);
 				ret += UnKakko(iArgv[body].c_str(), for_calc, for_non_talk);
+				if ( loop_result_too_large(ret) ) {
+					break;
+				}
+				if ( width > static_cast<unsigned int>(i) - static_cast<unsigned int>(end) ) {
+					break;
+				}
+				i -= static_cast<int>(width);
 			}
 		}
 	}
@@ -1879,7 +1930,9 @@ static BOOL CALLBACK EnumWindowsProc(HWND hwnd,LPARAM lParam)
 {
 	EnumWindowsInfo &inf = *reinterpret_cast<EnumWindowsInfo*>(lParam);
 
+	inf.title[0] = L'\0';	// タイトルの無いウインドウでは GetWindowText が書き込まないことがある
 	::GetWindowText(hwnd,inf.title,sizeof(inf.title)/sizeof(inf.title[0])-1);
+	inf.title[sizeof(inf.title)/sizeof(inf.title[0])-1] = L'\0';
 
 	if ( inf.title[0] ) {
 		if ( inf.isPartial ) {

@@ -66,6 +66,9 @@ extern const wchar_t* gSaoriVersion;
 
 static const int RESPONSE_HISTORY_SIZE=64;
 
+// ＄Ｒ／＄Ｓの添字の上限（これ以上は配列を広げない）。Referenceの最大数と同じ。
+static const int MAX_ARRAY_INDEX=65536;
+
 enum SurfaceRestoreMode {
 	SR_INVALID = -1,
 	SR_NONE = 0,
@@ -139,6 +142,11 @@ private:
 	bool	mIsMateria;	// まてりあは特殊処理が要る
 	bool    mIsStatusHeaderExist; //ステータスヘッダ対応してるかどうか
 	strvec	mReferences;
+	// n番目のReference。足りないときは空文字列（リクエストにReferenceが無くても範囲外を読まないように）
+	const wstring&	reference_or_empty(size_t n) const {
+		static const wstring	empty;
+		return	( n < mReferences.size() ) ? mReferences[n] : empty;
+	}
 	strvec  mKakkoCallResults;
 	enum { SAORI, SHIORI2, SHIORI3, MAKOTO2, UNKNOWN } mRequestMode;
 	// 格納されたメンバからResponseを作成。返値はステータスコード。
@@ -485,6 +493,9 @@ private:
 	static const SatoriFunctionTable&	function_table();
 	static const SatoriFunction*	find_function(const wstring& iName);
 
+	// 繰り返しの結果が大きすぎたら警告してtrueを返す
+	bool	loop_result_too_large(const wstring& iResult);
+
 	// 内蔵関数：（名前、引数…）
 	wstring	func_set(const strvec& iArgv, bool for_calc, bool for_non_talk);
 	wstring	func_loop(const strvec& iArgv, bool for_calc, bool for_non_talk);
@@ -617,6 +628,8 @@ public:
 	// SHIORI/3.0インタフェース
 	virtual bool load(const wstring& i_base_folder);
 	virtual bool unload();
+	// リクエスト処理中に例外で中断されたとき、途中だった呼び出しの状態を初期化する
+	virtual void on_request_exception();
 	virtual wstring getversionlist(const wstring& i_base_folder);
 	virtual int	request(
 		const wstring& i_protocol,
@@ -658,6 +671,8 @@ public:
 
 bool	calc(wstring&,bool isStrict = false);
 void	diet_script(wstring&);
+// 文・さくらスクリプト変換の再帰の深さ（静的な変数）を0に戻す
+void	reset_nest_counters();
 
 //---------------------------------------------------------------------------
 #endif

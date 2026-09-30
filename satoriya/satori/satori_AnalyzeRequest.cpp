@@ -303,7 +303,7 @@ int	Satori::request(
 			cds.lpData = const_cast<char*>(copyData.c_str());
 			DWORD ret;
 
-			SendMessageTimeout((HWND)stoi_internal(mReferences[0]), WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds, 0, 1000, &ret);
+			SendMessageTimeout((HWND)stoi_internal(reference_or_empty(0)), WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds, 0, 1000, &ret);
 
 			//ここで204を返すと非対応時のエラーを出すので200で通知メッセージを表示する
 			status_code = 200;

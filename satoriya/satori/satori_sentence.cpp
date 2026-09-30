@@ -215,10 +215,20 @@ wstring Satori::SentenceToSakuraScriptExec(const Talk& vec)
 	return allresult;
 }
 
+// 再帰の深さ。例外で途中から抜けたときに reset_nest_counters で戻せるよう、関数の外に置く。
+static int	g_sentence_internal_nest_count = 0;
+static int	g_get_sentence_nest_count = 0;
+
+void reset_nest_counters()
+{
+	g_sentence_internal_nest_count = 0;
+	g_get_sentence_nest_count = 0;
+}
+
 int Satori::SentenceToSakuraScriptInternal(const strvec &vec,wstring &result,wstring &jump_to, std::ptrdiff_t &ip)
 {
 	// 再帰管理
-	static	int nest_count=0;
+	int&	nest_count = g_sentence_internal_nest_count;
 	++nest_count;
 	//DBG(GetSender().sender() << "enter SentenceToSakuraScriptInternal, nest-count: " << nest_count << ", vector_size: " << vec.size() << std::endl);
 
@@ -281,22 +291,21 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,wstring &result,wst
 				GetSender().sender() << L"選択肢記法が長すぎるので、無視して続行します。" << std::endl;
 				continue;
 			}
-			wchar_t	buf[1024];
-			wcsncpy(buf, p+1, sizeof(buf) / sizeof(buf[0]));
-
-			wchar_t*	choiced = buf;
-			wchar_t*	id = (wchar_t*)strstr_hz(buf, L"\t"); // 選択肢ラベルとジャンプ先の区切り
+			// 再帰のたびにスタックを消費しないよう、大きな配列ではなく wstring に分ける
+			const wstring	choice_line(p+1);
+			const wstring::size_type	tab_pos = choice_line.find(L'\t'); // 選択肢ラベルとジャンプ先の区切り
 
 			result += append_at_choice_start;
-			if ( id == NULL ) {
-				wstring	str=UnKakko(choiced);
+			if ( tab_pos == wstring::npos ) {
+				wstring	str=UnKakko(choice_line.c_str());
 				//result += string("\\q")+itos(question_num++)+"["+str+"]["+str+"]";
 				result += L"\\q["+str+L","+str+L"]";
 			} else {
-				*id++=L'\0';
-				while ( *id==L'\t' ) ++id; // 選択肢ラベルとジャンプ先の区切り
+				const wstring	choiced = choice_line.substr(0, tab_pos);
+				wstring::size_type	id_pos = choice_line.find_first_not_of(L'\t', tab_pos); // 選択肢ラベルとジャンプ先の区切り
+				const wstring	id = ( id_pos == wstring::npos ) ? wstring() : choice_line.substr(id_pos);
 				//result += string("\\q")+itos(question_num++)+"["+UnKakko(id)+"]["+UnKakko(choiced)+"]";
-				result += L"\\q["+UnKakko(choiced)+L","+UnKakko(id)+L"]";
+				result += L"\\q["+UnKakko(choiced.c_str())+L","+UnKakko(id.c_str())+L"]";
 			}
 			result += append_at_choice_end;
 
@@ -417,13 +426,19 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,wstring &result,wst
 
 					wstring param;
 
-					while (true) {
+					// 終端の INTERNAL_MARK が無いまま文字列の終わりに来たら、そこで止める
+					// （辞書や入力に私用領域の文字があっても、無限ループにならないように）
+					bool terminated = false;
+					while ( *p != L'\0' ) {
 						c=next_a_chr(p);
-						if ( c==INTERNAL_MARK_STR ) { break; }
+						if ( c==INTERNAL_MARK_STR ) { terminated = true; break; }
 						param += c;
 					}
 
-					if ( cmd == INTERNAL_MARK_SCOPE_STR ) { //スコープ切り替え
+					if ( !terminated ) {
+						// 終端が無い内部特殊表現は無視する
+					}
+					else if ( cmd == INTERNAL_MARK_SCOPE_STR ) { //スコープ切り替え
 						int speaker_tmp = stoi_internal(param.c_str());
 						if ( is_speaked(speaker) && speaker != speaker_tmp ) {
 							result += append_at_scope_change;
@@ -716,6 +731,9 @@ bool Satori::SubstVariable(const wstring &key,wstring &value,wstring &result,boo
 				if ( aredigits(value) ) {
 					value = int2zen(stoi_internal(value));
 				}
+
+				// 計算中のカッコ展開で変数や R・S 配列が増減すると pstr が無効になるので、取り直す
+				pstr = GetValue(key,isSysValue,true,NULL,L"0");
 			}
 
 			GetSender().sender() << L"＄" << key << L"＝" << value << L"／" << 
@@ -736,7 +754,7 @@ bool Satori::SubstVariable(const wstring &key,wstring &value,wstring &result,boo
 const Talk* Satori::GetSentenceInternal(wstring& ioSentenceName)
 {
 	// 再帰管理
-	static	int nest_count=0;
+	int&	nest_count = g_get_sentence_nest_count;
 	++nest_count;
 
 	// ランダムトークが予約されていた場合の特殊処理。ただし１回のトーク生成で１回だけ。

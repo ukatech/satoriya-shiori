@@ -22,7 +22,7 @@ int		Satori::CreateResponse(strmap& oResponse)
 	if ( mRequestCommand==L"NOTIFY" ) {
 		if ( mRequestID==L"hwnd" ) {
 			strvec	vec;
-			const int max = split(mReferences[0], byte1_dlmt, vec);
+			const int max = split(reference_or_empty(0), byte1_dlmt, vec);
 			if ( max > 0 ) {
 				characters_hwnd.clear();
 			}

@@ -18,7 +18,7 @@ inline unsigned long posix_get_current_tick() {
 	gettimeofday(&ts, NULL);
 //	clock_gettime(CLOCK_MONOTONIC, &ts);
 #endif
-	return (ts.tv_sec * 1000) + (ts.tv_usec/1000/1000);
+	return (ts.tv_sec * 1000) + (ts.tv_usec/1000);
 //	return (ts.tv_sec * 1000) + (ts.tv_nsec/1000/1000);
 }
 

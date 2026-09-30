@@ -231,6 +231,10 @@ static const wchar_t*	char_at(const wchar_t* p, int n) {
 	return	p;
 }
 
+// 幅と精度の上限。巨大な値でメモリを使い果たさないように。
+static const int	PRINTF_MAX_WIDTH = 4096;
+static const int	PRINTF_MAX_PRECISION = 512;
+
 bool	printf_format(const wchar_t*& p, std::deque<wstring>& iArguments, std::wstringstream& os)
 {
 	assert(*p==L'%');
@@ -238,8 +242,8 @@ bool	printf_format(const wchar_t*& p, std::deque<wstring>& iArguments, std::wstr
 		return	false;	// 置き換え対象が無い
 
 	++p;
+	// 引数は書式が正しいと分かってから取り除く（失敗したら % をそのまま出すので、引数は使わない）
 	wstring	str = iArguments.front();
-	iArguments.pop_front();
 
 	// フラグ指定読み込み
 	bool isSharp=false;
@@ -261,7 +265,10 @@ bool	printf_format(const wchar_t*& p, std::deque<wstring>& iArguments, std::wstr
 		++p;
 	} else {
 		while ( *p>=L'0' && *p<=L'9' ) {
-			width = width*10 + (*p - L'0');
+			if ( width < PRINTF_MAX_WIDTH ) {
+				width = width*10 + (*p - L'0');
+				if ( width > PRINTF_MAX_WIDTH ) { width = PRINTF_MAX_WIDTH; }
+			}
 			++p;
 			os.width(width);
 		}
@@ -273,7 +280,10 @@ bool	printf_format(const wchar_t*& p, std::deque<wstring>& iArguments, std::wstr
 	if ( *p == L'.' ) {
 		++p;
 		while ( *p>=L'0' && *p<=L'9' ) {
-			precision = precision*10 + (*p - L'0');
+			if ( precision < PRINTF_MAX_PRECISION ) {
+				precision = precision*10 + (*p - L'0');
+				if ( precision > PRINTF_MAX_PRECISION ) { precision = PRINTF_MAX_PRECISION; }
+			}
 			++p;
 		}
 		os.precision(precision);
@@ -385,6 +395,7 @@ bool	printf_format(const wchar_t*& p, std::deque<wstring>& iArguments, std::wstr
 	case L'p': break;
 	default: return false;
 	}
+	iArguments.pop_front();
 	++p;
 	return	true;
 }
@@ -397,10 +408,12 @@ wstring	sprintf(std::deque<wstring>& iArguments) {
 	while ( *p!=L'\0' ) {
 		if ( *p==L'%' ) {
 			std::wstringstream sf;
+			const wchar_t* p_before = p;
 			if ( printf_format(p, iArguments, sf) ) {
 				s << sf.str();
 				continue;
 			}
+			p = p_before;	// 書式が不正なら % をそのまま出す（文字列の終端を越えて進まないように）
 		}
 		s.put(*p++);
 	}
@@ -528,8 +541,12 @@ SRV _substr(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {
 	if ( offset==0 || offset==INT_MIN ) // INT_MINの時は符号反転が効かないので0扱い。
 		return	SRV(204);
 	if ( offset<0 ) {
-		start += offset;
 		offset = -offset;
+		// start += offset（負）をintの範囲を越えずに行う。負になったら0
+		if ( start < offset )
+			start = 0;
+		else
+			start -= offset;
 	}
 	assert(offset >= 0 );
 
@@ -537,7 +554,8 @@ SRV _substr(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {
 		start = 0;
 	if ( start >= len )
 		return	SRV(204);
-	if ( start + offset >= len )
+	// start + offset は int を越えることがあるので、引き算で比べる
+	if ( offset >= len - start )
 		offset = len - start;
 
 	const wchar_t* const start_p = char_at(p, start);

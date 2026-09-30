@@ -165,7 +165,8 @@ bool ShioriPlugins::load_a_plugin(const wstring& iPluginLine)
 			// ファイル名・フォルダ名・拡張子を分離
 			const wchar_t*	lastyen = wcsrchr(fullpath.c_str(), DIR_CHAR);
 			const wchar_t*	lastdot = wcsrchr(fullpath.c_str(), L'.');
-			if ( lastyen==NULL || lastdot==NULL )
+			// 拡張子が無く、フォルダ名に . があるときは lastdot が lastyen より前になる（ファイル名を切り出せない）
+			if ( lastyen==NULL || lastdot==NULL || lastdot<lastyen )
 			{
 				return false;
 			}

@@ -51,6 +51,9 @@ typedef unsigned long long	calc_uint;
 
 static const calc_uint	CALC_INT_MAX = ~static_cast<calc_uint>(0) >> 1;
 
+// 文字列 * 数値 で作れる文字列の最大の長さ（文字数）
+static const calc_uint	CALC_MAX_STRING_LENGTH = 4 * 1024 * 1024;
+
 // 10進数の文字列を数値に。範囲外は wcstol と同じく最大値・最小値にする
 static calc_int	stoi64(const wstring& s) {
 	const wchar_t*	p = s.c_str();
@@ -295,9 +298,15 @@ static bool	calc_polish(simple_stack<calc_element>& polish, wstring& oResult,boo
 				stack.push(i64tos( stoi64(lhs)*stoi64(rhs) )); 
 			} else if ( aredigits(rhs) && ! isStrict ) {
 				calc_int	num = stoi64(rhs);
+				// 巨大な繰り返しでメモリを使い果たしたり、空文字列の繰り返しで延々と回ったりしないように
+				if ( num > 0 && !lhs.empty() && static_cast<calc_uint>(num) > CALC_MAX_STRING_LENGTH / lhs.size() )
+					return	false;
 				stack.push(L"");
-				for (calc_int i=0;i<num;++i)
-					stack.top() += lhs;
+				if ( !lhs.empty() ) {
+					stack.top().reserve(static_cast<size_t>(num > 0 ? num : 0) * lhs.size());
+					for (calc_int i=0;i<num;++i)
+						stack.top() += lhs;
+				}
 			} else {
 				return	false;
 			}

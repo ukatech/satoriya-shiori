@@ -120,12 +120,12 @@ bool	Satori::load(const wstring& iBaseFolder)
 
 #if POSIX
 	// 「/」で終わっていなければ付ける。
-	if (mBaseFolder[mBaseFolder.size() - 1] != L'/') {
+	if (!mBaseFolder.empty() && mBaseFolder[mBaseFolder.size() - 1] != L'/') {
 	    mBaseFolder += L'/';
 	}
 #else
 	// 「\」で終わっていなければ付ける。
-	if (mBaseFolder[mBaseFolder.size() - 1] != L'\\') {
+	if (!mBaseFolder.empty() && mBaseFolder[mBaseFolder.size() - 1] != L'\\') {
 	    mBaseFolder += L'\\';
 	}
 #endif
@@ -135,7 +135,9 @@ bool	Satori::load(const wstring& iBaseFolder)
 	// 本体のあるフォルダをサーチ
 	{
 		TCHAR	buf[MAX_PATH+1];
+		buf[0] = L'\0';
 		::GetModuleFileName(NULL, buf, MAX_PATH);
+		buf[MAX_PATH] = L'\0';	// 長すぎて切り詰められたときは終端が付かない
 		wchar_t*	p = FindFinalChar(buf, DIR_CHAR);
 		if ( p==NULL )
 			mExeFolder = L"";

@@ -450,7 +450,7 @@ int	values(const std::map<K,V>& iMap, C& oContainer) {
 template<typename C, typename K, typename V>
 C	values(const std::map<K,V>& iMap) {
 	C	theContainer;
-	keys<C,K,V>(iMap, theContainer);
+	values<C,K,V>(iMap, theContainer);
 	return	theContainer;
 }
 

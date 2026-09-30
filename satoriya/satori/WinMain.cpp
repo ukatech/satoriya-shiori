@@ -312,8 +312,11 @@ public:
 				::OpenClipboard(NULL);
 				HANDLE	hText = ::GetClipboardData(CF_UNICODETEXT);
 				if(hText != NULL) {
-					str = (wchar_t*)(::GlobalLock(hText));
-					::GlobalUnlock(hText);
+					const wchar_t* pText = (const wchar_t*)(::GlobalLock(hText));
+					if ( pText != NULL ) {
+						str = pText;
+						::GlobalUnlock(hText);
+					}
 				}
 				::CloseClipboard();
 				if ( str != L"" )
@@ -322,7 +325,8 @@ public:
 			/* FALL_THRU */
 		case IDOK:
 			GetText(IDC_EDIT1, gBuffer, BUFFER_SIZE);
-			SetText(IDC_EDIT2, L"%s", Do(gBuffer, isChecked(IDC_LIKE_DICT)!=0, isChecked(IDC_SATORI)!=0, m_hDlg).c_str());
+			// 書式経由だと 4095 文字で切れて終端も付かないので、文字列のまま渡す
+			SetText(IDC_EDIT2, Do(gBuffer, isChecked(IDC_LIKE_DICT)!=0, isChecked(IDC_SATORI)!=0, m_hDlg));
 			break;
 
 		case IDEXIT:
@@ -335,7 +339,7 @@ public:
 				SetText(IDC_EDIT2, L"");
 			} else {
 				GetText(IDC_EDIT1, gBuffer, BUFFER_SIZE);
-				SetText(IDC_EDIT2, L"%s", Do(gBuffer, isChecked(IDC_LIKE_DICT)!=0, isChecked(IDC_SATORI)!=0, m_hDlg).c_str());
+				SetText(IDC_EDIT2, Do(gBuffer, isChecked(IDC_LIKE_DICT)!=0, isChecked(IDC_SATORI)!=0, m_hDlg));
 			}
 			break;
 

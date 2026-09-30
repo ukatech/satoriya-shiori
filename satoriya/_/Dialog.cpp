@@ -52,6 +52,7 @@ Dialog::SetText( int id, const wchar_t* format, ... ) {
 	va_start( argptr, format );
 	_vsnwprintf( buf, 4095, format, argptr );
 	va_end( argptr );
+	buf[4095] = L'\0';	// “ü‚è‚«‚ç‚È‚¢‚Æ‚«‚ÍI’[‚ª•t‚©‚È‚¢
 	::SetDlgItemText( m_hDlg, id, buf );
 }
 

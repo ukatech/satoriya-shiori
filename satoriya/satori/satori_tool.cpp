@@ -242,7 +242,7 @@ bool	Satori::GetRecommendsiteSentence(const wstring& name, wstring& result)
 		{
 			unkakko_t1 = UnKakko(t[1].c_str(),false,true);
 
-			if ( unkakko_t1 == mReferences[1] ) {
+			if ( unkakko_t1 == reference_or_empty(1) ) {
 				result = SentenceToSakuraScriptExec( Talk(t.begin()+3, t.end()) );
 				return	true;
 			}

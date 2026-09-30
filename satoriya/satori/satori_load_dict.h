@@ -5,6 +5,21 @@ void	Satori::InitMembers() {
 	mRequestMap.clear();
 	mRequestID=L"";
 
+	// コンストラクタで初期化していないメンバ。リクエストのたびに設定されるか、グローバル実体の
+	// ゼロ初期化に頼っていたもの（POSIXのnewでは不定になる）
+	mIsMateria = false;
+	mIsStatusHeaderExist = false;
+	mRequestMode = UNKNOWN;
+	mOSType = SATORI_OS_UNDEFINED;
+	mikire_flag = false;
+	kasanari_flag = false;
+	can_talk_flag = false;
+	mAutoSaveInterval = 0;
+	mAutoSaveCurrentCount = 0;
+	speaker = 1;
+	chars_spoken = 0;
+	next_wait_value = 0;
+
 	replace_before_dic.clear();
 	replace_after_dic.clear();
 

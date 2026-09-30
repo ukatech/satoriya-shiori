@@ -22,6 +22,7 @@ bool	SetClipBoard(HWND iWnd, const wchar_t* iFormat, ...) {
 	va_start(theArgPtr, iFormat);
 	_vsnwprintf(theString, 1023, iFormat, theArgPtr);
 	va_end(theArgPtr);
+	theString[1023] = L'\0';	// ì¸ÇËÇ´ÇÁÇ»Ç¢Ç∆Ç´ÇÕèIí[Ç™ïtÇ©Ç»Ç¢
 
 	int	len = (wcslen(theString)+1) * sizeof(wchar_t);
 	HGLOBAL	hGlobal = ::GlobalAlloc(GHND, len);
@@ -729,6 +730,7 @@ void	DbgStr( const wchar_t* format, ... ) {
 	va_start( argptr, format );
 	_vsnwprintf( buf, 255, format, argptr );
 	va_end( argptr );
+	buf[255] = L'\0';
 	::OutputDebugString(buf);
 }
 
@@ -739,6 +741,7 @@ void	MesBox( const wchar_t* format, ... ) {
 	va_start( argptr, format );
 	_vsnwprintf( buf, 255, format, argptr );
 	va_end( argptr );
+	buf[255] = L'\0';
 	::MessageBox( NULL, buf, L"notice", MB_OK|MB_SYSTEMMODAL );
 }
 
@@ -749,5 +752,6 @@ void	SetWinText( HWND hWnd, const wchar_t* format, ... ) {
 	va_start( argptr, format );
 	_vsnwprintf( buf, 255, format, argptr );
 	va_end( argptr );
+	buf[255] = L'\0';
 	::SetWindowText( hWnd, buf );
 }

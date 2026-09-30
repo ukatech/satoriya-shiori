@@ -14,7 +14,7 @@ const wchar_t* gSatoriName = L"Satori";
 const wchar_t* gSatoriNameW = L"里々";
 const wchar_t* gSatoriCraftman = L"Yagi Kushigahama/The Maintenance Shop";
 const wchar_t* gSatoriCraftmanW = L"櫛ヶ浜やぎ/整備班";
-const wchar_t* gSatoriVersion = L"phase Mc201-6";
+const wchar_t* gSatoriVersion = L"phase Mc201-7";
 const wchar_t* gShioriVersion = L"3.0";
 const wchar_t* gSaoriVersion = L"1.0";
 
@@ -116,4 +116,16 @@ Satori::Satori()
 
 Satori::~Satori() {
 	delete mShioriPlugins;
+}
+
+// リクエスト処理中に例外で中断されたとき、途中だった呼び出しの状態を初期化する。
+// （通常は呼び出しが終わるたびに戻る値が、途中で抜けたせいで残ったままにならないように）
+void Satori::on_request_exception()
+{
+	m_nest_count = 0;
+	kakko_replace_history.clear();
+	mCallStack.clear();
+	mLoopCounters.clear();
+	reset_nest_counters();
+	GetSender().validate();	// ＄ログ無効などの一時的な状態は戻す
 }

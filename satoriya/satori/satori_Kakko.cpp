@@ -25,7 +25,7 @@ void	add_characters(const wchar_t* p, int& chars_spoken) {
 				p += 1;
 				while ( *p && *p!=L']' ) {
 					if (p[0]==L'\\' && p[1]==L']') {	// エスケープされた]
-						++p;
+						p += 2;
 					}
 					else {
 						get_a_chr(p);
@@ -78,6 +78,10 @@ wstring* Satori::GetValue(const wstring &iName,bool &oIsSysValue,bool iIsExpand,
 			}
 			else {
 				if ( iIsExpand && ref >= 0 ) {
+					if ( ref >= MAX_ARRAY_INDEX ) {
+						GetSender().sender() << L"＄" << iName << L"　添字が大きすぎます（" << MAX_ARRAY_INDEX << L"未満にしてください）。" << std::endl;
+						return NULL;
+					}
 					mReferences.resize(ref+1);
 					if ( oIsExpanded ) { *oIsExpanded = true; }
 					return &(mReferences[ref]);
@@ -125,6 +129,10 @@ wstring* Satori::GetValue(const wstring &iName,bool &oIsSysValue,bool iIsExpand,
 			}
 			else {
 				if ( iIsExpand && ref >= 0 ) {
+					if ( ref >= MAX_ARRAY_INDEX ) {
+						GetSender().sender() << L"＄" << iName << L"　添字が大きすぎます（" << MAX_ARRAY_INDEX << L"未満にしてください）。" << std::endl;
+						return NULL;
+					}
 					mKakkoCallResults.resize(ref+1);
 					if ( oIsExpanded ) { *oIsExpanded = true; }
 					return &(mKakkoCallResults[ref]);
@@ -206,7 +214,9 @@ bool	Satori::CallReal(const wstring& iName, wstring& oResult, bool for_calc, boo
 			GetSender().sender() << L"同じ名前「" << iName << L"」の単語群と文があります。トラブルの元なので避けましょう。" << std::endl;
 		}
 
-		oResult = UnKakko( w->c_str() );
+		// 展開中に「単語の追加」などで単語群が変わると w が指す先が無効になるので、コピーしてから展開する
+		const Word word_copy = *w;
+		oResult = UnKakko( word_copy.c_str() );
 	}
 	else if ( talks.is_exist(iName) ) {
 		// ＊に定義があれば文を取得

@@ -374,7 +374,7 @@ bool Satori::LoadDictionary(const wstring& iFileName,bool warnFileName,bool isUT
 
 void list_files(wstring i_path, std::vector<wstring>& o_files)
 {
-	unify_dir_char(i_path); // \\と/を環境に応じて適切な方に統一
+	i_path = unify_dir_char(i_path); // \\と/を環境に応じて適切な方に統一
 #ifdef POSIX
 
 	DIR* dh = opendir(WtoUTF8(i_path).c_str());
@@ -427,10 +427,13 @@ int Satori::LoadDicFolder(const wstring& i_base_folder)
 	
 	for (std::vector<wstring>::const_iterator it=files.begin() ; it!=files.end() ; ++it)
 	{
-		const int len = it->size();
+		const wstring::size_type len = it->size();
 		if ( len < dic_load_prefix.length() + (ext.length() < 4 ? ext.length() : 4)  ) { continue; } // 最短ファイル名は辞書接頭辞 + min(辞書拡張子, ".sat")
 		if ( it->compare(0,dic_load_prefix.length(),dic_load_prefix.c_str()) != 0 ) { continue; }
-		if ( it->compare(len-ext.length(),ext.length(),ext.c_str()) != 0 && it->compare(len-4,4,L".sat") != 0 ) { continue; }
+		// 名前が拡張子より短いと末尾の位置が負になるので、長さを確かめてから比べる
+		const bool is_ext = ( len >= ext.length() && it->compare(len-ext.length(),ext.length(),ext.c_str()) == 0 );
+		const bool is_sat = ( len >= 4 && it->compare(len-4,4,L".sat") == 0 );
+		if ( !is_ext && !is_sat ) { continue; }
 
 		if ( LoadDictionary(i_base_folder + *it,true,is_utf8_dic) ) {
 			++count;

@@ -55,6 +55,9 @@ public:
 	// レスポンスの文字コード。既定ではリクエストと同じ。
 	virtual CharactorSet response_charset(CharactorSet i_request_charset) { return i_request_charset; }
 
+	// request が例外で中断されたときに呼ばれる。途中だった処理の状態を戻すために使う。
+	virtual void on_request_exception() {}
+
 	// 変換済のリクエスト文字列を受け取り、レスポンス文字列を返す。
 	// 内部で↓を呼ぶ。
 	virtual wstring request(const wstring& i_request_string, CharactorSet i_request_charset);

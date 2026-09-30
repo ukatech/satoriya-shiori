@@ -178,6 +178,7 @@ void	Window::SetText(const wchar_t* format, ... ) {
 	va_start(argptr, format);
 	_vsnwprintf(buf, 1023, format, argptr);
 	va_end(argptr);
+	buf[1023] = L'\0';	// 入りきらないときは終端が付かない
 	::SetWindowText(mWnd, buf);
 }
 
@@ -187,6 +188,7 @@ int		Window::MesBox(UINT style, const wchar_t* title, const wchar_t* format, ...
 	va_start( argptr, format );
 	_vsnwprintf( buf, 1023, format, argptr );
 	va_end( argptr );
+	buf[1023] = L'\0';	// 入りきらないときは終端が付かない
 	return	::MessageBox(mWnd, buf, title, style);
 }
 

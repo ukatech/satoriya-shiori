@@ -7,6 +7,24 @@ using std::wstring;
 #  include <windows.h>
 #endif
 
+#ifndef POSIX
+// パイプに溜まっている分を全部読んで out に足す
+inline void read_available_from_pipe(HANDLE i_pipe, std::string& out)
+{
+	while (true)
+	{
+		DWORD	dwAvail = 0;
+		if ( !::PeekNamedPipe(i_pipe, NULL, 0, NULL, &dwAvail, NULL) || dwAvail == 0 )
+			break;
+		char szBuf[256];
+		DWORD	dwRead = 0;
+		if ( !::ReadFile(i_pipe, szBuf, sizeof(szBuf), &dwRead, NULL) || dwRead == 0 )
+			break;
+		out.append(szBuf, dwRead);
+	}
+}
+#endif
+
 // コンソールアプリケーションを呼び出す
 inline wstring // エラーメッセージ。""なら正常終了
 call_console_application(
@@ -43,13 +61,6 @@ call_console_application(
 		return	L"CreatePipeで失敗。";
 	}
 	
-	if ( !::DuplicateHandle(
-		::GetCurrentProcess(), stdout_write, 
-		::GetCurrentProcess(), NULL, 0, FALSE, DUPLICATE_SAME_ACCESS) )
-	{
-		return L"DuplicateHandleで失敗。";
-	}
-
 	STARTUPINFO si; 
 	memset(&si, 0, sizeof(STARTUPINFO)); 
 	si.cb = sizeof(STARTUPINFO); 
@@ -69,29 +80,34 @@ call_console_application(
 	{ 
 		return	L"CreateProcessで失敗。";
 	}
-	if ( ::WaitForSingleObject(pi.hProcess, 10000)==WAIT_TIMEOUT )
-	{
-		return	L"呼び出しタイムアウト。";
-	}
-
+	// 終了を待つ間も標準出力を読み続ける。読まないと、パイプの容量（既定で4KB）を超える出力で
+	// 子プロセスが書き込みで止まり、終了しないままタイムアウトになる。
 	std::string out_bytes;
+	bool timed_out = false;
+	const DWORD start_tick = ::GetTickCount();
 	while (true)
 	{
-		DWORD	dwResult;
-		DWORD	dwBytesLeftThisMessage;
-		PeekNamedPipe(stdout_read, NULL, 0, NULL, &dwResult, &dwBytesLeftThisMessage);
-		if ( dwResult==0 && dwBytesLeftThisMessage==0 )
+		const DWORD wait = ::WaitForSingleObject(pi.hProcess, 50);
+		read_available_from_pipe(stdout_read, out_bytes);
+		if ( wait != WAIT_TIMEOUT )
 			break;
-		if (dwResult > 0)
-		{ 
-			char szBuf[256];
-			ReadFile(stdout_read, szBuf, sizeof(szBuf), &dwResult, NULL);
-			out_bytes.append(szBuf, dwResult);
+		if ( ::GetTickCount() - start_tick > 10000 )
+		{
+			timed_out = true;
+			break;
 		}
 	}
 
+	if ( timed_out )
+	{
+		::TerminateProcess(pi.hProcess, 1);	// 応答しない子プロセスは残さない
+	}
 	::CloseHandle(pi.hThread);
 	::CloseHandle(pi.hProcess);
+	if ( timed_out )
+	{
+		return	L"呼び出しタイムアウト。";
+	}
 
 	// 出力の文字コードは不明なので判定する
 	o_stdout += MBtoW(out_bytes, CS_NULL);

@@ -171,7 +171,7 @@ public:
 			else if ( span == L"起動中")
 				m_clearOC_at_talk_end.erase(it->first);
 			else
-				GetSender().sender() << L"重複回避の期間'" << method << L"' は定義されていません。" << std::endl;
+				GetSender().sender() << L"重複回避の期間'" << span << L"' は定義されていません。" << std::endl;
 			
 		}
 	}
@@ -257,7 +257,8 @@ public:
 			{
 				bool test = false;
 				if (type == COMSEARCH_TAG) {
-					std::wstring s = iSentence.substr(sentenceNamePos + 2);	//+2は空白とカッコ分（全角2文字）
+					//+2は空白とカッコ分（全角2文字）。「が末尾にあるときは後ろが無いので空
+					std::wstring s = (sentenceNamePos + 2 <= iSentence.size()) ? iSentence.substr(sentenceNamePos + 2) : std::wstring();
 					test = s == *wds_it;
 				}
 				else {

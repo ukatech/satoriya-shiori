@@ -72,7 +72,13 @@ extern "C" __declspec(dllexport) BOOL __cdecl load(HGLOBAL i_data, long i_data_l
 		return TRUE;
 	}
 	GetSender().sender() << the_base_folder << std::endl;
-	return SakuraDLLHost::I()->load(the_base_folder);
+	try {
+		return SakuraDLLHost::I()->load(the_base_folder);
+	}
+	catch ( ... ) {
+		// 例外を呼び出し元に漏らさない
+		return FALSE;
+	}
 }
 
 // UTF-8版load。
@@ -82,7 +88,13 @@ extern "C" __declspec(dllexport) BOOL __cdecl loadu(HGLOBAL i_data, long i_data_
 	::GlobalFree(i_data);
 	s_loadu_called = true;
 	GetSender().sender() << the_base_folder << std::endl;
-	return SakuraDLLHost::I()->load(the_base_folder);
+	try {
+		return SakuraDLLHost::I()->load(the_base_folder);
+	}
+	catch ( ... ) {
+		// 例外を呼び出し元に漏らさない
+		return FALSE;
+	}
 }
 
 // チェックツール（tama/tamac）のログ受信ウィンドウを指定する（YAYA互換）
@@ -110,7 +122,13 @@ extern "C" __declspec(dllexport) BOOL __cdecl unload(void)
 #ifndef POSIX
 	s_loadu_called = false;
 #endif
-	return SakuraDLLHost::I()->unload();
+	try {
+		return SakuraDLLHost::I()->unload();
+	}
+	catch ( ... ) {
+		// 例外を呼び出し元に漏らさない
+		return 0;
+	}
 }
 
 #ifdef POSIX
@@ -243,9 +261,33 @@ wstring SakuraDLLHost::request(const wstring& i_request_string, CharactorSet i_r
 	wstring r_protocol, r_protocol_version;
 	strpairvec r_data;
 	
-	int r_return_code = request(
-		protocol, protocol_version, command, data, 
-		r_protocol, r_protocol_version, r_data);
+	// 例外（メモリ不足や範囲外など）を呼び出し元に漏らすと、ベースウェアごと落ちてしまう。
+	// ここで受け止めて、500 を返す。
+	int r_return_code;
+	try
+	{
+		r_return_code = request(
+			protocol, protocol_version, command, data, 
+			r_protocol, r_protocol_version, r_data);
+	}
+	catch ( const std::exception& e )
+	{
+		GetSender().sender() << L"内部エラー（例外）でリクエストを中断しました: " << ascii_to_w(e.what()) << std::endl;
+		r_return_code = -1;
+	}
+	catch ( ... )
+	{
+		GetSender().sender() << L"内部エラー（例外）でリクエストを中断しました。" << std::endl;
+		r_return_code = -1;
+	}
+	if ( r_return_code == -1 )
+	{
+		on_request_exception();
+		r_return_code = 500;
+		r_data.clear();
+		r_protocol = protocol;
+		r_protocol_version = protocol_version;
+	}
 
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

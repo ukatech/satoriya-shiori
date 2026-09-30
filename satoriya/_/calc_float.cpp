@@ -222,14 +222,16 @@ bool calc_float(wstring& ioString) {
 	if ( !calc_float(ioString.c_str(), &result) )
 		return	false;
 
-	char	buf[128];
+	char	buf[512];	// %f は double の最大値で 300 文字を超える
 	sprintf(buf, "%f", result);
 	ioString = ascii_to_w(buf);
 
+	// 末尾の 0 と . を削る。assign(自分のc_str(), n) はVC6では長い文字列で解放済みの領域から
+	// コピーして中身が壊れる（24桁を超える値で再現）ので、erase で縮める
 	while ( compare_tail(ioString, L"0") )
-		ioString.assign(ioString.c_str(), ioString.size()-1);
+		ioString.erase(ioString.size()-1);
 	if ( compare_tail(ioString, L".") )
-		ioString.assign(ioString.c_str(), ioString.size()-1);
+		ioString.erase(ioString.size()-1);
 
 	return	true;
 }

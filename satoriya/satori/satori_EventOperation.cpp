@@ -36,8 +36,44 @@ inline bool	is_empty_script(const wstring& script) {
 	return	true;
 }
 
+// イベントの処理が固定の添字で読むReferenceの数。
+static size_t	required_reference_count(const wstring& iEvent)
+{
+	static const struct {
+		const wchar_t*	event;
+		size_t	count;
+	} table[] = {
+		{ L"OnSecondChange",	4 },
+		{ L"OnMinuteChange",	4 },
+		{ L"OnSurfaceChange",	2 },
+		{ L"OnUpdateReady",		1 },
+		{ L"OnMouseDown",		6 },
+		{ L"OnMouseMove",		5 },
+		{ L"OnMouseWheel",		5 },
+		{ L"OnAnchorSelect",	1 },
+		{ L"OnChoiceSelect",	1 },
+		{ L"OnRecommendsiteChoice",	5 },
+		{ L"OnCommunicate",		2 },
+	};
+	for ( size_t i=0 ; i<sizeof(table)/sizeof(table[0]) ; ++i ) {
+		if ( iEvent == table[i].event ) {
+			return	table[i].count;
+		}
+	}
+	return	0;
+}
+
 int	Satori::EventOperation(wstring iEvent, std::map<wstring,wstring> &oResponse)
 {
+	// 以降の処理は固定の添字でReferenceを読む。リクエストに足りない分があっても範囲外を読まないよう、空で埋めておく。
+	// （Referenceが揃っている正しいリクエストでは何も変わらない）
+	{
+		const size_t	need = required_reference_count(iEvent);
+		if ( mReferences.size() < need ) {
+			mReferences.resize(need);
+		}
+	}
+
 	// トーク先頭に「→」があると設定される。無ければ""のまま。
 	mCommunicateFor=L"";
 	// スクリプト文字列

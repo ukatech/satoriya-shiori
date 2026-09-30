@@ -28,6 +28,11 @@ static bool	read_fmo(const wchar_t* name, std::string& o)
 	}
 
 	long size = *((long*)p);
+	// 共有メモリの内容は他のプロセスが書いたものなので、マップされた範囲を越えないようにする
+	MEMORY_BASIC_INFORMATION	mbi;
+	if ( ::VirtualQuery(p, &mbi, sizeof(mbi)) == 0 || size > static_cast<long>(mbi.RegionSize) ) {
+		size = 0;
+	}
 	if ( size > 4 ) {
 		o.assign(static_cast<const char*>(p) + 4, size - 4);
 		std::string::size_type nul = o.find('\0');
