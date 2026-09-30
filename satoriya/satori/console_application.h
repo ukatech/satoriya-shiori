@@ -9,9 +9,14 @@ using std::wstring;
 
 #ifndef POSIX
 // パイプに溜まっている分を全部読んで out に足す
+// 出力し続ける子プロセスで延々と読み続けたり、メモリを使い果たしたりしないよう、1回に読む量と出力の総量に上限がある
+static const size_t CONSOLE_READ_CHUNK_LIMIT = 64 * 1024;
+static const size_t CONSOLE_OUTPUT_LIMIT = 16 * 1024 * 1024;
+
 inline void read_available_from_pipe(HANDLE i_pipe, std::string& out)
 {
-	while (true)
+	size_t	read_total = 0;
+	while ( read_total < CONSOLE_READ_CHUNK_LIMIT && out.size() < CONSOLE_OUTPUT_LIMIT )
 	{
 		DWORD	dwAvail = 0;
 		if ( !::PeekNamedPipe(i_pipe, NULL, 0, NULL, &dwAvail, NULL) || dwAvail == 0 )
@@ -21,6 +26,7 @@ inline void read_available_from_pipe(HANDLE i_pipe, std::string& out)
 		if ( !::ReadFile(i_pipe, szBuf, sizeof(szBuf), &dwRead, NULL) || dwRead == 0 )
 			break;
 		out.append(szBuf, dwRead);
+		read_total += dwRead;
 	}
 }
 #endif
@@ -91,7 +97,7 @@ call_console_application(
 		read_available_from_pipe(stdout_read, out_bytes);
 		if ( wait != WAIT_TIMEOUT )
 			break;
-		if ( ::GetTickCount() - start_tick > 10000 )
+		if ( ::GetTickCount() - start_tick > 10000 || out_bytes.size() >= CONSOLE_OUTPUT_LIMIT )
 		{
 			timed_out = true;
 			break;

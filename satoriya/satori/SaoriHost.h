@@ -26,8 +26,11 @@ class SaoriHost : public SakuraDLLHost
 		wstring& o_protocol,
 		wstring& o_protocol_version,
 		strpairvec& o_data);
+protected:
+	// 直前のリクエストが SecurityLevel: local（または指定なし）か。external と明示されたときだけ偽。
+	bool	m_is_secure;
 public:
-	SaoriHost() : SakuraDLLHost() {}
+	SaoriHost() : SakuraDLLHost(), m_is_secure(true) {}
 
 	// SAORIとしての返答は常にUTF-8
 	virtual CharactorSet response_charset(CharactorSet i_request_charset) { return CS_UTF8; }

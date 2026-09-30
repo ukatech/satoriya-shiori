@@ -196,6 +196,7 @@ wstring	Satori::SentenceToSakuraScriptExec_with_PreProcess(const strvec& i_vec)
 {
 	strvec vec;
 	pre_process(i_vec, vec, m_escaper, replace_before_dic);
+	reset_call_budget();	// リクエストの外（さとりて）から呼ばれても数え直す
 	return SentenceToSakuraScriptExec(vec);
 }
 

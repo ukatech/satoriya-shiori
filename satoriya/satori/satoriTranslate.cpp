@@ -171,7 +171,7 @@ bool	Satori::Translate(wstring& ioScript) {
 									repstr += L"\\_a";
 
 									i->replace(c,j->size(),repstr);
-									c += repstr.size();
+									c += repstr.size() - 1;	// for ‚Ì ++c ‚Å’uŠ·Œã‚ÌŽŸ‚Ì•¶Žš‚Ö
 									n = i->size();
 									break;
 								}

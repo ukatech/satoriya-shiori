@@ -411,6 +411,9 @@ bool	Satori::load(const wstring& iBaseFolder)
 #endif
 bool	Satori::Save(bool isOnUnload) {
 	GetSender().next_event();
+	if ( isOnUnload ) {
+		reset_call_budget();	// 直前のリクエストで使い切っていても、OnSatoriUnload は実行できるように
+	}
 	
 	if ( isOnUnload ) {
 		secure_flag = true;

@@ -636,7 +636,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,wstring &result,wst
 				wstring cmd=L"";
 
 				static const wchar_t* tag_pattern[] = {
-					L"month",L"day",L"hour",L"minute",L"second",L"username",L"selfname",L"selfname2",L"keroname",L"screenwidth",L"screenheight",
+					L"month",L"day",L"hour",L"minute",L"second",L"username",L"selfname2",L"selfname",L"keroname",L"screenwidth",L"screenheight",
 					L"exh",L"et",L"wronghour",L"ms",L"mz",L"mc",L"mh",L"mt",L"me",L"mp",L"m?",L"dms",L"lastghostname",L"lastobjectname",L"property"
 				};
 				static unsigned int tag_pattern_count = sizeof(tag_pattern)/sizeof(tag_pattern[0]);
@@ -647,6 +647,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,wstring &result,wst
 					if ( wcsncmp(p,tag_pattern[tg],len) == 0 ) {
 						cmd = tag_pattern[tg];
 						p += len;
+						break;	// 一致したらそこで終わり（続きの文字で別のタグに当てはまらないように）
 					}
 				}
 

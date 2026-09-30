@@ -218,7 +218,7 @@ public:
 						if ( comName == L"Åu" ) { //Ç»ÇÒÇ≈Ç‡ìñÇΩÇÈãLñ@
 							elem_vector.push_back(it);
 						}
-						if ( iSentence.compare(0,comName.size(),comName) == 0 ) {
+						else if ( iSentence.compare(0,comName.size(),comName) == 0 ) {
 							elem_vector.push_back(it);
 						}
 					}

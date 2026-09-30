@@ -23,7 +23,7 @@
 
 #include	"SaoriHost.h"
 
-static SRV	call_ssu(wstring iCommand, std::deque<wstring>& iArguments, std::deque<wstring>& oValues);
+static SRV	call_ssu(wstring iCommand, std::deque<wstring>& iArguments, std::deque<wstring>& oValues, bool iIsSecure);
 
 #ifndef SSU_SAORI_CALL_INTERFACE
 
@@ -74,7 +74,7 @@ int ssu::request(
 
 	std::deque<wstring> oValues;
 
-	SRV result = call_ssu(theCommand, iArguments, oValues);
+	SRV result = call_ssu(theCommand, iArguments, oValues, i_is_secure);
 	o_result = result.mResultString;
 
 	// 注意！Valueヘッダ相当が存在しないときは、S?系システム変数を温存するためにデータを上書きしないこと！
@@ -113,7 +113,7 @@ SRV	ssu::request(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) 
 	// 最初の引数は命令名として扱う
 	wstring	theCommand = iArguments.front();
 	iArguments.pop_front();
-	return	call_ssu(theCommand, iArguments, oValues);
+	return	call_ssu(theCommand, iArguments, oValues, m_is_secure);
 }
 
 #endif
@@ -161,7 +161,7 @@ void get_ssu_funclist(std::vector<wstring> &funclist)
 	}
 }
 
-static SRV	call_ssu(wstring iCommand, std::deque<wstring>& iArguments, std::deque<wstring>& oValues)
+static SRV	call_ssu(wstring iCommand, std::deque<wstring>& iArguments, std::deque<wstring>& oValues, bool iIsSecure)
 {
 	const std::map<wstring, Command> &theMap = func_map();
 
@@ -169,6 +169,10 @@ static SRV	call_ssu(wstring iCommand, std::deque<wstring>& iArguments, std::dequ
 	std::map<wstring, Command>::const_iterator i = theMap.find(iCommand);
 	if ( i==theMap.end() )
 		return SRV(400, wstring()+L"Error: '"+iCommand+L"'という名前の命令は定義されていません。");
+
+	// ファイルシステムを操作する命令は、SecurityLevel: local でないと実行しない
+	if ( !iIsSecure && (iCommand==L"mkdir" || iCommand==L"lsimg") )
+		return SRV(400, wstring()+L"Error: '"+iCommand+L"'はlocalでないと実行できません。");
 
 	// 実際に呼ぶ
 	return	i->second(iArguments, oValues);
@@ -949,10 +953,20 @@ SRV _reverse(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {
 	if ( iArguments.empty() )
 		return	SRV(400, L"引数が足りません。");
 
-	wstring	r;
-	const wchar_t* p = iArguments[0].c_str();
+	// 先頭への連結を繰り返すと長さの2乗の時間がかかるので、文字ごとの位置を集めて後ろから並べる
+	const wchar_t* const start = iArguments[0].c_str();
+	std::vector<std::ptrdiff_t>	heads;
+	const wchar_t* p = start;
 	while (*p != L'\0') {
-		r = get_a_chr(p) + r;
+		heads.push_back(p - start);
+		next_a_chr(p);
+	}
+
+	wstring	r;
+	r.reserve(iArguments[0].size());
+	for ( std::vector<std::ptrdiff_t>::size_type n = heads.size() ; n > 0 ; --n ) {
+		const wchar_t* q = start + heads[n-1];
+		r += next_a_chr(q);
 	}
 
 	return	r;

@@ -143,8 +143,13 @@ inline int check_number(const wchar_t* start_pos) {
 }
 
 
-static bool	make_array(const wchar_t*& p, std::vector<calc_element>& oData) {
+// カッコの入れ子の上限。再帰でスタックを使い果たさないように
+static const int	CALC_MAX_NEST = 200;
 
+static bool	make_array(const wchar_t*& p, std::vector<calc_element>& oData, int iNest = 0) {
+
+	if ( iNest > CALC_MAX_NEST )
+		return	false;
 
 	while (true) {
 
@@ -153,7 +158,7 @@ static bool	make_array(const wchar_t*& p, std::vector<calc_element>& oData) {
 
 		if ( *p == L'(' ) {
 			oData.push_back( calc_element(L"(", 110) );
-			if ( !make_array(++p, oData) )	// カッコ内を再帰処理
+			if ( !make_array(++p, oData, iNest+1) )	// カッコ内を再帰処理
 				return	false;	// エラーはトップまで伝える
 			if ( *p++ !=L')' )
 				return	false;

@@ -34,6 +34,7 @@ int	Satori::request(
 	mRequestMap.clear();
 	mRequestID = L"";
 	mReferences.clear();
+	reset_call_budget();	// 呼び出し総数はリクエストごとに数え直す
 	mReferences.reserve(8); // 最小値
 
 	// 引数をクラスメンバに設定

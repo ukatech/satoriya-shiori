@@ -299,6 +299,18 @@ private:
 
 	int m_nest_count;
 
+	// 括弧（（）の入れ子の深さ。深さの上限を越えたら展開せずに打ち切る（スタックを使い果たさないため）
+	int m_kakko_depth;
+
+	// 呼び出し総数の制限。深さではなく総数で、分岐する再帰や、本体が空の長い繰り返しを止める。
+	// （名前）の呼び出しと繰り返しの1周を1回と数える。0なら無制限。リクエスト・読み込みごとに数え直す。
+	int m_total_call_limit;
+	int m_total_call_count;
+	bool m_total_call_reported;
+	// 呼び出し総数の予算を1つ使う。使い切っていたらtrueを返す（呼び出し側は処理を打ち切ること）。
+	bool use_call_budget();
+	void reset_call_budget() { m_total_call_count = 0; m_total_call_reported = false; }
+
 	// ばるーん位置
 	std::map<int, bool>	validBalloonOffset;	// 1回でも設定されたら有効 つーか片方だけだと意味無かった。むぅ。
 	std::map<int, wstring>	BalloonOffset;
@@ -583,6 +595,7 @@ private:
 	int	sysvar_nest_limit(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
 	int	sysvar_kakko_size_limit(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
 	int	sysvar_jump_limit(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
+	int	sysvar_total_call_limit(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
 	int	sysvar_surface_restore(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
 	int	sysvar_surface_restore_onetime(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);
 	int	sysvar_auto_anchor(const wstring& iKey, const wstring& iArg, const wstring& iValue, wstring* oResult);

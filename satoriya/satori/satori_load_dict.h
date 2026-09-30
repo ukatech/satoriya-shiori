@@ -158,6 +158,10 @@ void	Satori::InitMembers() {
 	m_kakko_size_limit = 256*1024; //1括弧で256KBもあったら大事故だろう
 
 	m_nest_count = 0;
+	m_kakko_depth = 0;
+
+	m_total_call_limit = 100000; //1リクエストで10万回も呼ぶな！
+	reset_call_budget();
 
 	header_script = L"";
 

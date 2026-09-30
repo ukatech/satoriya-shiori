@@ -173,6 +173,11 @@ bool	Satori::Call(const wstring& iName, wstring& oResult, bool for_calc, bool fo
 		for_non_talk = true;
 	}
 
+	if ( use_call_budget() ) {
+		oResult = L"i" + iName + L"j";
+		return false;
+	}
+
 	++m_nest_count;
 
 	if ( m_nest_limit > 0 && m_nest_count > m_nest_limit ) {

@@ -35,8 +35,13 @@ int	SaoriHost::request(
 
 	// ˆø”‚ğ Argument? ‚ÉŠi”[
 	std::deque<wstring> arguments;
+	m_is_secure = true;
 	for ( strpairvec::const_iterator it=i_data.begin() ; it!=i_data.end() ; ++it)
 	{
+		if ( it->first == L"SecurityLevel" && _wcsicmp(it->second.c_str(), L"external") == 0 )
+		{
+			m_is_secure = false;
+		}
 		if ( it->first.compare(0, 8, L"Argument") == 0 )
 		{
 			const int n = _wtoi(it->first.c_str() + 8);

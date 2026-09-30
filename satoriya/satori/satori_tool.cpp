@@ -273,8 +273,46 @@ bool Satori::calc_argument(const wstring &iExpression, int &oResult, bool for_no
 // 文章の中で （ を見つけた場合、pが （ の次の位置まで進められた上でこれが実行される。
 // pはこの内部で ） の次の位置まで進められる。
 // 返値はカッコの解釈結果。
+// 括弧の入れ子の深さの上限
+static const int	KAKKO_MAX_DEPTH = 1000;
+
+// 深さを数える（例外で抜けても戻るようにデストラクタで減らす）
+class KakkoDepthCounter
+{
+	int& m_depth;
+public:
+	KakkoDepthCounter(int& i_depth) : m_depth(i_depth) { ++m_depth; }
+	~KakkoDepthCounter() { --m_depth; }
+};
+
+// 呼び出し総数の予算を1つ使う。使い切っていたらtrueを返す。
+bool	Satori::use_call_budget()
+{
+	if ( m_total_call_limit <= 0 ) {
+		return	false;
+	}
+	if ( m_total_call_count < m_total_call_limit ) {
+		++m_total_call_count;
+		return	false;
+	}
+	if ( !m_total_call_reported ) {
+		m_total_call_reported = true;
+		GetSender().sender() << L"呼び出し総数超過（" << m_total_call_limit << L"回）：以降の呼び出しと繰り返しを打ち切ります" << std::endl;
+	}
+	return	true;
+}
+
 wstring	Satori::KakkoSection(const wchar_t*& p,bool for_calc,bool for_non_talk)
 {
+	KakkoDepthCounter depth_counter(m_kakko_depth);
+	if ( m_kakko_depth > KAKKO_MAX_DEPTH ) {
+		// これ以上は展開しない。（ だけを返すので、呼び出し側は続きを普通の文字として読み進める。
+		if ( m_kakko_depth == KAKKO_MAX_DEPTH + 1 ) {
+			GetSender().sender() << L"括弧の入れ子が深すぎます（" << KAKKO_MAX_DEPTH << L"段まで）。" << std::endl;
+		}
+		return	wstring(L"（");
+	}
+
 	if ( for_calc ) {
 		for_non_talk = true;
 	}

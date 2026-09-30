@@ -28,6 +28,7 @@ inline bool	is_empty_script(const wstring& script) {
 						return	false;
 					else
 						++p;
+				++p;	// ]
 				continue;
 			}
 		}
@@ -35,6 +36,9 @@ inline bool	is_empty_script(const wstring& script) {
 	}
 	return	true;
 }
+
+// ホールド判定が読む mousedown_reference_array の要素数（Reference3, 4 を使う）
+static const size_t	MOUSEDOWN_REFERENCE_COUNT = 5;
 
 // イベントの処理が固定の添字で読むReferenceの数。
 static size_t	required_reference_count(const wstring& iEvent)
@@ -134,7 +138,7 @@ int	Satori::EventOperation(wstring iEvent, std::map<wstring,wstring> &oResponse)
 		}
 #endif
 		//ホールド
-		if ( mousedown_reference_array.size() > 0 && mousedown_exec_complete == false ) {
+		if ( mousedown_reference_array.size() >= MOUSEDOWN_REFERENCE_COUNT && mousedown_exec_complete == false ) {
 			if ( (posix_get_current_tick() - mousedown_time) > 1000 ) {
 				wstring	str = mousedown_reference_array[3]+mousedown_reference_array[4]+L"ホールド";
 
@@ -152,9 +156,12 @@ int	Satori::EventOperation(wstring iEvent, std::map<wstring,wstring> &oResponse)
 					mousedown_secchange_delay_exec = false;
 					mousedown_secchange_delay_time = 0;
 
-					wstring	str = mousedown_reference_array[3]+mousedown_reference_array[4]+L"ホールド終了";
-					if ( talks.is_exist(str) ) {
-						script=GetSentence(str);
+					// 押し下げの後に別のクリックなどで配列が空になっていることがある
+					if ( mousedown_reference_array.size() >= MOUSEDOWN_REFERENCE_COUNT ) {
+						wstring	str = mousedown_reference_array[3]+mousedown_reference_array[4]+L"ホールド終了";
+						if ( talks.is_exist(str) ) {
+							script=GetSentence(str);
+						}
 					}
 					mousedown_reference_array.clear();
 					mousedown_time = 0;
@@ -222,9 +229,11 @@ int	Satori::EventOperation(wstring iEvent, std::map<wstring,wstring> &oResponse)
 			mousedown_secchange_delay_time = posix_get_current_tick();
 		}
 		else {
-			wstring	str = mousedown_reference_array[3]+mousedown_reference_array[4]+L"ホールド終了";
-			if ( talks.is_exist(str) ) {
-				script=GetSentence(str);
+			if ( mousedown_reference_array.size() >= MOUSEDOWN_REFERENCE_COUNT ) {
+				wstring	str = mousedown_reference_array[3]+mousedown_reference_array[4]+L"ホールド終了";
+				if ( talks.is_exist(str) ) {
+					script=GetSentence(str);
+				}
 			}
 			mousedown_reference_array.clear();
 			mousedown_time = 0;

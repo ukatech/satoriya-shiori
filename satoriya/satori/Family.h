@@ -145,17 +145,13 @@ public:
 	template<typename C>
 	void get_elements_pointers_selectables(C& o_c, Evalcator& i_evalcator)
 	{
-		for (typename CondsMap::const_iterator i = m_conds_map.begin(); i != m_conds_map.end(); ++i)
+		if ( m_conds_map.empty() ) { return; }
+		// getSelectables が条件式を評価して全体から選ぶので、条件の数だけ繰り返すと同じ候補が重複する。1回だけ呼ぶ。
+		std::list<const T*> selectable;
+		getSelectables(i_evalcator, selectable);
+		for (typename std::list<const T*>::const_iterator j = selectable.begin(); j != selectable.end(); ++j)
 		{
-			if ( i->first.empty() || i_evalcator.evalcate_to_bool(i->first))
-			{
-				std::list<const T*> selectable;
-				getSelectables(i_evalcator, selectable);
-				for (typename std::list<const T*>::const_iterator j = selectable.begin(); j != selectable.end(); ++j)
-				{
-					o_c.push_back((*j));
-				}
-			}
+			o_c.push_back((*j));
 		}
 	}
 

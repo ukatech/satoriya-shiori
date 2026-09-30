@@ -627,7 +627,11 @@ wstring	Satori::func_split_to(const strvec& iArgv, bool, bool)
 	const wstring	count_name = prefix + L"の数";
 	strmap::const_iterator	old = variables.find(count_name);
 	if ( old != variables.end() ) {
-		const int	old_count = zen2int(old->second);
+		// 変数の値は利用者が書き換えられるので、巨大な値で延々と回らないよう添字の上限で止める
+		int	old_count = zen2int(old->second);
+		if ( old_count > MAX_ARRAY_INDEX ) {
+			old_count = MAX_ARRAY_INDEX;
+		}
 		for ( int k=vec.size() ; k<old_count ; ++k ) {
 			variables.erase(prefix + itos(k));
 		}
@@ -1091,6 +1095,9 @@ wstring	Satori::func_times(const strvec& iArgv, bool for_calc, bool for_non_talk
 			throw(L"引数の個数が正しくありません。");
 		}
 		for(int i=count; i<max; i++){
+			if ( use_call_budget() ) {
+				break;
+			}
 			mLoopCounters.top() = itos(i);
 			ret += UnKakko(iArgv[body].c_str(), for_calc, for_non_talk);
 			if ( loop_result_too_large(ret) ) {
@@ -1128,6 +1135,9 @@ wstring	Satori::func_while(const strvec& iArgv, bool for_calc, bool for_non_talk
 			throw(L"引数の個数が正しくありません。");
 		}
 		for(int i=count; i<INT_MAX; i++){
+			if ( use_call_budget() ) {
+				break;
+			}
 			mLoopCounters.top() = itos(i);
 			if ( !calc_argument(iArgv[expression], result, for_non_talk) ) throw(L"' 式が計算不能です。");
 			if ( result == 0 ) {
@@ -1179,6 +1189,9 @@ wstring	Satori::func_for(const strvec& iArgv, bool for_calc, bool for_non_talk)
 		const unsigned int width = ( step==INT_MIN ) ? static_cast<unsigned int>(INT_MAX) : static_cast<unsigned int>( step<0 ? -step : step );
 		if ( start <= end ) {
 			for(int i=start; ; ) {
+				if ( use_call_budget() ) {
+					break;
+				}
 				mLoopCounters.top() = itos(i);
 				ret += UnKakko(iArgv[body].c_str(), for_calc, for_non_talk);
 				if ( loop_result_too_large(ret) ) {
@@ -1193,6 +1206,9 @@ wstring	Satori::func_for(const strvec& iArgv, bool for_calc, bool for_non_talk)
 		}
 		else {
 			for(int i=start; ; ) {
+				if ( use_call_budget() ) {
+					break;
+				}
 				mLoopCounters.top() = itos(i);
 				ret += UnKakko(iArgv[body].c_str(), for_calc, for_non_talk);
 				if ( loop_result_too_large(ret) ) {
@@ -2062,6 +2078,7 @@ int	Satori::system_variable_operation_real(wstring key, wstring value, wstring* 
 		{ L"呼び出し回数制限",	&Satori::sysvar_nest_limit,	0,	0 },
 		{ L"括弧展開サイズ制限",	&Satori::sysvar_kakko_size_limit,	0,	0 },
 		{ L"ジャンプ回数制限",	&Satori::sysvar_jump_limit,	0,	0 },
+		{ L"呼び出し総数制限",	&Satori::sysvar_total_call_limit,	0,	0 },
 
 		{ L"スコープ切り換え時",	0,	0,	&Satori::append_at_scope_change },
 		{ L"さくらスクリプトによるスコープ切り換え時",	0,	0,	&Satori::append_at_scope_change_with_sakura_script },
@@ -2219,6 +2236,12 @@ int	Satori::sysvar_kakko_size_limit(const wstring&, const wstring&, const wstrin
 int	Satori::sysvar_jump_limit(const wstring&, const wstring&, const wstring& iValue, wstring*)
 {
 	m_jump_limit = max(0, zen2int(iValue));
+	return	SYSVAR_SET;
+}
+
+int	Satori::sysvar_total_call_limit(const wstring&, const wstring&, const wstring& iValue, wstring*)
+{
+	m_total_call_limit = max(0, zen2int(iValue));
 	return	SYSVAR_SET;
 }
 
