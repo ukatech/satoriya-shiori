@@ -24,6 +24,7 @@ class ShioriPlugins {
 	public:
 		DllData() {
 			m_pSaoriClient = NULL;
+			mIsInternal = false;
 		}
 		~DllData() {
 			if ( m_pSaoriClient ) {
@@ -32,6 +33,7 @@ class ShioriPlugins {
 		}
 		SaoriClient	*m_pSaoriClient;
 		int	mRefCount;
+		bool	mIsInternal;	// 内蔵ssuを直接呼び出している（実体の ssu.dll が無い）
 	};
 	std::map<wstring, CallData>	mCallData;	// 呼び出し名；呼び出し名ごとの情報
 	std::map<wstring, DllData>	mDllData;	// DLLのフルパス；DLLごとの情報

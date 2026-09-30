@@ -326,7 +326,7 @@ bool	printf_format(const wchar_t*& p, std::deque<wstring>& iArguments, std::wstr
 				os << pair;
 			}
 			else {
-				os << (wchar_t)code;
+				os.put((wchar_t)code);
 			}
 			break;
 		}
@@ -402,7 +402,7 @@ wstring	sprintf(std::deque<wstring>& iArguments) {
 				continue;
 			}
 		}
-		s << *p++;
+		s.put(*p++);
 	}
 	return	s.str();
 }

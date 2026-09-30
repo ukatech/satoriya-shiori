@@ -124,6 +124,11 @@ bool ShioriPlugins::load_a_plugin(const wstring& iPluginLine)
 			// プラグインDLLをロード
 			mDllData[fullpath].mRefCount=1;
 			mDllData[fullpath].m_pSaoriClient=new ssu();
+			{
+				FILE*	ssu_fp = w_fopen(fullpath, L"rb");
+				if ( ssu_fp != NULL ) { fclose(ssu_fp); }
+				else { mDllData[fullpath].mIsInternal = true; }
+			}
 		}
 		else {
 #ifndef POSIX
@@ -357,6 +362,7 @@ wstring	ShioriPlugins::request(const wstring& iCallName, const strvec& iArgument
 		assert( mDllData.find(theCallData.mDllPath) != mDllData.end() );
 
 		wstring result;
+		const wstring dll_label = mDllData[ theCallData.mDllPath ].mIsInternal ? wstring(L"(internal ssu)") : theCallData.mDllPath;
 		int return_code = mDllData[ theCallData.mDllPath ].m_pSaoriClient->request(
 			 req,
 			 ( iSecurityLevel == L"local" || iSecurityLevel == L"Local" ),
@@ -372,13 +378,13 @@ wstring	ShioriPlugins::request(const wstring& iCallName, const strvec& iArgument
 		case 204:
 			break;
 		case 400:
-			GetSender().errsender() << theCallData.mDllPath + L" - " + iCallName + L" : 400 Bad Request / 呼び出しの不備" << satori::endl;
+			GetSender().errsender() << dll_label + L" - " + iCallName + L" : 400 Bad Request / 呼び出しの不備" << satori::endl;
 			break;
 		case 500:
-			GetSender().errsender() << theCallData.mDllPath + L" - " + iCallName + L" : 500 Internal Server Error / saori内でのエラー" << satori::endl;
+			GetSender().errsender() << dll_label + L" - " + iCallName + L" : 500 Internal Server Error / saori内でのエラー" << satori::endl;
 			break;
 		default:
-			GetSender().errsender() << theCallData.mDllPath + L" - " + iCallName + L" : " + itos(return_code) + L"? / 定義されていないステータスを返しました。" << satori::endl;
+			GetSender().errsender() << dll_label + L" - " + iCallName + L" : " + itos(return_code) + L"? / 定義されていないステータスを返しました。" << satori::endl;
 			break;
 		}
 

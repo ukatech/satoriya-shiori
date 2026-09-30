@@ -197,7 +197,9 @@ public:
 namespace satori {
 	template<class CharT, class Traits>
 		std::basic_ostream<CharT, Traits>& endl(std::basic_ostream<CharT, Traits>& os) {
-		return os << L'\n' << SenderConst::FLUSH_MARK << std::flush;
+		os.put(L'\n');
+		os.put(SenderConst::FLUSH_MARK);
+		return os << std::flush;
 	}
 }
 
