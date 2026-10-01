@@ -20,7 +20,7 @@ File::~File() {
 	Close();
 }
 
-bool	File::Open( const char* iFileName, OpenFlag iOpenFlag ) {
+bool	File::Open( const wchar_t* iFileName, OpenFlag iOpenFlag ) {
 	assert(iFileName != NULL);
 	assert(iOpenFlag == READ || iOpenFlag == WRITE);
 
@@ -145,7 +145,7 @@ BOOL	Rename( LPCTSTR iTo, LPCTSTR iFrom ) {
 }
 #endif
 // ファイル・フォルダの存在有無を問い合わせ
-bool	isExist(const char* iPath) {
+bool	isExist(const wchar_t* iPath) {
 	assert(iPath != NULL);
 	WIN32_FIND_DATA	fdFOUND;
 	HANDLE hFIND = ::FindFirstFile( iPath, &fdFOUND );
@@ -154,7 +154,7 @@ bool	isExist(const char* iPath) {
 	::FindClose(hFIND);
 	return	true;
 }
-bool	isExistFile(const char* iPath) {
+bool	isExistFile(const wchar_t* iPath) {
 	assert(iPath != NULL);
 	HANDLE hFile = ::CreateFile( iPath, 0, 
 		FILE_SHARE_READ|FILE_SHARE_WRITE, NULL,
@@ -164,7 +164,7 @@ bool	isExistFile(const char* iPath) {
 	::CloseHandle(hFile);
 	return true;
 }
-bool	isExistFolder(const char* iPath) {
+bool	isExistFolder(const wchar_t* iPath) {
 	assert(iPath != NULL);
 	WIN32_FIND_DATA	fdFOUND;
 	HANDLE hFIND = ::FindFirstFile( iPath, &fdFOUND );
@@ -177,7 +177,7 @@ bool	isExistFolder(const char* iPath) {
 
 
 // ファイルの大きさを取得
-BOOL	GetFileSize( LPCSTR szFileName, DWORD* pdwSize ) {
+BOOL	GetFileSize( LPCWSTR szFileName, DWORD* pdwSize ) {
 	assert( szFileName != NULL );
 	assert( pdwSize != NULL );
 
@@ -197,64 +197,64 @@ BOOL	GetFileSize( LPCSTR szFileName, DWORD* pdwSize ) {
 	return TRUE;
 }
 
-// 文字列中から指定の1byte文字が最後に出現する位置を返す。
-#include	<mbctype.h>	// for _ismbblead()
+// 文字列中から指定の文字が最後に出現する位置を返す。
 template<class T>
-inline T*	FindFinalChar(T* start, T c) {
+inline T*	FindFinalChar(T* start, wchar_t c) {
 	T* last=NULL;
-	for (T* p=start; *p ; p+=_ismbblead(*p)?2:1)
+	for (T* p=start; *p ; ++p)
 		if (*p==c)
 			last=p;
 	return	last;
 }
 
 // バス名からフォルダ名と拡張子を削除する。
-void	ToOnlyFileName( LPSTR buf ) {
-	LPSTR	ptr;
+void	ToOnlyFileName( LPWSTR buf ) {
+	LPWSTR	ptr;
 	// フォルダ名
-	if ( (ptr = FindFinalChar( buf, '\\' )) != NULL )
-		::lstrcpy( buf, ptr+1 );
+	if ( (ptr = FindFinalChar( buf, L'\\' )) != NULL )
+		::lstrcpyW( buf, ptr+1 );
 	// 拡張子
-	if ( (ptr = FindFinalChar( buf, '.' )) != NULL )
-		*ptr = '\0';
+	if ( (ptr = FindFinalChar( buf, L'.' )) != NULL )
+		*ptr = L'\0';
 }
 
 // パス文字列の拡張子を変更する
-void	SetExtention( LPTSTR szPath, LPCTSTR szNewExtention ) {
-	LPTSTR	ext = FindFinalChar( szPath, '.' );
+void	SetExtention( LPWSTR szPath, LPCWSTR szNewExtention ) {
+	LPWSTR	ext = FindFinalChar( szPath, L'.' );
 	if ( ext == NULL ) {
-		ext = szPath + ::lstrlen(szPath);
-		sprintf( ext, ".%s", szNewExtention );
+		ext = szPath + ::lstrlenW(szPath);
+		*ext++ = L'.';
+		wcscpy( ext, szNewExtention );
 	} else
-		strcpy( ext+1, szNewExtention );
+		wcscpy( ext+1, szNewExtention );
 }
 
 // パス文字列の拡張子部を取得する
-LPCTSTR	GetExtention( LPCTSTR szPath ) {
-	LPCTSTR	ext = FindFinalChar( szPath, '.' );
+LPCWSTR	GetExtention( LPCWSTR szPath ) {
+	LPCWSTR	ext = FindFinalChar( szPath, L'.' );
 	if ( ext == NULL )
 		return	NULL;
 	else
 		return	ext+1;
 }
 
-LPTSTR	GetExtention( LPTSTR szPath ) { 
-	return const_cast<LPTSTR>( GetExtention( static_cast<LPCTSTR>(szPath) ) ); 
+LPWSTR	GetExtention( LPWSTR szPath ) { 
+	return const_cast<LPWSTR>( GetExtention( static_cast<LPCWSTR>(szPath) ) ); 
 }
 // 拡張子を判定
-bool	isExtention(LPCTSTR iPath, LPCTSTR iExtention) {
-	return ( lstrcmpi( GetExtention(iPath), iExtention ) == 0 );
+bool	isExtention(LPCWSTR iPath, LPCWSTR iExtention) {
+	return ( lstrcmpiW( GetExtention(iPath), iExtention ) == 0 );
 }
 
 
 // パス文字列のファイル名部分を取得する。
 // 文字列中に \ 記号がない場合は、与えられた文字列をそのまま返す。
-LPCTSTR	GetFileName( LPCTSTR szPath ) {
-	LPCTSTR	ext = FindFinalChar( szPath, '\\' );
+LPCWSTR	GetFileName( LPCWSTR szPath ) {
+	LPCWSTR	ext = FindFinalChar( szPath, L'\\' );
 	return ( ext == NULL ) ? szPath : ext+1 ;
 }
-LPTSTR	GetFileName( LPTSTR szPath ) {
-	return const_cast<LPTSTR>( GetFileName( static_cast<LPCTSTR>(szPath) ) ); 
+LPWSTR	GetFileName( LPWSTR szPath ) {
+	return const_cast<LPWSTR>( GetFileName( static_cast<LPCWSTR>(szPath) ) ); 
 }
 
 
@@ -290,7 +290,7 @@ bool	GetSaveFileName(LPTSTR oFileName, HWND iParentWindow, LPCTSTR iFormat, LPCT
 #endif
 
 // フォルダを作成
-bool	MakeFolder(const char* iFolderName) {
+bool	MakeFolder(const wchar_t* iFolderName) {
 	if ( ::CreateDirectory(iFolderName, NULL) )
 		return	true;
 	else if ( ::GetLastError()==ERROR_ALREADY_EXISTS )
@@ -300,13 +300,13 @@ bool	MakeFolder(const char* iFolderName) {
 }
 
 // 複数階層に渡りフォルダを作成
-bool	MakeFolder_Nest(const char* iFolderName) {
-	int		theLength = strlen(iFolderName);
-	char*	theFolderName = new char[theLength+1];
-	memset(theFolderName, '\0', theLength+1);
+bool	MakeFolder_Nest(const wchar_t* iFolderName) {
+	int		theLength = wcslen(iFolderName);
+	wchar_t*	theFolderName = new wchar_t[theLength+1];
+	memset(theFolderName, 0, (theLength+1)*sizeof(wchar_t));
 
 	for (int i=0 ; i<theLength ; i++) {
-		if ( iFolderName[i] == '\\' )
+		if ( iFolderName[i] == L'\\' )
 			if ( !MakeFolder(theFolderName) ) {
 				delete [] theFolderName;
 				return	false;
@@ -318,7 +318,7 @@ bool	MakeFolder_Nest(const char* iFolderName) {
 }
 
 // ファイルの最終更新日時を取得
-bool	GetLastWriteTime(LPCSTR iFileName, SYSTEMTIME& oSystemTime) {
+bool	GetLastWriteTime(LPCWSTR iFileName, SYSTEMTIME& oSystemTime) {
 	HANDLE	theFile = ::CreateFile( iFileName, 
 		GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE, NULL,
 		OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL );
@@ -362,7 +362,7 @@ int	CompareTime(const SYSTEMTIME& stL, const SYSTEMTIME& stR) {
 	ファイルの更新日時を比較。
 	返値が正ならば前者、負ならば後者のほうが新しいファイル。
 ----------------------------------------------------------------------*/
-int	CompareTime(LPCSTR szL, LPCSTR szR) {
+int	CompareTime(LPCWSTR szL, LPCWSTR szR) {
 	assert(szL!=NULL && szR!=NULL);
 
 	SYSTEMTIME	stL, stR;

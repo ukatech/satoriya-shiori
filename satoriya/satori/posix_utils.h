@@ -18,7 +18,7 @@ inline unsigned long posix_get_current_tick() {
 	gettimeofday(&ts, NULL);
 //	clock_gettime(CLOCK_MONOTONIC, &ts);
 #endif
-	return (ts.tv_sec * 1000) + (ts.tv_usec/1000/1000);
+	return (ts.tv_sec * 1000) + (ts.tv_usec/1000);
 //	return (ts.tv_sec * 1000) + (ts.tv_nsec/1000/1000);
 }
 
@@ -45,7 +45,7 @@ inline unsigned long posix_get_current_sec() {
 #else  //POSIX
 	typedef unsigned __int64 (WINAPI *DefGetTickCount64)();
 
-	static const DefGetTickCount64 pGetTickCount64 = (DefGetTickCount64)::GetProcAddress(::GetModuleHandleA("kernel32"),"GetTickCount64");
+	static const DefGetTickCount64 pGetTickCount64 = (DefGetTickCount64)::GetProcAddress(::GetModuleHandle(L"kernel32"),"GetTickCount64");
 
 	if ( pGetTickCount64 ) {
 		return (unsigned long)(pGetTickCount64() / 1000);

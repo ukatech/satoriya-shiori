@@ -10,34 +10,33 @@ public:
 	~FileLister();
 
 	// 列挙パスを指定。ワイルドカード使用可。
-	BOOL	Open( LPCSTR iFindPath );
+	BOOL	Open( LPCWSTR iFindPath );
 	// 次のファイルを列挙。
 	BOOL	Next();
 
 	// 現在のファイル名を取得。
-	LPCSTR	Name();
+	LPCWSTR	Name();
 	// 現在のファイルはフォルダか？
 	BOOL	isFolder();
 	// 現在のファイル名は . のみで構成されている？
 	BOOL	isDots();
 	// 指定の拡張子か？
-	BOOL	isExt( LPCSTR iExtention );
+	BOOL	isExt( LPCWSTR iExtention );
 	// 現在のファイルの詳細データを取得。
-	const WIN32_FIND_DATA*	Data();
+	const WIN32_FIND_DATAW*	Data();
 
 	// 列挙の終了処理を行う。
 	void	Close();
 
 public:
-	TCHAR	mPath[MAX_PATH];	// 列挙対象パス
+	WCHAR	mPath[MAX_PATH];	// 列挙対象パス
 	HANDLE	mHandle;			// 列挙ハンドル
-	WIN32_FIND_DATA	mData;	// 列挙したファイルの情報
+	WIN32_FIND_DATAW	mData;	// 列挙したファイルの情報
 };
 
 
 #include	<string>
 #include	<list>
-using namespace std;
 
 /*
 // ファイル情報をリストアップ
@@ -48,10 +47,10 @@ bool	ListFile(string iFindPath, const vector<string>& oVector );
 bool	ListFolder(string iFindPath, const vector<WIN32_FIND_DATA>& oVector, bool iDotsFolder=false );
 */
 
-inline bool list_files(string i_folder, list<WIN32_FIND_DATA>& o_files)
+inline bool list_files(const std::wstring& i_folder, std::list<WIN32_FIND_DATAW>& o_files)
 {
 	FileLister lister;
-	if ( lister.Open((i_folder+"\\*.*").c_str()) == FALSE )
+	if ( lister.Open((i_folder+L"\\*.*").c_str()) == FALSE )
 		return false;
 
 	while ( lister.Next() ) 
@@ -62,9 +61,9 @@ inline bool list_files(string i_folder, list<WIN32_FIND_DATA>& o_files)
 	return true;
 }
 
-inline list<WIN32_FIND_DATA> list_files(string i_folder)
+inline std::list<WIN32_FIND_DATAW> list_files(const std::wstring& i_folder)
 {
-	list<WIN32_FIND_DATA> data;
+	std::list<WIN32_FIND_DATAW> data;
 	list_files(i_folder, data);
 	return data;
 }

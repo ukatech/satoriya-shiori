@@ -3,14 +3,14 @@
 #pragma warning( disable : 4503 ) //「装飾された名前の長さが限界を越えました。名前は切り捨てられます。」
 #include	"Saori.h"
 
-#include	<fstream>
-#include	<strstream>
 #include	<cassert>
 #include    <algorithm>
 #include	"../_/Sender.h"
 #include	"../_/CriticalSection.h"
 #include	"dsstp.h"
 #include	"get_browser_info.h"
+
+SakuraDLLHost* SakuraDLLHost::m_dll = new obu;
 
 static CriticalSection	gCS;
 static CBrowserInfo *g_pBrowserInfo = NULL;
@@ -29,9 +29,8 @@ VOID CALLBACK TimerProc(
 	Locker	locker(gCS);
 	static	unsigned int	count = 0;
 	static	int	theCoutner=0;
-	static	string	lastURL="", lastTitle="";
-	string	URL, Title;
-	static	set<string>	visitedURL;
+	static	wstring	lastURL=L"", lastTitle=L"";
+	wstring	URL, Title;
 	++count;
 
 	if ( !g_pBrowserInfo->Get(URL, Title) )
@@ -47,56 +46,26 @@ VOID CALLBACK TimerProc(
 		lastURL = URL;
 		lastTitle = Title;
 		
-		deque<string>	refs;
+		std::deque<wstring>	refs;
 		refs.push_back(URL);	// ref0
 		refs.push_back(Title);	// ref1
-		sendDirectSSTP_for_NOTIFY("obu", "OnWebsiteVisit", refs);
+		sendDirectSSTP_for_NOTIFY(L"obu", L"OnWebsiteVisit", refs);
 	}
 	else {
 		++theCoutner;
 		if ( gFrequency>0 && (theCoutner % gFrequency)==0 ) {
-			deque<string>	refs;
+			std::deque<wstring>	refs;
 			refs.push_back(URL);	// ref0
 			refs.push_back(Title);	// ref1
 			refs.push_back(itos(theCoutner/FREQ_RATE));	// ref2
-			sendDirectSSTP_for_NOTIFY("obu", "OnWebsiteStay", refs);
+			sendDirectSSTP_for_NOTIFY(L"obu", L"OnWebsiteStay", refs);
 		}
 	}
 
 }
 
-/*
-list< list<string> >	gList;
-bool	read_dictionary(strvec& vec) {
-	gList.clear();
+bool	obu::load(const wstring& iBaseFolder) {
 
-	strvec::iterator i=vec.begin();
-	while ( i!=vec.end() ) {
-
-		// 空行スキップ
-		while ( i->empty() )
-			if ( ++i == vec.end() )
-				return	!gList.empty();
-
-		gList.push_back( list<string>() );
-		list<string>::iterator j=gList.back();
-		while ( i!=vec.end() && !i->empty() ) {
-		}
-	} while ( i!=vec.end() );
-	// 空行区切りのlist<multimap<string, string> >
-}
-*/
-
-bool	Saori::load(const string& iBaseFolder) {
-
-	/*strvec	vec;
-	if ( !strvec_from_file(vec, iBaseFolder+"\\obu.txt") )
-		return	false;*/
-
-	// コメント削除
-	//strvec::iterator i=vec.begin();
-
-	//read_dictionary(vec);
 	g_pBrowserInfo = new CBrowserInfo;
 
 	gTimerEventID = ::SetTimer(NULL, NULL, 1000/FREQ_RATE, TimerProc);
@@ -105,72 +74,73 @@ bool	Saori::load(const string& iBaseFolder) {
 	return true;
 }
 
-bool	Saori::unload() {
+bool	obu::unload() {
 	Locker	locker(gCS);
 	if ( gTimerEventID != 0 )
 		::KillTimer(NULL, gTimerEventID);
 
 	delete g_pBrowserInfo;
+	g_pBrowserInfo = NULL;
 
 	return true;
 }
 
 
-int	Saori::request(deque<string>& iArguments, string& oResult, deque<string>& oValues) {
+SRV	obu::request(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {
 	Locker	locker(gCS);
 
 	if ( iArguments.empty() ) {
-		return	400;
+		return	SRV(400);
 	}
 	
-	std::string argCmd = iArguments[0];
-	std::transform(argCmd.begin(), argCmd.end(), argCmd.begin(), tolower);
+	wstring argCmd = iArguments[0];
+	std::transform(argCmd.begin(), argCmd.end(), argCmd.begin(), towlower);
 
-	if ( argCmd=="setEvent" && iArguments.size()==2 ) {
+	wstring	result;
+	if ( argCmd==L"setEvent" && iArguments.size()==2 ) {
 		//gFrequency = stoi_internal(iArguments[1]);
 	}
-	else if ( argCmd=="setfrequency" && iArguments.size()==2 ) {
+	else if ( argCmd==L"setfrequency" && iArguments.size()==2 ) {
 		gFrequency = stoi_internal(iArguments[1])*FREQ_RATE;
 	}
-	else if ( argCmd=="getfrequency" ) {
-		oResult = itos(gFrequency/FREQ_RATE);
+	else if ( argCmd==L"getfrequency" ) {
+		result = itos(gFrequency/FREQ_RATE);
 	}
-	else if ( argCmd=="geturllist" ) {
+	else if ( argCmd==L"geturllist" ) {
 		std::vector< str_pair >	URL;
 		if ( !g_pBrowserInfo->GetMulti(URL) )
-			return	204;
-		oResult = URL[0].first;
+			return	SRV(204);
+		result = URL[0].first;
 
 		for ( UINT i = 0 ; i < URL.size() ; ++i ) {
 			oValues.push_back(URL[i].first);
 		}
 	}
-	else if ( argCmd=="gettitlelist" ) {
+	else if ( argCmd==L"gettitlelist" ) {
 		std::vector< str_pair >	URL;
 		if ( !g_pBrowserInfo->GetMulti(URL) )
-			return	204;
-		oResult = URL[0].second;
+			return	SRV(204);
+		result = URL[0].second;
 
 		for ( UINT i = 0 ; i < URL.size() ; ++i ) {
 			oValues.push_back(URL[i].second);
 		}
 	}
-	else if ( argCmd=="geturl" ) {
-		string	URL, Title;
+	else if ( argCmd==L"geturl" ) {
+		wstring	URL, Title;
 		if ( !g_pBrowserInfo->Get(URL, Title) )
-			return	204;
-		oResult = URL;
+			return	SRV(204);
+		result = URL;
 	}
-	else if ( argCmd=="gettitle" ) {
-		string	URL, Title;
+	else if ( argCmd==L"gettitle" ) {
+		wstring	URL, Title;
 		if ( !g_pBrowserInfo->Get(URL, Title) )
-			return	204;
-		oResult = Title;
+			return	SRV(204);
+		result = Title;
 	}
 	else {
-		return	400;
+		return	SRV(400);
 	}
 
-	return	200;
+	return	SRV(result);
 }
-

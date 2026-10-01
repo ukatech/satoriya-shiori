@@ -15,11 +15,11 @@
 #endif
 ////////////////////////////////////////
 
-extern bool readSakuraFMO(std::map<string, strmap>& oSakuraFMOMap);
+extern bool readSakuraFMO(std::map<wstring, strmap>& oSakuraFMOMap);
 
 bool direct_sstp(
-	const string& i_script,
-	const string& i_client_name,
+	const wstring& i_script,
+	const wstring& i_client_name,
 	HWND i_client_window)
 {
 	SakuraFMO	fmo;
@@ -28,23 +28,24 @@ bool direct_sstp(
 		return	false;
 	}
 
-	string request = string() +
-		"SEND SSTP/1.1" + CRLF +
-		"Sender: " + i_client_name + CRLF +
-		"HWnd: " + itos((int)i_client_window) + CRLF +
-		"Charset: Shift_JIS" + CRLF +
-		"Script: " + i_script + CRLF +
-		"Option: notranslate" + CRLF +
+	wstring request = wstring() +
+		L"SEND SSTP/1.1" + CRLF +
+		L"Charset: UTF-8" + CRLF +
+		L"Sender: " + i_client_name + CRLF +
+		L"HWnd: " + itos((int)i_client_window) + CRLF +
+		L"Script: " + i_script + CRLF +
+		L"Option: notranslate" + CRLF +
 		CRLF;
 
 	COPYDATASTRUCT cds;
 	cds.dwData = 9801; // ‚Å‚¢‚¢‚Ì‚©‚È
-	cds.cbData = request.size();
-	cds.lpData = (LPVOID)request.c_str();
+	const std::string request_bytes = WtoUTF8(request);
+	cds.cbData = request_bytes.size();
+	cds.lpData = (LPVOID)request_bytes.c_str();
 
-	for( std::map<string, strmap>::iterator i=fmo.begin() ; i!=fmo.end() ; ++i )
+	for( std::map<wstring, strmap>::iterator i=fmo.begin() ; i!=fmo.end() ; ++i )
 	{
-		HWND host_window = (HWND)atoi(i->second["hwnd"].c_str());
+		HWND host_window = (HWND)_wtoi(i->second[L"hwnd"].c_str());
 		if ( host_window == NULL )
 		{
 			continue;

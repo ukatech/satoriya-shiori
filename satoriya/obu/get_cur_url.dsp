@@ -42,7 +42,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /MT /W3 /GX /O2 /I "..\_\\" /D "_CONSOLE" /D "WIN32" /D "NDEBUG" /D "_MBCS" /D WINVER=0x0400 /YX /FD /c
+# ADD CPP /nologo /MT /W3 /GX /O2 /I "..\_" /D "_CONSOLE" /D "WIN32" /D "NDEBUG" /D "UNICODE" /D "_UNICODE" /D WINVER=0x0500 /D _WIN32_WINNT=0x0500 /D _WIN32_IE=0x0500 /D "STRICT" /FD /c
 # ADD BASE RSC /l 0x411 /d "NDEBUG"
 # ADD RSC /l 0x411 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -66,7 +66,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I "..\_\\" /D "_CONSOLE" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D WINVER=0x0400 /YX /FD /GZ /c
+# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I "..\_" /D "_CONSOLE" /D "WIN32" /D "_DEBUG" /D "UNICODE" /D "_UNICODE" /D WINVER=0x0500 /D _WIN32_WINNT=0x0500 /D _WIN32_IE=0x0500 /D "STRICT" /FD /GZ /c
 # ADD BASE RSC /l 0x411 /d "_DEBUG"
 # ADD RSC /l 0x411 /d "_DEBUG"
 BSC32=bscmake.exe

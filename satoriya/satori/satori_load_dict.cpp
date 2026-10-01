@@ -25,33 +25,33 @@
 
 struct satori_unit
 {
-	string typemark;
-	string name;
-	string condition;
+	wstring typemark;
+	wstring name;
+	wstring condition;
 	strvec body;
 };
 #ifdef _DEBUG
-std::ostream& operator<<(std::ostream& o, const satori_unit& su)
+std::wostream& operator<<(std::wostream& o, const satori_unit& su)
 {
-	o << su.typemark << "/" << su.name << "/" << su.condition << std::endl;
+	o << su.typemark << L"/" << su.name << L"/" << su.condition << std::endl;
 	o << su.body;
 	return o;
 }
 #endif
 
 static void lines_to_units(
-	const std::vector<string>& i_lines,
-	const std::vector<string>& i_typemarks,
-	const string& i_name_cond_delimiter,
+	const std::vector<wstring>& i_lines,
+	const std::vector<wstring>& i_typemarks,
+	const wstring& i_name_cond_delimiter,
 	std::vector<satori_unit>& o_units)
 {
-	std::vector<string>::const_iterator line_it = i_lines.begin();
+	std::vector<wstring>::const_iterator line_it = i_lines.begin();
 	for ( ; line_it != i_lines.end() ; ++line_it)
 	{
 		//cout << *line_it << std::endl;
 
 		// 行頭にtypemarksのいずれかが出現しているか探す
-		std::vector<string>::const_iterator mark_it = i_typemarks.begin();
+		std::vector<wstring>::const_iterator mark_it = i_typemarks.begin();
 		for ( ; mark_it != i_typemarks.end() ; ++mark_it) 
 		{
 			if ( line_it->compare(0, mark_it->size(), mark_it->c_str()) ==0 )
@@ -66,8 +66,8 @@ static void lines_to_units(
 			satori_unit unit;
 			unit.typemark = *mark_it;
 			
-			const char* name = line_it->c_str() + mark_it->size();
-			const char* delimiter = strstr_hz(name, i_name_cond_delimiter.c_str());
+			const wchar_t* name = line_it->c_str() + mark_it->size();
+			const wchar_t* delimiter = strstr_hz(name, i_name_cond_delimiter.c_str());
 			if ( delimiter==NULL )
 			{
 				unit.name.assign(name);
@@ -124,41 +124,41 @@ static bool pre_process(
 	)
 {
 	int	kakko_nest_count=0;	// "（" のネスト数。1以上の場合は改行を無効化する。
-	string	accumulater="";	// 行あきゅむれーた
+	wstring	accumulater=L"";	// 行あきゅむれーた
 	int	line_number=1;
 	for ( strvec::const_iterator fi=in.begin() ; fi!=in.end() ; ++fi, ++line_number )
 	{
-		const char* p=fi->c_str();
+		const wchar_t* p=fi->c_str();
 		bool	escape = false;
 
 		// カッコ内の場合、行頭のタブは無視する。
 		if ( kakko_nest_count>0 )
-			while ( *p=='\t' )
+			while ( *p==L'\t' )
 				++p;
 
 		// 一行（物理行）に対する処理
-		while ( *p!='\0' )
+		while ( *p!=L'\0' )
 		{
-			string	c=get_a_chr(p);	// 全角半角問わず一文字取得。
+			wstring	c=get_a_chr(p);	// 全角半角問わず一文字取得。
 
 			if ( escape ) 
 			{
-				accumulater += (c=="φ") ? c : io_escaper.insert(c);
+				accumulater += (c==L"φ") ? c : io_escaper.insert(c);
 				escape = false;
 			}
 			else 
 			{
-				if ( c=="φ" ) 
+				if ( c==L"φ" ) 
 				{
 					escape = true;
 					continue;
 				}
-				if ( c=="＃" )
+				if ( c==L"＃" )
 					break;	// 行終了
 
-				if ( c=="（" )
+				if ( c==L"（" )
 					++kakko_nest_count;
-				else if (  c=="）" && kakko_nest_count>0 )
+				else if (  c==L"）" && kakko_nest_count>0 )
 					--kakko_nest_count;
 
 				accumulater += c;
@@ -181,7 +181,7 @@ static bool pre_process(
 			// 一行追加
 			out.push_back(accumulater);
 			//GetSender().sender() << line_number << " [" << accumulater << "]" << std::endl;
-			accumulater="";
+			accumulater=L"";
 		}
 		else if ( line_number == in.size() ) 
 		{
@@ -192,34 +192,35 @@ static bool pre_process(
 	return true;
 }
 
-string	Satori::SentenceToSakuraScriptExec_with_PreProcess(const strvec& i_vec)
+wstring	Satori::SentenceToSakuraScriptExec_with_PreProcess(const strvec& i_vec)
 {
 	strvec vec;
 	pre_process(i_vec, vec, m_escaper, replace_before_dic);
+	reset_call_budget();	// リクエストの外（さとりて）から呼ばれても数え直す
 	return SentenceToSakuraScriptExec(vec);
 }
 
 // .txtと.satの両方がくるので、新しい方だけを読み込む。
-bool Satori::select_dict_and_load_to_vector(const string& iFileName, strvec& oFileBody, bool warnFileName)
+bool Satori::select_dict_and_load_to_vector(const wstring& iFileName, strvec& oFileBody, bool warnFileName, CharactorSet cs)
 {
-	string txtfile = set_extention(iFileName, dic_load_ext);
-	string satfile = set_extention(iFileName, "sat");
+	wstring txtfile = set_extention(iFileName, dic_load_ext);
+	wstring satfile = set_extention(iFileName, L"sat");
 
-	string realext = get_extention(iFileName);
+	wstring realext = get_extention(iFileName);
 
-	bool FileExist(const string& f);
+	bool FileExist(const wstring& f);
 	bool decodeMe = false;
-	string file;
+	wstring file;
 
 	//SAT / TXT
-	if ( realext == "sat" ) {
+	if ( realext == L"sat" ) {
 		if ( FileExist(satfile.c_str()) ) {
 			file = satfile;
 			decodeMe = true;
 		}
 		else {
 			if ( warnFileName ) {
-				GetSender().sender() << "  " << satfile << "is not exist." << std::endl;
+				GetSender().sender() << L"  " << satfile << L"is not exist." << std::endl;
 			}
 			file = txtfile;
 		}
@@ -230,97 +231,89 @@ bool Satori::select_dict_and_load_to_vector(const string& iFileName, strvec& oFi
 		}
 		else {
 			if ( warnFileName ) {
-				GetSender().sender() << "  " << txtfile << "is not exist." << std::endl;
+				GetSender().sender() << L"  " << txtfile << L"is not exist." << std::endl;
 			}
 			file = satfile;
 			decodeMe = true;
 		}
 	}
 
-	GetSender().sender() << "  loading " << get_file_name(file);
-	if ( !strvec_from_file(oFileBody, file) )
+	GetSender().sender() << L"  loading " << get_file_name(file);
+	std::string bytes;
+	if ( !bytes_from_file(bytes, file) )
 	{
-		GetSender().sender() << "... failed.";
+		GetSender().sender() << L"... failed.";
 		return	false;
 	}
 	GetSender().sender() << std::endl;
 
+	std::vector<std::string> lines;
+	split_lines(bytes, lines);
+
 	if ( decodeMe ) {
-		// 暗号化を解除
-		for ( strvec::iterator it=oFileBody.begin() ; it!=oFileBody.end() ; ++it )
+		// 暗号化を解除（バイト列の並べ替えなので文字コード変換の前に行う）
+		for ( std::vector<std::string>::iterator it=lines.begin() ; it!=lines.end() ; ++it )
 		{
 			*it = decode( decode(*it) );
 		}
 	}
 
+	// 文字コードを変換。csがCS_NULLなら判定する。
+	lines_to_strvec(lines, oFileBody, cs);
+
 	return true;
 }
 
-static bool satori_anchor_compare(const string &lhs,const string &rhs)
+static bool satori_anchor_compare(const wstring &lhs,const wstring &rhs)
 {
 	return lhs.size() > rhs.size();
 }
 
 // 辞書を読み込む。
-bool Satori::LoadDictionary(const string& iFileName,bool warnFileName,bool isUTF8) 
+bool Satori::LoadDictionary(const wstring& iFileName,bool warnFileName,bool isUTF8) 
 {
 	// ファイルからvectorへ読み込む。
 	// その際、同ファイル名で拡張子が.txt(または指定拡張子)と.satのファイルの日付を比較し、新しい方だけを採用する。
 	strvec	file_vec;
-	if ( !select_dict_and_load_to_vector(iFileName, file_vec, warnFileName) )
+	// isUTF8が真ならUTF-8、偽なら文字コードを判定して読む
+	if ( !select_dict_and_load_to_vector(iFileName, file_vec, warnFileName, isUTF8 ? CS_UTF8 : CS_NULL) )
 	{
 		return false;
 	}
 
-	if ( isUTF8 ) {
-		convert_utf8_to_sjis_strvec(file_vec);
-	}
-	else if ( is_utf8_strvec(file_vec) ) {
-#ifdef POSIX
-	     GetSender().sender() <<
-		    iFileName << std::endl << std::endl <<
-		    "It is highly possible that you tried to read a dictionary whose character code is UTF-8." << satori::endl;
-#else
-		GetSender().sender() <<
-			iFileName + "\n\n"
-			"文字コードがUTF-8の辞書のようです。変換します。" << satori::endl;
-#endif
-		convert_utf8_to_sjis_strvec(file_vec);
-	}
-
-	bool	is_for_anchor = compare_head(get_file_name(iFileName), dic_load_prefix + "Anchor");
+	bool	is_for_anchor = compare_head(get_file_name(iFileName), dic_load_prefix + L"Anchor");
 
 	strvec preprocessed_vec;
 	if ( false == pre_process(file_vec, preprocessed_vec, m_escaper, replace_before_dic) )
 	{
 #ifdef POSIX
 	     GetSender().errsender() <<
-		    "syntax error - SATORI : " << iFileName << std::endl <<
+		    L"syntax error - SATORI : " << iFileName << std::endl <<
 		    std::endl <<
-		    "There are some mismatched parenthesis." << std::endl <<
-		    "The dictionary is not loaded correctly." << std::endl <<
+		    L"There are some mismatched parenthesis." << std::endl <<
+		    L"The dictionary is not loaded correctly." << std::endl <<
 		    std::endl <<
-		    "If you want to display parenthesis independently," << std::endl <<
-		    "use \"phi\" symbol to escape it." << satori::endl;
+		    L"If you want to display parenthesis independently," << std::endl <<
+		    L"use \"phi\" symbol to escape it." << satori::endl;
 #else
-		GetSender().errsender() << iFileName + "\n\n"
-			"\n"
-			"カッコの対応関係が正しくない部分があります。" "\n"
-			"辞書は正しく読み込まれていません。" "\n"
-			"\n"
-			"カッコを単独で表示する場合は　φ（　と記述してください。" << satori::endl;
+		GetSender().errsender() << iFileName + L"\n\n"
+			L"\n"
+			L"カッコの対応関係が正しくない部分があります。" L"\n"
+			L"辞書は正しく読み込まれていません。" L"\n"
+			L"\n"
+			L"カッコを単独で表示する場合は　φ（　と記述してください。" << satori::endl;
 #endif
 	}
 
-	static std::vector<string> typemarks;
+	static std::vector<wstring> typemarks;
 	if ( typemarks.empty() )
 	{
-		typemarks.push_back("＊");
-		typemarks.push_back("＠");
+		typemarks.push_back(L"＊");
+		typemarks.push_back(L"＠");
 	}
 
 	std::vector<satori_unit> units;
-	lines_to_units(preprocessed_vec, typemarks, "\t", units); // 単語群名/トーク名と採用条件式の区切り
+	lines_to_units(preprocessed_vec, typemarks, L"\t", units); // 単語群名/トーク名と採用条件式の区切り
 
 
 	for ( std::vector<satori_unit>::iterator i=units.begin() ; i!=units.end() ; ++i)
@@ -336,7 +329,7 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName,bool isUTF
 
 		m_escaper.unescape(i->name);
 		
-		if ( i->typemark == "＊" )
+		if ( i->typemark == L"＊" )
 		{
 			// トークの場合
 			if ( is_for_anchor ) {
@@ -347,7 +340,7 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName,bool isUTF
 			talks.add_element(i->name, i->body, i->condition);
 
 #ifdef _DEBUG
-			GetSender().sender() << "＊" << i->name << " " << i->condition << std::endl;
+			GetSender().sender() << L"＊" << i->name << L" " << i->condition << std::endl;
 #endif
 		}
 		else
@@ -360,7 +353,7 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName,bool isUTF
 			}
 
 #ifdef _DEBUG
-			GetSender().sender() << "＠" << i->name << " " << i->condition << std::endl;
+			GetSender().sender() << L"＠" << i->name << L" " << i->condition << std::endl;
 #endif
 		}
 
@@ -371,7 +364,7 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName,bool isUTF
 	}
 
 	//GetSender().sender() << "　　　talk:" << talks.count_all() << ", word:" << words.count_all() << std::endl;
-	GetSender().sender() << "... ok." << std::endl;
+	GetSender().sender() << L"... ok." << std::endl;
 	return	true;
 }
 
@@ -380,37 +373,34 @@ bool Satori::LoadDictionary(const string& iFileName,bool warnFileName,bool isUTF
 #  include <dirent.h>
 #endif
 
-void list_files(string i_path, std::vector<string>& o_files)
+void list_files(wstring i_path, std::vector<wstring>& o_files)
 {
-	unify_dir_char(i_path); // \\と/を環境に応じて適切な方に統一
+	i_path = unify_dir_char(i_path); // \\と/を環境に応じて適切な方に統一
 #ifdef POSIX
 
-	DIR* dh = opendir(i_path.c_str());
+	DIR* dh = opendir(WtoUTF8(i_path).c_str());
 	if (dh == NULL)
 	{
-	    GetSender().sender() << "file not found." << std::endl;
+	    GetSender().sender() << L"file not found." << std::endl;
+	    return;
 	}
 	while (1) {
 	    struct dirent* ent = readdir(dh);
 	    if (ent == NULL) {
 		break;
 	    }
-#if defined(__WINDOWS__) || defined(__CYGWIN__)
-	    string fname(ent->d_name);
-#else
-//	    string fname(ent->d_name, ent->d_namlen);
-	    string fname(ent->d_name);
-#endif
+	    wstring fname = UTF8toW(ent->d_name);
 		o_files.push_back(fname);
 	}
 	closedir(dh);
 #else /* POSIX */
 	HANDLE			hFIND;	// 検索ハンドル
 	WIN32_FIND_DATA	fdFOUND;// 見つかったファイルの情報
-	hFIND = ::FindFirstFile((i_path+"*.*").c_str(), &fdFOUND);
+	hFIND = ::FindFirstFile((i_path+L"*.*").c_str(), &fdFOUND);
 	if ( hFIND == INVALID_HANDLE_VALUE )
 	{
-		GetSender().sender() << "file not found." << std::endl;
+		GetSender().sender() << L"file not found." << std::endl;
+		return;
 	}
 
 	do
@@ -425,29 +415,32 @@ void list_files(string i_path, std::vector<string>& o_files)
 
 
 
-int Satori::LoadDicFolder(const string& i_base_folder)
+int Satori::LoadDicFolder(const wstring& i_base_folder)
 {
-	GetSender().sender() << "LoadDicFolder(" << i_base_folder << ")" << std::endl;
-	std::vector<string> files;
+	GetSender().sender() << L"LoadDicFolder(" << i_base_folder << L")" << std::endl;
+	std::vector<wstring> files;
 	list_files(i_base_folder, files);
 
 	int count = 0;
 	
-	string ext = ".";
+	wstring ext = L".";
 	ext += dic_load_ext;
 	
-	for (std::vector<string>::const_iterator it=files.begin() ; it!=files.end() ; ++it)
+	for (std::vector<wstring>::const_iterator it=files.begin() ; it!=files.end() ; ++it)
 	{
-		const int len = it->size();
+		const wstring::size_type len = it->size();
 		if ( len < dic_load_prefix.length() + (ext.length() < 4 ? ext.length() : 4)  ) { continue; } // 最短ファイル名は辞書接頭辞 + min(辞書拡張子, ".sat")
 		if ( it->compare(0,dic_load_prefix.length(),dic_load_prefix.c_str()) != 0 ) { continue; }
-		if ( it->compare(len-ext.length(),ext.length(),ext.c_str()) != 0 && it->compare(len-4,4,".sat") != 0 ) { continue; }
+		// 名前が拡張子より短いと末尾の位置が負になるので、長さを確かめてから比べる
+		const bool is_ext = ( len >= ext.length() && it->compare(len-ext.length(),ext.length(),ext.c_str()) == 0 );
+		const bool is_sat = ( len >= 4 && it->compare(len-4,4,L".sat") == 0 );
+		if ( !is_ext && !is_sat ) { continue; }
 
 		if ( LoadDictionary(i_base_folder + *it,true,is_utf8_dic) ) {
 			++count;
 		}
 	}
 
-	GetSender().sender() << "ok." << std::endl;
+	GetSender().sender() << L"ok." << std::endl;
 	return count;
 }

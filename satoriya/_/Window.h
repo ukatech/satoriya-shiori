@@ -187,8 +187,8 @@ public:
 	BOOL	SetPos(HWND hwndInsertAfter, int x, int y, int cx, int cy, UINT fuFlags) { return ::SetWindowPos(mWnd, hwndInsertAfter, x, y, cx, cy, fuFlags); }
 	RECT	GetClientRect() { RECT rc; ::GetClientRect(mWnd, &rc); return rc; }
 
-	void	SetText(const char* format, ... );
-	int		MesBox(UINT style, const char* title, const char* format, ... );
+	void	SetText(const wchar_t* format, ... );
+	int		MesBox(UINT style, const wchar_t* title, const wchar_t* format, ... );
 };
 
 

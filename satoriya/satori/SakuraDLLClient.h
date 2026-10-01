@@ -15,33 +15,37 @@ public:
 
 	// はじめるよ
 	virtual bool load(
-		const string& i_sender,
-		const string& i_charset,
-		const string& i_protocol,
-		const string& i_protocol_version,
-		const string& i_work_folder,	// 作業ディレクトリ。DLL::loadの引数。最後に \ または / が必要
-		const string& i_dll_fullpath);	// DLLのフルパス
+		const wstring& i_sender,
+		const wstring& i_charset,
+		const wstring& i_protocol,
+		const wstring& i_protocol_version,
+		const wstring& i_work_folder,	// 作業ディレクトリ。DLL::loadの引数。最後に \ または / が必要
+		const wstring& i_dll_fullpath);	// DLLのフルパス
 
 	// おわるよ
 	virtual void unload();
 
 	// バージョン取得。GET Versionして"SAORI/1.0" みたいのを返す。
-	virtual string get_version(const string& i_security_level);
+	virtual wstring get_version(const wstring& i_security_level);
+
+	// 直前のget_versionの応答に、空でないCharsetヘッダがあったか。
+	bool version_reply_has_charset() const { return m_version_reply_has_charset; }
 
 	// 素のリクエスト文字列を送り、素のレスポンス文字列を受け取る。
-	virtual string request(const string& i_request_string);
+	virtual wstring request(const wstring& i_request_string);
 
 	// リクエストを送り、レスポンスを受け取る。戻り値はリターンコード。
 	virtual int request(
-		const string& i_command,
+		const wstring& i_command,
 		const strpairvec& i_data,
 		strpairvec& o_data);
 
 private:
-	string m_sender;
-	string m_charset;
-	string m_protocol;
-	string m_protocol_version;
+	wstring m_sender;
+	wstring m_charset;
+	wstring m_protocol;
+	wstring m_protocol_version;
+	bool m_version_reply_has_charset;
 
 #ifdef POSIX
 	void*   mModule;
@@ -51,6 +55,7 @@ private:
 #else
 	HMODULE	mModule;
 	BOOL	(*mLoad)(HGLOBAL h, long len);
+	BOOL	(*mLoadU)(HGLOBAL h, long len);	// UTF-8版load
 	HGLOBAL	(*mRequest)(HGLOBAL h, long* len);
 	BOOL	(*mUnload)();
 #endif
