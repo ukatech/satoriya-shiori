@@ -38,6 +38,7 @@ Sender::Sender()
 
 	is_do_auto_initialize = false;
 	nest_object::sm_nest = 0;
+	sm_loghandler = NULL;
 #ifndef POSIX
 	sm_receiver_window = NULL;
 	sm_receiver_mode = SenderConst::MODE_RECEIVER;
@@ -87,6 +88,16 @@ void Sender::set_receiver_window(HWND hwnd)
 }
 #endif
 
+void Sender::set_loghandler(sender_loghandler handler)
+{
+	sm_loghandler = handler;
+
+	//YAYAと同じく、最初に文字コードを通知する（文字列はUTF-16で渡す）
+	if ( sm_loghandler ) {
+		send_to_window(SenderConst::E_UTF8,L"");
+	}
+}
+
 bool Sender::reinit(bool isEnable)
 {
 	if(isEnable)
@@ -107,6 +118,8 @@ bool Sender::reinit(bool isEnable)
 bool Sender::auto_init()
 {
 	if ( !sm_sender_flag ) { return false; }
+
+	if ( sm_loghandler ) { return true; }
 
 	if ( sm_receiver_window==NULL )
 	{
@@ -171,6 +184,19 @@ bool Sender::send(int mode,const wchar_t* iString)
 
 bool Sender::send_to_window(const int mode,const wchar_t* theBuf)
 {
+	// コールバックが設定されていればウィンドウには送らない（YAYAと同じ）
+	if ( sm_loghandler ) {
+		if ( !sm_sender_flag ) { return false; }
+
+		// ログ行には改行をつける。E_END以降は制御用なのでそのまま
+		std::wstring wstr = theBuf;
+		if ( mode < SenderConst::E_END ) {
+			wstr += L"\n";
+		}
+		sm_loghandler(wstr.c_str(), mode, 0);
+		return true;
+	}
+
 #ifdef POSIX
 	fputs(WtoUTF8(theBuf).c_str(), stderr);
 	fputs("\n", stderr);
@@ -396,8 +422,11 @@ void Sender::flush_latest_event()
 
 void Sender::flush()
 {
-#ifndef POSIX
+#ifdef POSIX
+	if (sm_loghandler && sm_sender_flag)
+#else
 	if (auto_init())
+#endif
 	{
 		for (std::list<delay_text_list>::iterator it = delay_send_list.begin(); it != delay_send_list.end(); it++)
 		{
@@ -407,7 +436,6 @@ void Sender::flush()
 			}
 		}
 	}
-#endif // not(POSIX)
 
 	//1つだけ残してパージ
 	if ( ! delay_send_list.empty() ) {

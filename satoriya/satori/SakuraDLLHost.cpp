@@ -105,6 +105,16 @@ extern "C" __declspec(dllexport) BOOL __cdecl logsend(long hwnd)
 }
 #endif
 
+// ログをコールバックで受け取る（YAYA互換）。設定中は logsend のウィンドウには送らない
+#ifdef POSIX
+extern "C" void Set_loghandler(void (*loghandler)(const wchar_t *str, int mode, int id))
+#else
+extern "C" __declspec(dllexport) void __cdecl Set_loghandler(void (*loghandler)(const wchar_t *str, int mode, int id))
+#endif
+{
+	GetSender().set_loghandler(loghandler);
+}
+
 #ifdef POSIX
 extern "C" int satori_unload(int id)
 {

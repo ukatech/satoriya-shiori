@@ -31,7 +31,8 @@ namespace SenderConst {
 		E_E = 2,	/* エラー */
 		E_W = 3,	/* ワーニング */
 		E_N = 4,	/* 注記 */
-		E_END = 5,	/* ログの終了 */
+		E_J = 5,	/* その他 */
+		E_END = 6,	/* ログの終了 */
 		E_SJIS = 16,	/* マルチバイト文字コード＝SJIS */
 		E_UTF8 = 17,	/* マルチバイト文字コード＝UTF-8 */
 		E_DEFAULT = 32,	/* マルチバイト文字コード＝OSデフォルトのコード */
@@ -101,6 +102,9 @@ class Sender;
 
 extern Sender& GetSender();
 
+// Set_loghandler で渡されるログのコールバック（YAYA互換）
+typedef void (*sender_loghandler)(const wchar_t *str, int mode, int id);
+
 class Sender
 {
 #ifdef POSIX
@@ -109,6 +113,9 @@ class Sender
 	// 出力先ウィンドウ
 	HWND sm_receiver_window;
 	int  sm_receiver_mode;
+
+	// 設定されていればウィンドウの代わりにこれを呼ぶ
+	sender_loghandler sm_loghandler;
 
 	sender_stream	send_stream;
 	error_stream	err_stream;
@@ -158,6 +165,8 @@ public:
 	// チェックツール（tama/tamac）が logsend で渡したウィンドウを送信先にする
 	void set_receiver_window(HWND hwnd);
 #endif
+	// ログをコールバックで受け取る（YAYAのSet_loghandler互換、NULLで解除）
+	void set_loghandler(sender_loghandler handler);
 	bool send(int mode,const wchar_t* iString);
 
 	void validate(bool i_flag=true) { sm_sender_flag = i_flag; }
