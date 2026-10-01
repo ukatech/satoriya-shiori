@@ -3,7 +3,7 @@
 
 #include	<vector>
 #include	<cassert>
-using std::string;
+using std::wstring;
 
 template<class T>
 class simple_stack : public std::vector<T>
@@ -36,11 +36,11 @@ public:
 
 #ifdef	_OSTREAM_
 template<class T>
-inline std::ostream& operator<<(std::ostream& stream, simple_stack<T>& ary) {
+inline std::wostream& operator<<(std::wostream& stream, simple_stack<T>& ary) {
 	for ( int i=0 ; i<ary.size() ; i++ ) {
 		stream << (ary[i]);
 		if ( i < ary.size()-1 )
-			stream << ", ";
+			stream << L", ";
 	}
 	return	stream;
 }

@@ -13,17 +13,17 @@ public:
 	
 	// 素のリクエスト文字列を送り、素のレスポンス文字列を受けとる。
 	// 実装は通信手段による。
-	virtual string request(const string& i_request_string)=0;
+	virtual wstring request(const wstring& i_request_string)=0;
 
 	// リクエストを送り、レスポンスを受け取る。戻り値はリターンコード。
 	virtual int request(
-		const string& i_protocol,
-		const string& i_protocol_version,
-		const string& i_command,
+		const wstring& i_protocol,
+		const wstring& i_protocol_version,
+		const wstring& i_command,
 		const strpairvec& i_data,
 		
-		string& o_protocol,
-		string& o_protocol_version,
+		wstring& o_protocol,
+		wstring& o_protocol_version,
 		strpairvec& o_data);
 };
 

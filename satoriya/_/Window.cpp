@@ -49,7 +49,7 @@ LRESULT	Window::WindowProcedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 	// マウスホイール対応
 	if ( message == msgMOUSEWHEEL ) {
 		message = WM_MOUSEWHEEL;
-		DbgStr("MouseWheel fwKeys:%04x, zDelta:%d, xPos:%d, yPos:%d",
+		DbgStr(L"MouseWheel fwKeys:%04x, zDelta:%d, xPos:%d, yPos:%d",
 			LOWORD(wParam), (short)HIWORD(wParam),
 			(short)LOWORD(lParam), (short)HIWORD(lParam) );
 	}
@@ -172,21 +172,23 @@ bool	Window::OnMouseWheel(WORD fwKeys, short zDelta, short xPos, short yPos) {
 	return	false;
 }
 
-void	Window::SetText(const char* format, ... ) {
-	char	buf[1024];
+void	Window::SetText(const wchar_t* format, ... ) {
+	wchar_t	buf[1024];
 	va_list	argptr;
 	va_start(argptr, format);
-	_vsnprintf(buf, 1023, format, argptr);
+	_vsnwprintf(buf, 1023, format, argptr);
 	va_end(argptr);
+	buf[1023] = L'\0';	// 入りきらないときは終端が付かない
 	::SetWindowText(mWnd, buf);
 }
 
-int		Window::MesBox(UINT style, const char* title, const char* format, ... ) {
-	char	buf[1024];
+int		Window::MesBox(UINT style, const wchar_t* title, const wchar_t* format, ... ) {
+	wchar_t	buf[1024];
 	va_list	argptr;
 	va_start( argptr, format );
-	_vsnprintf( buf, 1023, format, argptr );
+	_vsnwprintf( buf, 1023, format, argptr );
 	va_end( argptr );
+	buf[1023] = L'\0';	// 入りきらないときは終端が付かない
 	return	::MessageBox(mWnd, buf, title, style);
 }
 

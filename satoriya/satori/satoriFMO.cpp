@@ -14,7 +14,7 @@
 
 bool	Satori::updateGhostsInfo() {
 
-	if ( mExeFolder=="" )
+	if ( mExeFolder==L"" )
 	{
 		return	false;
 	}
@@ -27,21 +27,21 @@ bool	Satori::updateGhostsInfo() {
 
 	ghosts_info.clear();
 	ghosts_info.push_back( strmap() );
-	for( std::map<string, strmap>::iterator i=theSakuraFMO.begin() ; i!=theSakuraFMO.end() ; ++i ) {
+	for( std::map<wstring, strmap>::iterator i=theSakuraFMO.begin() ; i!=theSakuraFMO.end() ; ++i ) {
 		//ダミーを蹴る
-		if ( i->first.find("ssp_fmo_header_dummyentry") != string::npos ) { continue; }
-		if ( i->first.find("SSTPVIEWER-") != string::npos ) { continue; }
-		if ( i->first.find("SSSB") != string::npos ) { continue; }
+		if ( i->first.find(L"ssp_fmo_header_dummyentry") != wstring::npos ) { continue; }
+		if ( i->first.find(L"SSTPVIEWER-") != wstring::npos ) { continue; }
+		if ( i->first.find(L"SSSB") != wstring::npos ) { continue; }
 
 		strmap&	m = i->second;
 		bool	isSelfData = false;// 自分自身のデータか？
 
-		if ( m.find("ghostpath") != m.end() ) {
-			if ( stricmp((m["ghostpath"]+"ghost\\master\\").c_str(), mBaseFolder.c_str())==0 )
+		if ( m.find(L"ghostpath") != m.end() ) {
+			if ( _wcsicmp((m[L"ghostpath"]+L"ghost\\master\\").c_str(), mBaseFolder.c_str())==0 )
 				isSelfData = true;
 		}
 		else {
-			if ( stricmp(m["path"].c_str(), mExeFolder.c_str())==0 )
+			if ( _wcsicmp(m[L"path"].c_str(), mExeFolder.c_str())==0 )
 				isSelfData = true;
 		}
 

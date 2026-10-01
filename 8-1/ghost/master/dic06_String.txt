@@ -1,0 +1,168 @@
+
+＃　-----------------------------------------------------
+＃　
+＃　shiori互換dll『里々（さとり）』用辞書
+＃　
+＃　メニューのボタン名とか。 
+＃　ネットワーク更新の際のデータ置き場とか。 
+＃　おすすめ／ポータルなURLの一覧とか。 
+＃　
+＃　-----------------------------------------------------
+
+
+
+＠portalrootbutton.caption
+きほん(&P)
+
+＠recommendrootbutton.caption
+おすすめ(&R)
+
+＠kero.recommendbuttoncaption
+￥１のおすすめ(&R)
+
+＠updatebutton.caption
+オンラインアップデート(&U)
+ネットワーク更新(&U)
+
+＠vanishbutton.caption
+消滅(&F)
+アンインストール(&F)
+vanish(&F)
+
+＠readmebutton.caption
+現在のシェルについて(&R)
+取扱説明書(&R)
+Read me(&R)
+
+＠vanishbutton.visible
+1 
+＃消滅指示を表示するかどうか。1で表示、0で非表示（色が変わり選択できなくなる）です。
+
+
+＠homeurl
+
+＃ネットワーク更新時にアクセスするアドレス。
+＃フォルダ名を記述、最後に/をつけてください。例のような形になります。
+＃例）
+＃　＠homeurl
+＃　https://red_post.sakura.ne.jp/R_POST_and_KOMAINU/
+
+＠username
+（ユーザ名） 
+
+＊コメント
+
+　URL一覧は…… 
+
+　１行目がサイト名 
+　２行目がジャンプ先URL 
+　３行目がバナーURL（省略可） 
+　４行目以降はジャンプ時に表示される会話文（省略可） 
+
+
+＃＊sakura.recommendsites
+＃作者のサイト。ここを使わずに、sakura.portalsitesにまとめてしまうのも一つの方法。 
+＃http://～ 
+＃バナー（あれば） 
+
+
+＊sakura.recommendsites
+fiddle-de-dee
+http://fiddle-de-dee.sakura.ne.jp/
+：このパッケージの配布元です。
+：何かあったら連絡してやってな。
+
+＊sakura.recommendsites
+「Rポストと狛犬」配布ページ
+https://emily.shillest.net/specwiki/index.php?Wiz%E2%98%85%2F%EF%BC%B2%E3%83%9D%E3%82%B9%E3%83%88%E3%81%A8%E7%8B%9B%E7%8A%AC
+：たまには確認してね。
+：更新されてるかもしれないからな。
+
+＃＊sakura.portalsites
+＃-
+＃「-」といれることでリンクメニューに罫線を引くことができます。 
+
+
+＊sakura.portalsites
+伺かのあそびかたφ（FIRST GUIDEφ） 
+http://haka.sakura.ne.jp/guide/ 
+
+＊sakura.portalsites
+-
+
+＊sakura.portalsites
+何かゴーストセンター 
+http://ngc.sherry.jp/ 
+
+＊sakura.portalsites
+GHOST TOWN 
+http://ghosttown.mikage.jp/ 
+
+＊sakura.portalsites
+伺かチャット
+http://ukgkchat.saloon.jp/index.php?FrontPage
+伺かの話題のチャット。
+わからないことがあったら質問できるぞ。
+：ブラウザだけでも見られます。
+
+＊sakura.portalsites
+-
+
+＊sakura.portalsites
+SSP BUGTRAQ 
+https://ssp.shillest.net/ 
+推奨ベースウェア。
+
+
+CROW 
+http://crow.aqrs.jp/ 
+
+＊sakura.portalsites
+うさださくら 
+http://usada.sakura.vg/ 
+
+＊sakura.portalsites
+-
+
+＊sakura.portalsites
+里々φ/整備班カスタム
+https://ms.shillest.net/
+：現時点で更新されている里々です。
+
+
+＊sakura.portalsites
+-
+
+＊sakura.portalsites
+里々Wiki
+https://soliton.sub.jp/satori/
+：里々に関するＴｉｐがまとまっているような気がします。
+：うむ。
+
+＊sakura.portalsites
+postic
+http://navy.nm.land.to/post/
+：私たちにすでに適用されているサプリメントの元配布元です。
+：ややこしいことをしたいなら一読の価値ありだ。
+
+＊sakura.portalsites
+-
+
+＊sakura.portalsites
+ゴースト回覧板
+https://jbbs.shitaraba.net/computer/44300/
+
+
+＃＊sakura.recommendsites
+＃-
+＃http://
+＃
+
+＃＊kero.recommendsites
+＃-
+＃http://
+＃ソロゴーストであれば、kero側は必要ないことも。
+
+＃　φは直後の文字の「特殊性」を無効化します。
+＃　ここでは「…」がそのままでは「…\w3」に置き換えられてしまうのを防いでます。
+＃　他にも置き換えたくないカッコ　（　などに使えます。

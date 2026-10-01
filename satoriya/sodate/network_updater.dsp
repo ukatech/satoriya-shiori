@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Target_Dir ""
 MTL=midl.exe
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /MT /W3 /GX /O2 /Oy- /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /D "NO_ASM" /D "USE_ZIPMAIN" /YX /FD /c
+# ADD CPP /nologo /MT /W3 /GX /O2 /Oy- /I "..\_" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "UNICODE" /D "_UNICODE" /D WINVER=0x0500 /D _WIN32_WINNT=0x0500 /D _WIN32_IE=0x0500 /D "STRICT" /FD /c
 # ADD BASE RSC /l 0x411 /d "NDEBUG"
 # ADD RSC /l 0x411 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -68,7 +68,7 @@ LINK32=link.exe
 # PROP Target_Dir ""
 MTL=midl.exe
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "NO_ASM" /D "USE_ZIPMAIN" /YX /FD /GZ /c
+# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I "..\_" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "UNICODE" /D "_UNICODE" /D WINVER=0x0500 /D _WIN32_WINNT=0x0500 /D _WIN32_IE=0x0500 /D "STRICT" /FD /GZ /c
 # ADD BASE RSC /l 0x411 /d "_DEBUG"
 # ADD RSC /l 0x411 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -87,6 +87,14 @@ LINK32=link.exe
 # Begin Group "_"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\_\charset.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\_\charset.h
+# End Source File
 # Begin Source File
 
 SOURCE=..\_\File.cpp
@@ -144,74 +152,6 @@ SOURCE=..\_\Utilities.cpp
 SOURCE=..\_\Utilities.h
 # End Source File
 # End Group
-# Begin Group "zip"
-
-# PROP Default_Filter ""
-# Begin Group "win32"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=..\infozip\win32\nt.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\infozip\win32\win32.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\infozip\win32\win32zip.c
-# End Source File
-# End Group
-# Begin Source File
-
-SOURCE=..\infozip\crc32.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\infozip\crctab.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\infozip\crypt.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\infozip\deflate.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\infozip\fileio.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\infozip\globals.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\infozip\trees.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\infozip\ttyio.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\infozip\util.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\infozip\zip.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\infozip\zipfile.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\infozip\zipup.c
-# End Source File
-# End Group
 # Begin Source File
 
 SOURCE=.\backup.h
@@ -234,7 +174,7 @@ SOURCE=.\main.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\makeZip.h
+SOURCE=.\password.h
 # End Source File
 # Begin Source File
 

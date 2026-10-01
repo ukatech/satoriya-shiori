@@ -16,26 +16,23 @@
 using namespace std;
 
 
-void	error(const string& str);
+void	error(const wstring& str);
+// コンソールに出力
+void	console(const wstring& str);
 
 // 除外するファイル名
-extern	set<string>		deny_filename_set;
+extern	set<wstring>		deny_filename_set;
 
 // 対象ファイル一覧
-extern	list<string>	files;
+extern	list<wstring>	files;
 // filesをフォルダ別に分離格納
-extern	map<string, set<string> >	files_on_dir;	// dirname : filenames
+extern	map<wstring, set<wstring> >	files_on_dir;	// dirname : filenames
 
 // 環境設定
 extern	strmap	conf;
 // 作業フォルダ
-extern	string	base_folder;
+extern	wstring	base_folder;
 
-static const char byte_value_1[2] = {1,0};
-static const char byte_value_2[2] = {2,0};
-
-
-
-#include	"Sender.h"
-
+static const wchar_t byte_value_1[2] = {1,0};
+static const wchar_t byte_value_2[2] = {2,0};
 
