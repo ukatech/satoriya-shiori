@@ -12,34 +12,39 @@
 ////////////////////////////////////////
 
 int	SaoriHost::request(
-	const string& i_protocol,
-	const string& i_protocol_version,
-	const string& i_command,
+	const wstring& i_protocol,
+	const wstring& i_protocol_version,
+	const wstring& i_command,
 	const strpairvec& i_data,
 	
-	string& o_protocol,
-	string& o_protocol_version,
+	wstring& o_protocol,
+	wstring& o_protocol_version,
 	strpairvec& o_data)
 {
 	// 返すプロトコルは最初に決めておく
-	o_protocol = "SAORI";
-	o_protocol_version = "1.0";
+	o_protocol = L"SAORI";
+	o_protocol_version = L"1.0";
 
 	// SAORIであること。バージョンは最低たる1.0を満たしていれば良いので問わない
-	if ( i_protocol != "SAORI" ) { return 400; }
+	if ( i_protocol != L"SAORI" ) { return 400; }
 
 	// GET Versionならそのまま200を返す
-	if ( i_command == "GET Version" ) { return 200; }
+	if ( i_command == L"GET Version" ) { return 200; }
 	// それ以外のcommandは不正
-	if ( i_command != "EXECUTE" ) { return 400; }
+	if ( i_command != L"EXECUTE" ) { return 400; }
 
 	// 引数を Argument? に格納
-	std::deque<string> arguments;
+	std::deque<wstring> arguments;
+	m_is_secure = true;
 	for ( strpairvec::const_iterator it=i_data.begin() ; it!=i_data.end() ; ++it)
 	{
-		if ( it->first.compare(0, 8, "Argument") == 0 )
+		if ( it->first == L"SecurityLevel" && _wcsicmp(it->second.c_str(), L"external") == 0 )
 		{
-			const int n = atoi(it->first.c_str() + 8);
+			m_is_secure = false;
+		}
+		if ( it->first.compare(0, 8, L"Argument") == 0 )
+		{
+			const int n = _wtoi(it->first.c_str() + 8);
 			if ( n>=0 && n<65536 )
 			{
 				if ( arguments.size() <= n )
@@ -52,16 +57,15 @@ int	SaoriHost::request(
 	}
 
 	// SAORI実行
-	std::deque<string> values;
+	std::deque<wstring> values;
 	SRV	srv = request(arguments, values);
 
 	// 戻り値を解析＆格納
-	o_data.push_back( strpair("Charset", "Shift_JIS") );
-	o_data.push_back( strpair("Result", srv.mResultString) );
+	o_data.push_back( strpair(L"Result", srv.mResultString) );
 	int n=0;
-	for (std::deque<string>::const_iterator it=values.begin() ; it!=values.end() ; ++it)
+	for (std::deque<wstring>::const_iterator it=values.begin() ; it!=values.end() ; ++it)
 	{
-		o_data.push_back( strpair(string("Value") + itos(n++), *it) );
+		o_data.push_back( strpair(wstring(L"Value") + itos(n++), *it) );
 	}
 
 	return srv.mReturnCode;

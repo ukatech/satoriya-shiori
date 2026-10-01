@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "OBU_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /MT /W3 /GX /O2 /I "..\_\\" /D "_WINDOWS" /D "_USRDLL" /D "OBU_EXPORTS" /D "WIN32" /D "NDEBUG" /D "_MBCS" /D WINVER=0x0400 /YX /FD /c
+# ADD CPP /nologo /MT /W3 /GX /O2 /I "..\_" /D "_WINDOWS" /D "_USRDLL" /D "OBU_EXPORTS" /D "WIN32" /D "NDEBUG" /D "UNICODE" /D "_UNICODE" /D WINVER=0x0500 /D _WIN32_WINNT=0x0500 /D _WIN32_IE=0x0500 /D "STRICT" /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x411 /d "NDEBUG"
@@ -69,7 +69,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "OBU_EXPORTS" /YX /FD /GZ /c
-# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I "..\_\\" /D "_WINDOWS" /D "_USRDLL" /D "OBU_EXPORTS" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D WINVER=0x0400 /YX /FD /GZ /c
+# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I "..\_" /D "_WINDOWS" /D "_USRDLL" /D "OBU_EXPORTS" /D "WIN32" /D "_DEBUG" /D "UNICODE" /D "_UNICODE" /D WINVER=0x0500 /D _WIN32_WINNT=0x0500 /D _WIN32_IE=0x0500 /D "STRICT" /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x411 /d "_DEBUG"
@@ -96,7 +96,19 @@ SOURCE=..\_\charset.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\dll_interface.cpp
+SOURCE=..\satori\SakuraCS.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\satori\SakuraDLLHost.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\satori\SaoriHost.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\_\Sender.cpp
 # End Source File
 # Begin Source File
 

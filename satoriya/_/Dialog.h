@@ -61,34 +61,34 @@ public:
 	int		GetPos( LPARAM lParam ) { return ::SendMessage( (HWND)lParam, TBM_GETPOS, 0 ,0 ); }
 	void	SetPos( int id, int pos ) { ::SendMessage( toHWND(id), TBM_SETPOS, (WPARAM)TRUE , (LPARAM)pos ); }
 
-	void	GetText(int id, std::string& str) {
+	void	GetText(int id, std::wstring& str) {
 		int	len = GetTextLength(id);
-		char*	buf = new char[len+1];
+		wchar_t*	buf = new wchar_t[len+1];
 		GetText(id, buf, len+1); 
 		str=buf;
 		delete [] buf;
 	}
-	std::string	GetText(int id) { std::string str; GetText(id, str); return str; }
-	void	SetText(int id, const std::string& str) { ::SetDlgItemText(m_hDlg, id, str.c_str()); }
+	std::wstring	GetText(int id) { std::wstring str; GetText(id, str); return str; }
+	void	SetText(int id, const std::wstring& str) { ::SetDlgItemText(m_hDlg, id, str.c_str()); }
 
 	int		GetTextLength(int id) { return ::SendMessage(toHWND(id), WM_GETTEXTLENGTH, 0, 0); }
-	void	GetText( int id, LPSTR str, int max ) { ::GetDlgItemText( m_hDlg, id, str, max ); }
-	void	SetText( int id, const char* format, ... );
+	void	GetText( int id, LPTSTR str, int max ) { ::GetDlgItemText( m_hDlg, id, str, max ); }
+	void	SetText( int id, const wchar_t* format, ... );
 	void	SetSel( int id, int nStart, int nEnd ) { ::SendDlgItemMessage( m_hDlg, id, EM_SETSEL, (WPARAM)nStart, (LPARAM)nEnd ); }
 	void	SelAll( int id ) { SetSel( id, 0, -1 ); }
 
 	void	End( int nResult ) { ::EndDialog( m_hDlg, nResult ); }
 
 	void	LB_ResetContent( int id ) { ::SendDlgItemMessage( m_hDlg, id, LB_RESETCONTENT, 0, 0 ); }
-	LONG	LB_AddString( int id, LPCSTR str ) { return ::SendDlgItemMessage( m_hDlg, id, LB_ADDSTRING, 0, (LPARAM)str ); }
+	LONG	LB_AddString( int id, LPCTSTR str ) { return ::SendDlgItemMessage( m_hDlg, id, LB_ADDSTRING, 0, (LPARAM)str ); }
 	void	LB_SetCurSel( int id, int index ) { ::SendDlgItemMessage( m_hDlg, id, LB_SETCURSEL, (WPARAM)index, 0 ); }
 	LONG	LB_GetCurSel( int id ) { return ::SendDlgItemMessage( m_hDlg, id, LB_GETCURSEL, 0, 0 ); }
 	LONG	LB_GetSelCount( int id ) { ::SendDlgItemMessage( m_hDlg, id, LB_GETSELCOUNT, 0, 0 ); }
-	LONG	LB_GetText( int id, int index, LPSTR buf ) { return ::SendDlgItemMessage( m_hDlg, id, LB_GETTEXT, (WPARAM)index, (LPARAM)buf ); }
+	LONG	LB_GetText( int id, int index, LPTSTR buf ) { return ::SendDlgItemMessage( m_hDlg, id, LB_GETTEXT, (WPARAM)index, (LPARAM)buf ); }
 	LONG	LB_SetTopIndex( int id, int index ) { return ::SendDlgItemMessage( m_hDlg, id, LB_SETTOPINDEX, (WPARAM)index, 0 ); }
 	LONG	LB_GetCount(int id) { return ::SendDlgItemMessage( m_hDlg, id, LB_GETCOUNT, 0, 0 ); }
 
-	bool	LB_SelectText(int iID, LPCSTR iBuf) {
+	bool	LB_SelectText(int iID, LPCTSTR iBuf) {
 		TCHAR	theBuf[1024];
 		int	max=LB_GetCount(iID);
 		for ( int i=0 ; i<max ; i++ ) {
@@ -102,7 +102,7 @@ public:
 	}
 
 	void	CB_ResetContent( int id ) { ::SendDlgItemMessage( m_hDlg, id, CB_RESETCONTENT, 0, 0 ); }
-	LONG	CB_AddString( int id, LPCSTR str ) { return ::SendDlgItemMessage( m_hDlg, id, CB_ADDSTRING, 0, (LPARAM)str ); }
+	LONG	CB_AddString( int id, LPCTSTR str ) { return ::SendDlgItemMessage( m_hDlg, id, CB_ADDSTRING, 0, (LPARAM)str ); }
 	void	CB_SetCurSel( int id, int index ) { ::SendDlgItemMessage( m_hDlg, id, CB_SETCURSEL, (WPARAM)index, 0 ); }
 	LONG	CB_GetCurSel( int id ) { return ::SendDlgItemMessage( m_hDlg, id, CB_GETCURSEL, 0, 0 ); }
 	LONG	CB_SetTopIndex( int id, int index ) { return ::SendDlgItemMessage( m_hDlg, id, CB_SETTOPINDEX, (WPARAM)index, 0 ); }
@@ -145,10 +145,10 @@ void	foo() {
 
 BOOL	// 変更の有無
 GetStringFromDialog(
-	LPCSTR	szTitle,	// ダイアログタイトル
-	LPCSTR	szMessage,	// STATIC_TEXT値
-	LPCSTR	szDefault,	// 入力エリアの初期値
-	LPSTR	szBuffer,	// 入力された文字列
+	LPCTSTR	szTitle,	// ダイアログタイトル
+	LPCTSTR	szMessage,	// STATIC_TEXT値
+	LPCTSTR	szDefault,	// 入力エリアの初期値
+	LPTSTR	szBuffer,	// 入力された文字列
 	int		iBufSize	// szBufferのサイズ
 );
 

@@ -10,9 +10,9 @@
 // クリップボード
 
 // 文字列を設定する。hWndはNULLでも構わない。
-bool	SetClipBoard(HWND iWnd, const char* iFormat, ...);
+bool	SetClipBoard(HWND iWnd, const wchar_t* iFormat, ...);
 #ifdef	_STRING_
-std::string	GetClipBoard();
+std::wstring	GetClipBoard();
 #endif
 
 //----------------------------------------------------------
@@ -171,13 +171,13 @@ bool operator != ( const SYSTEMTIME& lhs, const SYSTEMTIME& rhs );
 void	PutWindowMessage( UINT message, WPARAM wParam, LPARAM lParam );
 
 // 可変引数対応TextOut
-void	TextOutF( HDC hDC, int xPos, int yPos, char* format, ... );
+void	TextOutF( HDC hDC, int xPos, int yPos, wchar_t* format, ... );
 
 // 可変引数対応のOutputDebugString
-void	DbgStr( const char* format, ... );
+void	DbgStr( const wchar_t* format, ... );
 // 可変引数対応の簡易報告用メッセージボックス
-void	MesBox( const char* format, ... );
+void	MesBox( const wchar_t* format, ... );
 // 可変引数対応の簡易報告用SetWindowText
-void	SetWinText( HWND hWnd, const char* format, ... );
+void	SetWinText( HWND hWnd, const wchar_t* format, ... );
 
 #endif	// WIN32_H

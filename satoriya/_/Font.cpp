@@ -29,7 +29,7 @@ void	Font::init() {
 	Underline(false);
 	Color(255,255,255);
 	Size(24);
-	Face("‚l‚r ƒSƒVƒbƒN");
+	Face(L"‚l‚r ƒSƒVƒbƒN");
 }
 
 

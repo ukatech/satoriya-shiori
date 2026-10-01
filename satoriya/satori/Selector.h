@@ -3,7 +3,7 @@
 #include <exception>
 #include <stdexcept>
 #include <typeinfo>
-using std::string;
+using std::wstring;
 
 #include "OverlapController.h"
 
@@ -157,6 +157,12 @@ public:
 		}
 		
 		return m_OC->select(m_candidates);
+	}
+
+	// Œ»İ‚Ì‘I‘ğ‘ÎÛŒó•â
+	const std::list<T>& candidates() const
+	{
+		return m_candidates;
 	}
 
 	bool isOCUsedAll()

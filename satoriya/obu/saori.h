@@ -1,12 +1,10 @@
 
 #include	"../_/stltool.h"
+#include	"../satori/SaoriHost.h"
 
-class	Saori {
+class	obu : public SaoriHost {
 public:
-	bool	load(const string& iBaseFolder);
-	bool	unload();
-	int		request(std::deque<string>& iArguments, string& oResult, std::deque<string>& oValues);
-private:
-
-	
+	virtual bool	load(const wstring& iBaseFolder);
+	virtual bool	unload();
+	virtual SRV		request(std::deque<wstring>& iArguments, std::deque<wstring>& oValues);
 };

@@ -23,7 +23,6 @@
 #include <windowsx.h>
 #include <commctrl.h>
 #include <winsock.h>
-#include <mbstring.h>
 
 // STL
 #include <deque>
@@ -37,7 +36,7 @@ using namespace std;
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(lib, "wsock32.lib")
 
-BOOL sendDirectSSTP_for_NOTIFY(string client, string id, deque<string>& refs);
+BOOL sendDirectSSTP_for_NOTIFY(wstring client, wstring id, deque<wstring>& refs);
 
 BOOL CheckSakuraMutex();
 
