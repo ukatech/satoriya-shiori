@@ -252,6 +252,15 @@ bool ShioriPlugins::load_a_plugin(const wstring& iPluginLine)
 					{
 						GetSender().errsender() << fullpath + L": SAORI/1.xのdllではありません。GET Versionの戻り値が未対応のものでした。(" + ver + L")" << satori::endl;
 					}
+					else if ( ! mDllData[fullpath].m_pSaoriClient->version_reply_has_charset() ) {
+						// YAYA as SAORI の古いayasaori.aymは、GET Versionの応答にCharsetを返さず、
+						// 次の最初のEXECUTEだけ文字コードの設定が合わず文字化けする。
+						// 応答にCharsetが無い・空のときは、何もしないEXECUTEを1回送って読み捨てる。
+						std::vector<wstring>	dummy_args(1, L"");
+						wstring	dummy_result;
+						std::vector<wstring>	dummy_values;
+						mDllData[fullpath].m_pSaoriClient->request(dummy_args, true, dummy_result, dummy_values);
+					}
 				}
 				else {
 					GetSender().errsender() << fullpath + L": SAORI/1.xのdllの読み込みに失敗しました。" << satori::endl;

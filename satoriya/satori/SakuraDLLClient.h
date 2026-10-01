@@ -28,6 +28,9 @@ public:
 	// バージョン取得。GET Versionして"SAORI/1.0" みたいのを返す。
 	virtual wstring get_version(const wstring& i_security_level);
 
+	// 直前のget_versionの応答に、空でないCharsetヘッダがあったか。
+	bool version_reply_has_charset() const { return m_version_reply_has_charset; }
+
 	// 素のリクエスト文字列を送り、素のレスポンス文字列を受け取る。
 	virtual wstring request(const wstring& i_request_string);
 
@@ -42,6 +45,7 @@ private:
 	wstring m_charset;
 	wstring m_protocol;
 	wstring m_protocol_version;
+	bool m_version_reply_has_charset;
 
 #ifdef POSIX
 	void*   mModule;

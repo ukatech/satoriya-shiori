@@ -22,6 +22,7 @@
 
 SakuraDLLClient::SakuraDLLClient()
 {
+	m_version_reply_has_charset = true;
 	mModule = NULL;
 	mLoad = NULL;
 #ifndef POSIX
@@ -104,6 +105,17 @@ wstring SakuraDLLClient::get_version(const wstring& i_security_level)
 		r_protocol,
 		r_protocol_version,
 		r_data);
+
+	m_version_reply_has_charset = false;
+	for ( strpairvec::const_iterator i = r_data.begin() ; i != r_data.end() ; ++i )
+	{
+		wstring key = i->first;
+		if ( ! key.empty() && key[key.size()-1] == L':' ) { key.erase(key.size()-1); }
+		if ( _wcsicmp(key.c_str(), L"Charset") == 0 && ! i->second.empty() ) {
+			m_version_reply_has_charset = true;
+		}
+	}
+
 	return r_protocol + L"/" + r_protocol_version;
 }
 
