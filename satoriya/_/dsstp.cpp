@@ -7,6 +7,7 @@
 
 ----------------------------------------------------------------------------*/
 #include "dsstp.h"
+#include "charset.h"
 #pragma warning( disable : 4786 ) //「デバッグ情報内での識別子切捨て」
 #pragma warning( disable : 4503 ) //「装飾された名前の長さが限界を越えました。名前は切り捨てられます。」
 
@@ -24,16 +25,7 @@
 	ローカル定義
 ----------------------------------------------------------------------------*/
 #define MY_DIRECTSSTP_PORT	9801
-#define MY_EXIST_FILEMAP	"Sakura"
-
-/*----------------------------------------------------------------------------
-	lstrchr()
-	マルチバイトstrchr
-----------------------------------------------------------------------------*/
-LPSTR lstrchr(LPCSTR sz, CHAR ch)
-{
-	return (LPSTR)_mbschr((LPBYTE)sz, (UINT)ch);
-}
+#define MY_EXIST_FILEMAP	L"Sakura"
 
 /*----------------------------------------------------------------------------
 	CheckSakuraFileMapping()
@@ -43,10 +35,10 @@ BOOL CheckSakuraFileMapping(HWND hParentWnd, vector<HWND>& vec)
 {
 	HANDLE hFileMap;
 	LPVOID lpBasePtr;
-	LPSTR lpBuffer;
-	LPSTR lpType1;
-	LPSTR lpType2;
-	CHAR szTemp[200];
+	const char* lpBuffer;
+	const char* lpType1;
+	const char* lpType2;
+	char szTemp[200];
 	DWORD dwSize;
 	HWND hWnd = NULL;
 	BOOL bRet;
@@ -55,10 +47,9 @@ BOOL CheckSakuraFileMapping(HWND hParentWnd, vector<HWND>& vec)
 
 	// ファイルマップを開く
 	hFileMap = OpenFileMapping(FILE_MAP_READ, FALSE, MY_EXIST_FILEMAP);
-	if(hFileMap == NULL) 
+	if(hFileMap == NULL)
 	{
 		// 存在しない
-		//MessageBox(hParentWnd, "ファイルマッピングオブジェクトが開けません。", "TestSSTP", MB_ICONSTOP);
 		return FALSE;
 	}
 
@@ -67,42 +58,45 @@ BOOL CheckSakuraFileMapping(HWND hParentWnd, vector<HWND>& vec)
 	if(lpBasePtr == NULL)
 	{
 		// 失敗
-		//MessageBox(hParentWnd, "ファイルマッピングオブジェクトが操作できません。", "TestSSTP", MB_ICONSTOP);
 		CloseHandle(hFileMap);
 		return FALSE;
 	}
-	lpBuffer = (LPSTR)lpBasePtr;
+	lpBuffer = (const char*)lpBasePtr;
 
 	// データ読み込み
+	// 区切り文字はすべてASCIIで、ここで取り出すのはhwnd(数値)だけなので、バイト列のまま扱う。
 	bRet = TRUE;
 	try
 	{
 		CopyMemory(&dwSize, lpBuffer, sizeof(DWORD));
 		lpBuffer += sizeof(DWORD);
 
-		while(*lpBuffer)
+		while(lpBuffer && *lpBuffer)
 		{
 			// エントリ解析
-			lpType1 = lstrchr(lpBuffer, '.');
+			lpType1 = strchr(lpBuffer, '.');
+			if ( !lpType1 ) { break; }
 			lpType1++;
-			lpType2 = lstrchr(lpType1, '\01');
+			lpType2 = strchr(lpType1, '\01');
+			if ( !lpType2 ) { break; }
 			lpType2++;
-			lstrcpyn(szTemp, lpType1, lpType2 - lpType1);
+			lstrcpynA(szTemp, lpType1, min((int)sizeof(szTemp), lpType2 - lpType1));
 
 			// エントリの種類ごとに分岐
-			if(lstrcmpi(szTemp, "hwnd") == 0)
+			if(lstrcmpiA(szTemp, "hwnd") == 0)
 			{
 				// データ取得
-				lpType1 = lstrchr(lpType2, '\r');
+				lpType1 = strchr(lpType2, '\r');
+				if ( !lpType1 ) { break; }
 				lpType1++;
-				lstrcpyn(szTemp, lpType2, lpType1 - lpType2);
+				lstrcpynA(szTemp, lpType2, min((int)sizeof(szTemp), lpType1 - lpType2));
 				hWnd = (HWND)atoi(szTemp);
 
 				vec.push_back(hWnd);
 			}
 
 			// \r\n まで１エントリ
-			lpBuffer = lstrchr(lpBuffer, '\n');
+			lpBuffer = strchr(lpBuffer, '\n');
 			if(lpBuffer)
 			{
 				lpBuffer++;
@@ -127,18 +121,16 @@ BOOL CheckSakuraFileMapping(HWND hParentWnd, vector<HWND>& vec)
 	DirectSSTPSendMessage()
 	DirectSSTP メッセージ送信
 ----------------------------------------------------------------------------*/
-BOOL sendDirectSSTP_for_NOTIFY(string client, string id, deque<string>& refs) 
+BOOL sendDirectSSTP_for_NOTIFY(wstring client, wstring id, deque<wstring>& refs) 
 //BOOL DirectSSTPSendMessage(HWND hParentWnd, LPCSTR szClient, LPCSTR szMessage, LPCSTR szOption)
 {
 	HWND hParentWnd=NULL;
-	LPCSTR szClient=client.c_str();
-//	LPCSTR szOption="";
-	CHAR szBuffer[100];
+	const wchar_t* szClient=client.c_str();
 	COPYDATASTRUCT cds;
 	DWORD dwRet;
 	vector<HWND> vec;
 	vector<HWND>::iterator it;
-	string strSendBuffer;
+	wstring strSendBuffer;
 
 	// 存在をチェック
 	if(!CheckSakuraMutex())
@@ -154,31 +146,29 @@ BOOL sendDirectSSTP_for_NOTIFY(string client, string id, deque<string>& refs)
 		return FALSE;
 	}
 
-	wsprintf(szBuffer, "%d", hParentWnd);
-
-	strSendBuffer = "NOTIFY SSTP/1.5\r\n";
-	strSendBuffer += "Sender: ";
+	strSendBuffer = L"NOTIFY SSTP/1.5\r\n";
+	strSendBuffer += L"Charset: UTF-8\r\n";
+	strSendBuffer += L"Sender: ";
 	strSendBuffer += szClient;
-	strSendBuffer += "\r\n";
-	strSendBuffer += "Event: ";
+	strSendBuffer += L"\r\n";
+	strSendBuffer += L"Event: ";
 	strSendBuffer += id;
-	strSendBuffer += "\r\n";
-	int	n='0';
-	for (deque<string>::iterator i=refs.begin() ; i!=refs.end() ; ++i, ++n) {
-		strSendBuffer += "Reference";
-		strSendBuffer += (char)n;
-		strSendBuffer += ": ";
+	strSendBuffer += L"\r\n";
+	int	n=L'0';
+	for (deque<wstring>::iterator i=refs.begin() ; i!=refs.end() ; ++i, ++n) {
+		strSendBuffer += L"Reference";
+		strSendBuffer += (wchar_t)n;
+		strSendBuffer += L": ";
 		strSendBuffer += *i;
-		strSendBuffer += "\r\n";
+		strSendBuffer += L"\r\n";
 	}
-	strSendBuffer += "Charset: Shift_JIS";
-	strSendBuffer += "\r\n";
-	strSendBuffer += "\r\n";
+	strSendBuffer += L"\r\n";
 
 	// 送信
+	const std::string sendBytes = WtoUTF8(strSendBuffer);
 	cds.dwData = MY_DIRECTSSTP_PORT;
-	cds.cbData = strSendBuffer.size();
-	cds.lpData = (LPVOID)strSendBuffer.c_str();
+	cds.cbData = sendBytes.size();
+	cds.lpData = (LPVOID)sendBytes.c_str();
 	for(it = vec.begin(); it != vec.end(); it++)
 	{
 		// WM_COPYDATA は汎用なので、HWND_BROADCAST してはいけません。
@@ -192,9 +182,9 @@ BOOL sendDirectSSTP_for_NOTIFY(string client, string id, deque<string>& refs)
 /*----------------------------------------------------------------------------
 	ローカル定義
 ----------------------------------------------------------------------------*/
-#define MY_LOCALHOST	"127.0.0.1"
-#define MY_SAKURA_MUTEX	"sakura"
-#define MY_SSP_MUTEX	"ssp"
+#define MY_LOCALHOST	L"127.0.0.1"
+#define MY_SAKURA_MUTEX	L"sakura"
+#define MY_SSP_MUTEX	L"ssp"
 
 
 /*----------------------------------------------------------------------------

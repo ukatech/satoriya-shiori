@@ -5,6 +5,7 @@ satoriya/satori/Debug_SU/
 satoriya/satori/Release_ST/
 satoriya/satori/Release_SU/
 satoriya/tmp/
+satoriya/test/playdriver/
 satorite.dat
 *.sdf
 *.opensdf
@@ -27,4 +28,4 @@ satorite.dat
 *.psess
 /.claude
 .mcp.json
-CLAUDE.md
+temp-doc-*.md

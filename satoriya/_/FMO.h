@@ -45,7 +45,7 @@ class	FMOmap {
 
 	// FMOの名前。プロセス間で共有して用いる。
 	FMO	mFMO;
-	string	mName;
+	wstring	mName;
 
 	// lockしてunlockするまで有効。
 	map<T,U>	mMap;
@@ -57,25 +57,25 @@ private:
 
 		LPVOID	pfm = fmo.Map();
 		if ( pfm==NULL ) {
-			GetSender().sender() << "FMO can't mapping." << endl;
+			GetSender().sender() << L"FMO can't mapping." << endl;
 			return	false;
 		}
 
 		long	size = *((long*)pfm);
-		char*	p = new char[size+1];
+		wchar_t*	p = new wchar_t[size+1];
 		memcpy(p, pfm, size);
-		p[size]='\0';
+		p[size]=L'\0';
 		if ( !fmo.Unmap(pfm) )
 			return	false;
 		fmo.Close();
 
-		static const char	ret_dlmt[3] = { 13, 10, 0 };
-		static const char	byte1_dlmt[2] = { 1, 0 };
+		static const wchar_t	ret_dlmt[3] = { 13, 10, 0 };
+		static const wchar_t	byte1_dlmt[2] = { 1, 0 };
 		strvec	lines;
 		split(p+4, ret_dlmt, lines);
 		for( strvec::iterator i=lines.begin() ; i!=lines.end() ; ++i ) {
 			strvec	MD5andDATA;
-			if ( split(*i, ".", MD5andDATA, 2) != 2 )
+			if ( split(*i, L".", MD5andDATA, 2) != 2 )
 				continue;
 
 			strvec	ENTRYandVALUE;
@@ -90,7 +90,7 @@ private:
 	}
 
 public:
-	FMOmap(const string& iName) : mName(iName) {}
+	FMOmap(const wstring& iName) : mName(iName) {}
 	~FMOmap() {}
 
 	void	set(const T& t, const U& u) {

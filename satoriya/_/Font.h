@@ -33,7 +33,7 @@ public:
 	bool	Strike() const { return mStrike; }
 	bool	Underline() const { return mUnderline; }
 	SIZE	Size() const { return mSize; }
-	const char*	Face() const { return mFace; }
+	const wchar_t*	Face() const { return mFace; }
 
 	void	Bold(bool iBold);
 	void	Italic(bool iItalic);

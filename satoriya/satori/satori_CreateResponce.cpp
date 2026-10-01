@@ -10,8 +10,8 @@
 #endif
 ////////////////////////////////////////
 
-void CreateStringSet(const strvec& vec, std::set<string>& strset);
-void CreateStringSetFromFirstElement(const strvec& vec, std::set<string>& strset);
+void CreateStringSet(const strvec& vec, std::set<wstring>& strset);
+void CreateStringSetFromFirstElement(const strvec& vec, std::set<wstring>& strset);
 
 int		Satori::CreateResponse(strmap& oResponse)
 {
@@ -19,22 +19,22 @@ int		Satori::CreateResponse(strmap& oResponse)
 	/*strmap	mNotifiedMap;
 	if ( mRequestCommand=="NOTIFY" )
 		mNotifiedMap[mRequestID] = mRequestMap["Reference0"];*/
-	if ( mRequestCommand=="NOTIFY" ) {
-		if ( mRequestID=="hwnd" ) {
+	if ( mRequestCommand==L"NOTIFY" ) {
+		if ( mRequestID==L"hwnd" ) {
 			strvec	vec;
-			const int max = split(mReferences[0], byte1_dlmt, vec);
+			const int max = split(reference_or_empty(0), byte1_dlmt, vec);
 			if ( max > 0 ) {
 				characters_hwnd.clear();
 			}
 			for (int n=0 ; n<max ; ++n) {
 				characters_hwnd[n] = (void*)(stoi_internal(vec[n]));
-				GetSender().sender() << "里々は id:" << n << " のhWndを取得しました。" << std::endl;
+				GetSender().sender() << L"里々は id:" << n << L" のhWndを取得しました。" << std::endl;
 			}
 		}
-		else if ( mRequestID=="capability" ) {
+		else if ( mRequestID==L"capability" ) {
 			bool isErrorHeader = false;
 			for ( strvec::const_iterator it = mReferences.begin() ; it != mReferences.end(); ++it ) {
-				if ( *it == "response.errorlevel" ) {
+				if ( *it == L"response.errorlevel" ) {
 					isErrorHeader = true;
 				}
 			}
@@ -42,55 +42,55 @@ int		Satori::CreateResponse(strmap& oResponse)
 		}
 	}
 
-	string	result;
+	wstring	result;
 
 	//喋り変換部初期化
 	reset_speaked_status();
 	
 	//otherghostnameは常に取得する
-	if (mRequestID == "otherghostname"){
+	if (mRequestID == L"otherghostname"){
 		CreateStringSetFromFirstElement(mReferences, otherghostname);
 	}
 
 	//notifyの保存しておく
 	if (is_save_notify){
 		
-		if (mRequestID == "installedghostname"){
+		if (mRequestID == L"installedghostname"){
 			//インストール済み情報
 			CreateStringSet(mReferences, installed_ghost_name);
 		}
-		else if (mRequestID == "installedshellname"){
+		else if (mRequestID == L"installedshellname"){
 			CreateStringSet(mReferences, installed_shell_name);
 		}
-		else if (mRequestID == "installedballoonname"){
+		else if (mRequestID == L"installedballoonname"){
 			CreateStringSet(mReferences, installed_balloon_name);
 		}
-		else if (mRequestID == "installedheadlinename"){
+		else if (mRequestID == L"installedheadlinename"){
 			CreateStringSet(mReferences, installed_headline_name);
 		}
-		else if (mRequestID == "OnNotifyFontInfo"){
+		else if (mRequestID == L"OnNotifyFontInfo"){
 			CreateStringSet(mReferences, installed_font_name);
 		}
-		else if (mRequestID == "installedplugin"){
+		else if (mRequestID == L"installedplugin"){
 			installed_plugin.clear();
-			const char dm[2] = { 1, 0 };//区切り文字
+			const wchar_t dm[2] = { 1, 0 };//区切り文字
 			for (int i = 0; i < mReferences.size(); i++){
-				std::vector<string> plugins;
+				std::vector<wstring> plugins;
 				split(mReferences[i], dm, plugins);
 				if (plugins.size() == 2){
 					PluginInfo info;
 					info.plugin_name = plugins[0];
 					info.plugin_id = plugins[1];
-					installed_plugin.insert(std::map<string, PluginInfo>::value_type(info.plugin_name, info));
+					installed_plugin.insert(std::map<wstring, PluginInfo>::value_type(info.plugin_name, info));
 				}
 			}
 		}
-		else if (mRequestID == "rateofusegraph")
+		else if (mRequestID == L"rateofusegraph")
 		{
 			rate_of_use_graph.clear();
-			const char dm[2] = { 1, 0 };//区切り文字
+			const wchar_t dm[2] = { 1, 0 };//区切り文字
 			for (int i = 0; i < mReferences.size(); i++){
-				std::vector<string> rate;
+				std::vector<wstring> rate;
 				split(mReferences[i], dm, rate);
 				if (rate.size() == 7){
 					RateOfUseGraph info;
@@ -101,19 +101,19 @@ int		Satori::CreateResponse(strmap& oResponse)
 					info.boot_minutes = rate[4];
 					info.boot_percent = rate[5];
 					info.status = rate[6];
-					rate_of_use_graph.insert(std::map<string, RateOfUseGraph>::value_type(info.ghost_name, info));
+					rate_of_use_graph.insert(std::map<wstring, RateOfUseGraph>::value_type(info.ghost_name, info));
 				}
 			}
 		}
 	}
 
 	//実際の呼び出し開始
-	if ( mRequestID == "OnDirectSaoriCall" ) {
-		string	str;
+	if ( mRequestID == L"OnDirectSaoriCall" ) {
+		wstring	str;
 		int	n=0;
 		bool	isfirst = true;
 		for (strvec::const_iterator i=mReferences.begin() ; i!=mReferences.end() ; ++i, ++n)
-			if ( i->empty() && mRequestMap.find( string("Reference")+itos(n) )==mRequestMap.end() )
+			if ( i->empty() && mRequestMap.find( wstring(L"Reference")+itos(n) )==mRequestMap.end() )
 				break;
 			else
 				if ( isfirst ) {
@@ -121,50 +121,50 @@ int		Satori::CreateResponse(strmap& oResponse)
 					isfirst = false;
 				}
 				else
-					str += "," + *i;
+					str += L"," + *i;
 		//while ( compare_tail(str, ",") )
 		//	str.assign( str.substr(0, str.size()-2)+"]" );
-		string	temp;
+		wstring	temp;
 		if ( secure_flag ) {
-			GetSender().sender() << "[DirectCall]" << std::endl;
+			GetSender().sender() << L"[DirectCall]" << std::endl;
 			Call(str, temp);
 			return	204;
 		}
 		else {
-			GetSender().sender() << "local/Localでないので蹴りました: " << str << std::endl;
+			GetSender().sender() << L"local/Localでないので蹴りました: " << str << std::endl;
 			return	204;
 		}
 	}
-	else if ( compare_head(mRequestID, "On") ) {
+	else if ( compare_head(mRequestID, L"On") ) {
 		if ( words.is_exist(mRequestID) )
-			return	Call(mRequestID, oResponse["Value"]) ? 200 : 204;
+			return	Call(mRequestID, oResponse[L"Value"]) ? 200 : 204;
 		return	EventOperation(mRequestID, oResponse);
 	}
-	else if ( mRequestID == "version" )
+	else if ( mRequestID == L"version" )
 		result = gSatoriVersion;
-	else if ( mRequestID == "craftman" )
+	else if ( mRequestID == L"craftman" )
 		result = gSatoriCraftman;
-	else if ( mRequestID == "craftmanw" )
+	else if ( mRequestID == L"craftmanw" )
 		result = gSatoriCraftmanW;
-	else if ( mRequestID == "name" )
+	else if ( mRequestID == L"name" )
 		result = gSatoriName;
-	else if ( mRequestID.find(".recommendsites") != string::npos || mRequestID=="sakura.portalsites" ) {
+	else if ( mRequestID.find(L".recommendsites") != wstring::npos || mRequestID==L"sakura.portalsites" ) {
 		if ( !GetURLList(mRequestID, result) )	// URLリストの取得
 			return	204;
 	} 
 	else if ( !Call(mRequestID, result) ) {
 
-		if ( mRequestID=="getaistate" ) {
-			static const string names[] = {"NoNameTalk", "EventTalk", "OtherTalk", "Word", "Anchor", "Variable"};
+		if ( mRequestID==L"getaistate" ) {
+			static const wstring names[] = {L"NoNameTalk", L"EventTalk", L"OtherTalk", L"Word", L"Anchor", L"Variable"};
 			static const int names_count = sizeof(names) / sizeof(names[0]);
 
-			string res;
+			wstring res;
 			int cnt;
 
 			//表示値
 			res += itos( count_func(names[0]) );
 			for ( cnt = 1 ; cnt < names_count ; ++cnt ) {
-				res += ",";
+				res += L",";
 				res += itos( count_func(names[cnt]) );
 			}
 
@@ -173,11 +173,11 @@ int		Satori::CreateResponse(strmap& oResponse)
 			//ラベル
 			res += names[0];
 			for ( cnt = 1 ; cnt < names_count ; ++cnt ) {
-				res += ",";
+				res += L",";
 				res += names[cnt];
 			}
 
-			oResponse["Value"] = res;
+			oResponse[L"Value"] = res;
 			return 200;
 		}
 
@@ -189,11 +189,11 @@ int		Satori::CreateResponse(strmap& oResponse)
 	if ( result.empty() )
 		return	204;
 
-	oResponse["Value"] = result;
+	oResponse[L"Value"] = result;
 	return	200;
 }
 
-void CreateStringSet(const strvec& vec, std::set<string>& strset)
+void CreateStringSet(const strvec& vec, std::set<wstring>& strset)
 {
 	strset.clear();
 	for (int i = 0; i < vec.size(); i++){
@@ -201,17 +201,17 @@ void CreateStringSet(const strvec& vec, std::set<string>& strset)
 	}
 }
 
-void CreateStringSetFromFirstElement(const strvec& vec, std::set<string>& strset)
+void CreateStringSetFromFirstElement(const strvec& vec, std::set<wstring>& strset)
 {
 	strset.clear();
 
 	strvec byte1splitter;
-	string vecelem;
+	wstring vecelem;
 
 	for (int i = 0; i < vec.size(); i++){
 		vecelem = vec.at(i);
 		byte1splitter.clear();
-		split(vecelem,"\1",byte1splitter);
+		split(vecelem,L"\1",byte1splitter);
 		strset.insert(byte1splitter[0]);
 	}
 }

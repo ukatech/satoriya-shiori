@@ -46,12 +46,13 @@ Dialog::RunAsync( HINSTANCE hInstance, WORD idDialog, HWND hwndOwner ) {
 
 //---------------------------------------------------------------------
 void	
-Dialog::SetText( int id, const char* format, ... ) {
-	char	buf[4096];
+Dialog::SetText( int id, const wchar_t* format, ... ) {
+	wchar_t	buf[4096];
 	va_list	argptr;
 	va_start( argptr, format );
-	_vsnprintf( buf, 4095, format, argptr );
+	_vsnwprintf( buf, 4095, format, argptr );
 	va_end( argptr );
+	buf[4095] = L'\0';	// “ü‚è‚«‚ç‚È‚¢‚Æ‚«‚ÍI’[‚ª•t‚©‚È‚¢
 	::SetDlgItemText( m_hDlg, id, buf );
 }
 

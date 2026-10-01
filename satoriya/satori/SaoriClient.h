@@ -11,16 +11,16 @@ public:
 	virtual ~SaoriClient() {}
 
 	virtual bool load(
-		const string& i_sender,
-		const string& i_charset,
-		const string& i_work_folder,
-		const string& i_dll_fullpath);
+		const wstring& i_sender,
+		const wstring& i_charset,
+		const wstring& i_work_folder,
+		const wstring& i_dll_fullpath);
 
 	virtual int request(
-		const std::vector<string>& i_argument,
+		const std::vector<wstring>& i_argument,
 		bool i_is_secure,
-		string& o_result,
-		std::vector<string>& o_value);
+		wstring& o_result,
+		std::vector<wstring>& o_value);
 };
 
 // ‚Å‚àSakuraDLLClient‚©‚çŒp³‚·‚é‚Ì‚Í•s“KØ‚¾

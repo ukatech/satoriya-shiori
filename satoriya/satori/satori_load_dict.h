@@ -3,7 +3,22 @@
 void	Satori::InitMembers() {
 
 	mRequestMap.clear();
-	mRequestID="";
+	mRequestID=L"";
+
+	// コンストラクタで初期化していないメンバ。リクエストのたびに設定されるか、グローバル実体の
+	// ゼロ初期化に頼っていたもの（POSIXのnewでは不定になる）
+	mIsMateria = false;
+	mIsStatusHeaderExist = false;
+	mRequestMode = UNKNOWN;
+	mOSType = SATORI_OS_UNDEFINED;
+	mikire_flag = false;
+	kasanari_flag = false;
+	can_talk_flag = false;
+	mAutoSaveInterval = 0;
+	mAutoSaveCurrentCount = 0;
+	speaker = 1;
+	chars_spoken = 0;
+	next_wait_value = 0;
 
 	replace_before_dic.clear();
 	replace_after_dic.clear();
@@ -13,10 +28,10 @@ void	Satori::InitMembers() {
 	m_escaper.clear();
 
 	mDelimiters.clear();
-	mDelimiters.insert(",");
-	mDelimiters.insert("、");
-	mDelimiters.insert("､");
-	mDelimiters.insert("，");
+	mDelimiters.insert(L",");
+	mDelimiters.insert(L"、");
+	mDelimiters.insert(L"､");
+	mDelimiters.insert(L"，");
 	mDelimiters.insert(byte1_dlmt);
 
 	talks.clear();
@@ -47,12 +62,12 @@ void	Satori::InitMembers() {
 
 	type_of_communicate_search = COMSEARCH_DEFAULT;
 
-	append_at_scope_change = "\\n[half]";
-	append_at_scope_change_with_sakura_script = "";
-	append_at_talk_start = "";
-	append_at_talk_end = "";
-	append_at_choice_start = "";
-	append_at_choice_end = "\\n";
+	append_at_scope_change = L"\\n[half]";
+	append_at_scope_change_with_sakura_script = L"";
+	append_at_talk_start = L"";
+	append_at_talk_end = L"";
+	append_at_choice_start = L"";
+	append_at_choice_end = L"\\n";
 
 	assert(kakko_replace_history.size()==0);
 
@@ -65,7 +80,7 @@ void	Satori::InitMembers() {
 	auto_newline_enable = true;
 	auto_newline_enable_onetime = true;
 
-	load_savedata_status = "正常";
+	load_savedata_status = L"正常";
 
 	surface_add_value.clear();
 	last_talk_exiting_surface.clear();
@@ -75,18 +90,18 @@ void	Satori::InitMembers() {
 	last_talk_exiting_surface[1]=next_default_surface[1]=cur_surface[1]=default_surface[1]=10;
 
 	BalloonOffset.clear();
-	BalloonOffset[0] = BalloonOffset[1] = "0,0";
+	BalloonOffset[0] = BalloonOffset[1] = L"0,0";
 	validBalloonOffset.clear();
 
 	sec_count_at_load = posix_get_current_sec();
 	sec_count_total = 0;
 
-	dic_load_ext = "txt";
-	dic_load_prefix = "dic";
+	dic_load_ext = L"txt";
+	dic_load_prefix = L"dic";
 
 	ghosts_info.clear();
 	otherghostname.clear();
-	mCommunicateFor="";
+	mCommunicateFor=L"";
 	mCommunicateLog.clear();
 
 	fRequestLog = true;
@@ -98,18 +113,18 @@ void	Satori::InitMembers() {
 	reload_flag = false;
 	dic_folder.clear();
 
-	teach_genre="";
+	teach_genre=L"";
 
 	timer_sec.clear();
 
-	on_loaded_script = "";
-	on_unloading_script = "";
+	on_loaded_script = L"";
+	on_unloading_script = L"";
 
 	//@ mShioriPlugins->clear(); // 特殊。
 
 	secure_flag = false;
 
-	last_choice_name="";
+	last_choice_name=L"";
 
 	fEncodeSavedata = false;
 	mSaoriArgumentCalcMode = SACM_AUTO;
@@ -143,17 +158,15 @@ void	Satori::InitMembers() {
 	m_kakko_size_limit = 256*1024; //1括弧で256KBもあったら大事故だろう
 
 	m_nest_count = 0;
+	m_kakko_depth = 0;
 
-	header_script = "";
+	m_total_call_limit = 100000; //1リクエストで10万回も呼ぶな！
+	reset_call_budget();
+
+	header_script = L"";
 
 	mReferences.clear();
 	mKakkoCallResults.clear();
-
-	special_commands.insert("when");
-	special_commands.insert("whenlist");
-	special_commands.insert("times");
-	special_commands.insert("while");
-	special_commands.insert("for");
 
 	mLoopCounters.clear();
 

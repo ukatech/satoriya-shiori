@@ -3,20 +3,29 @@
 
 
 // 除外するファイル名
-set<string>		deny_filename_set;
+set<wstring>		deny_filename_set;
 // 対象ファイル一覧
-list<string>	files;
+list<wstring>	files;
 
-map<string, set<string> >	files_on_dir;	// dirname : filenames
+map<wstring, set<wstring> >	files_on_dir;	// dirname : filenames
 
 // 環境設定
 strmap	conf;
 // 作業フォルダ
-string	base_folder;
+wstring	base_folder;
 
 
-void	error(const string& str) {
-	cerr << "\nエラー：" << str << "\n";
+void	console(const wstring& str) {
+	HANDLE	h = ::GetStdHandle(STD_OUTPUT_HANDLE);
+	DWORD	written = 0;
+	if ( ::WriteConsoleW(h, str.c_str(), str.size(), &written, NULL) )
+		return;
+	// コンソールでなければ（リダイレクト等）既定のコードページで出力
+	cout << WtoACP(str) << flush;
+}
 
-	::MessageBox(NULL, str.c_str(), "error - sodate", MB_OK);
+void	error(const wstring& str) {
+	console(L"\nエラー：" + str + L"\n");
+
+	::MessageBox(NULL, str.c_str(), L"error - sodate", MB_OK);
 }

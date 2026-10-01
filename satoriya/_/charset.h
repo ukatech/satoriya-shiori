@@ -1,73 +1,55 @@
 /*
-	今のところ「euc,jisをsjisに変換する」ことしかできない。
-	ただし拡張は容易。
+	文字コード変換。
+	内部表現は std::wstring (Windowsでは UTF-16、POSIXでは UTF-32)。
+	外部とのやりとり（ファイル、SHIORI/SAORI/SSTPのリクエスト等）は std::string のバイト列で、
+	ここの関数で内部表現との相互変換を行う。
 
-	判別・変換にはこちらを参照した。
-	http://www.mars.dti.ne.jp/~torao/program/appendix/japanese.html
-
-	判別ルーチンの挙動
-	
-		テキスト中に　charset=??? または encoding=??? があれば採用（複数あった場合は最初のものを使う）
-		???の文字列としては iso-2022-jp, shift_jis, x-sjis, x-euc-jp, euc-jp, UTF-16BE, UTF-16LE, UTF-8 を認識。
-
-		判定の順序は、UTFのBOM, charset, encoding, jisエスケープ, euc/sjis判定である。
-		Unicodeは内容による判別は行わない。
-
-		charsetが無い場合でも、jisは確実な判定ができる。
-		eucとsjisは、互いに使われていないコードが存在すれば確実な判定ができるが、
-		完全に重なった部分の文字しか使われていなかった場合、判別不能として CS_NULL を返す。
-
-
-	sjis2jisはここから。
-	ソースは殆どそのまんま。
-	http://plaza13.mbn.or.jp/~konton/TIPPRG/tipprg03.html
+	UTF-8 との変換は自前実装なので環境に依存しない。
+	Shift_JIS との変換は Windows では CP932 の API、POSIX では iconv を使う。
 */
 
 #ifndef CHARSET_H_INCLUDED
 #define CHARSET_H_INCLUDED
 
+#include	<string>
+
 // 文字コード
 enum CharactorSet
 {
-	CS_NULL,
-	CS_JIS,
-	CS_SJIS,
-	CS_EUC,
-	CS_UTF8,
-	CS_UTF16BE,
-	CS_UTF16LE,
+	CS_NULL,	// 不明・自動判定
+	CS_SJIS,	// Shift_JIS (CP932)
+	CS_UTF8,	// UTF-8
+	CS_ACP,		// 環境の既定コードページ（Windows: CP_ACP、POSIX: UTF-8）
 };
 
-// 文字コード判別（確実ではない。判別に失敗するとCS_NULLを返す）
-CharactorSet	getCharactorSet(const char* p);
-inline CharactorSet	getCharactorSet(const string& str) { return getCharactorSet(str.c_str()); } 
+// 相互変換
+std::wstring	SJIStoW(const std::string& str);
+std::string		WtoSJIS(const std::wstring& str);
+std::wstring	UTF8toW(const std::string& str);
+std::string		WtoUTF8(const std::wstring& str);
+std::wstring	ACPtoW(const std::string& str);
+std::string		WtoACP(const std::wstring& str);
 
-// 文字コード変換
-string sjis2euc(const string& str);
-string sjis2jis(const string& str);
+// 指定の文字コードで変換。CS_NULL の場合は DetectCharset で判定する。
+std::wstring	MBtoW(const std::string& str, CharactorSet cs);
+std::string		WtoMB(const std::wstring& str, CharactorSet cs);
 
-string euc2sjis(const string& str);
-string euc2jis(const string& str);
+// Charset ヘッダ等の名前との変換。知らない名前は CS_NULL を返す。
+CharactorSet	CharsetFromName(const std::wstring& name);
+const wchar_t*	CharsetName(CharactorSet cs);
 
-string jis2sjis(const string& str);
-string jis2euc(const string& str);
+// 厳密に正しい UTF-8 のバイト列か
+bool	IsValidUTF8(const char* p, size_t len);
+inline bool	IsValidUTF8(const std::string& str) { return IsValidUTF8(str.c_str(), str.size()); }
 
-string	SJIStoUTF8(const string& str);
-string	UTF8toSJIS(const string& str);
-string	UTF16BEtoSJIS(const wchar_t* p);
-string	UTF16LEtoSJIS(const wchar_t* p);
+// 先頭が UTF-8 の BOM か
+bool	HasUTF8BOM(const std::string& str);
 
-// 不明のコードを自動判別し、とにかくsjisを返す。無理なこともある。
-inline string convertSomethingToSJIS(const char* p) {
-	switch ( getCharactorSet(p) ) {
-	case CS_JIS: return jis2sjis(p); 
-	case CS_EUC: return euc2sjis(p);
-	case CS_UTF8: return UTF8toSJIS(p);
-	case CS_UTF16BE: return UTF16BEtoSJIS((const wchar_t*)p);
-	case CS_UTF16LE: return UTF16LEtoSJIS((const wchar_t*)p);
-	default: return p; // 変換しない
-	}
-}
+// BOM があるか、全体が正しい UTF-8 なら CS_UTF8、そうでなければ CS_SJIS を返す。
+CharactorSet	DetectCharset(const std::string& str);
+
+// UTF-16 のサロゲートペアの判定（wchar_t が 32bit の環境では常に false）
+inline bool	IsHighSurrogate(wchar_t c) { return sizeof(wchar_t) == 2 && c >= 0xD800 && c <= 0xDBFF; }
+inline bool	IsLowSurrogate(wchar_t c) { return sizeof(wchar_t) == 2 && c >= 0xDC00 && c <= 0xDFFF; }
 
 #endif //CHARSET_H_INCLUDED
-

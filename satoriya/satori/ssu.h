@@ -5,7 +5,7 @@
 
 #include	"SaoriClient.h"
 
-void get_ssu_funclist(std::vector<string> &funclist);
+void get_ssu_funclist(std::vector<wstring> &funclist);
 
 class ssu : public SaoriClient {
 public:
@@ -17,19 +17,19 @@ public:
 	}
 
 	virtual int request(
-		const std::vector<string>& i_argument,
+		const std::vector<wstring>& i_argument,
 		bool i_is_secure,
-		string& o_result,
-		std::vector<string>& o_value);
+		wstring& o_result,
+		std::vector<wstring>& o_value);
 
 	virtual bool load(
-		const string& i_sender,
-		const string& i_charset,
-		const string& i_work_folder,
-		const string& i_dll_fullpath);
+		const wstring& i_sender,
+		const wstring& i_charset,
+		const wstring& i_work_folder,
+		const wstring& i_dll_fullpath);
 	virtual void unload();
-	virtual string request(const string& i_request_string);
-	virtual string get_version(const string& i_security_level);
+	virtual wstring request(const wstring& i_request_string);
+	virtual wstring get_version(const wstring& i_security_level);
 };
 
 #endif
