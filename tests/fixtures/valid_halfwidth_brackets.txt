@@ -1,0 +1,3 @@
+＃ 半角カッコ・波括弧・引用符 テスト辞書
+＊OnBoot
+：Hello (World) {test} "quoted" 'single'
