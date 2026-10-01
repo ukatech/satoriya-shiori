@@ -1,0 +1,4 @@
+charset, Shift_JIS
+type,ghost
+name,�q�|�X�g�ƍ���
+directory,R_POST_and_KOMAINU
