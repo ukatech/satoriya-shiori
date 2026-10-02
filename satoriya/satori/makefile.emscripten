@@ -70,6 +70,9 @@ LIBSATORI = $(DYLIB_NAME_PREFIX)satori$(DYLIB_NAME_POSTFIX)
 #all: $(LIBSATORI) $(LIBSSU)
 all: $(LIBSATORI)
 
+# makeがmakefile自体をリメイクしようとして%.oにマッチしないようにする
+$(MAKEFILE_LIST): ;
+
 depend:
 #	mkdep $(CXXFLAGS) $(CXXFLAGS_ADD) -I. -I../_ $(LIBSATORI_OBJ:.o=.cpp) $(LIBSSU_OBJ:.o=.cpp)
 	mkdep $(CXXFLAGS) $(CXXFLAGS_ADD) -I. -I../_ $(LIBSATORI_OBJ:.o=.cpp)
