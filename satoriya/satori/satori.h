@@ -196,9 +196,9 @@ private:
 	//map<string, set<string> >	mRelationalWord;	// <単語, <属性> > 
 	//set<string>	mUsedRelation;	// <使用された属性> １トークでリセット。明示リセットも可。
 
-	// 選択分岐の記録    map<ID, pair<NUMBER, LABEL> >　
+	// 選択分岐の記録
 	// よく考えたら、選択項目とるだけなら全く不要だった。まぁ全体取得できても悪くは無いけど
-	std::map<wstring, std::pair<int, wstring> >	question_record;
+	std::vector< std::pair<wstring, wstring> >	question_record;	// 選択肢のIDとラベル（出てきた順。同じIDが並んでもよい）
 
 	int	second_from_last_talk;	// 最後に喋ってからの経過時間
 
@@ -380,6 +380,8 @@ private:
 
 	// 直前の表示選択肢
 	wstring	last_choice_name;
+	// 直前の OnChoiceSelectEx の既定の処理で実行したID。続けて届く同じIDの OnChoiceSelect を無視するため。
+	wstring	choice_select_ex_id;
 
 	// セーブデータ保存時の暗号化有無
 	bool	fEncodeSavedata;
@@ -667,6 +669,7 @@ public:
 	bool	Call(const wstring& word, wstring& result, bool for_calc = false, bool for_non_talk = false, bool use_arg_callstack = false);
 	// 里々レベルでの計算を行う。戻り値は成否。
 	bool calculate(const wstring& iExpression, wstring& oResult);
+	void report_calc_error(const wstring& iExpression);
 
 	// 最終置き換え処理。置換後のスクリプトが中身が無い（実行してもしなくても一緒）と判断したらfalseを返す。
 	bool	Translate(wstring& script);

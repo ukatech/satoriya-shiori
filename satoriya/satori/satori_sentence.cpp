@@ -302,10 +302,23 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,wstring &result,wst
 				result += L"\\q["+str+L","+str+L"]";
 			} else {
 				const wstring	choiced = choice_line.substr(0, tab_pos);
-				wstring::size_type	id_pos = choice_line.find_first_not_of(L'\t', tab_pos); // 選択肢ラベルとジャンプ先の区切り
-				const wstring	id = ( id_pos == wstring::npos ) ? wstring() : choice_line.substr(id_pos);
+				// ジャンプ先と、その後ろにタブで区切って並べた引数（\q の3番目以降）
+				strvec	fields;
+				wstring::size_type	pos = choice_line.find_first_not_of(L'\t', tab_pos);
+				while ( pos != wstring::npos ) {
+					const wstring::size_type	end = choice_line.find(L'\t', pos);
+					fields.push_back( choice_line.substr(pos, (end == wstring::npos) ? wstring::npos : end-pos) );
+					pos = (end == wstring::npos) ? wstring::npos : choice_line.find_first_not_of(L'\t', end);
+				}
+				if ( fields.empty() ) {
+					fields.push_back(wstring());
+				}
 				//result += string("\\q")+itos(question_num++)+"["+UnKakko(id)+"]["+UnKakko(choiced)+"]";
-				result += L"\\q["+UnKakko(choiced.c_str())+L","+UnKakko(id.c_str())+L"]";
+				result += L"\\q["+UnKakko(choiced.c_str());
+				for ( strvec::const_iterator f=fields.begin() ; f!=fields.end() ; ++f ) {
+					result += L"," + UnKakko(f->c_str());
+				}
+				result += L"]";
 			}
 			result += append_at_choice_end;
 
@@ -718,24 +731,36 @@ bool Satori::SubstVariable(const wstring &key,wstring &value,wstring &result,boo
 			GetSender().sender() << L"変数「" << key << L"」と同じ名前の文があります。トラブルの元なので避けましょう。" << std::endl;
 		}
 
-		if ( system_variable_operation(key, value, &result) >= 0 ) {
-			bool isOverwritten;
-			bool isSysValue;
+		bool isOverwritten;
+		bool isSysValue;
 
-			// "0"は代入先を先に参照する時、エラーを返さないように。
-			wstring *pstr = GetValue(key,isSysValue,true,&isOverwritten,L"0");
+		// "0"は代入先を先に参照する時、エラーを返さないように。
+		GetValue(key,isSysValue,true,&isOverwritten,L"0");
 
+		// ＝のときは先に計算し、数値になったらシステム変数にも計算後の値を渡す。
+		// 数値にならないとき・計算できないときは、今までどおり計算前の値を渡す。
+		wstring	calc_result;
+		bool	calc_ok = false;
+		if ( do_calc ) {
+			calc_result = UnKakko(value.c_str(),true);
+			calc_ok = calc(calc_result);
+			if ( calc_ok && aredigits(calc_result) ) {
+				calc_result = int2zen(stoi_internal(calc_result));
+			}
+		}
+		const bool	is_number = calc_ok && aredigits(zen2han(calc_result));
+
+		if ( system_variable_operation(key, is_number ? calc_result : value, &result) >= 0 ) {
 			if ( do_calc ) {
-				if ( !calculate(value, value) ) {
+				if ( !calc_ok ) {
+					report_calc_error(value);
 					return false;
 				}
-				if ( aredigits(value) ) {
-					value = int2zen(stoi_internal(value));
-				}
-
-				// 計算中のカッコ展開で変数や R・S 配列が増減すると pstr が無効になるので、取り直す
-				pstr = GetValue(key,isSysValue,true,NULL,L"0");
+				value = calc_result;
 			}
+
+			// 計算中のカッコ展開で変数や R・S 配列が増減すると pstr が無効になるので、ここで取る
+			wstring *pstr = GetValue(key,isSysValue,true,NULL,L"0");
 
 			GetSender().sender() << L"＄" << key << L"＝" << value << L"／" << 
 				(isOverwritten ? L"written." : L"overwritten.")<< std::endl;

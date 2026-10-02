@@ -1489,7 +1489,7 @@ bool	Satori::var_time_t(const wstring&, const wstring&, int, wstring& oResult)
 {
 	time_t tm;
 	time(&tm);
-	oResult = int2zen(tm);
+	oResult = ul2zen(static_cast<unsigned long>(tm)); // int ‚Å‚Í2038”N‚Éˆì‚ê‚é
 	return	true;
 }
 

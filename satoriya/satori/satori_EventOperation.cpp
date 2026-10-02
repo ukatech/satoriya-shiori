@@ -83,6 +83,10 @@ int	Satori::EventOperation(wstring iEvent, std::map<wstring,wstring> &oResponse)
 	// スクリプト文字列
 	wstring	script=L"";
 
+	// 直前の OnChoiceSelectEx で実行したID。次のリクエストまでしか持ち越さない。
+	wstring	last_choice_select_ex_id;
+	last_choice_select_ex_id.swap(choice_select_ex_id);
+
 
 	bool talking = false;
 	if ( mIsStatusHeaderExist ) {
@@ -320,7 +324,18 @@ int	Satori::EventOperation(wstring iEvent, std::map<wstring,wstring> &oResponse)
 		}
 	}
 	else if ( iEvent==L"OnChoiceSelect" ) {
-		script=GetSentence(mReferences[0]);
+		// 直前の OnChoiceSelectEx で実行済みなら、同じ文を二度実行しない
+		if ( last_choice_select_ex_id.empty() || last_choice_select_ex_id != mReferences[0] ) {
+			script=GetSentence(mReferences[0]);
+		}
+	}
+	else if ( iEvent==L"OnChoiceSelectEx" && mReferences.size() > 2 && !talks.is_exist(L"OnChoiceSelect") && talks.is_exist(mReferences[1]) ) {
+		// 引数付きの選択肢。ＩＤの文を、Reference2以降を（Ａ０）～にして実行する
+		strvec	args(mReferences.begin()+2, mReferences.end());
+		mCallStack.push(args);
+		script=GetSentence(mReferences[1]);
+		mCallStack.pop();
+		choice_select_ex_id = mReferences[1];
 	}
 	else if ( iEvent==L"OnWindowStateRestore"
 		|| iEvent==L"OnShellChanged"
@@ -450,7 +465,18 @@ int	Satori::EventOperation(wstring iEvent, std::map<wstring,wstring> &oResponse)
 				GetSender().sender() << var_name << L"が発動。" <<std::endl;
 
 				reset_speaked_status();
-				script=GetSentence(timer_name);
+				if ( !talks.is_exist(timer_name) && talks.is_exist(L"OnSatoriTimer") ) {
+					// ＊名前 が無ければ ＊OnSatoriTimer に、（Ａ０）タイマの名前、（Ａ１）遅れた秒数 を渡す
+					strvec	args;
+					args.push_back(timer_name);
+					args.push_back(int2zen(-(i->second)));
+					mCallStack.push(args);
+					script=GetSentence(L"OnSatoriTimer");
+					mCallStack.pop();
+				}
+				else {
+					script=GetSentence(timer_name);
+				}
 				
 				strintmap::const_iterator tm = timer_sec.find(timer_name);
 				if ( tm != timer_sec.end() ) { //まだタイマー変数が残っている

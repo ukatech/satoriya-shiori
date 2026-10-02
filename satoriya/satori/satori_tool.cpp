@@ -434,16 +434,20 @@ bool	Satori::calculate(const wstring& iExpression, wstring& oResult) {
 	
 	bool r = calc(oResult);
 	if ( !r ) {
-#ifdef POSIX
-		GetSender().errsender() <<
-			L"error on Satori::calculate" << std::endl <<
-			L"Error in expression: " << iExpression << satori::endl;
-#else
-		// もうちょっと抽象化を……
-		GetSender().errsender() << wstring() + L"式が計算不能です。\n" + iExpression << satori::endl;
-#endif
+		report_calc_error(iExpression);
 	}
 	return	r;
+}
+
+void	Satori::report_calc_error(const wstring& iExpression) {
+#ifdef POSIX
+	GetSender().errsender() <<
+		L"error on Satori::calculate" << std::endl <<
+		L"Error in expression: " << iExpression << satori::endl;
+#else
+	// もうちょっと抽象化を……
+	GetSender().errsender() << wstring() + L"式が計算不能です。\n" + iExpression << satori::endl;
+#endif
 }
 
 

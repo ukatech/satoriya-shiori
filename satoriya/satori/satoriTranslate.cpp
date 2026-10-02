@@ -83,7 +83,7 @@ bool	Satori::Translate(wstring& ioScript) {
 							//script: ‚à‘ÎÛŠO
 
 							int	count = question_record.size() + 1;
-							question_record[id] = std::pair<int, wstring>(count, label);
+							question_record.push_back( std::pair<wstring, wstring>(id, label) );
 
 							//id‚à•ª—£
 							strvec vec_id;
