@@ -1,10 +1,5 @@
 #include	"satori.h"
 
-#ifdef POSIX
-/* POSIXではstricmpは定義されていない。代わりにstrcasecmpが使える。 */
-#  define _wcsicmp _wcsicmp
-#  include <string.h>
-#endif
 
 //////////DEBUG/////////////////////////
 #include "warning.h"
