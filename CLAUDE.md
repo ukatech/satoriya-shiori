@@ -18,6 +18,18 @@ msdev satori.dsw /MAKE "ssu - Win32 Release" /REBUILD /OUT "$env:TEMP\claude\sat
 ssu は変更前から警告5件（STLヘッダ由来）が出ます。
 出力先は satori が `Release\`、satorite が `Release_ST\`、ssu が `Release_SU\` です（`satori\Release\satorite.exe` などは古い残骸）。
 
+### サブモジュール（正規表現エンジン DEELX）
+`satoriya/deelx`（https://github.com/ponapalt/deelx 、ヘッダのみ）は git サブモジュールで、ssu の `regex_*` 関数が `../deelx/deelx.h` を使います。**ビルドの前に必ず最新にします**。
+
+```
+git submodule update --init --remote satoriya/deelx
+```
+
+- 参照先は常にリモートの最新に付け替える（`--remote`）。ポインタが変わったら `git status` に `modified: satoriya/deelx` が出るので、ビルドして問題がないことを確かめてから `satoriya/deelx を更新` のようなコミットで記録する（リリース前にも行う）。
+- 新しく clone した直後は `git submodule update --init` が要る（`deelx` が空のままだとビルドが通らない）。
+- deelx.h は ASCII・LF/CRLF どちらでもよい。POSIX の makefile は `utf8src/deelx/` にコピーして使う。
+- DEELX は正規表現の書式エラーを報告しない（閉じていない括弧などはそのまま解釈される）。
+
 ## リリース
 
 ### バージョン記号 `McXYY-Z`
@@ -111,6 +123,7 @@ ssu は変更前から警告5件（STLヘッダ由来）が出ます。
 - トーク本文からさくらスクリプトへの変換（自動ウェイト、スコープ切り替え）：`satori_sentence.cpp`
 - 最終変換（自動アンカー、replace_after）：`satoriTranslate.cpp`
 - ssu の実装：`ssu.cpp`
+  - `regex_*`（`regex_match` / `regex_find` / `regex_findall` / `regex_count` / `regex_replace` / `regex_replace_first` / `regex_erase` / `regex_erase_first` / `regex_split` / `regex_escape`）は DEELX を使う。オプションは `i`（大小無視）`s`（`.`が改行にも一致）`m`（`^$`が行単位）`x`（拡張）の文字列で、`(?i)` 等のパターン内指定も可。`regex_match` / `regex_find` は Value0 に一致部分、Value1〜 に括弧のグループ。置換後は `$1` `$&` `${名前}` が使える。
   - satori.dll 内では SAORI を経由せず直接呼ばれる。
   - ssu.dll 単体ビルドは `SSU_SAORI_CALL_INTERFACE` を定義した場合。
 - `SakuraScript.cpp` / `main.cpp` / `cn.cpp` / `TimeCommands.cpp` はどのプロジェクトにも入っていない（死んだコード）。

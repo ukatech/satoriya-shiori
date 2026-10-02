@@ -145,6 +145,10 @@ static const std::map<wstring, Command> &func_map(void)
 		d(kata2hira);		d(sprintf);			d(reverse);			d(at);
 		d(choice);
 		d(lsimg);			d(mkdir);
+		d(regex_match);		d(regex_find);		d(regex_findall);	d(regex_count);
+		d(regex_replace);	d(regex_replace_first);
+		d(regex_erase);		d(regex_erase_first);
+		d(regex_split);		d(regex_escape);
 		#undef	d
 	}
 	return theMap;
@@ -188,6 +192,7 @@ static SRV	call_ssu(wstring iCommand, std::deque<wstring>& iArguments, std::dequ
 #  include	<windows.h>
 #endif
 #include	"../_/stltool.h"
+#include	"../deelx/deelx.h"
 
 // 変換テーブル。前後のテーブルは同じ位置の文字が対応する。
 static const wchar_t	kata[] = L"アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヰヱヲンァィゥェォャュョヮッガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ";
@@ -1051,4 +1056,263 @@ SRV _mkdir(std::deque<wstring>& iArguments, std::deque<wstring>& oValues)
 		return L"1";
 	else
 		return L"0";
+}
+
+// ここから正規表現（DEELX。../deelx は git サブモジュール）
+// 文字列は wchar_t のまま扱い、位置は文字数（サロゲートペアは1文字）で返す。
+// オプション（省略可）は文字の並び：i=大文字小文字を区別しない s=ドットが改行にも一致 m=^と$が行頭・行末に一致 x=パターン中の空白とコメントを無視
+// (?i) (?s) (?m) といったパターン内指定も使える。置換後文字列では $1 $& ${名前} $$ などが使える。
+
+typedef CRegexpT<wchar_t>	Regex;
+
+// パターンをコンパイルする。失敗したらエラー文を返す（成功ならNULL）
+// DEELX は書式エラーを報告しないので、閉じていない括弧などはそのまま解釈される。
+static const wchar_t*	regex_compile(Regex& oRegex, const wstring& iPattern, const wstring& iOptions)
+{
+	int	flags = 0;
+	for ( wstring::const_iterator i=iOptions.begin() ; i!=iOptions.end() ; ++i ) {
+		switch ( *i ) {
+		case L'i': case L'I':	flags |= IGNORECASE;	break;
+		case L's': case L'S':	flags |= SINGLELINE;	break;
+		case L'm': case L'M':	flags |= MULTILINE;	break;
+		case L'x': case L'X':	flags |= EXTENDED;	break;
+		case L' ': case L',':	break;
+		default:
+			return	L"正規表現のオプションが正しくありません（i, s, m, x が使えます）。";
+		}
+	}
+	try {
+		oRegex.Compile(iPattern.c_str(), static_cast<int>(iPattern.size()), flags);
+	}
+	catch ( ... ) {
+		return	L"正規表現の書式が正しくありません。";
+	}
+	if ( oRegex.m_builder.m_pTopElx == NULL ) {
+		return	L"正規表現の書式が正しくありません。";
+	}
+	return	NULL;
+}
+
+static const wstring&	regex_arg(const std::deque<wstring>& iArguments, size_t n);
+
+// 引数 iPatternIndex がパターン、その次がオプション（省略可）
+static const wchar_t*	regex_compile_args(Regex& oRegex, const std::deque<wstring>& iArguments, size_t iPatternIndex)
+{
+	return	regex_compile(oRegex, iArguments[iPatternIndex], regex_arg(iArguments, iPatternIndex+1));
+}
+
+// 全体と各グループの一致部分を oValues に入れる（一致しなかったグループは空文字列）
+static void	regex_push_groups(const MatchResult& iResult, const wstring& iStr, std::deque<wstring>& oValues)
+{
+	for ( int n=0 ; n<=iResult.MaxGroupNumber() ; ++n ) {
+		const int	s = iResult.GetGroupStart(n), e = iResult.GetGroupEnd(n);
+		oValues.push_back(s>=0 && e>=s ? iStr.substr(s, e-s) : wstring());
+	}
+}
+
+// 一致のたびに iFunc を呼ぶ。iFunc が false を返したら打ち切る。
+// 空文字列に一致する場合も1文字ずつ進むので止まらなくなることはない。
+template <class F>
+static void	regex_each_match(const Regex& iRegex, const wstring& iStr, F& iFunc)
+{
+	CContext	context;
+	iRegex.PrepareMatch(iStr.c_str(), static_cast<int>(iStr.size()), -1, &context);
+	while ( true ) {
+		MatchResult	r = iRegex.Match(&context);
+		if ( ! r.IsMatched() || ! iFunc(r) ) {
+			break;
+		}
+	}
+}
+
+struct RegexCounter {
+	int	count;
+	RegexCounter() : count(0) {}
+	bool	operator()(const MatchResult&) { ++count; return true; }
+};
+
+struct RegexCollector {
+	const wstring&	str;
+	std::deque<wstring>&	values;
+	RegexCollector(const wstring& s, std::deque<wstring>& v) : str(s), values(v) {}
+	bool	operator()(const MatchResult& r) {
+		values.push_back(str.substr(r.GetStart(), r.GetEnd()-r.GetStart()));
+		return true;
+	}
+};
+
+struct RegexSplitter {
+	const wstring&	str;
+	std::deque<wstring>&	values;
+	const int	max_words;
+	int	last;
+	RegexSplitter(const wstring& s, std::deque<wstring>& v, int m) : str(s), values(v), max_words(m), last(0) {}
+	bool	operator()(const MatchResult& r) {
+		const int	s = r.GetStart(), e = r.GetEnd();
+		if ( s==e && (s==0 || s==static_cast<int>(str.size())) ) {
+			return true;	// 先頭・末尾の空一致では区切らない
+		}
+		if ( max_words > 0 && static_cast<int>(values.size()) >= max_words-1 ) {
+			return false;
+		}
+		values.push_back(str.substr(last, s-last));
+		last = e;
+		return true;
+	}
+};
+
+// 置換。iTimes<0 なら全部、そうでなければその回数まで。
+static SRV	regex_replace_impl(const wstring& iStr, const wstring& iPattern, const wstring& iTo, const wstring& iOptions, int iTimes)
+{
+	Regex	re;
+	const wchar_t*	err = regex_compile(re, iPattern, iOptions);
+	if ( err ) {
+		return	SRV(400, err);
+	}
+	int	result_length = 0;
+	wchar_t*	r = re.Replace(iStr.c_str(), static_cast<int>(iStr.size()), iTo.c_str(), static_cast<int>(iTo.size()), result_length, -1, iTimes);
+	if ( r == NULL ) {
+		return	SRV(200, iStr);
+	}
+	wstring	result(r, result_length);
+	Regex::ReleaseString(r);
+	return	SRV(200, result);
+}
+
+// 省略された引数の代わりに使う空文字列
+static const wstring&	regex_arg(const std::deque<wstring>& iArguments, size_t n)
+{
+	static const wstring	empty;
+	return	n < iArguments.size() ? iArguments[n] : empty;
+}
+
+// regex_match(対象, パターン, [オプション])
+// 一致すれば1、しなければ0。Value0に一致した部分、Value1以降に括弧のグループ。
+SRV _regex_match(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {
+	if ( iArguments.size()<2 )
+		return	SRV(400, L"引数の個数が正しくありません。");
+	Regex	re;
+	const wchar_t*	err = regex_compile_args(re, iArguments, 1);
+	if ( err )
+		return	SRV(400, err);
+	const wstring&	str = iArguments[0];
+	MatchResult	r = re.Match(str.c_str(), static_cast<int>(str.size()), -1);
+	if ( ! r.IsMatched() )
+		return	L"0";
+	regex_push_groups(r, str, oValues);
+	return	L"1";
+}
+
+// regex_find(対象, パターン, [オプション], [開始位置])
+// 最初に一致した位置（0始まりの文字数）、なければ-1。Valueはregex_matchと同じ。
+SRV _regex_find(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {
+	if ( iArguments.size()<2 )
+		return	SRV(400, L"引数の個数が正しくありません。");
+	Regex	re;
+	const wchar_t*	err = regex_compile_args(re, iArguments, 1);
+	if ( err )
+		return	SRV(400, err);
+	const wstring&	str = iArguments[0];
+	int	start = 0;
+	if ( iArguments.size()>3 ) {
+		const int	len = static_cast<int>(count_chars(str));
+		start = zen2int(iArguments[3]);
+		if ( start < 0 )
+			start = len + start;
+		if ( start < 0 || start > len )
+			return	L"-1";
+		start = static_cast<int>(char_at(str.c_str(), start) - str.c_str());
+	}
+	MatchResult	r = re.Match(str.c_str(), static_cast<int>(str.size()), start);
+	if ( ! r.IsMatched() )
+		return	L"-1";
+	regex_push_groups(r, str, oValues);
+	return	itos(static_cast<long>(count_chars(str.substr(0, r.GetStart()))));
+}
+
+// regex_findall(対象, パターン, [オプション])
+// 一致した部分すべてをValueに入れ、その個数を返す。
+SRV _regex_findall(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {
+	if ( iArguments.size()<2 )
+		return	SRV(400, L"引数の個数が正しくありません。");
+	Regex	re;
+	const wchar_t*	err = regex_compile_args(re, iArguments, 1);
+	if ( err )
+		return	SRV(400, err);
+	std::deque<wstring>	found;
+	RegexCollector	collector(iArguments[0], found);
+	regex_each_match(re, iArguments[0], collector);
+	oValues.insert(oValues.end(), found.begin(), found.end());
+	return	itos(static_cast<long>(found.size()));
+}
+
+// regex_count(対象, パターン, [オプション])
+SRV _regex_count(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {
+	if ( iArguments.size()<2 )
+		return	SRV(400, L"引数の個数が正しくありません。");
+	Regex	re;
+	const wchar_t*	err = regex_compile_args(re, iArguments, 1);
+	if ( err )
+		return	SRV(400, err);
+	RegexCounter	counter;
+	regex_each_match(re, iArguments[0], counter);
+	return	itos(counter.count);
+}
+
+// regex_replace(対象, パターン, 置換後, [オプション])
+SRV _regex_replace(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {
+	if ( iArguments.size()<3 )
+		return	SRV(400, L"引数の個数が正しくありません。");
+	return	regex_replace_impl(iArguments[0], iArguments[1], iArguments[2], regex_arg(iArguments, 3), -1);
+}
+
+SRV _regex_replace_first(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {
+	if ( iArguments.size()<3 )
+		return	SRV(400, L"引数の個数が正しくありません。");
+	return	regex_replace_impl(iArguments[0], iArguments[1], iArguments[2], regex_arg(iArguments, 3), 1);
+}
+
+// regex_erase(対象, パターン, [オプション])
+SRV _regex_erase(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {
+	if ( iArguments.size()<2 )
+		return	SRV(400, L"引数の個数が正しくありません。");
+	return	regex_replace_impl(iArguments[0], iArguments[1], wstring(), regex_arg(iArguments, 2), -1);
+}
+
+SRV _regex_erase_first(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {
+	if ( iArguments.size()<2 )
+		return	SRV(400, L"引数の個数が正しくありません。");
+	return	regex_replace_impl(iArguments[0], iArguments[1], wstring(), regex_arg(iArguments, 2), 1);
+}
+
+// regex_split(対象, パターン, [オプション], [最大分割数])
+// パターンに一致した部分で区切り、各要素をValueに入れて個数を返す。
+SRV _regex_split(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {
+	if ( iArguments.size()<2 )
+		return	SRV(400, L"引数の個数が正しくありません。");
+	Regex	re;
+	const wchar_t*	err = regex_compile_args(re, iArguments, 1);
+	if ( err )
+		return	SRV(400, err);
+	const wstring&	str = iArguments[0];
+	std::deque<wstring>	pieces;
+	RegexSplitter	splitter(str, pieces, iArguments.size()>3 ? zen2int(iArguments[3]) : 0);
+	regex_each_match(re, str, splitter);
+	pieces.push_back(str.substr(splitter.last));
+	oValues.insert(oValues.end(), pieces.begin(), pieces.end());
+	return	itos(static_cast<long>(pieces.size()));
+}
+
+// regex_escape(文字列)
+// 正規表現の特殊文字を \ でエスケープして返す（文字列をそのままパターンに埋め込むため）。
+SRV _regex_escape(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {
+	if ( iArguments.size()<1 )
+		return	L"";
+	wstring	r;
+	for ( wstring::const_iterator i=iArguments[0].begin() ; i!=iArguments[0].end() ; ++i ) {
+		if ( wcschr(L"\\^$.|?*+()[]{}", *i) != NULL )
+			r += L'\\';
+		r += *i;
+	}
+	return	SRV(200, r);
 }
