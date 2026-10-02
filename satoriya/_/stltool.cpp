@@ -309,18 +309,22 @@ static size_t	char_width(unsigned int c) {
 	return	2;
 }
 
-size_t	count_width(const wstring& str) {
+size_t	count_width(const wchar_t* p, size_t len) {
 	size_t	n = 0;
-	for ( wstring::size_type i=0 ; i<str.size() ; ++i ) {
-		if ( IsHighSurrogate(str[i]) && i+1<str.size() && IsLowSurrogate(str[i+1]) ) {
+	for ( size_t i=0 ; i<len ; ++i ) {
+		if ( IsHighSurrogate(p[i]) && i+1<len && IsLowSurrogate(p[i+1]) ) {
 			++i;
 			n += 2;	// •â•–Ê‚Í‘SŠpˆµ‚¢
 		}
 		else {
-			n += char_width(str[i]);
+			n += char_width(p[i]);
 		}
 	}
 	return	n;
+}
+
+size_t	count_width(const wstring& str) {
+	return	count_width(str.c_str(), str.size());
 }
 
 size_t	char_pos_to_index(const wstring& str, size_t char_pos) {

@@ -455,7 +455,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,wstring &result,wst
 						int speaker_tmp = stoi_internal(param.c_str());
 						if ( is_speaked(speaker) && speaker != speaker_tmp ) {
 							result += append_at_scope_change;
-							chars_spoken += 1;
+							chars_spoken += 2;
 						}
 						speaker = speaker_tmp;
 						character_wait_clear(2);
@@ -496,7 +496,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,wstring &result,wst
 			else if ( do_process && (c==L"：") ) {	// スコープ切り替え - ここは二人を想定。
 				if ( is_speaked(speaker) ) {
 					result += append_at_scope_change;
-					chars_spoken += 1;
+					chars_spoken += 2;
 				}
 				speaker = (speaker==0) ? 1 : 0;
 				character_wait_clear(2);
@@ -602,7 +602,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,wstring &result,wst
 						// スコープ切り替え
 						if ( is_speaked(speaker) ) {
 							result += append_at_scope_change_with_sakura_script;
-							chars_spoken += 1;
+							chars_spoken += 2;
 						}
 						speaker = spktmp;
 						character_wait_clear(2);
@@ -693,7 +693,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,wstring &result,wst
 
 				speaked_speaker.insert(speaker);
 				result += c;
-				chars_spoken += 1;
+				chars_spoken += static_cast<int>(count_width(c));	// ACP版のバイト数に合わせて半角換算（全角は2）
 				if ( c==L"。" || c==L"、" ) {
 					character_wait_clear(c==L"、"?1:2);
 				}

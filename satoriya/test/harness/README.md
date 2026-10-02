@@ -38,4 +38,4 @@ Reference0: master
 ## master との比較
 
 master の DLL には SJIS のリクエスト、unicode 版には SJIS か UTF-8 のリクエストを渡し、応答を比べる。
-自動ウェイト（`\_w[n]`）は unicode 版で値が変わるのが正しいので、比較では除く。
+自動ウェイト（`\_w[n]`）は半角換算（全角2・半角1）で数えるので、master と同じ値になる（Mc202-1 以降）。

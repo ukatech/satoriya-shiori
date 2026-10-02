@@ -34,8 +34,7 @@ void	add_characters(const wchar_t* p, int& chars_spoken) {
 			}
 		}
 		else {
-			get_a_chr(p);
-			chars_spoken += 1;
+			chars_spoken += static_cast<int>(count_width(get_a_chr(p)));	// ”¼ŠpŠ·Zi‘SŠp‚Í2j
 		}
 	}
 }
