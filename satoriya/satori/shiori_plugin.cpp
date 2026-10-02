@@ -202,7 +202,7 @@ bool ShioriPlugins::load_a_plugin(const wstring& iPluginLine)
 					do_fallback = false;
 				}
 				}
-				dlclose(handle);
+				if (handle != NULL) { dlclose(handle); }
 			}
 			if (do_fallback) {
 				// ‘ã‘Öƒ‰ƒCƒuƒ‰ƒŠ‚ğ’T‚·B

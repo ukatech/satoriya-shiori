@@ -14,23 +14,35 @@ private:
 protected:
 	static std::vector<SakuraDLLHost *> m_dll;
 public:
+    // IDは m_dll の添字。他のIDがずれないよう、破棄しても vector からは取り除かず NULL にして、Create で再利用する。
+    // 0 は静的な実体（gSatori）なので、Create / Destroy の対象外。
     template<typename T>
     static int Create() {
-        m_dll.emplace_back(new T());
-        return m_dll.size() - 1;
+        T* p = new T();
+        for (size_t i = 1; i < m_dll.size(); ++i) {
+            if (m_dll[i] == NULL) {
+                m_dll[i] = p;
+                return static_cast<int>(i);
+            }
+        }
+        m_dll.push_back(p);
+        return static_cast<int>(m_dll.size() - 1);
     }
     static void Select(int id) {
-        if (id <= 0 || id >= m_dll.size()) {
+        if (id <= 0 || static_cast<size_t>(id) >= m_dll.size() || m_dll[id] == NULL) {
             return;
         }
         m_id = id;
     }
     static void Destroy(int id) {
-        if (id <= 0 || id >= m_dll.size()) {
+        if (id <= 0 || static_cast<size_t>(id) >= m_dll.size() || m_dll[id] == NULL) {
             return;
         }
         delete m_dll[id];
-        m_dll.erase(m_dll.begin() + id);
+        m_dll[id] = NULL;
+        if (m_id == id) {
+            m_id = 0;	// 選択中のものを破棄したら静的な実体に戻す（I() が NULL を返さないように）
+        }
     }
 	static SakuraDLLHost* I() { return m_dll[m_id]; }
 #else

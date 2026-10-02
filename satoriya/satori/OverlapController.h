@@ -155,7 +155,7 @@ public:
 			typename std::set<T>::iterator it = m_unused.find(t);
 			if (it != m_unused.end())
 			{
-				m_unused.erase(t);
+				m_unused.erase(it);
 				m_used.insert(t);
 			}
 		}
@@ -395,7 +395,7 @@ public:
 	}
 
 	// Œó•â‚ªÁ‹‚³‚ê‚æ‚¤‚Æ‚µ‚Ä‚¢‚é
-	virtual void on_erase(const std::list<T>& i_candidates, typename std::list<T>::const_iterator& i_it)
+	virtual void on_erase(const std::list<T>& i_candidates, typename std::list<T>::const_iterator i_it)
 	{
 		if ( m_last == *i_it ) 
 		{
@@ -518,7 +518,7 @@ public:
 	}
 
 	// Œó•â‚ªÁ‹‚³‚ê‚æ‚¤‚Æ‚µ‚Ä‚¢‚é
-	virtual void on_erase(const std::list<T>& i_candidates, typename std::list<T>::const_iterator& i_it)
+	virtual void on_erase(const std::list<T>& i_candidates, typename std::list<T>::const_iterator i_it)
 	{
 		if ( m_last == *i_it ) 
 		{

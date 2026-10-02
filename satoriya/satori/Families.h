@@ -31,7 +31,11 @@ public:
 	// —v‘f‚Ì“o˜^
 	const T& add_element(const wstring& i_name, const T& i_t, const Condition& i_condition = Condition())
 	{
-		std::pair<iterator,bool> found = m_elements.insert(std::pair<wstring, Family<T> >(i_name,Family<T>()));
+		// Šù‚É‚ ‚é‚Æ‚«‚É Family ‚ğì‚Á‚ÄƒRƒs[‚·‚é–³‘Ê‚ğ”ğ‚¯‚é‚½‚ßAæ‚É’T‚·
+		std::pair<iterator,bool> found(m_elements.find(i_name), false);
+		if ( found.first == m_elements.end() ) {
+			found = m_elements.insert(std::pair<wstring, Family<T> >(i_name,Family<T>()));
+		}
 		//std::pair<iterator,bool> found = m_elements.insert(map< string, Family<T> >::value_type(i_name,Family<T>()));
 		if ( found.second ) {
 			found.first->second.set_namevec(i_name);

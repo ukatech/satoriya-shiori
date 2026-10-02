@@ -804,6 +804,7 @@ static std::string SendDataUsingUnixSocket(const std::string &path, const std::s
 	// null-terminated‚à‘‚«‚Ü‚¹‚é
 	strncpy(addr.sun_path, path.c_str(), path.length() + 1);
 	if (connect(soc, reinterpret_cast<const sockaddr *>(&addr), sizeof(addr)) == -1) {
+		close(soc);
 		return "";
 	}
 	if (send(soc, request.data(), request.size(), 0) != request.size()) {
@@ -819,7 +820,7 @@ static std::string SendDataUsingUnixSocket(const std::string &path, const std::s
 			close(soc);
 			return "";
 		}
-		remain = *reinterpret_cast<uint32_t *>(buffer);
+		memcpy(&remain, buffer, sizeof(remain));
 		data.reserve(remain);
 	}
 	while (true) {

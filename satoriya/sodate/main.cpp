@@ -113,7 +113,7 @@ int main( int argc, char *argv[ ], char *envp[ ] )
 		list<wstring>&	NEW = files;	// 空っぽのほう
 
 		// まずは単なるアルファベットソート
-		files.sort();		
+		OLD.sort();		
 
 		// まずはshellフォルダの中身を移行
 		list<wstring>::iterator	i;;

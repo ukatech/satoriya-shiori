@@ -794,6 +794,9 @@ const Talk* Satori::GetSentenceInternal(wstring& ioSentenceName)
 		wstring	reserved_talk_name;	// 今回話すべきトークがあれば、その名前になる
 		if ( !reserved_talk.empty() ) {
 			// 予約トークの添字を1ずつデクリメント
+			// 注意: map を走査しながら [key-1] を挿入し、走査中の要素を erase している。
+			// キーの昇順に走査するので、挿入先は走査済みの側に入り、再訪も上書きも起きないから動いている。
+			// 走査順やずらし方を変えると壊れるので、変えるなら別の map に作り直すこと。
 			std::map<int, wstring>::iterator	it = reserved_talk.begin();
 			while ( it!=reserved_talk.end() )
 			{

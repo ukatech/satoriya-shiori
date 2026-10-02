@@ -1,5 +1,7 @@
 
 #include <list>
+#include <set>
+#include <algorithm>
 #include <exception>
 #include <stdexcept>
 #include <typeinfo>
@@ -17,6 +19,9 @@ class Selector
 {
 	std::list<T> m_candidates; // 選択の対象となる候補
 	OverlapController<T>* m_OC; // 選択メソッド
+
+	// m_OC を所有しているので代入は禁止（実装しない）。コピーは候補が空のときだけコピーコンストラクタで許す。
+	Selector& operator=(const Selector&);
 
 public:
 
@@ -53,7 +58,9 @@ public:
 	}
 
 	// 選択対象候補を更新する。
-	// i_candidatesは降順にソートされており、かつ、空であってはならない。
+	// i_candidatesは空であってはならない。
+	// 候補の並びは選択方法（順次など）の意味を持つので、i_candidatesの並びのまま持つ。
+	// 同じ候補かどうかは T の値（ポインタなど）の一致で判断する。大小比較には頼らない。
 	void update_candidates(const std::list<T>& i_candidates)
 	{
 		if ( m_OC == NULL )
@@ -63,51 +70,45 @@ public:
 			//cout << "                               m_OC:" << m_OC << ", this:" << this << endl;
 		}
 
-		#define NOW i_candidates
-		#define OLD m_candidates
-
-		typename std::list<T>::const_iterator now = NOW.begin();
-		typename std::list<T>::iterator old = OLD.begin();
-
-		while (true)
+		// 前回と同じなら何もしない（条件付きの群でも、条件の結果が変わっていなければここで済む）
+		if ( m_candidates.size() == i_candidates.size() &&
+			 std::equal(i_candidates.begin(), i_candidates.end(), m_candidates.begin()) )
 		{
-			if ( now == NOW.end() )
+			return;
+		}
+
+		// 1. 新しい候補に無いものを、今の並びのまま順に通知して消す。
+		//    （OverlapController は隣の候補を見て、直前の選択を付け替えることがある）
+		std::set<T> now_set;	// VC6 の set には範囲コンストラクタが無いので insert で作る
+		for ( typename std::list<T>::const_iterator n = i_candidates.begin() ; n != i_candidates.end() ; ++n )
+		{
+			now_set.insert(*n);
+		}
+		for ( typename std::list<T>::iterator old = m_candidates.begin() ; old != m_candidates.end() ; )
+		{
+			if ( now_set.find(*old) == now_set.end() )
 			{
-				//OLD.erase(old, OLD.end());
-				while ( old != OLD.end() )
-				{
-					m_OC->on_erase(OLD, old);
-					old = OLD.erase(old);
-				}
-				break;
-			}
-			if ( old == OLD.end() )
-			{
-				//OLD.insert(old, now, NOW.end());
-				for (; now != NOW.end() ; ++now )
-				{
-					OLD.insert(old, *now);
-					m_OC->on_add(OLD, now);
-				}
-				break;
-			}
-	
-			if ( *now < *old )
-			{
-				OLD.insert(old, *now);
-				m_OC->on_add(OLD, now);
-				++now;
-			}
-			else if ( *now > *old )
-			{
-				m_OC->on_erase(OLD, old);
-				old = OLD.erase(old);
-//				++old;
+				m_OC->on_erase(m_candidates, old);
+				old = m_candidates.erase(old);
 			}
 			else
 			{
-				++now;
 				++old;
+			}
+		}
+
+		// 2. 今の候補に無いものを、新しい並びにそろえてから通知して加える。
+		std::set<T> old_set;
+		for ( typename std::list<T>::const_iterator o = m_candidates.begin() ; o != m_candidates.end() ; ++o )
+		{
+			old_set.insert(*o);
+		}
+		m_candidates = i_candidates;
+		for ( typename std::list<T>::const_iterator now = m_candidates.begin() ; now != m_candidates.end() ; ++now )
+		{
+			if ( old_set.find(*now) == old_set.end() )
+			{
+				m_OC->on_add(m_candidates, now);
 			}
 		}
 	}

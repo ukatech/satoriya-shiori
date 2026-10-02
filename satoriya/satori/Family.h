@@ -26,7 +26,9 @@ class Family
 	bool ComNameFound;
 
 	// 条件式をキー、要素リストを値としたmap
-	typedef std::vector<T> Elements;
+	// 要素のアドレスを重複回避（Selector / OverlapController）の識別に使っているので、
+	// 追加・削除でほかの要素のアドレスが変わらない list にする。vector にしてはいけない。
+	typedef std::list<T> Elements;
 	typedef std::map<Condition, Elements> CondsMap;
 	CondsMap m_conds_map;
 
@@ -97,19 +99,13 @@ class Family
 	const std::list<const T*>* update_selector(Evalcator& i_evalcator, std::list<const T*>& o_work)
 	{
 		if ( m_candidates_cached && is_unconditional() && !m_selector.candidates().empty() ) {
-			// 要素はアドレス順（ソート済み）で渡しているので、選択係の候補は前回渡したものと同じ
+			// 要素は常に同じ並び（list の並び）で渡しているので、選択係の候補は前回渡したものと同じ
 			return &m_selector.candidates();
 		}
 
 		select_all(i_evalcator, o_work);
 		if ( o_work.empty() ) {
 			return NULL;
-		}
-		switch (m_selector.type()) {
-		case 200:
-		case 300:
-			o_work.sort();
-			break;
 		}
 		m_selector.update_candidates(o_work);
 		m_candidates_cached = is_unconditional();
@@ -219,7 +215,11 @@ public:
 		if ( it == m_conds_map.end() ) { return; }
 		m_candidates_cached = false;
 		Elements& lt = it->second;
-		lt.erase(std::remove(lt.begin(),lt.end(),i_t),lt.end());
+		for ( typename Elements::iterator j = lt.begin() ; j != lt.end() ; )
+		{
+			if ( *j == i_t ) { j = lt.erase(j); }
+			else { ++j; }
+		}
 		if ( lt.empty() ) {
 			m_conds_map.erase(it);
 		}
@@ -257,7 +257,7 @@ public:
 			Elements& e = m_conds_map.begin()->second;
 			assert(e.size() > 0);
 
-			for ( typename std::vector<T>::const_iterator j = e.begin() ; j != e.end() ; ++j ) {
+			for ( typename Elements::const_iterator j = e.begin() ; j != e.end() ; ++j ) {
 				candidates.push_back( &(*j) );
 			}
 		}
@@ -268,7 +268,7 @@ public:
 				// 「無条件」であるか「条件式を評価した結果、0/０を返さなかったもの」を採用
 				if ( i->first.empty() || i_evalcator.evalcate_to_bool(i->first) )
 				{
-					for ( typename std::vector<T>::const_iterator j = i->second.begin() ; j != i->second.end() ; ++j )
+					for ( typename Elements::const_iterator j = i->second.begin() ; j != i->second.end() ; ++j )
 					{
 						candidates.push_back( &(*j) );
 					}

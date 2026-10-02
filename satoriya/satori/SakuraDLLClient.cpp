@@ -59,6 +59,12 @@ wstring	SakuraDLLClient::request(const wstring& iRequestString)
 	HGLOBAL h = ::GlobalAlloc(GMEM_FIXED, len + 1);
 #endif
 
+	if ( h == NULL )
+	{
+		GetSender().errsender() << L"SakuraDLLClient::request: リクエスト用のメモリを確保できませんでした。" << satori::endl;
+		return	L"";
+	}
+
 	memcpy(h, theRequest.c_str(), len + 1); //ZeroTermまで
 	h = mRequest(h, &len);
 
@@ -71,6 +77,7 @@ wstring	SakuraDLLClient::request(const wstring& iRequestString)
 		void *pLock = ::GlobalLock(h);
 		if ( pLock ) {
 			theResponse.assign(static_cast<char*>(pLock), len);
+			::GlobalUnlock(h);
 			::GlobalFree(h);
 		}
 		else { //バグ対策 - GlobalAllocで確保してないポインタ向け
@@ -245,6 +252,13 @@ bool	SakuraDLLClient::load(
 #else
 		HGLOBAL h = ::GlobalAlloc(GMEM_FIXED, len + 1);
 #endif
+		if ( h == NULL )
+		{
+			GetSender().sender() << L"failed." << std::endl;
+			unload();
+			GetSender().errsender() << dll_fullpath + L": load()に渡すメモリを確保できませんでした。" << satori::endl;
+			return	false;
+		}
 		memcpy(h, theFolder.c_str(), len + 1); //ZeroTermまで
 
 		if ( theLoad(h, len) == FALSE )
