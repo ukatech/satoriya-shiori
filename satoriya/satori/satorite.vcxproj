@@ -230,6 +230,7 @@
     <ClInclude Include="shiori_plugin.h" />
     <ClInclude Include="SSTPClient.h" />
     <ClInclude Include="ssu.h" />
+    <ClInclude Include="..\deelx\deelx.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="icon1.ico" />

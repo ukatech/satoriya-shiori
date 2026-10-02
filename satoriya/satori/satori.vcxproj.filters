@@ -188,6 +188,9 @@
     <ClInclude Include="ssu.h">
       <Filter>SSUDirect</Filter>
     </ClInclude>
+    <ClInclude Include="..\deelx\deelx.h">
+      <Filter>SSUDirect</Filter>
+    </ClInclude>
     <ClInclude Include="..\_\charset.h">
       <Filter>_</Filter>
     </ClInclude>

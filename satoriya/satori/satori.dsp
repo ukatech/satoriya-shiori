@@ -344,6 +344,10 @@ SOURCE=.\ssu.cpp
 
 SOURCE=.\ssu.h
 # End Source File
+# Begin Source File
+
+SOURCE=..\deelx\deelx.h
+# End Source File
 # End Group
 # Begin Source File
 

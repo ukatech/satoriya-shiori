@@ -211,6 +211,7 @@
     <ClInclude Include="ShioriClient.h" />
     <ClInclude Include="shiori_plugin.h" />
     <ClInclude Include="ssu.h" />
+    <ClInclude Include="..\deelx\deelx.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />

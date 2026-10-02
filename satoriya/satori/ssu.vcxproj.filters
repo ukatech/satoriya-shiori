@@ -64,6 +64,9 @@
     <ClInclude Include="SakuraCS.h">
       <Filter>SakuraCS</Filter>
     </ClInclude>
+    <ClInclude Include="..\deelx\deelx.h">
+      <Filter>SakuraCS</Filter>
+    </ClInclude>
     <ClInclude Include="SakuraDLLHost.h">
       <Filter>SakuraCS</Filter>
     </ClInclude>

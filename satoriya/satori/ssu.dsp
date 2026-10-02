@@ -156,6 +156,10 @@ SOURCE=.\SakuraCS.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\deelx\deelx.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\SakuraDLLHost.cpp
 # End Source File
 # Begin Source File
