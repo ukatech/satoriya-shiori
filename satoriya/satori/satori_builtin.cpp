@@ -526,7 +526,8 @@ wstring	Satori::func_remember(const strvec& iArgv, bool, bool)
 static void	variable_names_with_prefix(const strmap& iVariables, const wstring& iPrefix, strvec& oNames)
 {
 	for ( strmap::const_iterator it=iVariables.lower_bound(iPrefix) ; it!=iVariables.end() ; ++it ) {
-		if ( !compare_head(it->first, iPrefix) ) {
+		// compare_head‚ÍÚ“ª«‚ª‹ó‚¾‚Æí‚Éfalse‚ğ•Ô‚·‚Ì‚ÅA‹ó‚Ì‚Æ‚«‚Í‘S•”‚ğ‘ÎÛ‚É‚·‚é
+		if ( !iPrefix.empty() && !compare_head(it->first, iPrefix) ) {
 			break;
 		}
 		oNames.push_back(it->first);
