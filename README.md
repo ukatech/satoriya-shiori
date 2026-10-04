@@ -59,7 +59,7 @@ msdev satori.dsw /MAKE "ssu - Win32 Release" /REBUILD
 
 出力先は satori が `Release\`、satorite が `Release_ST\`、ssu が `Release_SU\` です。ビルド後に `satoriya\make_satori.ps1` を実行すると、`satoriya\tmp\satori.zip` ができます（7-Zip が必要です）。
 
-POSIX 環境向けの `makefile.posix` などもありますが、主に保守しているのは Windows（VC6）版です。
+POSIX 環境向けには Linux 用の `makefile.linux`、macOS 用の `makefile.posix` などもありますが、主に保守しているのは Windows（VC6）版です。
 
 ソースの文字コードは Shift_JIS、改行は CRLF です。編集するときはこれを保ってください。
 

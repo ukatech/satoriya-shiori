@@ -30,6 +30,18 @@ git submodule update --init --remote satoriya/deelx
 - deelx.h は ASCII・LF/CRLF どちらでもよい。POSIX の makefile は `utf8src/deelx/` にコピーして使う。
 - DEELX は正規表現の書式エラーを報告しない（閉じていない括弧などはそのまま解釈される）。
 
+### POSIX 版（Linux / macOS）
+- `satoriya/satori/makefile.linux`（Linux / BSD、`libsatori.so`）と `makefile.posix`（macOS、`libsatori.bundle`、`-liconv`）でビルドする。オブジェクト一覧と規則は同じなので、ソースを増やしたら両方（と `makefile.emscripten`）に足す。`libssu` は `SSU_SAORI_CALL_INTERFACE` 付きの別ビルドが要るため作らない（satori 本体が ssu を内蔵している）。
+- ソースは SJIS のまま、makefile が iconv で `utf8src/` に UTF-8 の写しを作ってからコンパイルする。ファイル名は git 上の大文字小文字どおりに書く（`satori_Kakko.cpp` は小文字始まり。Windows では気づかない）。
+- 手動実行の GitHub Actions `.github/workflows/posix-build.yml` で、Linux（ubuntu-latest、g++）と macOS（macos-latest、clang++）のビルドとスモークテストを行う。ローカルに Linux / macOS が無くても、push してから実行して直せる。
+  ```
+  gh workflow run posix-build.yml --ref unicode
+  gh run watch <run-id> --exit-status
+  gh run view <run-id> --log-failed
+  ```
+- スモークテストは `satoriya/test/posix/posix_smoke.c`。dlopen → `load` → イベントの `request` → `unload` → dlclose まで通し、`test/posix/ghost/dic_smoke.txt` のイベント（トーク・変数・ssu の `replace` / `calc` / `regex_replace`）の応答に期待値が入るかを見る。期待値を足すときは、先に Windows の satori.dll を harness で動かして確かめる。
+- POSIX の `load` / `request` は渡したバッファを `free` する（YAYA と違って成功時も）ので、テストは `malloc` したものを渡す。
+
 ## リリース
 
 ### バージョン記号 `McXYY-Z`
