@@ -139,11 +139,14 @@ static bool pre_process(
 		// 一行（物理行）に対する処理
 		while ( *p!=L'\0' )
 		{
-			wstring	c=get_a_chr(p);	// 全角半角問わず一文字取得。
+			a_chr	c=next_a_chr(p);	// 全角半角問わず一文字取得。
 
 			if ( escape ) 
 			{
-				accumulater += (c==L"φ") ? c : io_escaper.insert(c);
+				if ( c==L"φ" )
+					accumulater += c;
+				else
+					append_grow(accumulater, io_escaper.insert(c.str()));
 				escape = false;
 			}
 			else 

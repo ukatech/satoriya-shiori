@@ -8,21 +8,10 @@
 #endif
 
 #include	<cstring>
+#include	<vector>
 
 //----------------------------------------------------------------------
 // UTF-8 (自前実装)
-
-static void	append_codepoint(std::wstring& o, unsigned long cp)
-{
-	if ( sizeof(wchar_t) == 2 && cp >= 0x10000 ) {
-		cp -= 0x10000;
-		o += (wchar_t)(0xD800 + (cp >> 10));
-		o += (wchar_t)(0xDC00 + (cp & 0x3FF));
-	}
-	else {
-		o += (wchar_t)cp;
-	}
-}
 
 // p から1文字デコードする。不正なら 0 を返す。成功したら使ったバイト数を返す。
 static int	decode_utf8_char(const unsigned char* p, size_t len, unsigned long& cp)
@@ -47,8 +36,10 @@ static int	decode_utf8_char(const unsigned char* p, size_t len, unsigned long& c
 
 std::wstring	UTF8toW(const std::string& str)
 {
-	std::wstring o;
-	o.reserve(str.size());
+	// VC6のbasic_stringは1文字ずつ追加すると遅いので、配列に書いてから一度に作る。
+	// UTF-8の1バイトから2単位以上にはならないので、バイト数分あれば足りる。
+	std::vector<wchar_t> buf(str.size() + 1);
+	wchar_t* q = &buf[0];
 	const unsigned char* p = (const unsigned char*)str.c_str();
 	size_t len = str.size();
 	while ( len > 0 ) {
@@ -56,16 +47,21 @@ std::wstring	UTF8toW(const std::string& str)
 		int n = decode_utf8_char(p, len, cp);
 		if ( n == 0 ) {
 			// 不正なバイトは U+FFFD にして1バイト進める
-			o += (wchar_t)0xFFFD;
+			*q++ = (wchar_t)0xFFFD;
 			n = 1;
 		}
+		else if ( sizeof(wchar_t) == 2 && cp >= 0x10000 ) {
+			cp -= 0x10000;
+			*q++ = (wchar_t)(0xD800 + (cp >> 10));
+			*q++ = (wchar_t)(0xDC00 + (cp & 0x3FF));
+		}
 		else {
-			append_codepoint(o, cp);
+			*q++ = (wchar_t)cp;
 		}
 		p += n;
 		len -= n;
 	}
-	return o;
+	return std::wstring(&buf[0], q - &buf[0]);
 }
 
 std::string		WtoUTF8(const std::wstring& str)
