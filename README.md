@@ -27,13 +27,12 @@
 | `saori\ssu.dll` | 同梱 SAORI「ssu」（`calc` `split` `replace` などの関数） |
 
 バージョンは `McXYY-Z` の形で、X が版の種類を表します。
+| 版 | バージョン | ブランチ |
+|----|------------|----------|
+| ACP 版（Shift_JIS ベース） | `Mc1YY-Z` | `master` |
+| Unicode 版 | `Mc2YY-Z` | `unicode` |
 
-| 版 | バージョン | ブランチ | 状態 |
-|----|------------|----------|------|
-| ACP 版（Shift_JIS ベース） | `Mc1YY-Z` | `master` | 安定版 |
-| Unicode 版 | `Mc2YY-Z` | `unicode` | 試験版（Releases では Pre-release） |
-
-Unicode 版では、UTF-8 の辞書が使えるほか、サロゲートペアなどを 1 文字として扱えます。ACP 版との違いは [ACP 版との違い](https://ukatech.github.io/satori-docs/other/unicode-changes/) を、試験版の動作確認のお願いと報告先は [里々 Unicode 版 試験版 ─ 動作確認のお願い](https://ukatech.github.io/satori-docs/other/satori2-prerelease/) を参照してください。
+Unicode 版では、UTF-8 の辞書が使えるほか、サロゲートペアなどを 1 文字として扱えます。ACP 版との違いは [ACP 版との違い](https://ukatech.github.io/satori-docs/other/unicode-changes/) を参照してください。
 
 ## リポジトリの構成
 
