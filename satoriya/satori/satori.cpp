@@ -14,7 +14,7 @@ const wchar_t* gSatoriName = L"Satori";
 const wchar_t* gSatoriNameW = L"—¢X";
 const wchar_t* gSatoriCraftman = L"Yagi Kushigahama/The Maintenance Shop";
 const wchar_t* gSatoriCraftmanW = L"‹ùƒ–•l‚â‚¬/®”õ”Ç";
-const wchar_t* gSatoriVersion = L"phase Mc203-2";
+const wchar_t* gSatoriVersion = L"phase Mc203-3";
 const wchar_t* gShioriVersion = L"3.0";
 const wchar_t* gSaoriVersion = L"1.0";
 
