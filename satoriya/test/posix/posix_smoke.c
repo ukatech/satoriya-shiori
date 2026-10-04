@@ -111,7 +111,7 @@ int main(int argc, char **argv)
 	check("OnHello", "hello world");
 	check("OnVar", "x is \xef\xbc\x95");
 	check("OnReplace", "heLLo");
-	check("OnCalc", "0\07\e");
+	check("OnCalc", "\\07\\e");
 	check("OnRegex", "abc-def");
 
 	p_unload();

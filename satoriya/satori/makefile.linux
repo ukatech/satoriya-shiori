@@ -7,7 +7,7 @@ STRIP = strip
 MKDEP = mkdep
 
 # 作るライブラリ名の設定
-# Linux / BSD 用の設定で、libsatori.so と libssu.so を生成する。
+# Linux / BSD 用の設定で、libsatori.so を生成する。
 # macOS 用は makefile.posix（.bundle を生成する）。
 DYLIB_NAME_PREFIX = lib
 DYLIB_NAME_POSTFIX = .so
@@ -15,7 +15,7 @@ DYLIB_NAME_POSTFIX = .so
 # 追加するフラグ。
 # LDFLAGS は dlopen 可能なライブラリを作れる設定にしなければならない。
 # Linux / BSD なら -shared。
-CXXFLAGS = -O3 -Wall -std=c++11
+CXXFLAGS = -O3 -Wall -Wno-unknown-pragmas -std=c++11
 LDFLAGS = -shared
 LIBS = -ldl
 
@@ -43,7 +43,7 @@ LIBSATORI_OBJ = \
 	satori_builtin.o \
 	satori_CreateResponce.o \
 	satori_EventOperation.o \
-	Satori_Kakko.o \
+	satori_Kakko.o \
 	satori_load_dict.o \
 	satori_load_unload.o \
 	satori_sentence.o \
@@ -51,42 +51,23 @@ LIBSATORI_OBJ = \
 	shiori_plugin.o \
 	ssu.o \
 	$(NULL)
-LIBSSU_OBJ = \
-	../_/Sender.o \
-	../_/charset.o \
-	../_/Utilities.o \
-	../_/calc.o \
-	../_/calc_float.o \
-	../_/stltool.o \
-	../_/mt19937ar.o \
-	SakuraCS.o \
-	SakuraDLLHost.o \
-	SaoriHost.o \
-	ssu.o \
-	$(NULL)
 
 LIBSATORI = $(DYLIB_NAME_PREFIX)satori$(DYLIB_NAME_POSTFIX)
-LIBSSU = $(DYLIB_NAME_PREFIX)ssu$(DYLIB_NAME_POSTFIX)
 
-all: $(LIBSATORI) $(LIBSSU)
+all: $(LIBSATORI)
 
 # makeがmakefile自体をリメイクしようとして%.oにマッチしないようにする
 $(MAKEFILE_LIST): ;
 
 depend:
-	mkdep $(CXXFLAGS) $(CXXFLAGS_ADD) -I. -I../_ $(LIBSATORI_OBJ:.o=.cpp) $(LIBSSU_OBJ:.o=.cpp)
+	mkdep $(CXXFLAGS) $(CXXFLAGS_ADD) -I. -I../_ $(LIBSATORI_OBJ:.o=.cpp)
 
 clean:
 	rm -rf $(U8DIR)
 	rm -f $(LIBSATORI) $(LIBSATORI_OBJ)
-	rm -f $(LIBSSU) $(LIBSSU_OBJ)
 
 $(LIBSATORI): $(LIBSATORI_OBJ)
 	$(LD) -o $@ $(LIBSATORI_OBJ) $(LDFLAGS) $(LIBS)
-	$(STRIP) -x $@
-
-$(LIBSSU): $(LIBSSU_OBJ)
-	$(LD) -o $@ $(LIBSSU_OBJ) $(LDFLAGS) $(LIBS)
 	$(STRIP) -x $@
 
 # ソースはShift_JISなので、UTF-8に変換したコピー($(U8DIR))をコンパイルする。

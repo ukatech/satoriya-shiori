@@ -24,8 +24,8 @@ jobs:
       - name: Check output
         working-directory: satoriya/satori
         run: |
-          ls -l libsatori.so libssu.so
-          file libsatori.so libssu.so
+          ls -l libsatori.so
+          file libsatori.so
 
       - name: Smoke test (dlopen + SHIORI load/request/unload)
         run: |
@@ -50,8 +50,8 @@ jobs:
       - name: Check output
         working-directory: satoriya/satori
         run: |
-          ls -l libsatori.bundle libssu.bundle
-          file libsatori.bundle libssu.bundle
+          ls -l libsatori.bundle
+          file libsatori.bundle
 
       - name: Smoke test (dlopen + SHIORI load/request/unload)
         run: |
