@@ -58,7 +58,6 @@ git submodule update --init --remote satoriya/deelx
    - ノートは日本語の箇条書き（`- ○○の問題修正`、`- ○○を追加`）。外部の PR によるものは末尾に ` by @ユーザー名` を付ける。
    - 過去の例は `gh release view Mc172-3` で見られる。
    - 公開前にノートの文面をユーザーに見せて確認する。
-   - Mc2XX（Unicode 版）は当面 `--prerelease` を付けてベータとして出す。検証が進んだらユーザーの指示で外す（`gh release edit McXYY-Z --prerelease=false`）。指示があるまでは外さない。
 
 ## ドキュメント
 
