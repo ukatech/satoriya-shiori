@@ -27,6 +27,7 @@
 | `saori\ssu.dll` | 同梱 SAORI「ssu」（`calc` `split` `replace` などの関数） |
 
 バージョンは `McXYY-Z` の形で、X が版の種類を表します。
+
 | 版 | バージョン | ブランチ |
 |----|------------|----------|
 | ACP 版（Shift_JIS ベース） | `Mc1YY-Z` | `master` |
