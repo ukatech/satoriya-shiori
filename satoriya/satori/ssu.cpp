@@ -188,6 +188,7 @@ static SRV	call_ssu(wstring iCommand, std::deque<wstring>& iArguments, std::dequ
 #  include      "../_/Utilities.h"
 #  include <sys/stat.h>
 #  include <sys/types.h>
+#  include <dirent.h>
 #else
 #  include	<windows.h>
 #endif
@@ -1006,6 +1007,17 @@ SRV _choice(std::deque<wstring>& iArguments, std::deque<wstring>& oValues)
 	return iArguments[ random(iArguments.size()) ];
 }
 
+static bool is_image_file_name(const wstring& name)
+{
+	wstring lo(name);
+	std::transform(lo.begin(), lo.end(), lo.begin(), towlower);
+	return compare_tail(lo, L".png") ||
+		compare_tail(lo, L".jpg") ||
+		compare_tail(lo, L".jpe") ||
+		compare_tail(lo, L".jpeg") ||
+		compare_tail(lo, L".bmp");
+}
+
 SRV _lsimg(std::deque<wstring>& iArguments, std::deque<wstring>& oValues)
 {
 	if (iArguments.size() == 0)
@@ -1019,22 +1031,23 @@ SRV _lsimg(std::deque<wstring>& iArguments, std::deque<wstring>& oValues)
 	if (h == INVALID_HANDLE_VALUE)
 		return L"0";
 	do {
-		wstring lo(wfd.cFileName);
-		std::transform(lo.begin(), lo.end(), lo.begin(), towlower);
-		if (compare_tail(lo, L".png") ||
-			compare_tail(lo, L".jpg") ||
-			compare_tail(lo, L".jpe") ||
-			compare_tail(lo, L".jpeg") ||
-			compare_tail(lo, L".bmp"))
-		{
+		if (is_image_file_name(wfd.cFileName))
 			oValues.push_back(wfd.cFileName);
-		}
 	} while (FindNextFile(h, &wfd));
 	FindClose(h);
 	return itos(oValues.size());
 #else
-	// TODO ‚¾‚ê‚©‚È‚ñ‚Æ‚©‚µ‚Ä
-	return L"0";
+	DIR* dh = opendir(WtoUTF8(iArguments[0]).c_str());
+	if (dh == NULL)
+		return L"0";
+	struct dirent* ent;
+	while ((ent = readdir(dh)) != NULL) {
+		wstring name = UTF8toW(ent->d_name);
+		if (is_image_file_name(name))
+			oValues.push_back(name);
+	}
+	closedir(dh);
+	return itos(oValues.size());
 #endif
 }
 

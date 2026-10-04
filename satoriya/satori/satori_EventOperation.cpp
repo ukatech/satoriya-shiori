@@ -276,6 +276,7 @@ int	Satori::EventOperation(wstring iEvent, std::map<wstring,wstring> &oResponse)
 		    int ret = 0;
 #else
 		    LRESULT	ret = 0;
+#endif
 
 			if ( mIsStatusHeaderExist ) {
 				strmap::const_iterator it = mRequestMap.find(L"Status");
@@ -294,6 +295,7 @@ int	Satori::EventOperation(wstring iEvent, std::map<wstring,wstring> &oResponse)
 					}
 				}
 			}
+#ifndef POSIX
 			else {
 				if ( !insert_nade_talk_at_other_talk && updateGhostsInfo() ) {
 					wstring	hwnd_str = (ghosts_info[0])[L"hwnd"];
