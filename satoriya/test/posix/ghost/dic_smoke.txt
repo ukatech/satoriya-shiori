@@ -1,0 +1,15 @@
+＊OnHello
+：hello world
+
+＊OnVar
+＄x＝５
+：x is （x）
+
+＊OnReplace
+：（replace、hello、l、L）
+
+＊OnCalc
+：（calc、1＋2＊3）
+
+＊OnRegex
+：（regex_replace、abc123def、[0-9]+、-）

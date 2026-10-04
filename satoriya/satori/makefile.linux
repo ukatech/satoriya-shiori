@@ -1,28 +1,27 @@
 # -*- makefile -*-
 
 # 使用するツール類の設定
-CXX = clang++
-LD = clang++
+CXX = g++
+LD = g++
 STRIP = strip
 MKDEP = mkdep
 
 # 作るライブラリ名の設定
-# macOS 用の設定で、libsatori.bundle と libssu.bundle を生成する。
-# Linux / BSD 用は makefile.linux（.so を生成する）。
+# Linux / BSD 用の設定で、libsatori.so と libssu.so を生成する。
+# macOS 用は makefile.posix（.bundle を生成する）。
 DYLIB_NAME_PREFIX = lib
-DYLIB_NAME_POSTFIX = .bundle
+DYLIB_NAME_POSTFIX = .so
 
 # 追加するフラグ。
 # LDFLAGS は dlopen 可能なライブラリを作れる設定にしなければならない。
-# macOS なら -bundle。
-ARCH_FLAGS =
-CXXFLAGS = -O3 -Wall -std=c++11 $(ARCH_FLAGS)
-LDFLAGS = -bundle $(ARCH_FLAGS)
-LIBS =
+# Linux / BSD なら -shared。
+CXXFLAGS = -O3 -Wall -std=c++11
+LDFLAGS = -shared
+LIBS = -ldl
 
 
 ################## これより下は弄らなくてもコンパイル出来ます ##################
-CXXFLAGS_ADD = -DPOSIX -DSATORI_DLL
+CXXFLAGS_ADD = -DPOSIX -DSATORI_DLL -fPIC
 LIBSATORI_OBJ = \
 	../_/Sender.o \
 	../_/charset.o \

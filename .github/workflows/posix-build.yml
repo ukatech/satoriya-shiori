@@ -1,0 +1,61 @@
+name: posix-build
+
+# 手動実行のみ。Actions タブの "Run workflow" からブランチを選んで実行する
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    name: Linux (makefile.linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build
+        working-directory: satoriya/satori
+        run: make -f makefile.linux -j"$(nproc)"
+
+      - name: Check output
+        working-directory: satoriya/satori
+        run: |
+          ls -l libsatori.so libssu.so
+          file libsatori.so libssu.so
+
+      - name: Smoke test (dlopen + SHIORI load/request/unload)
+        run: |
+          cc -o posix_smoke satoriya/test/posix/posix_smoke.c -ldl
+          mkdir ghost
+          cp satoriya/test/posix/ghost/*.txt ghost/
+          ./posix_smoke "$PWD/satoriya/satori/libsatori.so" "$PWD/ghost"
+
+  macos:
+    name: macOS (makefile.posix)
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build
+        working-directory: satoriya/satori
+        run: make -f makefile.posix -j"$(sysctl -n hw.ncpu)"
+
+      - name: Check output
+        working-directory: satoriya/satori
+        run: |
+          ls -l libsatori.bundle libssu.bundle
+          file libsatori.bundle libssu.bundle
+
+      - name: Smoke test (dlopen + SHIORI load/request/unload)
+        run: |
+          cc -o posix_smoke satoriya/test/posix/posix_smoke.c
+          mkdir ghost
+          cp satoriya/test/posix/ghost/*.txt ghost/
+          ./posix_smoke "$PWD/satoriya/satori/libsatori.bundle" "$PWD/ghost"
