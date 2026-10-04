@@ -253,6 +253,10 @@ bool ShioriPlugins::load_a_plugin(const wstring& iPluginLine)
 						GetSender().errsender() << fullpath + L": SAORI/1.xのdllではありません。GET Versionの戻り値が未対応のものでした。(" + ver + L")" << satori::endl;
 					}
 					else if ( ! mDllData[fullpath].m_pSaoriClient->version_reply_has_charset() ) {
+						// GET Versionの応答にCharsetを返さないSAORIは、Charsetヘッダを見ずに
+						// Shift_JISとして読むもの（華和梨のSAORIモードなど）があるので、master版と同じくShift_JISで送る。
+						mDllData[fullpath].m_pSaoriClient->set_charset(L"Shift_JIS");
+
 						// YAYA as SAORI の古いayasaori.aymは、GET Versionの応答にCharsetを返さず、
 						// 次の最初のEXECUTEだけ文字コードの設定が合わず文字化けする。
 						// 応答にCharsetが無い・空のときは、何もしないEXECUTEを1回送って読み捨てる。

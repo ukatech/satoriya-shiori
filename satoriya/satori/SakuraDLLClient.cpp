@@ -89,8 +89,12 @@ wstring	SakuraDLLClient::request(const wstring& iRequestString)
 		return wstring(L"");
 	}
 
-	// 返答はCharsetヘッダに従う。無ければ判定する。
+	// 返答はCharsetヘッダに従う。無ければ、Shift_JISで送った相手ならShift_JIS、それ以外は判定する。
+	// （Shift_JISの半角カナはUTF-8として正しい並びになることがあるので、判定に任せない）
 	CharactorSet response_cs = CharsetFromName(UTF8toW(find_charset_header(theResponse)));
+	if ( response_cs == CS_NULL && cs == CS_SJIS ) {
+		response_cs = CS_SJIS;
+	}
 	return MBtoW(theResponse, response_cs);
 }
 

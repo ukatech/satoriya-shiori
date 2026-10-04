@@ -31,7 +31,7 @@ int SaoriClient::request(
 
 	strpairvec data;
 
-	data.push_back( strpair(L"Charset", L"UTF-8" ) );
+	data.push_back( strpair(L"Charset", charset() ) );
 	data.push_back( strpair(L"Sender", L"SATORI" ) );
 	data.push_back( strpair(L"SecurityLevel", (i_is_secure ? L"Local" : L"External") ) );
 

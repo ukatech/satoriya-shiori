@@ -31,6 +31,10 @@ public:
 	// 直前のget_versionの応答に、空でないCharsetヘッダがあったか。
 	bool version_reply_has_charset() const { return m_version_reply_has_charset; }
 
+	// リクエストを送る文字コード（Charsetヘッダの値）。
+	const wstring& charset() const { return m_charset; }
+	void set_charset(const wstring& i_charset) { m_charset = i_charset; }
+
 	// 素のリクエスト文字列を送り、素のレスポンス文字列を受け取る。
 	virtual wstring request(const wstring& i_request_string);
 
