@@ -288,15 +288,6 @@ bool	strmap_to_file(const strmap& oMap, const wstring& iFileName, const wstring&
 }
 
 
-wstring	get_a_chr(const wchar_t*& p) {
-	if ( *p==L'\0' )
-		return	L"";
-	const wchar_t*	start = p++;
-	if ( IsHighSurrogate(*start) && IsLowSurrogate(*p) )
-		++p;
-	return	wstring(start, p);
-}
-
 size_t	count_chars(const wstring& str) {
 	size_t	n = 0;
 	for ( wstring::size_type i=0 ; i<str.size() ; ++i ) {

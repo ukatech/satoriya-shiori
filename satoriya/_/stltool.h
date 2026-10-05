@@ -210,9 +210,6 @@ static const char	FILE_NEWLINE[] = "\n";
 static const char	FILE_NEWLINE[] = "\r\n";
 #endif
 
-// 一文字取得（サロゲートペアは1文字として扱う）
-wstring	get_a_chr(const wchar_t*& p);
-
 // 文字列の末尾に追加する。
 // VC6のbasic_stringは容量を32文字ずつしか増やさず、少しずつ追加すると長さの2乗の時間がかかるので、足りなければ倍々に確保する。
 inline wstring&	append_grow(wstring& s, const wchar_t* p, size_t n) {
@@ -227,7 +224,7 @@ inline wstring&	append_grow(wstring& s, const wstring& t) {
 }
 
 // 一文字（サロゲートペアは2単位）を、ヒープを使わずに持つ。
-// VC6のbasic_stringは1文字でもヒープを確保するので、1文字ずつ回すループでは get_a_chr の代わりに next_a_chr を使う。
+// VC6のbasic_stringは1文字でもヒープを確保するので、1文字ずつ回すループでは wstring ではなくこれを使う。
 class a_chr {
 	wchar_t	m_buf[3];
 	size_t	m_len;
@@ -244,7 +241,7 @@ public:
 	bool	operator!=(const wstring& s) const { return !(*this == s); }
 };
 
-// 一文字取得（サロゲートペアは1文字として扱う）。get_a_chr と同じだが a_chr で返す。
+// 一文字取得（サロゲートペアは1文字として扱う）。p は一文字ぶん進む。
 inline a_chr	next_a_chr(const wchar_t*& p) {
 	a_chr	c;
 	if ( *p == L'\0' )
@@ -273,7 +270,7 @@ size_t	char_pos_to_index(const wstring& str, size_t char_pos);
 template<class T>
 int	split(const wchar_t* p, T& o) {
 	while ( *p != L'\0' )
-		o.push_back(get_a_chr(p));
+		o.push_back(next_a_chr(p).str());
 	return	o.size();
 }
 

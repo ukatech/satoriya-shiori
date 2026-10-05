@@ -100,7 +100,7 @@ git submodule update --init --remote satoriya/deelx
 - 内部の文字列はすべて `std::wstring`（`strvec` / `strmap` なども）。`std::string` は外部とのバイト列にだけ使い、変換は `_/charset.h` で行う。
 - バイト列との境界は次の箇所だけ：SHIORI/SAORI の受け側（`SakuraDLLHost::request_bytes`、`load` / `loadu`）、SAORI の呼び出し側（`SakuraDLLClient`）、ファイル（`stltool` の `bytes_from_file` など）、SSTP（`SendDirectSSTP`、`SSTPClient`、`dsstp`）、FMO（`SakuraFMO`）、ログ（`Sender`）。
 - 日本語リテラルの長さを数値で書かない（`const_strlen(L"...")` や `strip_head_tail` を使う）。
-- 1文字取得は `get_a_chr`、文字数は `count_chars`（サロゲートペアを1文字として扱う）。
+- 1文字取得は `next_a_chr`（`a_chr`。ヒープを使わない。VC6 の `basic_string` は1文字でもヒープを確保するので、1文字ずつ回すループで `wstring` を作らない）、文字数は `count_chars`（サロゲートペアを1文字として扱う）。
 - さくらスクリプトのコマンド名判定は ASCII に限る（`iswalpha` はかなや漢字でも真になる）。
 - 内部特殊表現は私用領域の文字（`INTERNAL_MARK` U+E0FF、種別 U+E0FD / U+E0FC、escaper U+E09E、Sender の flush 区切り U+E0FE）。master の `\x01` / `\x02` は、（バイト値、１）などの引数区切りと衝突して「引数の個数が正しくありません」になったので移した。制御文字を内部表現に使わない。
 

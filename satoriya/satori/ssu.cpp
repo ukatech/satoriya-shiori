@@ -982,7 +982,7 @@ SRV _at(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {
 
 	if ( iArguments.size()==2 ) {
 		const wchar_t* p = char_at(iArguments.at(0).c_str(), zen2int(iArguments.at(1)));
-		return	(p==NULL || *p==L'\0') ? wstring() : get_a_chr(p);
+		return	(p==NULL || *p==L'\0') ? wstring() : next_a_chr(p).str();
 	}
 	//else if ( iArguments.size()==3 ) {
 	//}
