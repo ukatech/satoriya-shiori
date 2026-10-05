@@ -252,7 +252,17 @@ bool ShioriPlugins::load_a_plugin(const wstring& iPluginLine)
 					{
 						GetSender().errsender() << fullpath + L": SAORI/1.xのdllではありません。GET Versionの戻り値が未対応のものでした。(" + ver + L")" << satori::endl;
 					}
-					else if ( ! mDllData[fullpath].m_pSaoriClient->version_reply_has_charset() ) {
+					else if ( mDllData[fullpath].m_pSaoriClient->version_reply_has_charset() ) {
+						// GET Versionの応答のCharsetが、送った値と違うときは、SAORIが対応する文字コードを知らせている。
+						// 要求のCharsetを見ずに常にShift_JISで読み書きするSAORI（葉梨のhanasi.dllなど）に
+						// UTF-8で送ると文字化けするので、応答の文字コードに合わせて送る。
+						CharactorSet reply_cs = CharsetFromName(mDllData[fullpath].m_pSaoriClient->version_reply_charset());
+						if ( reply_cs != CS_NULL
+						  && reply_cs != CharsetFromName(mDllData[fullpath].m_pSaoriClient->charset()) ) {
+							mDllData[fullpath].m_pSaoriClient->set_charset(CharsetName(reply_cs));
+						}
+					}
+					else {
 						// GET Versionの応答にCharsetを返さないSAORIは、Charsetヘッダを見ずに
 						// Shift_JISとして読むもの（華和梨のSAORIモードなど）があるので、master版と同じくShift_JISで送る。
 						mDllData[fullpath].m_pSaoriClient->set_charset(L"Shift_JIS");

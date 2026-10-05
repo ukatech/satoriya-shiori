@@ -214,11 +214,24 @@ extern "C" __declspec(dllexport) HGLOBAL __cdecl getversionlist(HGLOBAL i_data, 
 #endif
 
 
+static bool	is_ascii_only(const std::string& i_bytes)
+{
+	for ( std::string::const_iterator i = i_bytes.begin() ; i != i_bytes.end() ; ++i ) {
+		if ( static_cast<unsigned char>(*i) >= 0x80 ) { return false; }
+	}
+	return true;
+}
+
 std::string SakuraDLLHost::request_bytes(const std::string& i_request_bytes)
 {
 	CharactorSet cs = CharsetFromName(UTF8toW(find_charset_header(i_request_bytes)));
 	if ( cs == CS_NULL ) {
 		cs = DetectCharset(i_request_bytes);
+		if ( cs == CS_UTF8 && is_ascii_only(i_request_bytes) ) {
+			// Charsetヘッダが無くASCIIだけの要求は、文字コードを申告しない古い呼び出し元（SHIORI/2.x、SAORI/1.0など）。
+			// 返答の日本語はmaster版と同じくShift_JISにする。
+			cs = CS_SJIS;
+		}
 	}
 	wstring the_response = request(MBtoW(i_request_bytes, cs), cs);
 

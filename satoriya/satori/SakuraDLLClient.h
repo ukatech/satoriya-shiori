@@ -31,6 +31,9 @@ public:
 	// 直前のget_versionの応答に、空でないCharsetヘッダがあったか。
 	bool version_reply_has_charset() const { return m_version_reply_has_charset; }
 
+	// 直前のget_versionの応答のCharsetヘッダの値。無ければ空。
+	const wstring& version_reply_charset() const { return m_version_reply_charset; }
+
 	// リクエストを送る文字コード（Charsetヘッダの値）。
 	const wstring& charset() const { return m_charset; }
 	void set_charset(const wstring& i_charset) { m_charset = i_charset; }
@@ -50,6 +53,7 @@ private:
 	wstring m_protocol;
 	wstring m_protocol_version;
 	bool m_version_reply_has_charset;
+	wstring m_version_reply_charset;
 
 #ifdef POSIX
 	void*   mModule;

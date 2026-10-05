@@ -32,8 +32,8 @@ protected:
 public:
 	SaoriHost() : SakuraDLLHost(), m_is_secure(true) {}
 
-	// SAORIとしての返答は常にUTF-8
-	virtual CharactorSet response_charset(CharactorSet i_request_charset) { return CS_UTF8; }
+	// SAORIとしての返答は、要求のCharsetに合わせる（SakuraDLLHostの既定）。
+	// Charsetを見ない古い呼び出し元にUTF-8で返すと文字化けするので、固定にしない。
 	virtual ~SaoriHost() {}
 
 	virtual SRV	request(std::deque<wstring>& iArguments, std::deque<wstring>& oValues)=0;
