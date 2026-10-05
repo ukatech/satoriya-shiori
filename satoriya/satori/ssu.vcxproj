@@ -58,7 +58,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
       <AdditionalIncludeDirectories>..\_;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_WINDOWS;_USRDLL;ssu_EXPORTS;WIN32;_DEBUG;STRICT;_CRT_SECURE_NO_WARNINGS;SSU_SAORI_CALL_INTERFACE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;_USRDLL;ssu_EXPORTS;WIN32;WINVER=0x0500;_WIN32_WINNT=0x0500;_WIN32_IE=0x0500;_DEBUG;STRICT;_CRT_SECURE_NO_WARNINGS;SSU_SAORI_CALL_INTERFACE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Debug_SU\</AssemblerListingLocation>
       <BrowseInformation>true</BrowseInformation>
       <PrecompiledHeaderOutputFile>.\Debug_SU\ssu.pch</PrecompiledHeaderOutputFile>
@@ -108,7 +108,7 @@
       <PrecompiledHeaderOutputFile>.\Release_SU\ssu.pch</PrecompiledHeaderOutputFile>
       <ObjectFileName>.\Release_SU\</ObjectFileName>
       <ProgramDataBaseFileName>.\Release_SU\</ProgramDataBaseFileName>
-      <PreprocessorDefinitions>_WINDOWS;_USRDLL;ssu_EXPORTS;WIN32;_RELEASE;STRICT;_CRT_SECURE_NO_WARNINGS;SSU_SAORI_CALL_INTERFACE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;_USRDLL;ssu_EXPORTS;WIN32;WINVER=0x0500;_WIN32_WINNT=0x0500;_WIN32_IE=0x0500;_RELEASE;STRICT;_CRT_SECURE_NO_WARNINGS;SSU_SAORI_CALL_INTERFACE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>

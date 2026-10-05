@@ -59,7 +59,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
       <AdditionalIncludeDirectories>..\_;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_WINDOWS;WINVER=0x400;WIN32;NDEBUG;STRICT;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;WIN32;WINVER=0x0500;_WIN32_WINNT=0x0500;_WIN32_IE=0x0500;NDEBUG;STRICT;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Release_ST\</AssemblerListingLocation>
       <PrecompiledHeaderOutputFile>.\Release_ST\satorite.pch</PrecompiledHeaderOutputFile>
       <ObjectFileName>.\Release_ST\</ObjectFileName>
@@ -96,7 +96,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
       <AdditionalIncludeDirectories>..\_;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_WINDOWS;WIN32;_DEBUG;STRICT;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;WIN32;WINVER=0x0500;_WIN32_WINNT=0x0500;_WIN32_IE=0x0500;_DEBUG;STRICT;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AssemblerListingLocation>.\Debug_ST\</AssemblerListingLocation>
       <BrowseInformation>true</BrowseInformation>
       <PrecompiledHeaderOutputFile>.\Debug_ST\satorite.pch</PrecompiledHeaderOutputFile>

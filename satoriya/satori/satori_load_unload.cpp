@@ -1,11 +1,6 @@
 #ifdef _MSC_VER 
 
-	// マルチモニタ関連
-	//#define WINVER 0x0500
 	#include	<windows.h>
-	#include	<multimon.h>
-	#define SM_CXVIRTUALSCREEN      78
-	#define SM_CYVIRTUALSCREEN      79
 
 #endif	// _MSC_VER
 
@@ -44,14 +39,7 @@ BOOL CALLBACK MonitorEnumFunc(HMONITOR hMonitor,HDC hdc,LPRECT rect,LPARAM lPara
     MONITORINFOEX MonitorInfoEx;
     MonitorInfoEx.cbSize=sizeof(MonitorInfoEx);
 
-	static BOOL (WINAPI* pGetMonitorInfo)(HMONITOR,LPMONITORINFO) = NULL;
-	if ( ! pGetMonitorInfo ) {
-		(FARPROC&)pGetMonitorInfo = ::GetProcAddress(::GetModuleHandle(L"user32.dll"), "GetMonitorInfoW");
-	}
-
-	if ( pGetMonitorInfo==NULL )
-		return	FALSE;
-	if ( !(*pGetMonitorInfo)(hMonitor,&MonitorInfoEx) ) {
+	if ( !::GetMonitorInfo(hMonitor,&MonitorInfoEx) ) {
 		GetSender().sender() << L"'GetMonitorInfo' was failed." << std::endl;
         return FALSE;
     }
@@ -154,51 +142,25 @@ bool	Satori::load(const wstring& iBaseFolder)
 
 #ifdef	_MSC_VER
 	// システムの設定を読んでおく
-    OSVERSIONINFO	ovi;
-    ovi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-	::GetVersionEx(&ovi);
-	wstring	os;
-	if ( ovi.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS ) {
-		if ( ovi.dwMinorVersion == 0 ) { mOSType=SATORI_OS_WIN95; os=L"Windows 95"; }
-		else if ( ovi.dwMinorVersion == 10 ) { mOSType=SATORI_OS_WIN98; os=L"Windows 98"; }
-		else if ( ovi.dwMinorVersion == 90 ) { mOSType=SATORI_OS_WINME; os=L"Windows Me"; }
-		else { mOSType = SATORI_OS_UNDEFINED; os=L"undefined"; }
-	} else {
-		if ( ovi.dwMinorVersion == 0 ) {
-			if ( ovi.dwMajorVersion == 4 ) { mOSType=SATORI_OS_WINNT; os=L"Windows NT"; }
-			else if ( ovi.dwMajorVersion == 5 ) { mOSType=SATORI_OS_WIN2K; os=L"Windows 2000"; }
-		}
-		else { mOSType = SATORI_OS_WINXP; os=L"Windows XP or later"; }
-	}
-	GetSender().sender() << L"ＯＳ種別: " << os << std::endl;
-	if ( mOSType==SATORI_OS_WIN95 ) {
-		is_single_monitor = true;
-	} else {
-		BOOL (WINAPI* pEnumDisplayMonitors)(HDC,LPRECT,MONITORENUMPROC,LPARAM);
-		(FARPROC&)pEnumDisplayMonitors = ::GetProcAddress(::GetModuleHandle(L"user32.dll"), "EnumDisplayMonitors");
-		if ( pEnumDisplayMonitors==NULL ) {
-			is_single_monitor = true;
-		}
-		else {
-			RECT rectData[2];
-			memset(rectData,0,sizeof(rectData));
-			(*pEnumDisplayMonitors)(NULL,NULL,(MONITORENUMPROC)MonitorEnumFunc,(LPARAM)(rectData));
+	{
+		RECT rectData[2];
+		memset(rectData,0,sizeof(rectData));
+		::EnumDisplayMonitors(NULL,NULL,MonitorEnumFunc,(LPARAM)(rectData));
 
-			max_screen_rect = rectData[0];
-			desktop_rect = rectData[1];
+		max_screen_rect = rectData[0];
+		desktop_rect = rectData[1];
 
-			RECT*	rect;
-			rect = &desktop_rect;
-			GetSender().sender() << L"プライマリデスクトップ: (" << 
-				rect->left << L"," << rect->top << L"," << rect->right << L"," << rect->bottom << L")" << std::endl;
-			rect = &max_screen_rect;
-			GetSender().sender() << L"仮想デスクトップ: (" << 
-				rect->left << L"," << rect->top << L"," << rect->right << L"," << rect->bottom << L")" << std::endl;
-			is_single_monitor = ( ::EqualRect(&max_screen_rect, &desktop_rect)!=FALSE );
-			GetSender().sender() << (is_single_monitor ? 
-				L"モニタは一つだけと判断、見切れ判定を呼び出し元に任せます。" : 
-				L"複数のモニタが接続されていると判断、見切れ判定は里々が行います。") << std::endl;
-		}
+		RECT*	rect;
+		rect = &desktop_rect;
+		GetSender().sender() << L"プライマリデスクトップ: (" << 
+			rect->left << L"," << rect->top << L"," << rect->right << L"," << rect->bottom << L")" << std::endl;
+		rect = &max_screen_rect;
+		GetSender().sender() << L"仮想デスクトップ: (" << 
+			rect->left << L"," << rect->top << L"," << rect->right << L"," << rect->bottom << L")" << std::endl;
+		is_single_monitor = ( ::EqualRect(&max_screen_rect, &desktop_rect)!=FALSE );
+		GetSender().sender() << (is_single_monitor ? 
+			L"モニタは一つだけと判断、見切れ判定を呼び出し元に任せます。" : 
+			L"複数のモニタが接続されていると判断、見切れ判定は里々が行います。") << std::endl;
 	}
 #endif // _MSC_VER
 

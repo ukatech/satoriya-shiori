@@ -1,7 +1,6 @@
 #include	"Win32.h"
 #include	<windows.h>
 #include	<stdio.h>
-#include	<zmouse.h>	// for MouseWheel
 #include	<stdarg.h>	// for va_arg
 
 //////////DEBUG/////////////////////////
@@ -43,11 +42,6 @@ bool	SetClipBoard(HWND iWnd, const wchar_t* iFormat, ...) {
 
 
 
-
-const UINT msgMOUSEWHEEL =
-	(((GetVersion() & 0x80000000) && LOBYTE(LOWORD(GetVersion()) == 4)) ||
-	(!(GetVersion() & 0x80000000) && LOBYTE(LOWORD(GetVersion()) == 3)))
-	? RegisterWindowMessage(MSH_MOUSEWHEEL) : 0;
 
 RECT NormalizeRect( RECT rc ) {
 	if ( rc.left > rc.right ) {

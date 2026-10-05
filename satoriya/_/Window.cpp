@@ -1,10 +1,6 @@
 #include	"Window.h"
 #include	"Win32.h"
 
-// くるくる対応
-#include	<zmouse.h>
-extern const UINT msgMOUSEWHEEL;	// require ../_/Win32.cpp
-
 //////////DEBUG/////////////////////////
 #include "warning.h"
 #ifdef _WINDOWS
@@ -44,14 +40,6 @@ LRESULT	Window::WindowProcedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		gTaskbarCreatedMessage = ::RegisterWindowMessage(TEXT("TaskbarCreated"));
 
 		return	b ? 0 : -1;
-	}
-
-	// マウスホイール対応
-	if ( message == msgMOUSEWHEEL ) {
-		message = WM_MOUSEWHEEL;
-		DbgStr(L"MouseWheel fwKeys:%04x, zDelta:%d, xPos:%d, yPos:%d",
-			LOWORD(wParam), (short)HIWORD(wParam),
-			(short)LOWORD(lParam), (short)HIWORD(lParam) );
 	}
 
 	Window*	p=(Window*)(::GetWindowLong(hWnd, 0));

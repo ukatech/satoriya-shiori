@@ -47,10 +47,6 @@ void	EndCapture();
 // 指定windowが持っていた場合に限り解放しTRUEを返す。
 BOOL	EndCapture( HWND hWnd ); 
 
-// マウスホイールからの入力をサポート。
-// WinProc() { if ( message == msgMOUSEWHEEL ) message = WM_MOUSEWHEEL; ...
-extern const UINT msgMOUSEWHEEL;
-
 //----------------------------------------------------------
 // 点
 
