@@ -236,7 +236,7 @@ static const wchar_t*	char_at(const wchar_t* p, int n) {
 	for (int i=0 ; i<n ; ++i) {
 		if ( *p == L'\0' )
 			return	NULL;
-		get_a_chr(p);
+		next_a_chr(p);
 	}
 	return	p;
 }
@@ -1322,6 +1322,7 @@ SRV _regex_escape(std::deque<wstring>& iArguments, std::deque<wstring>& oValues)
 	if ( iArguments.size()<1 )
 		return	L"";
 	wstring	r;
+	r.reserve(iArguments[0].size() * 2);
 	for ( wstring::const_iterator i=iArguments[0].begin() ; i!=iArguments[0].end() ; ++i ) {
 		if ( wcschr(L"\\^$.|?*+()[]{}", *i) != NULL )
 			r += L'\\';

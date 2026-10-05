@@ -141,6 +141,14 @@ bool	bytes_from_file(std::string& o, const wstring& iFileName) {
 	FILE*	fp = w_fopen(iFileName, L"rb");
 	if ( fp == NULL )
 		return	false;
+	// 追記のたびに領域を取り直さないよう、先にファイルの大きさ分を確保する。
+	if ( fseek(fp, 0, SEEK_END) == 0 ) {
+		long	size = ftell(fp);
+		if ( size > 0 ) {
+			o.reserve(o.size() + size);
+		}
+		fseek(fp, 0, SEEK_SET);
+	}
 	char	buf[4096];
 	size_t	n;
 	while ( (n = fread(buf, 1, sizeof(buf), fp)) > 0 ) {
@@ -228,6 +236,14 @@ bool	strvec_to_file(
 	CharactorSet cs)
 {
 	std::string	bytes;
+	{
+		// 1文字は最大3バイト（UTF-8）。行ごとの追記で領域を取り直さないよう先に確保する。
+		size_t	reserve_size = 0;
+		for ( strvec::const_iterator it=vec.begin() ; it!=vec.end() ; ++it ) {
+			reserve_size += it->size() * 3 + 2;
+		}
+		bytes.reserve(reserve_size);
+	}
 	for ( strvec::const_iterator it=vec.begin() ; it!=vec.end() ; ++it ) {
 		bytes += WtoMB(*it, cs);
 		bytes += FILE_NEWLINE;
@@ -344,6 +360,7 @@ std::string	encode(const std::string& s) {
 	const char*	p = s.c_str();
 	int	len = s.size();
 	std::string	ret;
+	ret.reserve(len);
 
 	for ( int n=0 ; n<len/2 ; ++n ) {
 		ret += p[n];
@@ -358,6 +375,7 @@ std::string	decode(const std::string& s) {
 	const char*	p = s.c_str();
 	int	len = s.size();
 	std::string	ret;
+	ret.reserve(len);
 
 	for ( int n=0 ; n<len ; n+=2 ) ret += p[n];
 	for ( int m=len-((len&1)?2:1) ; m>=0 ; m-=2 ) ret += p[m];

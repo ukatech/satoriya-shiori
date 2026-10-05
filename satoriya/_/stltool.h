@@ -46,6 +46,7 @@ namespace std {
 #include	<string>
 #include	<map>
 #include	<set>
+#include	<algorithm>
 #include	<vector>
 #include	<list>
 #include	<fstream>
@@ -239,6 +240,7 @@ public:
 	bool	operator==(const wchar_t* s) const { return wcscmp(m_buf, s) == 0; }
 	bool	operator!=(const wchar_t* s) const { return !(*this == s); }
 	bool	operator==(const wstring& s) const { return s.size() == m_len && wcscmp(m_buf, s.c_str()) == 0; }
+	bool	operator==(const a_chr& c) const { return m_len == c.m_len && wcscmp(m_buf, c.m_buf) == 0; }
 	bool	operator!=(const wstring& s) const { return !(*this == s); }
 };
 
@@ -284,9 +286,9 @@ inline int split(const wstring& i, T& o) {
 template<class T>
 int	split(const wchar_t* p, const wchar_t* dp, T& o, int max_words=0, bool split_one=false)
 {
-	std::set<wstring>	dlmt_set;
+	std::vector<a_chr>	dlmt_set;	// 区切り文字は少数なので線形探索（1文字ごとにヒープを使わないよう a_chr で持つ）
 	while ( *dp != L'\0' )
-		dlmt_set.insert(get_a_chr(dp));
+		dlmt_set.push_back(next_a_chr(dp));
 
 	if ( dlmt_set.empty() )
 		return	split(p, o);
@@ -298,8 +300,8 @@ int	split(const wchar_t* p, const wchar_t* dp, T& o, int max_words=0, bool split
 
 	wstring	word;
 	while ( *p != L'\0' ) {
-		wstring	c = get_a_chr(p);
-		if ( dlmt_set.find(c) != dlmt_set.end() ) {
+		a_chr	c = next_a_chr(p);
+		if ( std::find(dlmt_set.begin(), dlmt_set.end(), c) != dlmt_set.end() ) {
 			if ( word.size() > 0 || split_one ) {
 				o.push_back(word);
 
@@ -353,11 +355,11 @@ int	split_string(const wchar_t* p, const wchar_t* dp, T& o, int max_words=0, boo
 
 	wstring	word;
 	const wchar_t *dpr = dp;
-	wstring  dpc = get_a_chr(dpr); //とりあえず1文字目をとっておく
+	a_chr  dpc = next_a_chr(dpr); //とりあえず1文字目をとっておく
 	size_t  dpl = wcslen(dpr);
 
 	while ( *p != L'\0' ) {
-		wstring	c = get_a_chr(p);
+		a_chr	c = next_a_chr(p);
 
 		if ( c == dpc && wcsncmp(p,dpr,dpl) == 0 ) { //strncmpで2文字目以降を単純比較マッチ
 			if ( word.size() > 0 || split_one ) {
@@ -462,16 +464,16 @@ int	combine(wstring& out, const T& in, const wstring& dlmt=L"", bool add_dlmt_on
 	typename T::const_iterator i=in.begin();
 	if ( add_dlmt_on_final ) {
 		for (; i!=in.end() ;++i) {
-			out += *i;
-			out += dlmt;
+			append_grow(out, *i);
+			append_grow(out, dlmt);
 		}
 	}
 	else {
 		int	size=in.size();
 		for (int n=0 ; n<size ; ++n,++i) {
-			out += *i;
+			append_grow(out, *i);
 			if (n<size-1)
-				out += dlmt;
+				append_grow(out, dlmt);
 		}
 	}
 	return	out.size();

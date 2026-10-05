@@ -366,7 +366,7 @@ static wstring	translate_tag(const wstring& i) {
 			p+=2;
 		}
 		else {
-			column += static_cast<int>(count_width(get_a_chr(p)));
+			column += static_cast<int>(count_width(next_a_chr(p)));
 			if ( column >= column_max ) {
 				column=0;
 				row++;

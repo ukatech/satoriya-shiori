@@ -1542,7 +1542,7 @@ bool	Satori::var_isempty(const wstring&, const wstring& iArg, int, wstring& oRes
 		return	false;
 	}
 	const wchar_t* p = iArg.c_str();
-	get_a_chr(p);
+	next_a_chr(p);
 	oResult = (*p==L'\0') ? L"1" : L"0";
 	return	true;
 }
