@@ -122,6 +122,13 @@ inline unsigned long stoui(const wchar_t* s) { return wcstoul(s,NULL,10); }
 inline wstring	itos(long i, const wchar_t* iFormat=L"%d") { char buf[64]; sprintf(buf,w_to_ascii(iFormat).c_str(),i); return ascii_to_w(buf); }
 inline wstring	uitos(unsigned long i, const wchar_t* iFormat=L"%u") { char buf[64]; sprintf(buf,w_to_ascii(iFormat).c_str(),i); return ascii_to_w(buf); }
 
+// 実数の読み書き。ロケールの小数点（localeconv）に依らず、常に . を小数点として扱う。
+// ホストが LC_NUMERIC を設定していると、wcstod や printf("%f") の小数点が , になるため。
+// wcstod_dot は小数点が . でない書き方（1,5 など）を数の途中で終わったものとして読む。
+// dtos_fixed は printf("%f") と同じ書式。
+double	wcstod_dot(const wchar_t* s);
+wstring	dtos_fixed(double d);
+
 inline bool stobool(const wchar_t *s) { return ( _wcsicmp(s,L"true") == 0 || _wtoi(s) != 0 ); }
 inline bool stobool(const wstring &s) { return stobool(s.c_str()); }
 

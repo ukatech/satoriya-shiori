@@ -125,7 +125,7 @@ static VALUE_TYPE	calc_polish(simple_stack<calc_element>& polish) {
 	for ( int n=0 ; n<polish.size()-1 ; n++ ) {
 		calc_element&	el=polish[n];
 		if ( el.priority==100 ) { // 被演算子
-			stack.push( wcstod(el.str.c_str(), NULL) );
+			stack.push( wcstod_dot(el.str.c_str()) );
 		}
 		else if ( el.priority==90 ) {	// 単項演算子
 			assert(stack.size()>=1);
@@ -228,9 +228,7 @@ bool calc_float(wstring& ioString) {
 	if ( !calc_float(ioString.c_str(), &result) )
 		return	false;
 
-	char	buf[512];	// %f は double の最大値で 300 文字を超える
-	sprintf(buf, "%f", result);
-	ioString = ascii_to_w(buf);
+	ioString = dtos_fixed(result);
 
 	// 末尾の 0 と . を削る。assign(自分のc_str(), n) はVC6では長い文字列で解放済みの領域から
 	// コピーして中身が壊れる（24桁を超える値で再現）ので、erase で縮める

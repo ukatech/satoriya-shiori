@@ -8,18 +8,16 @@
 #include <time.h>
 #include <sys/time.h>
 
+// 経過ミリ秒（GetTickCount 相当）。壁時計は時刻合わせで戻ることがあるので、単調な時計を使う。
+// 差を取って使うこと（符号なしの引き算なので、一周しても差は合う）
 inline unsigned long posix_get_current_tick() {
-	struct timeval ts;
-//	struct timespec {time_t tv_sec; long tv_nsec;} ts;
-//    struct timespec ts;
-#ifdef CLOCK_UPTIME
-	clock_gettime(CLOCK_UPTIME, &ts);
-#else
-	gettimeofday(&ts, NULL);
-//	clock_gettime(CLOCK_MONOTONIC, &ts);
-#endif
-	return (ts.tv_sec * 1000) + (ts.tv_usec/1000);
-//	return (ts.tv_sec * 1000) + (ts.tv_nsec/1000/1000);
+	struct timespec ts;
+	if ( clock_gettime(CLOCK_MONOTONIC, &ts) == 0 ) {
+		return static_cast<unsigned long>(ts.tv_sec) * 1000UL + static_cast<unsigned long>(ts.tv_nsec / 1000000);
+	}
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return static_cast<unsigned long>(tv.tv_sec) * 1000UL + static_cast<unsigned long>(tv.tv_usec / 1000);
 }
 
 #else  //POSIX
@@ -30,18 +28,21 @@ inline unsigned long posix_get_current_tick() {
 
 #endif //POSIX
 
+// OS を起動してからの経過秒（Windows の GetTickCount64 / 1000 と同じ意味）
 inline unsigned long posix_get_current_sec() {
 #ifdef POSIX
-	struct timeval ts;
-//	struct timespec {time_t tv_sec; long tv_nsec;} ts;
-//    struct timespec ts;
-#ifdef CLOCK_UPTIME
-	clock_gettime(CLOCK_UPTIME, &ts);
-#else
-	gettimeofday(&ts, NULL);
-//	clock_gettime(CLOCK_MONOTONIC, &ts);
+	struct timespec ts;
+#ifdef CLOCK_BOOTTIME
+	// Linux。サスペンド中も数える
+	if ( clock_gettime(CLOCK_BOOTTIME, &ts) == 0 ) {
+		return static_cast<unsigned long>(ts.tv_sec);
+	}
 #endif
-	return ts.tv_sec;
+	// macOS などは CLOCK_MONOTONIC が起動からの時間
+	if ( clock_gettime(CLOCK_MONOTONIC, &ts) == 0 ) {
+		return static_cast<unsigned long>(ts.tv_sec);
+	}
+	return static_cast<unsigned long>(time(NULL));	// どちらも使えない環境だけ。起動時間としては正しくない
 #else  //POSIX
 	typedef unsigned __int64 (WINAPI *DefGetTickCount64)();
 

@@ -1,5 +1,6 @@
 #include	"stltool.h"
 #include	<sstream>
+#include	<locale.h>
 #include	<cassert>
 #include	"charset.h"
 
@@ -660,5 +661,49 @@ int zen2int(const wchar_t *str)
 unsigned long zen2ul(const wchar_t *str)
 {
 	return stoui(zen2han(str));
+}
+
+// ロケールの小数点。ASCII 1文字以外（多バイトなど）は扱わず . とみなす
+static char	locale_decimal_point()
+{
+	const struct lconv*	lc = localeconv();
+	if ( lc != NULL && lc->decimal_point != NULL && lc->decimal_point[0] != '\0'
+	  && lc->decimal_point[1] == '\0' && static_cast<unsigned char>(lc->decimal_point[0]) < 0x80 ) {
+		return lc->decimal_point[0];
+	}
+	return '.';
+}
+
+double	wcstod_dot(const wchar_t* s)
+{
+	const wchar_t	dp = static_cast<wchar_t>(locale_decimal_point());
+	if ( dp == L'.' ) {
+		return wcstod(s, NULL);
+	}
+	// wcstod はロケールの小数点で読むので、. をそれに置き換えて渡す。
+	// ロケールの小数点そのもの（1,5 など）は . ではないので、そこで数を終わらせる
+	wstring	w(s);
+	const wstring::size_type	dot = w.find(L'.');
+	const wstring::size_type	loc = w.find(dp);
+	if ( loc != wstring::npos && (dot == wstring::npos || loc < dot) ) {
+		w.erase(loc);
+	}
+	else if ( dot != wstring::npos ) {
+		w[dot] = dp;
+	}
+	return wcstod(w.c_str(), NULL);
+}
+
+wstring	dtos_fixed(double d)
+{
+	char	buf[512];	// %f は double の最大値で 300 文字を超える
+	sprintf(buf, "%f", d);
+	const char	dp = locale_decimal_point();
+	if ( dp != '.' ) {
+		for ( char* p = buf ; *p != '\0' ; ++p ) {
+			if ( *p == dp ) { *p = '.'; break; }
+		}
+	}
+	return ascii_to_w(buf);
 }
 

@@ -16,7 +16,9 @@ DYLIB_NAME_POSTFIX = .bundle
 # LDFLAGS は dlopen 可能なライブラリを作れる設定にしなければならない。
 # macOS なら -bundle。
 ARCH_FLAGS =
-CXXFLAGS = -O3 -Wall -Wno-unknown-pragmas -std=c++11 $(ARCH_FLAGS)
+# -fvisibility=hidden は load / request などの入口（SakuraDLLHost.cpp の SATORI_EXPORT）以外を
+# 公開しないため。内部の関数がホスト側の同名の関数と入れ替わらないようにする。
+CXXFLAGS = -O3 -Wall -Wno-unknown-pragmas -std=c++11 -fvisibility=hidden -fvisibility-inlines-hidden $(ARCH_FLAGS)
 LDFLAGS = -bundle $(ARCH_FLAGS)
 LIBS = -liconv
 

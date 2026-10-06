@@ -378,27 +378,27 @@ bool	printf_format(const wchar_t*& p, std::deque<wstring>& iArguments, std::wstr
 		}
 	case L'e':
 		{
-			os << std::scientific << std::nouppercase << wcstod(zen2han_internal(str).c_str(),NULL);
+			os << std::scientific << std::nouppercase << wcstod_dot(zen2han_internal(str).c_str());
 			break;
 		}
 	case L'E':
 		{
-			os << std::scientific << std::uppercase << wcstod(zen2han_internal(str).c_str(),NULL);
+			os << std::scientific << std::uppercase << wcstod_dot(zen2han_internal(str).c_str());
 			break;
 		}
 	case L'g':
 		{
-			os << std::scientific << std::fixed << std::nouppercase << wcstod(zen2han_internal(str).c_str(),NULL);
+			os << std::scientific << std::fixed << std::nouppercase << wcstod_dot(zen2han_internal(str).c_str());
 			break;
 		}
 	case L'G':
 		{
-			os << std::scientific << std::fixed << std::uppercase << wcstod(zen2han_internal(str).c_str(),NULL);
+			os << std::scientific << std::fixed << std::uppercase << wcstod_dot(zen2han_internal(str).c_str());
 			break;
 		}
 	case L'f':
 		{
-			os << std::fixed << wcstod(zen2han_internal(str).c_str(),NULL);
+			os << std::fixed << wcstod_dot(zen2han_internal(str).c_str());
 			break;
 		}
 	case L'n': break;

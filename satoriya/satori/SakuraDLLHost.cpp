@@ -40,8 +40,12 @@ static std::string	to_bytes(const char* p, long len)
 
 #ifdef POSIX
 
+// makefile は -fvisibility=hidden でビルドするので、ホストから呼ばれる入口だけ公開する。
+// 内部の関数（mt19937ar など）が、ホストや他のライブラリの同名のものと入れ替わらないように。
+#define SATORI_EXPORT __attribute__((visibility("default")))
+
 // POSIXではパスはUTF-8で渡される
-extern "C" int satori_load(char* i_data, long i_data_len) {
+extern "C" SATORI_EXPORT int satori_load(char* i_data, long i_data_len) {
 //	GetSender().initialize();
     wstring the_base_folder = UTF8toW(to_bytes(i_data, i_data_len));
     free(i_data);
@@ -52,7 +56,7 @@ extern "C" int satori_load(char* i_data, long i_data_len) {
     return id;
 }
 
-extern "C" int load(char* i_data, long i_data_len) {
+extern "C" SATORI_EXPORT int load(char* i_data, long i_data_len) {
 //	GetSender().initialize();
     wstring the_base_folder = UTF8toW(to_bytes(i_data, i_data_len));
     free(i_data);
@@ -107,7 +111,7 @@ extern "C" __declspec(dllexport) BOOL __cdecl logsend(long hwnd)
 
 // ログをコールバックで受け取る（YAYA互換）。設定中は logsend のウィンドウには送らない
 #ifdef POSIX
-extern "C" void Set_loghandler(void (*loghandler)(const wchar_t *str, int mode, int id))
+extern "C" SATORI_EXPORT void Set_loghandler(void (*loghandler)(const wchar_t *str, int mode, int id))
 #else
 extern "C" __declspec(dllexport) void __cdecl Set_loghandler(void (*loghandler)(const wchar_t *str, int mode, int id))
 #endif
@@ -116,15 +120,17 @@ extern "C" __declspec(dllexport) void __cdecl Set_loghandler(void (*loghandler)(
 }
 
 #ifdef POSIX
-extern "C" int satori_unload(int id)
+extern "C" SATORI_EXPORT int satori_unload(int id)
 {
-    SakuraDLLHost::Select(id);
+    if ( ! SakuraDLLHost::Select(id) ) {
+        return 0;
+    }
 	int ret = SakuraDLLHost::I()->unload();
     SakuraDLLHost::Destroy(id);
     return ret;
 }
 
-extern "C" int unload(void)
+extern "C" SATORI_EXPORT int unload(void)
 #else
 extern "C" __declspec(dllexport) BOOL __cdecl unload(void)
 #endif
@@ -150,12 +156,15 @@ static char* return_bytes(const std::string& the_resp_str, long* io_data_len)
     return the_return_data;
 }
 
-extern "C" char* satori_request(int id, char* i_data, long* io_data_len) {
+extern "C" SATORI_EXPORT char* satori_request(int id, char* i_data, long* io_data_len) {
     // グローバルメモリを受けとる
     std::string the_req_str(i_data, *io_data_len);
     free(i_data);
 
-    SakuraDLLHost::Select(id);
+    if ( ! SakuraDLLHost::Select(id) ) {
+        *io_data_len = 0;
+        return NULL;
+    }
     // リクエスト実行
     std::string the_resp_str = SakuraDLLHost::I()->request_bytes(the_req_str);
 
@@ -163,7 +172,7 @@ extern "C" char* satori_request(int id, char* i_data, long* io_data_len) {
     return return_bytes(the_resp_str, io_data_len);
 }
 
-extern "C" char* request(char* i_data, long* io_data_len) {
+extern "C" SATORI_EXPORT char* request(char* i_data, long* io_data_len) {
     // グローバルメモリを受けとる
     std::string the_req_str(i_data, *io_data_len);
     free(i_data);

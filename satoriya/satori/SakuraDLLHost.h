@@ -28,11 +28,14 @@ public:
         m_dll.push_back(p);
         return static_cast<int>(m_dll.size() - 1);
     }
-    static void Select(int id) {
+    // 無効な ID（範囲外、破棄済み、0）なら選択を変えず false を返す。
+    // 呼び出し側が無視すると、直前に選んでいた別のインスタンスを操作してしまう
+    static bool Select(int id) {
         if (id <= 0 || static_cast<size_t>(id) >= m_dll.size() || m_dll[id] == NULL) {
-            return;
+            return false;
         }
         m_id = id;
+        return true;
     }
     static void Destroy(int id) {
         if (id <= 0 || static_cast<size_t>(id) >= m_dll.size() || m_dll[id] == NULL) {
