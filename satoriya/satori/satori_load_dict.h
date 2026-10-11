@@ -166,6 +166,7 @@ void	Satori::InitMembers() {
 
 	mReferences.clear();
 	mKakkoCallResults.clear();
+	mLastSSTPResponseCode = 0;
 
 	mLoopCounters.clear();
 

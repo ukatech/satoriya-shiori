@@ -428,6 +428,11 @@ private:
 	//HWNDテーブル(POSIXにはHWNDはないのでvoid*とする)
 	std::map<int, void*>	characters_hwnd;
 
+	// 本体へ EXECUTE SSTP を送る（satori_builtin.cpp）。i_name はログに出す関数名。
+	// 戻り値は応答コード（送れなかったときは0）で、mLastSSTPResponseCode にも残す。o_lines は応答の追加データ。
+	int		ExecuteSSTP(const wstring& i_name, const wstring& i_command, const strvec& i_references, strvec& o_lines);
+	int		mLastSSTPResponseCode;
+
 	// ループ時のカウンタ参照用
 	simple_stack<wstring> mLoopCounters; //バグを誘発させそうなのでstring
 
@@ -528,6 +533,7 @@ private:
 	wstring	func_remove_all_added_words(const strvec& iArgv, bool for_calc, bool for_non_talk);
 	wstring	func_get_property(const strvec& iArgv, bool for_calc, bool for_non_talk);
 	wstring	func_set_property(const strvec& iArgv, bool for_calc, bool for_non_talk);
+	wstring	func_execute_sstp(const strvec& iArgv, bool for_calc, bool for_non_talk);
 	wstring	func_load_saori(const strvec& iArgv, bool for_calc, bool for_non_talk);
 	// 特殊形式：引数を展開せずに受け取る
 	wstring	func_when(const strvec& iArgv, bool for_calc, bool for_non_talk);
@@ -556,6 +562,7 @@ private:
 	bool	var_random(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
 	bool	var_isempty(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
 	bool	var_argument_count(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
+	bool	var_sstp_response_code(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
 	bool	var_surface(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
 	bool	var_last_exiting_surface(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);
 	bool	var_window_handle(const wstring& iName, const wstring& iArg, int iParam, wstring& oResult);

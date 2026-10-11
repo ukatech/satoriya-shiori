@@ -16,6 +16,7 @@
 #include	<tlhelp32.h>
 #else
 #include <climits>
+#include <cstdlib>
 #include <cstdint>
 #include <cstring>
 #include <fcntl.h>
@@ -148,6 +149,7 @@ const SatoriFunctionTable&	Satori::function_table()
 			{ L"equal",				{ &Satori::func_equal,				false,	true } },
 			{ L"get_property",		{ &Satori::func_get_property,		false,	true } },
 			{ L"set_property",		{ &Satori::func_set_property,		false,	true } },
+			{ L"execute_sstp",		{ &Satori::func_execute_sstp,		false,	true } },
 			{ L"load_saori",		{ &Satori::func_load_saori,			false,	true } },
 			{ L"単語の追加",		{ &Satori::func_add_word,			false,	true } },
 			{ L"追加単語の削除",	{ &Satori::func_remove_added_word,	false,	true } },
@@ -789,7 +791,119 @@ wstring	Satori::func_remove_all_added_words(const strvec& iArgv, bool, bool)
 //---------------------------------------------------------------------------
 // 本体との連携
 
-//get_property関数用のハンドラと結果格納
+// EXECUTE SSTP の送受信。get_property / set_property / execute_sstp が使う。
+// 応答コードは（SSTP応答コード）で参照できる。送れなかったとき・応答が無かったときは0。
+
+// ヘッダの並び（ステータス行から空行の前の改行まで）から、名前（小文字で末尾に':'）の値を探す。無ければ空
+static std::string find_sstp_header(const std::string& i_headers, const char* i_name)
+{
+	const std::string name = std::string("\r\n") + i_name;
+	for ( std::string::size_type pos = 0 ; pos + name.size() <= i_headers.size() ; ++pos ) {
+		std::string::size_type n = 0;
+		for ( ; n < name.size() ; ++n ) {
+			char c = i_headers[pos+n];
+			if ( c >= 'A' && c <= 'Z' ) { c = c - 'A' + 'a'; }
+			if ( c != name[n] ) { break; }
+		}
+		if ( n == name.size() ) {
+			std::string::size_type start = pos + name.size();
+			std::string::size_type end = i_headers.find("\r\n", start);
+			if ( end == std::string::npos ) { end = i_headers.size(); }
+			while ( start < end && (i_headers[start] == ' ' || i_headers[start] == '\t') ) { ++start; }
+			while ( end > start && (i_headers[end-1] == ' ' || i_headers[end-1] == '\t') ) { --end; }
+			return i_headers.substr(start, end - start);
+		}
+	}
+	return std::string();
+}
+
+// EXECUTE SSTP の応答（バイト列）を解析する。戻り値は応答コード（解析できなければ0）。
+// o_lines には追加データを1行ずつ入れる。
+// 応答は「ステータス行、ヘッダ、空行、追加データ」。ヘッダがあるときは Content-Length で長さが示され、
+// 無いときは追加データの後に空行が付く（SSP の SPSSTPData::ReturnStatusA）。
+static int ParseExecuteResponse(const std::string& i_bytes, strvec& o_lines)
+{
+	o_lines.clear();
+
+	// 末尾に\0が付いてくる
+	std::string bytes = i_bytes;
+	const std::string::size_type nul = bytes.find('\0');
+	if ( nul != std::string::npos ) {
+		bytes.erase(nul);
+	}
+
+	// ステータス行：SSTP/1.x 200 OK
+	std::string::size_type status_end = bytes.find("\r\n");
+	if ( status_end == std::string::npos ) {
+		status_end = bytes.size();
+	}
+	if ( bytes.compare(0, 5, "SSTP/") != 0 ) {
+		return 0;
+	}
+	std::string::size_type p = bytes.find(' ');
+	if ( p == std::string::npos || p >= status_end ) {
+		return 0;
+	}
+	++p;
+	int code = 0;
+	int digits = 0;
+	while ( p < status_end && bytes[p] >= '0' && bytes[p] <= '9' && digits < 3 ) {
+		code = code * 10 + (bytes[p] - '0');
+		++p;
+		++digits;
+	}
+	if ( digits != 3 ) {
+		return 0;
+	}
+
+	// ヘッダ（ステータス行の後から空行まで）
+	const std::string::size_type header_end = bytes.find("\r\n\r\n", status_end);
+	if ( header_end == std::string::npos ) {
+		return code;	// 追加データなし
+	}
+	const std::string headers = bytes.substr(0, header_end + 2);
+
+	// Charsetが無ければ送ったときのUTF-8とみなす
+	CharactorSet cs = CharsetFromName(UTF8toW(find_sstp_header(headers, "charset:")));
+	if ( cs == CS_NULL ) {
+		cs = CS_UTF8;
+	}
+
+	std::string body = bytes.substr(header_end + 4);
+	const std::string length = find_sstp_header(headers, "content-length:");
+	const bool has_length = ! length.empty();
+	if ( has_length ) {
+		const std::string::size_type n = strtoul(length.c_str(), NULL, 10);
+		if ( n < body.size() ) {
+			body.erase(n);
+		}
+	}
+
+	// 行に分ける。Content-Length が無いときは空行で終わる
+	const wstring data = MBtoW(body, cs);
+	wstring::size_type start = 0;
+	while ( start < data.size() ) {
+		wstring::size_type end = data.find(L'\n', start);
+		if ( end == wstring::npos ) {
+			end = data.size();
+		}
+		wstring::size_type len = end - start;
+		if ( len > 0 && data[start + len - 1] == L'\r' ) {
+			--len;
+		}
+		if ( len == 0 && ! has_length ) {
+			break;
+		}
+		o_lines.push_back(data.substr(start, len));
+		start = end + 1;
+	}
+	// Content-Length があるときも、末尾の空行は追加データに含めない
+	while ( ! o_lines.empty() && o_lines.back().empty() ) {
+		o_lines.pop_back();
+	}
+	return code;
+}
+
 #ifdef POSIX
 
 static std::string SendDataUsingUnixSocket(const std::string &path, const std::string &request, bool has_header) {
@@ -808,7 +922,7 @@ static std::string SendDataUsingUnixSocket(const std::string &path, const std::s
 		close(soc);
 		return "";
 	}
-	if (send(soc, request.data(), request.size(), 0) != request.size()) {
+	if (send(soc, request.data(), request.size(), 0) != static_cast<ssize_t>(request.size())) {
 		close(soc);
 		return "";
 	}
@@ -822,10 +936,12 @@ static std::string SendDataUsingUnixSocket(const std::string &path, const std::s
 			return "";
 		}
 		memcpy(&remain, buffer, sizeof(remain));
-		data.reserve(remain);
+		if (remain <= 0x1000000) { // 相手の申告した長さをそのまま確保しない
+			data.reserve(remain);
+		}
 	}
 	while (true) {
-		int ret = read(soc, buffer, BUFFER_SIZE);
+		ssize_t ret = read(soc, buffer, BUFFER_SIZE);
 		if (ret == -1) {
 			close(soc);
 			return "";
@@ -834,159 +950,230 @@ static std::string SendDataUsingUnixSocket(const std::string &path, const std::s
 			close(soc);
 			break;
 		}
-		if (!has_header || remain > ret) {
+		if (!has_header) {
 			data.append(buffer, ret);
 		}
 		else {
-			data.append(buffer, remain);
+			uint32_t n = (remain < static_cast<uint32_t>(ret)) ? remain : static_cast<uint32_t>(ret);
+			data.append(buffer, n);
+			remain -= n;
 		}
-		remain -= ret;
 	}
 	return data;
 }
 
-static bool SendDirectSSTP(const void* targetHWnd, const std::wstring &sendText, std::wstring &result)
+// ninix の FMO から、hwnd が i_target のゴーストのソケットのパスを探す。
+// FMO は「ID.キー\x01値」の行の並び。
+static bool FindNinixSocket(const void* i_target, std::string& o_path)
 {
-    result = L"";
-    shm_t *shm;
-    int fd = shm_open("/ninix", O_RDWR, 0);
-    if (fd == -1) {
-        return false;
-    }
-    shm = static_cast<shm_t *>(mmap(NULL, sizeof(shm_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0));
-    close(fd);
-    if (shm == MAP_FAILED) {
-        return false;
-    }
-    if (sem_wait(&shm->sem) == -1) {
-        return false;
-    }
-    std::string path(shm->buf, shm->size);
-    if (sem_post(&shm->sem) == -1) {
-        return false;
-    }
-    std::string data = SendDataUsingUnixSocket(path + "ninix", "GetFMO\r\n", true);
-    if (data.empty()) {
-        return false;
-    }
-    int target = reinterpret_cast<long>(targetHWnd);
-    std::istringstream iss(data);
-    std::string uuid;
-    while (true) {
-        if (!iss) {
-            return false;
-        }
-        std::string tmp;
-        int hwnd;
-        std::getline(iss, tmp);
-        std::istringstream line(tmp);
-        std::getline(iss, uuid, '.');
-        std::getline(iss, tmp, '\x01');
-        if (tmp != "hwnd") {
-            continue;
-        }
-        std::getline(iss, tmp);
-        if (target == atoi(tmp.c_str())) {
-            break;
-        }
-    }
-    std::string request = "EXECUTE SSTP/1.1\r\nCharset: UTF-8\r\n" + WtoUTF8(sendText) + "Sender: Satori\r\n\r\n";
-    data = SendDataUsingUnixSocket(path + uuid, request, false);
-    std::wstring response = MBtoW(data, CharsetFromName(UTF8toW(find_charset_header(data))));
-    std::wstring header = cut_token(response, CRLF);
-    cut_token(header, L" ");
-    if (header == L"200 OK")
-    {
-        //1行文読み捨て
-        cut_token(response, CRLF);
-        result = cut_token(response, CRLF);
-        return true;
-    }
-    else {
-        return false;
-    }
+	int fd = shm_open("/ninix", O_RDWR, 0);
+	if (fd == -1) {
+		return false;
+	}
+	shm_t *shm = static_cast<shm_t *>(mmap(NULL, sizeof(shm_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0));
+	close(fd);
+	if (shm == MAP_FAILED) {
+		return false;
+	}
+	if (sem_wait(&shm->sem) == -1) {
+		munmap(shm, sizeof(shm_t));
+		return false;
+	}
+	std::string sockdir(shm->buf, (shm->size < sizeof(shm->buf)) ? shm->size : sizeof(shm->buf));
+	const int post_result = sem_post(&shm->sem);
+	munmap(shm, sizeof(shm_t));
+	if (post_result == -1) {
+		return false;
+	}
+
+	const std::string fmo = SendDataUsingUnixSocket(sockdir + "ninix", "GetFMO\r\n", true);
+	const long target = reinterpret_cast<long>(i_target);
+	std::istringstream iss(fmo);
+	std::string line;
+	while (std::getline(iss, line)) {
+		if (!line.empty() && line[line.size() - 1] == '\r') {
+			line.erase(line.size() - 1);
+		}
+		const std::string::size_type dot = line.find('.');
+		if (dot == std::string::npos) {
+			continue;
+		}
+		const std::string::size_type sep = line.find('\x01', dot + 1);
+		if (sep == std::string::npos) {
+			continue;
+		}
+		if (line.compare(dot + 1, sep - dot - 1, "hwnd") != 0) {
+			continue;
+		}
+		if (atol(line.c_str() + sep + 1) == target) {
+			o_path = sockdir + line.substr(0, dot);
+			return true;
+		}
+	}
+	return false;
+}
+
+static bool SendExecuteSSTP(const void* i_target, const std::string& i_request, std::string& o_response)
+{
+	o_response.erase();
+	std::string path;
+	if (!FindNinixSocket(i_target, path)) {
+		return false;
+	}
+	o_response = SendDataUsingUnixSocket(path, i_request, false);
+	return !o_response.empty();
 }
 
 #else
 
-static std::wstring execute_result;
-static bool execute_succeeded;
-
-static LRESULT CALLBACK GetPropertyHandler(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
+static LRESULT CALLBACK DirectSSTPClientProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
-	if (message == WM_COPYDATA)
-	{
+	if ( message == WM_COPYDATA ) {
 		const COPYDATASTRUCT* cds = (const COPYDATASTRUCT*)lparam;
-		std::string recv_bytes((const char*)cds->lpData, cds->cbData);
-		wstring recv_str = MBtoW(recv_bytes, CharsetFromName(UTF8toW(find_charset_header(recv_bytes))));
-
-		wstring header = cut_token(recv_str, CRLF);
-		cut_token(header, L" ");
-		if (header == L"200 OK")
-		{
-			//1行文読み捨て
-			cut_token(recv_str, CRLF);
-			execute_result = cut_token(recv_str, CRLF);
-			execute_succeeded = true;
+#ifdef GWLP_USERDATA
+		std::string* response = (std::string*)::GetWindowLongPtr(hwnd, GWLP_USERDATA);
+#else
+		std::string* response = (std::string*)::GetWindowLong(hwnd, GWL_USERDATA);
+#endif
+		if ( response && cds && cds->lpData ) {
+			response->assign((const char*)cds->lpData, cds->cbData);
 		}
+		return TRUE;
 	}
-	return CallWindowProc(DefWindowProc, hwnd, message, wparam, lparam);
+	return ::DefWindowProc(hwnd, message, wparam, lparam);
 }
 
-static bool SendDirectSSTP(const void* targetHWnd, std::wstring sendText, std::wstring &result)
+static bool SendExecuteSSTP(const void* i_target, const std::string& i_request, std::string& o_response)
 {
-	execute_result = L"";
-	execute_succeeded = false;
+	o_response.erase();
 
-	//結果受信用ウインドウ作成: リソースの仕様を局所化してみたけどオーバーヘッドがでかい場合はSHIORIの初期化周辺に絡めるといいのかも
-	const wchar_t* windowname = L"satori_get_property";
+	HWND target = (HWND)i_target;
+	if ( target == NULL || ! ::IsWindow(target) ) {
+		return false;
+	}
+
+	// 応答を受け取るウィンドウ。応答は WM_COPYDATA でこのウィンドウに返ってくる
+	const wchar_t* windowname = L"satori_execute_sstp";
 
 	WNDCLASSEX windowClass;
-	ZeroMemory(&windowClass,sizeof(windowClass));
-
+	ZeroMemory(&windowClass, sizeof(windowClass));
 	windowClass.cbSize = sizeof(windowClass);
-	windowClass.hInstance = GetModuleHandle(NULL);
+	windowClass.hInstance = ::GetModuleHandle(NULL);
 	windowClass.lpszClassName = windowname;
-	windowClass.lpfnWndProc = ::GetPropertyHandler;
-
+	windowClass.lpfnWndProc = DirectSSTPClientProc;
 	::RegisterClassEx(&windowClass);
 
-	HWND propertyWindow = ::CreateWindow(windowname, windowname, 0, 0, 0, 100, 100, NULL, NULL, windowClass.hInstance, NULL);
+	HWND receiver = ::CreateWindow(windowname, windowname, 0, 0, 0, 100, 100, NULL, NULL, windowClass.hInstance, NULL);
+	if ( receiver == NULL ) {
+		::UnregisterClass(windowClass.lpszClassName, windowClass.hInstance);
+		return false;
+	}
+#ifdef GWLP_USERDATA
+	::SetWindowLongPtr(receiver, GWLP_USERDATA, (LONG_PTR)&o_response);
+#else
+	::SetWindowLong(receiver, GWL_USERDATA, (LONG)&o_response);
+#endif
 
-	std::string sendData = "EXECUTE SSTP/1.1\r\nCharset: UTF-8\r\n" + WtoUTF8(sendText) + "Sender: Satori\r\n\r\n";
-
-	//メッセージ転送
 	COPYDATASTRUCT cds;
 	cds.dwData = 9801;
-	cds.cbData = sendData.size();
-	cds.lpData = malloc(cds.cbData);
-	memcpy(cds.lpData, sendData.c_str(), cds.cbData);
+	cds.cbData = i_request.size();
+	cds.lpData = (void*)i_request.data();
 
-	/*LRESULT res =*/ ::SendMessage((HWND)targetHWnd, WM_COPYDATA, (WPARAM)propertyWindow, (LPARAM)&cds);
+	// 相手はWM_COPYDATAの処理中に、こちらのウィンドウへWM_COPYDATAで返信してくるので、
+	// 待っている間も送られてきたメッセージを処理できるよう、SMTO_BLOCKは付けない
+	DWORD ret_dword = 0;
+	const LRESULT sent = ::SendMessageTimeout(target, WM_COPYDATA, (WPARAM)receiver, (LPARAM)&cds, SMTO_ABORTIFHUNG, 5000, &ret_dword);
 
-	//リソースの開放
-	free(cds.lpData);
-
-	::DestroyWindow(propertyWindow);
+	::DestroyWindow(receiver);
 	::UnregisterClass(windowClass.lpszClassName, windowClass.hInstance);
 
-	result = execute_result;
-	return execute_succeeded;
+	return sent != 0 && ! o_response.empty();
 }
-#endif
+
+#endif // POSIX
+
+// 改行や\0はヘッダの区切りになるので、コマンドや引数には含められない
+static bool is_sstp_header_value(const wstring& s)
+{
+	static const wchar_t forbidden[] = { L'\r', L'\n', L'\0' };
+	return s.find_first_of(forbidden, 0, sizeof(forbidden)/sizeof(forbidden[0])) == wstring::npos;
+}
+
+int	Satori::ExecuteSSTP(const wstring& i_name, const wstring& i_command, const strvec& i_references, strvec& o_lines)
+{
+	o_lines.clear();
+	mLastSSTPResponseCode = 0;
+
+	wstring command = i_command;
+	m_escaper.unescape(command);
+	strvec references = i_references;
+	for ( strvec::iterator ri = references.begin() ; ri != references.end() ; ++ri ) {
+		m_escaper.unescape(*ri);
+	}
+
+	if ( command.empty() ) {
+		GetSender().sender() << L"error: '" << i_name << L"' : コマンドが空です。" << std::endl;
+		return 0;
+	}
+	bool is_valid = is_sstp_header_value(command);
+	for ( strvec::const_iterator vi = references.begin() ; is_valid && vi != references.end() ; ++vi ) {
+		is_valid = is_sstp_header_value(*vi);
+	}
+	if ( ! is_valid ) {
+		GetSender().sender() << L"error: '" << i_name << L"' : コマンドや引数に改行を含めることはできません。" << std::endl;
+		return 0;
+	}
+
+	std::map<int, void*>::const_iterator found = characters_hwnd.find(0);
+	if ( found == characters_hwnd.end() || found->second == NULL ) {
+		GetSender().sender() << L"'" << i_name << L"' : 本体のウィンドウがまだ分からないため、送れませんでした。" << std::endl;
+		return 0;
+	}
+
+	wstring request = L"EXECUTE SSTP/1.1\r\nCharset: UTF-8\r\nSender: Satori\r\nCommand: " + command + L"\r\n";
+	for ( strvec::size_type i = 0 ; i < references.size() ; ++i ) {
+		request += L"Reference" + itos(i) + L": " + references[i] + L"\r\n";
+	}
+	request += L"\r\n";
+
+	std::string response;
+	if ( ! SendExecuteSSTP(found->second, WtoUTF8(request), response) ) {
+		GetSender().sender() << L"'" << i_name << L"' : 本体から応答がありませんでした。" << std::endl;
+		return 0;
+	}
+	mLastSSTPResponseCode = ParseExecuteResponse(response, o_lines);
+	return mLastSSTPResponseCode;
+}
+
+wstring	Satori::func_execute_sstp(const strvec& iArgv, bool, bool)
+{
+	if ( iArgv.empty() ) {
+		mLastSSTPResponseCode = 0;
+		GetSender().sender() << L"error: 'execute_sstp' : コマンドを指定してください。" << std::endl;
+		return	L"";
+	}
+
+	const strvec references(iArgv.begin() + 1, iArgv.end());
+	strvec lines;
+	const int code = ExecuteSSTP(L"execute_sstp", iArgv[0], references, lines);
+	if ( code < 200 || code >= 300 ) {
+		return	L"";
+	}
+	// SAORIのValueと同じく、追加データが無いときは（Ｓｎ）を残す
+	if ( ! lines.empty() ) {
+		mKakkoCallResults = lines;
+	}
+	return lines.empty() ? wstring() : lines[0];
+}
 
 wstring	Satori::func_get_property(const strvec& iArgv, bool, bool)
 {
 	if (iArgv.size() >= 1)
 	{
-		const void* targetHWnd = characters_hwnd[0];
-		std::wostringstream ost;
-		ost << L"Command: GetProperty\r\nReference0: " << iArgv[0] << L"\r\n";
-		std::wstring sendData = ost.str();
-
-		std::wstring result;
-		if (SendDirectSSTP(targetHWnd, sendData, result)) {
-			return result;
+		const strvec references(1, iArgv[0]);
+		strvec lines;
+		if ( ExecuteSSTP(L"get_property", L"GetProperty", references, lines) == 200 ) {
+			return lines.empty() ? wstring() : lines[0];
 		}
 		return (iArgv.size() >= 2) ? iArgv[1] : L"";
 	}
@@ -997,14 +1184,15 @@ wstring	Satori::func_set_property(const strvec& iArgv, bool, bool)
 {
 	if (iArgv.size() >= 2)
 	{
-		const void* targetHWnd = characters_hwnd[0];
-		std::wostringstream ost;
-		ost << L"Command: SetProperty\r\nReference0: " << iArgv[0] << L"\r\nReference1: " << iArgv[1] << L"\r\n";
-		std::wstring sendData = ost.str();
-
-		std::wstring result;
-		SendDirectSSTP(targetHWnd, sendData, result);
-		return result;
+		strvec references;
+		references.push_back(iArgv[0]);
+		references.push_back(iArgv[1]);
+		strvec lines;
+		const int code = ExecuteSSTP(L"set_property", L"SetProperty", references, lines);
+		if ( code >= 200 && code < 300 && ! lines.empty() ) {
+			return lines[0];
+		}
+		return	L"";
 	}
 	return	L"";
 }
@@ -1287,6 +1475,7 @@ bool	Satori::GetBuiltinValue(const wstring& iName, wstring& oResult)
 		{ L"イベント名",			&Satori::var_event_name,		0 },
 		{ L"直前の選択肢名",		&Satori::var_last_choice_name,	0 },
 		{ L"本体の所在",			&Satori::var_exe_folder,		0 },
+		{ L"SSTP応答コード",		&Satori::var_sstp_response_code,	0 },
 	};
 
 	// 全角を半角にした名前が完全に一致するもの
@@ -1561,6 +1750,13 @@ bool	Satori::var_argument_count(const wstring&, const wstring&, int iParam, wstr
 		oResult = itos(mKakkoCallResults.size());
 		break;
 	}
+	return	true;
+}
+
+// 直前の EXECUTE SSTP（get_property・set_property・execute_sstp）の応答コード
+bool	Satori::var_sstp_response_code(const wstring&, const wstring&, int, wstring& oResult)
+{
+	oResult = itos(mLastSSTPResponseCode);
 	return	true;
 }
 
