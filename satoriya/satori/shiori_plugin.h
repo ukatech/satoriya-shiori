@@ -1,4 +1,6 @@
 /* -*- c++ -*- */
+#pragma once
+
 #ifndef POSIX
 #  include <windows.h>	// HMODULE,BOOL,HGLOBALとか
 #endif
@@ -34,6 +36,7 @@ class ShioriPlugins {
 		SaoriClient	*m_pSaoriClient;
 		int	mRefCount;
 		bool	mIsInternal;	// 内蔵ssuを直接呼び出している（実体の ssu.dll が無い）
+		wstring	mDirectModule;	// 本体の内蔵モジュールをDirect SSTP（SAORI over DirectSSTP）で呼んでいる（実体のDLLが無い）。その名前
 	};
 	std::map<wstring, CallData>	mCallData;	// 呼び出し名；呼び出し名ごとの情報
 	std::map<wstring, DllData>	mDllData;	// DLLのフルパス；DLLごとの情報

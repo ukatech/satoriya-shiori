@@ -685,6 +685,10 @@ public:
 			characters_hwnd[0] = hWnd;
 		}
 	}
+
+	// SAORI over DirectSSTP の要求（UTF-8のバイト列）を本体へ送り、応答を受け取る（satori_builtin.cpp）。
+	// 送れなかった・応答が無かったときはfalse。
+	bool	SendSaoriDirectSSTP(const std::string& i_request, std::string& o_response);
 };
 
 //---------------------------------------------------------------------------

@@ -1013,7 +1013,7 @@ static bool FindNinixSocket(const void* i_target, std::string& o_path)
 	return false;
 }
 
-static bool SendExecuteSSTP(const void* i_target, const std::string& i_request, std::string& o_response)
+static bool SendExecuteSSTP(const void* i_target, const std::string& i_request, std::string& o_response, unsigned i_timeout_ms)
 {
 	o_response.erase();
 	std::string path;
@@ -1043,7 +1043,7 @@ static LRESULT CALLBACK DirectSSTPClientProc(HWND hwnd, UINT message, WPARAM wpa
 	return ::DefWindowProc(hwnd, message, wparam, lparam);
 }
 
-static bool SendExecuteSSTP(const void* i_target, const std::string& i_request, std::string& o_response)
+static bool SendExecuteSSTP(const void* i_target, const std::string& i_request, std::string& o_response, unsigned i_timeout_ms)
 {
 	o_response.erase();
 
@@ -1082,7 +1082,7 @@ static bool SendExecuteSSTP(const void* i_target, const std::string& i_request, 
 	// 相手はWM_COPYDATAの処理中に、こちらのウィンドウへWM_COPYDATAで返信してくるので、
 	// 待っている間も送られてきたメッセージを処理できるよう、SMTO_BLOCKは付けない
 	DWORD ret_dword = 0;
-	const LRESULT sent = ::SendMessageTimeout(target, WM_COPYDATA, (WPARAM)receiver, (LPARAM)&cds, SMTO_ABORTIFHUNG, 5000, &ret_dword);
+	const LRESULT sent = ::SendMessageTimeout(target, WM_COPYDATA, (WPARAM)receiver, (LPARAM)&cds, SMTO_ABORTIFHUNG, i_timeout_ms, &ret_dword);
 
 	::DestroyWindow(receiver);
 	::UnregisterClass(windowClass.lpszClassName, windowClass.hInstance);
@@ -1137,12 +1137,25 @@ int	Satori::ExecuteSSTP(const wstring& i_name, const wstring& i_command, const s
 	request += L"\r\n";
 
 	std::string response;
-	if ( ! SendExecuteSSTP(found->second, WtoUTF8(request), response) ) {
+	if ( ! SendExecuteSSTP(found->second, WtoUTF8(request), response, 5000) ) {
 		GetSender().sender() << L"'" << i_name << L"' : 本体から応答がありませんでした。" << std::endl;
 		return 0;
 	}
 	mLastSSTPResponseCode = ParseExecuteResponse(response, o_lines);
 	return mLastSSTPResponseCode;
+}
+
+// SAORI over DirectSSTP。本体が内蔵するモジュールの呼び出しは、SAORIと同じく結果が返るまで待つ。
+// 時間のかかる処理は、モジュール側の --async で非同期にする仕様なので、待つ上限は長めにしてある。
+bool Satori::SendSaoriDirectSSTP(const std::string& i_request, std::string& o_response)
+{
+	o_response.erase();
+	std::map<int, void*>::const_iterator found = characters_hwnd.find(0);
+	if ( found == characters_hwnd.end() || found->second == NULL ) {
+		GetSender().sender() << L"SAORI over DirectSSTP : 本体のウィンドウがまだ分からないため、送れませんでした。" << std::endl;
+		return false;
+	}
+	return SendExecuteSSTP(found->second, i_request, o_response, 30000);
 }
 
 wstring	Satori::func_execute_sstp(const strvec& iArgv, bool, bool)

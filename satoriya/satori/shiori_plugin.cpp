@@ -11,6 +11,7 @@
 #include	<assert.h>
 #include	"../_/stltool.h"
 #include	"../_/Sender.h"
+#include	"satori.h"
 #include	"shiori_plugin.h"
 #include	"console_application.h"
 #include	"ssu.h"
@@ -76,6 +77,53 @@ static wstring posix_search_fallback_dll(const wstring& dllfile) {
 }
 #endif
 
+#ifndef POSIX
+
+// SAORI over DirectSSTP の互換モジュール（本体が内蔵するSAORI DLLの互換）。internal_ で始まるものは別に判定する
+static const wchar_t* const direct_sstp_compat_modules[] = {
+	L"houchi", L"clipcopy", L"textcopy", L"saori_ip", L"saori_cpuid",
+	L"mciaudio", L"cpuusage", L"httpc", L"string", L"hanayu",
+};
+
+// DLLの実体が無く、名前が本体の内蔵モジュールのものなら、そのモジュール名（小文字、.dllなし）を返す。
+// 実体があるときは、これまでどおりDLLとして読む。
+static bool find_direct_sstp_module(const wstring& i_fullpath, wstring& o_module)
+{
+	if ( ! compare_tail_nocase(i_fullpath, L".dll") ) {
+		return false;
+	}
+	const wchar_t* lastyen = wcsrchr(i_fullpath.c_str(), DIR_CHAR);
+	wstring name = (lastyen != NULL) ? (lastyen + 1) : i_fullpath.c_str();
+	name.erase(name.size() - const_strlen(L".dll"));
+	for ( wstring::iterator i = name.begin() ; i != name.end() ; ++i ) {
+		*i = towlower(*i);
+	}
+
+	bool is_module = compare_head(name, L"internal_");
+	for ( size_t n = 0 ; ! is_module && n < sizeof(direct_sstp_compat_modules)/sizeof(direct_sstp_compat_modules[0]) ; ++n ) {
+		is_module = (name == direct_sstp_compat_modules[n]);
+	}
+	if ( ! is_module ) {
+		return false;
+	}
+
+	FILE*	fp = w_fopen(i_fullpath, L"rb");
+	if ( fp != NULL ) {
+		fclose(fp);
+		return false;
+	}
+	o_module = name;
+	return true;
+}
+
+// SaoriDirectClient から本体へ要求を送る
+static bool send_saori_direct_sstp(void* i_context, const std::string& i_request, std::string& o_response)
+{
+	return static_cast<Satori*>(i_context)->SendSaoriDirectSSTP(i_request, o_response);
+}
+
+#endif // POSIX
+
 bool ShioriPlugins::load(const wstring& iBaseFolder)
 {
 	mBaseFolder = iBaseFolder;
@@ -104,6 +152,9 @@ bool ShioriPlugins::load_a_plugin(const wstring& iPluginLine)
 	// フォルダ区切りを環境に応じて方に統一
 	wstring filename = unify_dir_char(vec[1]);
 	wstring fullpath = unify_dir_char(mBaseFolder + filename);
+#ifndef POSIX
+	wstring direct_module;
+#endif
 
 	if ( mDllData.find(fullpath) != mDllData.end() ) 
 	{
@@ -130,6 +181,14 @@ bool ShioriPlugins::load_a_plugin(const wstring& iPluginLine)
 				else { mDllData[fullpath].mIsInternal = true; }
 			}
 		}
+#ifndef POSIX
+		else if ( find_direct_sstp_module(fullpath, direct_module) ) {
+			// SAORI over DirectSSTP：本体が内蔵するモジュール。呼び出しのたびに本体へ要求を送る
+			mDllData[fullpath].mRefCount=1;
+			mDllData[fullpath].m_pSaoriClient=new SaoriDirectClient(direct_module, send_saori_direct_sstp, pSatori);
+			mDllData[fullpath].mDirectModule = direct_module;
+		}
+#endif
 		else {
 #ifndef POSIX
 			// ネットワーク更新時、SAORI.dllが上書きできずdl2として保存される問題に暫定対処
@@ -386,7 +445,14 @@ wstring	ShioriPlugins::request(const wstring& iCallName, const strvec& iArgument
 		assert( mDllData.find(theCallData.mDllPath) != mDllData.end() );
 
 		wstring result;
-		const wstring dll_label = mDllData[ theCallData.mDllPath ].mIsInternal ? wstring(L"(internal ssu)") : theCallData.mDllPath;
+		const DllData& dll_data = mDllData[ theCallData.mDllPath ];
+		wstring dll_label = theCallData.mDllPath;
+		if ( dll_data.mIsInternal ) {
+			dll_label = L"(internal ssu)";
+		}
+		else if ( ! dll_data.mDirectModule.empty() ) {
+			dll_label = L"(DirectSSTP " + dll_data.mDirectModule + L")";
+		}
 		int return_code = mDllData[ theCallData.mDllPath ].m_pSaoriClient->request(
 			 req,
 			 ( iSecurityLevel == L"local" || iSecurityLevel == L"Local" ),
@@ -396,16 +462,20 @@ wstring	ShioriPlugins::request(const wstring& iCallName, const strvec& iArgument
 		//---------------------
 		// 返答に対処
 
+		// ErrorDescriptionがあれば、ログに添える（SAORI over DirectSSTPの内蔵モジュールなど）
+		const wstring error_description = mDllData[ theCallData.mDllPath ].m_pSaoriClient->error_description();
+		const wstring error_suffix = error_description.empty() ? wstring() : (L" (" + error_description + L")");
+
 		switch (return_code)
 		{
 		case 200:
 		case 204:
 			break;
 		case 400:
-			GetSender().errsender() << dll_label + L" - " + iCallName + L" : 400 Bad Request / 呼び出しの不備" << satori::endl;
+			GetSender().errsender() << dll_label + L" - " + iCallName + L" : 400 Bad Request / 呼び出しの不備" + error_suffix << satori::endl;
 			break;
 		case 500:
-			GetSender().errsender() << dll_label + L" - " + iCallName + L" : 500 Internal Server Error / saori内でのエラー" << satori::endl;
+			GetSender().errsender() << dll_label + L" - " + iCallName + L" : 500 Internal Server Error / saori内でのエラー" + error_suffix << satori::endl;
 			break;
 		default:
 			GetSender().errsender() << dll_label + L" - " + iCallName + L" : " + itos(return_code) + L"? / 定義されていないステータスを返しました。" << satori::endl;
