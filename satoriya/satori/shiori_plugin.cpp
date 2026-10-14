@@ -133,8 +133,92 @@ bool ShioriPlugins::load(const wstring& iBaseFolder)
 	{
 	    mBaseFolder += DIR_CHAR;
 	}
+#ifndef POSIX
+	// 読み込み直したら、本体の内蔵モジュールは問い合わせ直す
+	mInternalModulesState = IMS_UNKNOWN;
+	mInternalModules.clear();
+#endif
 	return true;
 }
+
+#ifndef POSIX
+
+// 本体に internal_system の ListModules を送り、内蔵モジュールの一覧を得る。
+void	ShioriPlugins::fetch_internal_modules()
+{
+	if ( ! pSatori->CanSendSaoriDirectSSTP() ) {
+		// 本体の窓がまだ分からない。次の呼び出しで再び試す
+		return;
+	}
+
+	SaoriDirectClient client(L"internal_system", send_saori_direct_sstp, pSatori);
+	const std::vector<wstring> args(1, L"ListModules");
+	wstring result;
+	std::vector<wstring> values;
+	const int code = client.request(args, true, result, values);
+
+	if ( code == 200 || code == 204 ) {
+		if ( values.empty() && ! result.empty() ) {
+			split(result, L",", values);
+		}
+		for ( std::vector<wstring>::const_iterator i = values.begin() ; i != values.end() ; ++i ) {
+			wstring name = *i;
+			for ( wstring::iterator c = name.begin() ; c != name.end() ; ++c ) {
+				*c = towlower(*c);
+			}
+			mInternalModules.insert(name);
+		}
+		mInternalModulesState = IMS_LISTED;
+	}
+	else if ( code == 400 && client.error_description() == L"unknown module" ) {
+		// SAORI over DirectSSTP には対応しているが、internal_system が無い本体
+		mInternalModulesState = IMS_ANY;
+	}
+	else {
+		GetSender().sender() << L"SAORI over DirectSSTP : 本体の内蔵モジュールを使えません。(" << client.error_description() << L")" << std::endl;
+		mInternalModulesState = IMS_NONE;
+	}
+}
+
+// iCallNameが本体の内蔵モジュール（internal_*）の名前なら、＠SAORIに
+// 「iCallName,saori/<小文字の名前>.dll」と書いたのと同じように登録してtrueを返す。
+bool	ShioriPlugins::register_internal_module(const wstring& iCallName)
+{
+	if ( ! compare_head_nocase(iCallName, L"internal_") ) {
+		return false;
+	}
+	// モジュール名に使える文字だけ（ファイル名・＠SAORIの行として扱えないものを除く）
+	wstring name = iCallName;
+	for ( wstring::iterator c = name.begin() ; c != name.end() ; ++c ) {
+		if ( !( (*c >= L'A' && *c <= L'Z') || (*c >= L'a' && *c <= L'z') || (*c >= L'0' && *c <= L'9') || *c == L'_' ) ) {
+			return false;
+		}
+		*c = towlower(*c);
+	}
+
+	if ( mInternalModulesState == IMS_UNKNOWN ) {
+		fetch_internal_modules();
+	}
+	switch ( mInternalModulesState ) {
+	case IMS_LISTED:
+		if ( mInternalModules.find(name) == mInternalModules.end() ) {
+			return false;
+		}
+		break;
+	case IMS_ANY:
+		break;
+	default:
+		return false;
+	}
+
+	if ( ! load_a_plugin(iCallName + L",saori/" + name + L".dll") ) {
+		return false;
+	}
+	GetSender().sender() << L"SAORI over DirectSSTP : " << iCallName << L" を本体の内蔵モジュールとして登録しました。" << std::endl;
+	return mCallData.find(iCallName) != mCallData.end();
+}
+
+#endif // POSIX
 
 bool ShioriPlugins::load_a_plugin(const wstring& iPluginLine)
 {

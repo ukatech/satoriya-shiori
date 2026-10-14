@@ -689,6 +689,13 @@ public:
 	// SAORI over DirectSSTP の要求（UTF-8のバイト列）を本体へ送り、応答を受け取る（satori_builtin.cpp）。
 	// 送れなかった・応答が無かったときはfalse。
 	bool	SendSaoriDirectSSTP(const std::string& i_request, std::string& o_response);
+
+	// SAORI over DirectSSTP の送り先（本体の窓）が分かっているか
+	bool	CanSendSaoriDirectSSTP() const
+	{
+		std::map<int,void*>::const_iterator found = characters_hwnd.find(0);
+		return found != characters_hwnd.end() && found->second != NULL;
+	}
 };
 
 //---------------------------------------------------------------------------
