@@ -196,6 +196,7 @@
     <ClCompile Include="SSTPClient.cpp">
     </ClCompile>
     <ClCompile Include="ssu.cpp" />
+    <ClCompile Include="..\uka_regexp\uka_regexp.cpp" />
     <ClCompile Include="WinMain.cpp">
     </ClCompile>
   </ItemGroup>
@@ -230,7 +231,7 @@
     <ClInclude Include="shiori_plugin.h" />
     <ClInclude Include="SSTPClient.h" />
     <ClInclude Include="ssu.h" />
-    <ClInclude Include="..\deelx\deelx.h" />
+    <ClInclude Include="..\uka_regexp\uka_regexp.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="icon1.ico" />

@@ -13,3 +13,7 @@
 
 ＊OnRegex
 ：（regex_replace、abc123def、[0-9]+、-）
+
+＊OnRegexSub
+＄year	\d{4}
+：（regex_replace、abc2026def、(?&year)、#）

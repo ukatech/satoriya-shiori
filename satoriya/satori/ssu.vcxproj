@@ -157,6 +157,7 @@
     </ClCompile>
     <ClCompile Include="ssu.cpp">
     </ClCompile>
+    <ClCompile Include="..\uka_regexp\uka_regexp.cpp" />
     <ClCompile Include="TimeCommands.cpp">
     </ClCompile>
   </ItemGroup>
@@ -167,7 +168,7 @@
     <ClInclude Include="..\_\stltool.h" />
     <ClInclude Include="..\_\Utilities.h" />
     <ClInclude Include="SakuraCS.h" />
-    <ClInclude Include="..\deelx\deelx.h" />
+    <ClInclude Include="..\uka_regexp\uka_regexp.h" />
     <ClInclude Include="SakuraDLLHost.h" />
     <ClInclude Include="SaoriHost.h" />
   </ItemGroup>

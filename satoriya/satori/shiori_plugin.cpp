@@ -124,9 +124,16 @@ static bool send_saori_direct_sstp(void* i_context, const std::string& i_request
 
 #endif // POSIX
 
+// ssu の正規表現のサブルーチン呼び出しの名前を、（名前）として展開する
+static bool resolve_ssu_regex_name(const wstring& i_name, wstring& o_result, void* i_context)
+{
+	return static_cast<Satori*>(i_context)->Call(i_name, o_result, false, true);
+}
+
 bool ShioriPlugins::load(const wstring& iBaseFolder)
 {
 	mBaseFolder = iBaseFolder;
+	set_ssu_name_resolver(resolve_ssu_regex_name, pSatori);
 
 	// mBaseFolderがスラッシュで終わっていなければ、付ける。
 	if ( false == mBaseFolder.empty() && mBaseFolder[mBaseFolder.length() - 1] != DIR_CHAR)
@@ -459,6 +466,7 @@ void	ShioriPlugins::load_default_entry()
 
 void	ShioriPlugins::unload()
 {
+	set_ssu_name_resolver(NULL, NULL);
 	for ( std::map<wstring, CallData>::iterator i=mCallData.begin() ; i!=mCallData.end() ; ++i ) {
 		if ( i->second.mIsBasic )
 			continue;

@@ -114,6 +114,9 @@
     <ClCompile Include="ssu.cpp">
       <Filter>SSUDirect</Filter>
     </ClCompile>
+    <ClCompile Include="..\uka_regexp\uka_regexp.cpp">
+      <Filter>SSUDirect</Filter>
+    </ClCompile>
     <ClCompile Include="..\_\calc_float.cpp">
       <Filter>_</Filter>
     </ClCompile>
@@ -188,7 +191,7 @@
     <ClInclude Include="ssu.h">
       <Filter>SSUDirect</Filter>
     </ClInclude>
-    <ClInclude Include="..\deelx\deelx.h">
+    <ClInclude Include="..\uka_regexp\uka_regexp.h">
       <Filter>SSUDirect</Filter>
     </ClInclude>
     <ClInclude Include="..\_\charset.h">

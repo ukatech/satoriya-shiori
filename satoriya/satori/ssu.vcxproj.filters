@@ -43,6 +43,7 @@
       <Filter>SakuraCS</Filter>
     </ClCompile>
     <ClCompile Include="ssu.cpp" />
+    <ClCompile Include="..\uka_regexp\uka_regexp.cpp" />
     <ClCompile Include="TimeCommands.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -64,7 +65,7 @@
     <ClInclude Include="SakuraCS.h">
       <Filter>SakuraCS</Filter>
     </ClInclude>
-    <ClInclude Include="..\deelx\deelx.h">
+    <ClInclude Include="..\uka_regexp\uka_regexp.h">
       <Filter>SakuraCS</Filter>
     </ClInclude>
     <ClInclude Include="SakuraDLLHost.h">

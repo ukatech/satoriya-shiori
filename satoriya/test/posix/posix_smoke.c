@@ -113,6 +113,7 @@ int main(int argc, char **argv)
 	check("OnReplace", "heLLo");
 	check("OnCalc", "\\07\\e");
 	check("OnRegex", "abc-def");
+	check("OnRegexSub", "abc#def");
 
 	p_unload();
 	printf("OK  unload\n");

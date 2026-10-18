@@ -7,6 +7,11 @@
 
 void get_ssu_funclist(std::vector<wstring> &funclist);
 
+// regex_* のパターンの中で、パターンに定義の無いサブルーチン名（(?&名前) や \g<名前>）が出てきたときに、
+// その名前の中身を求める関数。取得できたら true を返して o_result に入れる。NULL ならすべて未定義として扱う。
+typedef bool (*SsuNameResolver)(const wstring& i_name, wstring& o_result, void* i_context);
+void set_ssu_name_resolver(SsuNameResolver i_resolver, void* i_context);
+
 class ssu : public SaoriClient {
 public:
 	ssu() {

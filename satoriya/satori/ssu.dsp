@@ -156,7 +156,11 @@ SOURCE=.\SakuraCS.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\deelx\deelx.h
+SOURCE=..\uka_regexp\uka_regexp.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\uka_regexp\uka_regexp.h
 # End Source File
 # Begin Source File
 

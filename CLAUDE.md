@@ -15,16 +15,18 @@ msdev satori.dsw /MAKE "ssu - Win32 Release" /REBUILD /OUT "$env:TEMP\claude\sat
 - ログは `Get-Content <log> -Encoding oem` で読む。最終行の「ｴﾗｰ n、警告 n」を見る。ssu は変更前から警告5件（STLヘッダ由来）が出る。
 - 出力先は satori が `Release\`、satorite が `Release_ST\`、ssu が `Release_SU\`（`satori\Release\satorite.exe` などは古い残骸）。
 
-### サブモジュール（DEELX）
-`satoriya/deelx`（https://github.com/ponapalt/deelx 、ヘッダのみ）は ssu の `regex_*` が使う正規表現エンジンで、git サブモジュールです。**ビルドの前に必ず最新にします**。
+### サブモジュール（uka_regexp）
+`satoriya/uka_regexp`（https://github.com/ukatech/uka_regexp 、`uka_regexp.h` と `uka_regexp.cpp` の2ファイル）は ssu の `regex_*` が使う正規表現エンジンで、git サブモジュールです。伺か共用の PCRE2 寄りのエンジンで、Unlicense のためライセンス表記は要りません。**ビルドの前に必ず最新にします**。
 
 ```
-git submodule update --init --remote satoriya/deelx
+git submodule update --init --remote satoriya/uka_regexp
 ```
 
-- ポインタが変わると `git status` に `modified: satoriya/deelx` が出る。ビルドして問題がないことを確かめてから `satoriya/deelx を更新` のようなコミットで記録する（リリース前にも行う）。
+- ポインタが変わると `git status` に `modified: satoriya/uka_regexp` が出る。ビルドして問題がないことを確かめてから `satoriya/uka_regexp を更新` のようなコミットで記録する（リリース前にも行う）。
 - clone 直後は `git submodule update --init` が要る（空のままだとビルドが通らない）。
-- DEELX は正規表現の書式エラーを報告しない（閉じていない括弧などはそのまま解釈される）。
+- 本体側では編集しない。直すときは `../uka_regexp` で直してから参照を更新する（ASCII のみなので Sjis_ 系ツールは不要）。
+- ヘッダだけでなく `uka_regexp.cpp` も satori / satorite / ssu の3プロジェクトと makefile（`uka_regexp.o`）に入っている。
+- 書式エラーは `CRegexpException`（`ERR_SYNTAX`）で報告される。バックトラックの上限超過は `ERR_STEP_LIMIT`（`call_ssu` で捕まえてエラー文にする）。
 
 ### Linux / macOS
 - `satoriya/satori/makefile.linux`（Linux / BSD、`libsatori.so`）と `makefile.posix`（macOS、`libsatori.bundle`）。ソースを増やしたら両方と `makefile.emscripten` の一覧に足す。
@@ -114,7 +116,7 @@ git submodule update --init --remote satoriya/deelx
   - 名前と処理の対応は表（`function_table` / `GetBuiltinValue` / `system_variable_operation_real`）。足すときは処理を書いて `satori.h` に宣言し、表に1行加える。
   - 完全一致の名前は map で引き、`文「…」の存在` のような前後で決まる名前は表の上から順に調べる（順番に意味がある。汎用の `…の存在` は最後のほう）。
   - `function_table` の「localのみ」が真のものは `SecurityLevel: local` 以外では実行されない。
-- ssu：`ssu.cpp`。satori.dll 内では SAORI を経由せず直接呼ばれ、ssu.dll 単体ビルドは `SSU_SAORI_CALL_INTERFACE` を定義した場合。`regex_*` は DEELX（オプション `i` `s` `m` `x`、置換後は `$1` `$&` `${名前}`）。
+- ssu：`ssu.cpp`。satori.dll 内では SAORI を経由せず直接呼ばれ、ssu.dll 単体ビルドは `SSU_SAORI_CALL_INTERFACE` を定義した場合。`regex_*` は uka_regexp（オプション `i` `s` `m` `x`、置換後は `$1` `$&` `${名前}`）。パターンに定義の無いサブルーチン名（`(?&名前)` `\g<名前>`）は、`set_ssu_name_resolver` で渡される関数（`shiori_plugin.cpp` の `resolve_ssu_regex_name`。`Satori::Call` で `（名前）` を展開する）が解決する。解決した個数だけ、エンジンが呼び出し専用のグループを末尾に足すので、`regex_push_groups` では数えない。
 - `SakuraScript.cpp` / `main.cpp` / `cn.cpp` / `TimeCommands.cpp` はどのプロジェクトにも入っていない（死んだコード）。
 - ログ送信：`_/Sender.cpp`。送信先は `logsend(hwnd)` で渡されたウィンドウで、無ければ最初の送信時に れしば → tama（`TamaWndClass`）の順に FindWindow する。tama モードでは WM_COPYDATA の `dwData` がログコード（YAYA と同じ値）。errsender は E_E で送られ、`capability` で `response.errorlevel` 非対応と分かった後は MessageBox になる。
 

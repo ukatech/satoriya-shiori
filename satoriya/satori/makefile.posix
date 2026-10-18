@@ -53,6 +53,7 @@ LIBSATORI_OBJ = \
 	satori_tool.o \
 	shiori_plugin.o \
 	ssu.o \
+	uka_regexp.o \
 	$(NULL)
 
 LIBSATORI = $(DYLIB_NAME_PREFIX)satori$(DYLIB_NAME_POSTFIX)
@@ -79,16 +80,19 @@ $(LIBSATORI): $(LIBSATORI_OBJ)
 ICONV = iconv -f CP932 -t UTF-8
 U8DIR = utf8src
 
-$(U8DIR)/.stamp: $(wildcard *.cpp *.h ../_/*.cpp ../_/*.h ../deelx/*.h)
+$(U8DIR)/.stamp: $(wildcard *.cpp *.h ../_/*.cpp ../_/*.h ../uka_regexp/*.cpp ../uka_regexp/*.h)
 	rm -rf $(U8DIR)
-	mkdir -p $(U8DIR)/satori $(U8DIR)/_ $(U8DIR)/deelx
+	mkdir -p $(U8DIR)/satori $(U8DIR)/_ $(U8DIR)/uka_regexp
 	for f in *.cpp *.h; do $(ICONV) $$f > $(U8DIR)/satori/$$f || exit 1; done
 	for f in ../_/*.cpp ../_/*.h; do $(ICONV) $$f > $(U8DIR)/_/`basename $$f` || exit 1; done
-	for f in ../deelx/*.h; do $(ICONV) $$f > $(U8DIR)/deelx/`basename $$f` || exit 1; done
+	for f in ../uka_regexp/*.cpp ../uka_regexp/*.h; do $(ICONV) $$f > $(U8DIR)/uka_regexp/`basename $$f` || exit 1; done
 	touch $@
 
 ../_/%.o: $(U8DIR)/.stamp
 	$(CXX) $(CXXFLAGS) $(CXXFLAGS_ADD) -I$(U8DIR)/satori -I$(U8DIR)/_ -o $@ -c $(U8DIR)/_/$*.cpp
+
+uka_regexp.o: $(U8DIR)/.stamp
+	$(CXX) $(CXXFLAGS) $(CXXFLAGS_ADD) -I$(U8DIR)/satori -I$(U8DIR)/_ -o $@ -c $(U8DIR)/uka_regexp/uka_regexp.cpp
 
 %.o: $(U8DIR)/.stamp
 	$(CXX) $(CXXFLAGS) $(CXXFLAGS_ADD) -I$(U8DIR)/satori -I$(U8DIR)/_ -o $@ -c $(U8DIR)/satori/$*.cpp
@@ -100,8 +104,8 @@ dist:
 	cp -f ../satori_license.txt $(DESTDIR)
 	mkdir -p $(DESTDIR)/_
 	cp -f ../_/*.cpp ../_/*.h $(DESTDIR)/_
-	mkdir -p $(DESTDIR)/deelx
-	cp -f ../deelx/*.h $(DESTDIR)/deelx
+	mkdir -p $(DESTDIR)/uka_regexp
+	cp -f ../uka_regexp/*.cpp ../uka_regexp/*.h $(DESTDIR)/uka_regexp
 	mkdir -p $(DESTDIR)/satori
 	cp -f *.cpp *.h makefile.* *.html *.dsp *.dsw $(DESTDIR)/satori
 	mkdir -p $(DESTDIR)/satori/test

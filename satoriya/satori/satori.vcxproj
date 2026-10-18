@@ -186,6 +186,7 @@
     <ClCompile Include="shiori_plugin.cpp">
     </ClCompile>
     <ClCompile Include="ssu.cpp" />
+    <ClCompile Include="..\uka_regexp\uka_regexp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\_\charset.h" />
@@ -211,7 +212,7 @@
     <ClInclude Include="ShioriClient.h" />
     <ClInclude Include="shiori_plugin.h" />
     <ClInclude Include="ssu.h" />
-    <ClInclude Include="..\deelx\deelx.h" />
+    <ClInclude Include="..\uka_regexp\uka_regexp.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />
