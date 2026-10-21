@@ -19,7 +19,7 @@ protected:
 
 public:
 	Thread() : mThread(NULL), mID(0), mParam(NULL) {}
-	virtual	~Thread() {}
+	virtual	~Thread() { close(); }
 
 	// ì¬
 	virtual	bool	create(void* iParam=NULL, bool iSuspendedCreate=false);

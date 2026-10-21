@@ -73,6 +73,11 @@ call_console_application(
 	si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
 	si.wShowWindow = SW_HIDE;
 	si.hStdOutput = stdout_write; 
+	si.hStdError = stdout_write;	// STARTF_USESTDHANDLES では3つとも渡す。NULL のままだと書き込みで失敗する子がある
+
+	// 標準入力は NUL。読もうとした子が止まらないように
+	Handle stdin_null(::CreateFile(L"NUL", GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, &sa, OPEN_EXISTING, 0, NULL));
+	si.hStdInput = ( (HANDLE)stdin_null == INVALID_HANDLE_VALUE ) ? NULL : (HANDLE)stdin_null;
 
 	PROCESS_INFORMATION	pi; 
 	memset(&pi, 0, sizeof(pi)); 

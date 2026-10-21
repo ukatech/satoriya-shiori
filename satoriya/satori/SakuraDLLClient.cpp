@@ -155,9 +155,10 @@ int SakuraDLLClient::request(
 void	SakuraDLLClient::unload()
 {
 #ifdef POSIX
-    if (mModule != NULL) {
-	    dlclose(mModule);
-	}
+	if ( mUnload != NULL )
+		mUnload();
+	if ( mModule != NULL )
+		dlclose(mModule);
 #else
 	if ( mUnload != NULL )
 		mUnload();
@@ -198,7 +199,8 @@ bool	SakuraDLLClient::load(
 	mModule = dlopen(WtoUTF8(dll_fullpath).c_str(), RTLD_LAZY);
 	if (mModule == NULL) {
 	    GetSender().sender() << L"failed." << std::endl;
-	    GetSender().errsender() << UTF8toW(dlerror()) << satori::endl;
+	    const char* the_error = dlerror();
+	    GetSender().errsender() << UTF8toW(the_error ? the_error : "dlopen failed.") << satori::endl;
 	    return false;
 	}
 #else
@@ -211,9 +213,9 @@ bool	SakuraDLLClient::load(
 #endif
 
 #ifdef POSIX
-	mLoad = (bool (*)(char*, long))dlsym(mModule, "load");
+	mLoad = (int (*)(char*, long))dlsym(mModule, "load");
 	mRequest = (char* (*)(char*, long*))dlsym(mModule, "request");
-	mUnload = (bool (*)())dlsym(mModule, "unload");
+	mUnload = (int (*)())dlsym(mModule, "unload");
 #else
 	mLoad = (BOOL (*)(HGLOBAL, long))::GetProcAddress(mModule, "load");
 	if ( ! mLoad ) {
@@ -242,7 +244,7 @@ bool	SakuraDLLClient::load(
 	}
 
 #ifdef POSIX
-	bool (*theLoad)(char*, long) = mLoad;
+	int (*theLoad)(char*, long) = mLoad;
 	const std::string theFolder = WtoUTF8(work_folder);
 #else
 	// loaduがあればUTF-8でパスを渡す。無ければOSの既定コードページで渡す。

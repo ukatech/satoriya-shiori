@@ -57,9 +57,9 @@ private:
 
 #ifdef POSIX
 	void*   mModule;
-	bool    (*mLoad)(char* h, long len);
+	int     (*mLoad)(char* h, long len);
 	char*   (*mRequest)(char* h, long* len);
-	bool    (*mUnload)();
+	int     (*mUnload)();
 #else
 	HMODULE	mModule;
 	BOOL	(*mLoad)(HGLOBAL h, long len);

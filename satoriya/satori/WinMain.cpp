@@ -34,7 +34,7 @@ class UserWindow : public Window
 	HWND m_next_window;
 
 public:
-	UserWindow() { }
+	UserWindow() : m_next_window(NULL) { }
 	virtual ~UserWindow() { }
 
 	virtual	bool	OnCreate(LPCREATESTRUCT iCreateStruct)
@@ -49,6 +49,11 @@ public:
 		if ( hwnd!=NULL )
 		{
 			::PostMessage(hwnd, WM_COMMAND, ID_READCLIPBOARD_SYNC, 0);
+		}
+		// クリップボードビューアのチェーンの次へ渡す
+		if ( m_next_window != NULL )
+		{
+			::SendMessage(m_next_window, WM_DRAWCLIPBOARD, 0, 0);
 		}
 		return true;
 	}
@@ -85,6 +90,18 @@ class	UserThread : public Thread
 public:
 	UserThread() { }
 	virtual ~UserThread() { }
+
+	// ウィンドウを閉じてメッセージループを抜けさせ、スレッドの終了を待つ
+	void	quit()
+	{
+		HWND h = w;
+		if ( h != NULL )
+		{
+			::PostMessage(h, WM_CLOSE, 0, 0);
+			waitEnd(3000);
+		}
+		close();
+	}
 
 	virtual	DWORD	ThreadMain()
 	{
@@ -277,7 +294,7 @@ public:
 			strmap_to_file(gConf, CONFIG_FILENAME, L",");
 		}
 		//fmo.Close();
-		ut.close();
+		ut.quit();
 		return FALSE;
 	}
 
@@ -320,7 +337,7 @@ public:
 				}
 				::CloseClipboard();
 				if ( str != L"" )
-					SetText(IDC_EDIT1, str.c_str());
+					SetText(IDC_EDIT1, str);	// 書式として解釈させない（% を含むスクリプトで落ちる）
 			}
 			/* FALL_THRU */
 		case IDOK:

@@ -28,16 +28,24 @@ bool	SetClipBoard(HWND iWnd, const wchar_t* iFormat, ...) {
 	if ( hGlobal == NULL )
 		return	false;
 	LPVOID	pMemory = ::GlobalLock(hGlobal);
-	if ( pMemory == NULL )
+	if ( pMemory == NULL ) {
+		::GlobalFree(hGlobal);
 		return	false;
+	}
 	::CopyMemory(pMemory, theString, len);
 	::GlobalUnlock(hGlobal);
 	
-	::OpenClipboard(NULL);
+	if ( !::OpenClipboard(NULL) ) {
+		::GlobalFree(hGlobal);
+		return	false;
+	}
 	::EmptyClipboard();
-	::SetClipboardData(CF_UNICODETEXT, hGlobal);
+	// 成功したらメモリはクリップボードのもの。失敗したときだけ自分で解放する
+	const bool	ok = ( ::SetClipboardData(CF_UNICODETEXT, hGlobal) != NULL );
 	::CloseClipboard();
-	return	true;
+	if ( !ok )
+		::GlobalFree(hGlobal);
+	return	ok;
 }
 
 
@@ -327,208 +335,208 @@ PutWindowMessage( UINT message, WPARAM wParam, LPARAM lParam )
 	if ( message >= WM_USER && message <= 0x7FFF )
 		swprintf( buf, L"WM_USER+%d", message-WM_USER );
 
-	LPSTR	ptr = buf+lstrlen(buf);
+	LPWSTR	ptr = buf+lstrlen(buf);
 	if ( message == WM_MOUSEWHEEL ) {
 		// ホイール
-		sprintf( ptr, L"\t\t\t( fwKeys:%x, zDelta:%d, x:%d, y:%d )\n", LOWORD(wParam), (short) HIWORD(wParam), LOWORD(lParam), HIWORD(lParam) );
+		swprintf( ptr, L"\t\t\t( fwKeys:%x, zDelta:%d, x:%d, y:%d )\n", LOWORD(wParam), (short) HIWORD(wParam), LOWORD(lParam), HIWORD(lParam) );
 	}
 	else if ( message >= WM_MOUSEMOVE && message <= WM_MOUSEWHEEL ) {
 		// マウス関連メッセージ
-		sprintf( ptr, L"\t\t\t( fwKeys:%x, x:%d, y:%d )\n", wParam, LOWORD(lParam), HIWORD(lParam) );
+		swprintf( ptr, L"\t\t\t( fwKeys:%x, x:%d, y:%d )\n", wParam, LOWORD(lParam), HIWORD(lParam) );
 	}
 	else if ( message == WM_ACTIVATE ) {
 		if ( LOWORD(wParam) == WA_ACTIVE )
-			ptr += sprintf( ptr, L"\t\t\t( WA_ACTIVE, ");
+			ptr += swprintf( ptr, L"\t\t\t( WA_ACTIVE, ");
 		else if ( LOWORD(wParam) == WA_CLICKACTIVE )
-			ptr += sprintf( ptr, L"\t\t\t( WA_CLICKACTIVE, ");
+			ptr += swprintf( ptr, L"\t\t\t( WA_CLICKACTIVE, ");
 		else if ( LOWORD(wParam) == WA_INACTIVE )
-			ptr += sprintf( ptr, L"\t\t\t( WA_INACTIVE, ");
-		ptr += sprintf( ptr, L"%s, ", ((BOOL)HIWORD(wParam)) ? L"true" : L"false"  );
+			ptr += swprintf( ptr, L"\t\t\t( WA_INACTIVE, ");
+		ptr += swprintf( ptr, L"%s, ", ((BOOL)HIWORD(wParam)) ? L"true" : L"false"  );
 		if ( (HWND)lParam == NULL )
-			ptr += sprintf( ptr, L"NULL )\n" );
+			ptr += swprintf( ptr, L"NULL )\n" );
 		else {
-			ptr += sprintf( ptr, L"\"" );
+			ptr += swprintf( ptr, L"\"" );
 			ptr += ::GetWindowText( (HWND)lParam, ptr, 256 );
-			ptr += sprintf( ptr, L"\" )\n" );
+			ptr += swprintf( ptr, L"\" )\n" );
 		}
 	}
 	else if ( message == WM_NCACTIVATE )
-		ptr += sprintf( ptr, L"\t\t\t( %s )\n", ((BOOL)wParam) ? L"true" : L"false"  );
+		ptr += swprintf( ptr, L"\t\t\t( %s )\n", ((BOOL)wParam) ? L"true" : L"false"  );
 	else if ( message == WM_MOVE )
-		ptr += sprintf( ptr, L"\t\t\t( x:%d, y:%d )\n", LOWORD(lParam), HIWORD(lParam) );
+		ptr += swprintf( ptr, L"\t\t\t( x:%d, y:%d )\n", LOWORD(lParam), HIWORD(lParam) );
 	else if ( message == WM_SIZE ) {
-		ptr += sprintf( ptr, L"\t\t\t( " );
+		ptr += swprintf( ptr, L"\t\t\t( " );
 		if ( wParam == SIZE_MAXIMIZED )
-			ptr += sprintf( ptr, L"SIZE_MAXIMIZED" );
+			ptr += swprintf( ptr, L"SIZE_MAXIMIZED" );
 		else if ( wParam == SIZE_MINIMIZED )
-			ptr += sprintf( ptr, L"SIZE_MINIMIZED" );
+			ptr += swprintf( ptr, L"SIZE_MINIMIZED" );
 		else if ( wParam == SIZE_RESTORED )
-			ptr += sprintf( ptr, L"SIZE_RESTORED" );
+			ptr += swprintf( ptr, L"SIZE_RESTORED" );
 		else if ( wParam == SIZE_MAXHIDE )
-			ptr += sprintf( ptr, L"SIZE_MAXHIDE" );
+			ptr += swprintf( ptr, L"SIZE_MAXHIDE" );
 		else if ( wParam == SIZE_MAXSHOW )
-			ptr += sprintf( ptr, L"SIZE_MAXSHOW" );
-		ptr += sprintf( ptr, L", w:%d, h:%d )\n", LOWORD(lParam), HIWORD(lParam) );
+			ptr += swprintf( ptr, L"SIZE_MAXSHOW" );
+		ptr += swprintf( ptr, L", w:%d, h:%d )\n", LOWORD(lParam), HIWORD(lParam) );
 	}
 	else if ( message == WM_WINDOWPOSCHANGED || message == WM_WINDOWPOSCHANGING ) {
 		// WINDOWPOS構造体を使用するメッセージ
 		LPWINDOWPOS	p = (LPWINDOWPOS)lParam;
-		ptr += sprintf( ptr, L"\t\t\t( x:%d, y:%d, cx:%d, cy:%d )\n",
+		ptr += swprintf( ptr, L"\t\t\t( x:%d, y:%d, cx:%d, cy:%d )\n",
 			p->x, p->y, p->cx, p->cy );
-		ptr += sprintf( ptr, L"flags : " );
+		ptr += swprintf( ptr, L"flags : " );
 		if ( p->flags & SWP_DRAWFRAME )
-			ptr += sprintf( ptr, L"SWP_DRAWFRAME " );
+			ptr += swprintf( ptr, L"SWP_DRAWFRAME " );
 		if ( p->flags & SWP_FRAMECHANGED )
-			ptr += sprintf( ptr, L"SWP_HIDEWINDOW " );
+			ptr += swprintf( ptr, L"SWP_HIDEWINDOW " );
 		if ( p->flags & SWP_NOACTIVATE )
-			ptr += sprintf( ptr, L"SWP_NOACTIVATE " );
+			ptr += swprintf( ptr, L"SWP_NOACTIVATE " );
 		if ( p->flags & SWP_NOCOPYBITS )
-			ptr += sprintf( ptr, L"SWP_NOCOPYBITS " );
+			ptr += swprintf( ptr, L"SWP_NOCOPYBITS " );
 		if ( p->flags & SWP_NOMOVE )
-			ptr += sprintf( ptr, L"SWP_NOMOVE " );
+			ptr += swprintf( ptr, L"SWP_NOMOVE " );
 		if ( p->flags & SWP_NOOWNERZORDER )
-			ptr += sprintf( ptr, L"SWP_NOOWNERZORDER " );
+			ptr += swprintf( ptr, L"SWP_NOOWNERZORDER " );
 		if ( p->flags & SWP_NOSIZE )
-			ptr += sprintf( ptr, L"SWP_NOSIZE " );
+			ptr += swprintf( ptr, L"SWP_NOSIZE " );
 		if ( p->flags & SWP_NOREDRAW )
-			ptr += sprintf( ptr, L"SWP_NOREDRAW " );
+			ptr += swprintf( ptr, L"SWP_NOREDRAW " );
 		if ( p->flags & SWP_NOZORDER )
-			ptr += sprintf( ptr, L"SWP_NOZORDER " );
+			ptr += swprintf( ptr, L"SWP_NOZORDER " );
 		if ( p->flags & SWP_SHOWWINDOW )
-			ptr += sprintf( ptr, L"SWP_SHOWWINDOW " );
-		ptr += sprintf( ptr, L"\n" );
+			ptr += swprintf( ptr, L"SWP_SHOWWINDOW " );
+		ptr += swprintf( ptr, L"\n" );
 	}
 	else if ( message == WM_KEYDOWN || message == WM_KEYUP || message == WM_SYSKEYDOWN || message == WM_SYSKEYUP) {
 		// 仮想キーコードの表示
-		ptr += sprintf( ptr, L"\t\t\t( VK_" );
+		ptr += swprintf( ptr, L"\t\t\t( VK_" );
 		int	vk = (int)wParam;
 		switch ( vk ) {
-		case 0x01: ptr += sprintf( ptr, L"LBUTTON" ); break;
-		case 0x02: ptr += sprintf( ptr, L"RBUTTON" ); break;
-		case 0x03: ptr += sprintf( ptr, L"CANCEL" ); break;
-		case 0x04: ptr += sprintf( ptr, L"MBUTTON" ); break;    /* NOT contiguous with L & RBUTTON */
-		case 0x08: ptr += sprintf( ptr, L"BACK" ); break;
-		case 0x09: ptr += sprintf( ptr, L"TAB" ); break;
-		case 0x0C: ptr += sprintf( ptr, L"CLEAR" ); break;
-		case 0x0D: ptr += sprintf( ptr, L"RETURN" ); break;
-		case 0x10: ptr += sprintf( ptr, L"SHIFT" ); break;
-		case 0x11: ptr += sprintf( ptr, L"CONTROL" ); break;
-		case 0x12: ptr += sprintf( ptr, L"MENU" ); break;
-		case 0x13: ptr += sprintf( ptr, L"PAUSE" ); break;
-		case 0x14: ptr += sprintf( ptr, L"CAPITAL" ); break;
-		case 0x15: ptr += sprintf( ptr, L"KANA" ); break;
-		//case 0x15: ptr += sprintf( ptr, "HANGEUL" ); break;  /* old name - should be here for compatibility */
-		//case 0x15: ptr += sprintf( ptr, "HANGUL" ); break;
-		case 0x17: ptr += sprintf( ptr, L"JUNJA" ); break;
-		case 0x18: ptr += sprintf( ptr, L"FINAL" ); break;
-		//case 0x19: ptr += sprintf( ptr, "HANJA" ); break;
-		case 0x19: ptr += sprintf( ptr, L"KANJI" ); break;
-		case 0x1B: ptr += sprintf( ptr, L"ESCAPE" ); break;
-		case 0x1C: ptr += sprintf( ptr, L"CONVERT" ); break;
-		case 0x1D: ptr += sprintf( ptr, L"NONCONVERT" ); break;
-		case 0x1E: ptr += sprintf( ptr, L"ACCEPT" ); break;
-		case 0x1F: ptr += sprintf( ptr, L"MODECHANGE" ); break;
-		case 0x20: ptr += sprintf( ptr, L"SPACE" ); break;
-		case 0x21: ptr += sprintf( ptr, L"PRIOR" ); break;
-		case 0x22: ptr += sprintf( ptr, L"NEXT" ); break;
-		case 0x23: ptr += sprintf( ptr, L"END" ); break;
-		case 0x24: ptr += sprintf( ptr, L"HOME" ); break;
-		case 0x25: ptr += sprintf( ptr, L"LEFT" ); break;
-		case 0x26: ptr += sprintf( ptr, L"UP" ); break;
-		case 0x27: ptr += sprintf( ptr, L"RIGHT" ); break;
-		case 0x28: ptr += sprintf( ptr, L"DOWN" ); break;
-		case 0x29: ptr += sprintf( ptr, L"SELECT" ); break;
-		case 0x2A: ptr += sprintf( ptr, L"PRINT" ); break;
-		case 0x2B: ptr += sprintf( ptr, L"EXECUTE" ); break;
-		case 0x2C: ptr += sprintf( ptr, L"SNAPSHOT" ); break;
-		case 0x2D: ptr += sprintf( ptr, L"INSERT" ); break;
-		case 0x2E: ptr += sprintf( ptr, L"DELETE" ); break;
-		case 0x2F: ptr += sprintf( ptr, L"HELP" ); break;
+		case 0x01: ptr += swprintf( ptr, L"LBUTTON" ); break;
+		case 0x02: ptr += swprintf( ptr, L"RBUTTON" ); break;
+		case 0x03: ptr += swprintf( ptr, L"CANCEL" ); break;
+		case 0x04: ptr += swprintf( ptr, L"MBUTTON" ); break;    /* NOT contiguous with L & RBUTTON */
+		case 0x08: ptr += swprintf( ptr, L"BACK" ); break;
+		case 0x09: ptr += swprintf( ptr, L"TAB" ); break;
+		case 0x0C: ptr += swprintf( ptr, L"CLEAR" ); break;
+		case 0x0D: ptr += swprintf( ptr, L"RETURN" ); break;
+		case 0x10: ptr += swprintf( ptr, L"SHIFT" ); break;
+		case 0x11: ptr += swprintf( ptr, L"CONTROL" ); break;
+		case 0x12: ptr += swprintf( ptr, L"MENU" ); break;
+		case 0x13: ptr += swprintf( ptr, L"PAUSE" ); break;
+		case 0x14: ptr += swprintf( ptr, L"CAPITAL" ); break;
+		case 0x15: ptr += swprintf( ptr, L"KANA" ); break;
+		//case 0x15: ptr += swprintf( ptr, "HANGEUL" ); break;  /* old name - should be here for compatibility */
+		//case 0x15: ptr += swprintf( ptr, "HANGUL" ); break;
+		case 0x17: ptr += swprintf( ptr, L"JUNJA" ); break;
+		case 0x18: ptr += swprintf( ptr, L"FINAL" ); break;
+		//case 0x19: ptr += swprintf( ptr, "HANJA" ); break;
+		case 0x19: ptr += swprintf( ptr, L"KANJI" ); break;
+		case 0x1B: ptr += swprintf( ptr, L"ESCAPE" ); break;
+		case 0x1C: ptr += swprintf( ptr, L"CONVERT" ); break;
+		case 0x1D: ptr += swprintf( ptr, L"NONCONVERT" ); break;
+		case 0x1E: ptr += swprintf( ptr, L"ACCEPT" ); break;
+		case 0x1F: ptr += swprintf( ptr, L"MODECHANGE" ); break;
+		case 0x20: ptr += swprintf( ptr, L"SPACE" ); break;
+		case 0x21: ptr += swprintf( ptr, L"PRIOR" ); break;
+		case 0x22: ptr += swprintf( ptr, L"NEXT" ); break;
+		case 0x23: ptr += swprintf( ptr, L"END" ); break;
+		case 0x24: ptr += swprintf( ptr, L"HOME" ); break;
+		case 0x25: ptr += swprintf( ptr, L"LEFT" ); break;
+		case 0x26: ptr += swprintf( ptr, L"UP" ); break;
+		case 0x27: ptr += swprintf( ptr, L"RIGHT" ); break;
+		case 0x28: ptr += swprintf( ptr, L"DOWN" ); break;
+		case 0x29: ptr += swprintf( ptr, L"SELECT" ); break;
+		case 0x2A: ptr += swprintf( ptr, L"PRINT" ); break;
+		case 0x2B: ptr += swprintf( ptr, L"EXECUTE" ); break;
+		case 0x2C: ptr += swprintf( ptr, L"SNAPSHOT" ); break;
+		case 0x2D: ptr += swprintf( ptr, L"INSERT" ); break;
+		case 0x2E: ptr += swprintf( ptr, L"DELETE" ); break;
+		case 0x2F: ptr += swprintf( ptr, L"HELP" ); break;
 		/* 0 thru 9 are the same as ASCII '0' thru '9' (0x30 - 0x39) */
 		/* A thru Z are the same as ASCII 'A' thru 'Z' (0x41 - 0x5A) */
-		case 0x5B: ptr += sprintf( ptr, L"LWIN" ); break;
-		case 0x5C: ptr += sprintf( ptr, L"RWIN" ); break;
-		case 0x5D: ptr += sprintf( ptr, L"APPS" ); break;
-		case 0x60: ptr += sprintf( ptr, L"NUMPAD0" ); break;
-		case 0x61: ptr += sprintf( ptr, L"NUMPAD1" ); break;
-		case 0x62: ptr += sprintf( ptr, L"NUMPAD2" ); break;
-		case 0x63: ptr += sprintf( ptr, L"NUMPAD3" ); break;
-		case 0x64: ptr += sprintf( ptr, L"NUMPAD4" ); break;
-		case 0x65: ptr += sprintf( ptr, L"NUMPAD5" ); break;
-		case 0x66: ptr += sprintf( ptr, L"NUMPAD6" ); break;
-		case 0x67: ptr += sprintf( ptr, L"NUMPAD7" ); break;
-		case 0x68: ptr += sprintf( ptr, L"NUMPAD8" ); break;
-		case 0x69: ptr += sprintf( ptr, L"NUMPAD9" ); break;
-		case 0x6A: ptr += sprintf( ptr, L"MULTIPLY" ); break;
-		case 0x6B: ptr += sprintf( ptr, L"ADD" ); break;
-		case 0x6C: ptr += sprintf( ptr, L"SEPARATOR" ); break;
-		case 0x6D: ptr += sprintf( ptr, L"SUBTRACT" ); break;
-		case 0x6E: ptr += sprintf( ptr, L"DECIMAL" ); break;
-		case 0x6F: ptr += sprintf( ptr, L"DIVIDE" ); break;
-		case 0x70: ptr += sprintf( ptr, L"F1" ); break;
-		case 0x71: ptr += sprintf( ptr, L"F2" ); break;
-		case 0x72: ptr += sprintf( ptr, L"F3" ); break;
-		case 0x73: ptr += sprintf( ptr, L"F4" ); break;
-		case 0x74: ptr += sprintf( ptr, L"F5" ); break;
-		case 0x75: ptr += sprintf( ptr, L"F6" ); break;
-		case 0x76: ptr += sprintf( ptr, L"F7" ); break;
-		case 0x77: ptr += sprintf( ptr, L"F8" ); break;
-		case 0x78: ptr += sprintf( ptr, L"F9" ); break;
-		case 0x79: ptr += sprintf( ptr, L"F10" ); break;
-		case 0x7A: ptr += sprintf( ptr, L"F11" ); break;
-		case 0x7B: ptr += sprintf( ptr, L"F12" ); break;
-		case 0x7C: ptr += sprintf( ptr, L"F13" ); break;
-		case 0x7D: ptr += sprintf( ptr, L"F14" ); break;
-		case 0x7E: ptr += sprintf( ptr, L"F15" ); break;
-		case 0x7F: ptr += sprintf( ptr, L"F16" ); break;
-		case 0x80: ptr += sprintf( ptr, L"F17" ); break;
-		case 0x81: ptr += sprintf( ptr, L"F18" ); break;
-		case 0x82: ptr += sprintf( ptr, L"F19" ); break;
-		case 0x83: ptr += sprintf( ptr, L"F20" ); break;
-		case 0x84: ptr += sprintf( ptr, L"F21" ); break;
-		case 0x85: ptr += sprintf( ptr, L"F22" ); break;
-		case 0x86: ptr += sprintf( ptr, L"F23" ); break;
-		case 0x87: ptr += sprintf( ptr, L"F24" ); break;
-		case 0x90: ptr += sprintf( ptr, L"NUMLOCK" ); break;
-		case 0x91: ptr += sprintf( ptr, L"SCROLL" ); break;
+		case 0x5B: ptr += swprintf( ptr, L"LWIN" ); break;
+		case 0x5C: ptr += swprintf( ptr, L"RWIN" ); break;
+		case 0x5D: ptr += swprintf( ptr, L"APPS" ); break;
+		case 0x60: ptr += swprintf( ptr, L"NUMPAD0" ); break;
+		case 0x61: ptr += swprintf( ptr, L"NUMPAD1" ); break;
+		case 0x62: ptr += swprintf( ptr, L"NUMPAD2" ); break;
+		case 0x63: ptr += swprintf( ptr, L"NUMPAD3" ); break;
+		case 0x64: ptr += swprintf( ptr, L"NUMPAD4" ); break;
+		case 0x65: ptr += swprintf( ptr, L"NUMPAD5" ); break;
+		case 0x66: ptr += swprintf( ptr, L"NUMPAD6" ); break;
+		case 0x67: ptr += swprintf( ptr, L"NUMPAD7" ); break;
+		case 0x68: ptr += swprintf( ptr, L"NUMPAD8" ); break;
+		case 0x69: ptr += swprintf( ptr, L"NUMPAD9" ); break;
+		case 0x6A: ptr += swprintf( ptr, L"MULTIPLY" ); break;
+		case 0x6B: ptr += swprintf( ptr, L"ADD" ); break;
+		case 0x6C: ptr += swprintf( ptr, L"SEPARATOR" ); break;
+		case 0x6D: ptr += swprintf( ptr, L"SUBTRACT" ); break;
+		case 0x6E: ptr += swprintf( ptr, L"DECIMAL" ); break;
+		case 0x6F: ptr += swprintf( ptr, L"DIVIDE" ); break;
+		case 0x70: ptr += swprintf( ptr, L"F1" ); break;
+		case 0x71: ptr += swprintf( ptr, L"F2" ); break;
+		case 0x72: ptr += swprintf( ptr, L"F3" ); break;
+		case 0x73: ptr += swprintf( ptr, L"F4" ); break;
+		case 0x74: ptr += swprintf( ptr, L"F5" ); break;
+		case 0x75: ptr += swprintf( ptr, L"F6" ); break;
+		case 0x76: ptr += swprintf( ptr, L"F7" ); break;
+		case 0x77: ptr += swprintf( ptr, L"F8" ); break;
+		case 0x78: ptr += swprintf( ptr, L"F9" ); break;
+		case 0x79: ptr += swprintf( ptr, L"F10" ); break;
+		case 0x7A: ptr += swprintf( ptr, L"F11" ); break;
+		case 0x7B: ptr += swprintf( ptr, L"F12" ); break;
+		case 0x7C: ptr += swprintf( ptr, L"F13" ); break;
+		case 0x7D: ptr += swprintf( ptr, L"F14" ); break;
+		case 0x7E: ptr += swprintf( ptr, L"F15" ); break;
+		case 0x7F: ptr += swprintf( ptr, L"F16" ); break;
+		case 0x80: ptr += swprintf( ptr, L"F17" ); break;
+		case 0x81: ptr += swprintf( ptr, L"F18" ); break;
+		case 0x82: ptr += swprintf( ptr, L"F19" ); break;
+		case 0x83: ptr += swprintf( ptr, L"F20" ); break;
+		case 0x84: ptr += swprintf( ptr, L"F21" ); break;
+		case 0x85: ptr += swprintf( ptr, L"F22" ); break;
+		case 0x86: ptr += swprintf( ptr, L"F23" ); break;
+		case 0x87: ptr += swprintf( ptr, L"F24" ); break;
+		case 0x90: ptr += swprintf( ptr, L"NUMLOCK" ); break;
+		case 0x91: ptr += swprintf( ptr, L"SCROLL" ); break;
 		/*
 		 * VK_L* & VK_R* - left and right Alt, Ctrl and Shift virtual keys.
 		 * Used only as parameters to GetAsyncKeyState() and GetKeyState().
 		 * No other API or message will distinguish left and right keys in this way.
 		 */
-		case 0xA0: ptr += sprintf( ptr, L"LSHIFT" ); break;
-		case 0xA1: ptr += sprintf( ptr, L"RSHIFT" ); break;
-		case 0xA2: ptr += sprintf( ptr, L"LCONTROL" ); break;
-		case 0xA3: ptr += sprintf( ptr, L"RCONTROL" ); break;
-		case 0xA4: ptr += sprintf( ptr, L"LMENU" ); break;
-		case 0xA5: ptr += sprintf( ptr, L"RMENU" ); break;
+		case 0xA0: ptr += swprintf( ptr, L"LSHIFT" ); break;
+		case 0xA1: ptr += swprintf( ptr, L"RSHIFT" ); break;
+		case 0xA2: ptr += swprintf( ptr, L"LCONTROL" ); break;
+		case 0xA3: ptr += swprintf( ptr, L"RCONTROL" ); break;
+		case 0xA4: ptr += swprintf( ptr, L"LMENU" ); break;
+		case 0xA5: ptr += swprintf( ptr, L"RMENU" ); break;
 		#if(WINVER >= 0x0400)
-		case 0xE5: ptr += sprintf( ptr, L"PROCESSKEY" ); break;
+		case 0xE5: ptr += swprintf( ptr, L"PROCESSKEY" ); break;
 		#endif /* WINVER >= 0x0400 */
-		case 0xF6: ptr += sprintf( ptr, L"ATTN" ); break;
-		case 0xF7: ptr += sprintf( ptr, L"CRSEL" ); break;
-		case 0xF8: ptr += sprintf( ptr, L"EXSEL" ); break;
-		case 0xF9: ptr += sprintf( ptr, L"EREOF" ); break;
-		case 0xFA: ptr += sprintf( ptr, L"PLAY" ); break;
-		case 0xFB: ptr += sprintf( ptr, L"ZOOM" ); break;
-		case 0xFC: ptr += sprintf( ptr, L"NONAME" ); break;
-		case 0xFD: ptr += sprintf( ptr, L"PA1" ); break;
-		case 0xFE: ptr += sprintf( ptr, L"OEM_CLEAR" ); break;
+		case 0xF6: ptr += swprintf( ptr, L"ATTN" ); break;
+		case 0xF7: ptr += swprintf( ptr, L"CRSEL" ); break;
+		case 0xF8: ptr += swprintf( ptr, L"EXSEL" ); break;
+		case 0xF9: ptr += swprintf( ptr, L"EREOF" ); break;
+		case 0xFA: ptr += swprintf( ptr, L"PLAY" ); break;
+		case 0xFB: ptr += swprintf( ptr, L"ZOOM" ); break;
+		case 0xFC: ptr += swprintf( ptr, L"NONAME" ); break;
+		case 0xFD: ptr += swprintf( ptr, L"PA1" ); break;
+		case 0xFE: ptr += swprintf( ptr, L"OEM_CLEAR" ); break;
 		default:
 			if ( vk >= L'0' && vk <= L'9' )
-				ptr += sprintf( ptr, L"%c", vk );
+				ptr += swprintf( ptr, L"%c", vk );
 			else if ( vk >= L'A' && vk <= L'Z' )
-				ptr += sprintf( ptr, L"%c", vk );
+				ptr += swprintf( ptr, L"%c", vk );
 			else
-				ptr += sprintf( ptr, L"(0x%x)", vk );
+				ptr += swprintf( ptr, L"(0x%x)", vk );
 			break;
 		}
 
-		ptr += sprintf( ptr, L", %x )\n", lParam );
+		ptr += swprintf( ptr, L", %x )\n", lParam );
 	}
 	else {
 		// それ以外の一般形
-		sprintf( ptr, L"\t\t\t( %x, %x )\n", wParam, lParam );
+		swprintf( ptr, L"\t\t\t( %x, %x )\n", wParam, lParam );
 	}
 	
 	::OutputDebugString(buf);

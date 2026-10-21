@@ -69,7 +69,14 @@ BOOL CheckSakuraFileMapping(HWND hParentWnd, vector<HWND>& vec)
 	try
 	{
 		CopyMemory(&dwSize, lpBuffer, sizeof(DWORD));
-		lpBuffer += sizeof(DWORD);
+
+		// 先頭の DWORD が全体の大きさ。終端の NUL が無くても読み過ぎないよう、写像の範囲内で写し取ってから解析する
+		MEMORY_BASIC_INFORMATION mbi;
+		if ( ::VirtualQuery(lpBasePtr, &mbi, sizeof(mbi)) == 0 || dwSize > mbi.RegionSize ) {
+			dwSize = 0;
+		}
+		const std::string theData = ( dwSize > sizeof(DWORD) ) ? std::string(lpBuffer + sizeof(DWORD), dwSize - sizeof(DWORD)) : std::string();
+		lpBuffer = theData.c_str();
 
 		while(lpBuffer && *lpBuffer)
 		{
@@ -154,10 +161,11 @@ BOOL sendDirectSSTP_for_NOTIFY(wstring client, wstring id, deque<wstring>& refs)
 	strSendBuffer += L"Event: ";
 	strSendBuffer += id;
 	strSendBuffer += L"\r\n";
-	int	n=L'0';
+	int	n=0;
 	for (deque<wstring>::iterator i=refs.begin() ; i!=refs.end() ; ++i, ++n) {
+		wchar_t	num[16];
 		strSendBuffer += L"Reference";
-		strSendBuffer += (wchar_t)n;
+		strSendBuffer += _itow(n, num, 10);	// 10個目以降も Reference10, Reference11, ...
 		strSendBuffer += L": ";
 		strSendBuffer += *i;
 		strSendBuffer += L"\r\n";

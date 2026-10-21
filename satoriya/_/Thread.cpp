@@ -16,16 +16,20 @@ bool	Thread::create(void* iParam, bool iSuspendedCreate) {
 	// スレッド関数の本来の引数はメンバにコピーしておく。
 	mParam=iParam;
 	
-	// スレッド作成
+	// スレッド作成。ThreadMain が delete this しても mThread への代入が先に済むよう、止めた状態で作る
 	mThread=::CreateThread(
 		NULL,				// セキュリティ属性
 		0,					// 初期スタックサイズ 0 で自動
 		Thread::ThreadProc,	// スレッド関数
 		(LPVOID)this,		// スレッド関数の引数
-		iSuspendedCreate ? CREATE_SUSPENDED : 0,	// 即座に実行するか否か
+		CREATE_SUSPENDED,
 		&mID );				// スレッドID受け取り
 
-	return	(mThread!=NULL);
+	if ( mThread==NULL )
+		return	false;
+	if ( !iSuspendedCreate )
+		::ResumeThread(mThread);	// ここから先は this に触れない
+	return	true;
 }
 
 void	Thread::close() {

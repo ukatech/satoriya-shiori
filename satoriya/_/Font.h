@@ -24,7 +24,7 @@ public:
 	void	init();		// 設定を初期状態に戻す
 	// 設定を反映してmFontを最新状態にする。TextOut前には忘れずに実行しましょう。
 	bool	update();	
-	void	del() { if (mFont!=NULL) ::DeleteObject(mFont); }
+	void	del() { if (mFont!=NULL) { ::DeleteObject(mFont); mFont=NULL; } }
 	HFONT	getFont() { return mFont; }
 	COLORREF	getColor() const { return mColor; }
 

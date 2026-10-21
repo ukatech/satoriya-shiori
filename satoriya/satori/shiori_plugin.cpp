@@ -260,7 +260,7 @@ bool ShioriPlugins::load_a_plugin(const wstring& iPluginLine)
 #ifdef POSIX
 		if ( compare_tail(fullpath, L"\\ssu") || compare_tail(fullpath, L"/ssu") || compare_tail(fullpath, L"\\ssu.dll") || compare_tail(fullpath, L"/ssu.dll") )
 #else
-		if ( compare_tail(fullpath, L"\\ssu.dll") || compare_tail(fullpath, L"/ssu.dll") )
+		if ( compare_tail_nocase(fullpath, L"\\ssu.dll") || compare_tail_nocase(fullpath, L"/ssu.dll") )
 #endif
 		{
 			// プラグインDLLをロード
@@ -283,7 +283,7 @@ bool ShioriPlugins::load_a_plugin(const wstring& iPluginLine)
 		else {
 #ifndef POSIX
 			// ネットワーク更新時、SAORI.dllが上書きできずdl2として保存される問題に暫定対処
-			if ( compare_tail(fullpath, L".dll") )
+			if ( compare_tail_nocase(fullpath, L".dll") )
 			{
 				wstring	dl2 = fullpath;
 				dl2[dl2.size()-1]=L'2';
@@ -386,7 +386,7 @@ bool ShioriPlugins::load_a_plugin(const wstring& iPluginLine)
 #ifdef POSIX
 			if ( 1 )
 #else
-			if ( compare_tail(fullpath, L".dll") )
+			if ( compare_tail_nocase(fullpath, L".dll") )
 #endif
 			{
 				// プラグインDLLをロード
@@ -439,7 +439,7 @@ bool ShioriPlugins::load_a_plugin(const wstring& iPluginLine)
 #ifdef POSIX
 	mCallData[vec[0]].mIsBasic = false; // 拡張子では判断できないので、とりあえずSaori Basicのサポートは無し…
 #else
-	mCallData[vec[0]].mIsBasic = !compare_tail(fullpath, L".dll");
+	mCallData[vec[0]].mIsBasic = !compare_tail_nocase(fullpath, L".dll");
 #endif
 	strvec::const_iterator j=vec.begin();
 	for ( j+=2 ; j!=vec.end() ; ++j )
@@ -496,7 +496,8 @@ wstring	ShioriPlugins::request(const wstring& iCallName, const strvec& iArgument
 		if ( iSecurityLevel != L"local" && iSecurityLevel != L"Local" )
 			return	L""; 
 
-		wstring	theCommandLine = theCallData.mDllPath;
+		// パスに空白があっても別のファイルと取り違えないよう、引用符で囲む
+		wstring	theCommandLine = L"\"" + theCallData.mDllPath + L"\"";
 		strvec::const_iterator i;
 		for ( i=theCallData.mPreDefinedArguments.begin() ; i!=theCallData.mPreDefinedArguments.end() ; ++i )
 			theCommandLine += L" "+ *i;
@@ -545,6 +546,8 @@ wstring	ShioriPlugins::request(const wstring& iCallName, const strvec& iArgument
 		else if ( ! dll_data.mDirectModule.empty() ) {
 			dll_label = L"(DirectSSTP " + dll_data.mDirectModule + L")";
 		}
+		// 正規表現の（名前）の解決先はプロセスで1つなので、呼ぶたびにこの里々を指す（POSIX は複数の実体を持てる）
+		set_ssu_name_resolver(resolve_ssu_regex_name, pSatori);
 		int return_code = mDllData[ theCallData.mDllPath ].m_pSaoriClient->request(
 			 req,
 			 ( iSecurityLevel == L"local" || iSecurityLevel == L"Local" ),

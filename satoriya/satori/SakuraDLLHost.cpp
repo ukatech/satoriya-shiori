@@ -50,10 +50,16 @@ extern "C" SATORI_EXPORT int satori_load(char* i_data, long i_data_len) {
     wstring the_base_folder = UTF8toW(to_bytes(i_data, i_data_len));
     free(i_data);
     GetSender().sender() << the_base_folder << std::endl;
-    int id = SakuraDLLHost::Create<Satori>();
-    SakuraDLLHost::Select(id);
-    SakuraDLLHost::I()->load(the_base_folder);
-    return id;
+    try {
+        int id = SakuraDLLHost::Create<Satori>();
+        SakuraDLLHost::Select(id);
+        SakuraDLLHost::I()->load(the_base_folder);
+        return id;
+    }
+    catch ( ... ) {
+        // 例外を呼び出し元に漏らさない
+        return 0;
+    }
 }
 
 extern "C" SATORI_EXPORT int load(char* i_data, long i_data_len) {
@@ -61,7 +67,13 @@ extern "C" SATORI_EXPORT int load(char* i_data, long i_data_len) {
     wstring the_base_folder = UTF8toW(to_bytes(i_data, i_data_len));
     free(i_data);
     GetSender().sender() << the_base_folder << std::endl;
-    return SakuraDLLHost::I()->load(the_base_folder);
+    try {
+        return SakuraDLLHost::I()->load(the_base_folder);
+    }
+    catch ( ... ) {
+        // 例外を呼び出し元に漏らさない
+        return 0;
+    }
 }
 #else
 // loadu が先に呼ばれていたら load は無視する（DLL共通仕様）
@@ -125,7 +137,13 @@ extern "C" SATORI_EXPORT int satori_unload(int id)
     if ( ! SakuraDLLHost::Select(id) ) {
         return 0;
     }
-	int ret = SakuraDLLHost::I()->unload();
+	int ret = 0;
+	try {
+		ret = SakuraDLLHost::I()->unload();
+	}
+	catch ( ... ) {
+		// 例外を呼び出し元に漏らさない
+	}
     SakuraDLLHost::Destroy(id);
     return ret;
 }
@@ -150,10 +168,26 @@ extern "C" __declspec(dllexport) BOOL __cdecl unload(void)
 #ifdef POSIX
 static char* return_bytes(const std::string& the_resp_str, long* io_data_len)
 {
+    char* the_return_data = static_cast<char*>(malloc(the_resp_str.size() + 1));
+    if ( the_return_data == NULL ) {
+        *io_data_len = 0;
+        return NULL;
+    }
     *io_data_len = the_resp_str.size();
-    char* the_return_data = static_cast<char*>(malloc(*io_data_len + 1));
     memcpy(the_return_data, the_resp_str.c_str(), *io_data_len + 1);
     return the_return_data;
+}
+
+// 例外（メモリ不足など）を呼び出し元に漏らさない。失敗したら NULL を返す。
+static char* request_and_return(const std::string& the_req_str, long* io_data_len)
+{
+    try {
+        return return_bytes(SakuraDLLHost::I()->request_bytes(the_req_str), io_data_len);
+    }
+    catch ( ... ) {
+        *io_data_len = 0;
+        return NULL;
+    }
 }
 
 extern "C" SATORI_EXPORT char* satori_request(int id, char* i_data, long* io_data_len) {
@@ -166,10 +200,7 @@ extern "C" SATORI_EXPORT char* satori_request(int id, char* i_data, long* io_dat
         return NULL;
     }
     // リクエスト実行
-    std::string the_resp_str = SakuraDLLHost::I()->request_bytes(the_req_str);
-
-    // グローバルメモリで返す
-    return return_bytes(the_resp_str, io_data_len);
+    return request_and_return(the_req_str, io_data_len);
 }
 
 extern "C" SATORI_EXPORT char* request(char* i_data, long* io_data_len) {
@@ -178,16 +209,17 @@ extern "C" SATORI_EXPORT char* request(char* i_data, long* io_data_len) {
     free(i_data);
 
     // リクエスト実行
-    std::string the_resp_str = SakuraDLLHost::I()->request_bytes(the_req_str);
-
-    // グローバルメモリで返す
-    return return_bytes(the_resp_str, io_data_len);
+    return request_and_return(the_req_str, io_data_len);
 }
 #else
 static HGLOBAL return_bytes(const std::string& the_resp_str, long* io_data_len)
 {
+	HGLOBAL the_return_data = ::GlobalAlloc(GMEM_FIXED, the_resp_str.size() + 1);
+	if ( the_return_data == NULL ) {
+		*io_data_len = 0;
+		return NULL;
+	}
 	*io_data_len = the_resp_str.size();
-	HGLOBAL the_return_data = ::GlobalAlloc(GMEM_FIXED, *io_data_len + 1);
 	::CopyMemory(the_return_data, the_resp_str.c_str(), *io_data_len + 1);
 	return	the_return_data;
 }
@@ -198,11 +230,17 @@ extern "C" __declspec(dllexport) HGLOBAL __cdecl request(HGLOBAL i_data, long* i
 	std::string the_req_str((const char*)::GlobalLock(i_data), *io_data_len);
 	::GlobalFree(i_data);
 
-	// リクエスト実行
-	std::string	the_resp_str = SakuraDLLHost::I()->request_bytes(the_req_str);
+	// リクエスト実行。例外（メモリ不足など）を呼び出し元に漏らさない
+	try {
+		std::string	the_resp_str = SakuraDLLHost::I()->request_bytes(the_req_str);
 
-	// グローバルメモリで返す
-	return return_bytes(the_resp_str, io_data_len);
+		// グローバルメモリで返す
+		return return_bytes(the_resp_str, io_data_len);
+	}
+	catch ( ... ) {
+		*io_data_len = 0;
+		return NULL;
+	}
 }
 #endif
 
@@ -214,11 +252,17 @@ extern "C" __declspec(dllexport) HGLOBAL __cdecl getversionlist(HGLOBAL i_data, 
 	wstring the_req_str = ACPtoW(to_bytes((const char*)::GlobalLock(i_data), *io_data_len));
 	::GlobalFree(i_data);
 
-	// リクエスト実行
-	wstring	the_resp_str = SakuraDLLHost::I()->getversionlist(the_req_str);
+	// リクエスト実行。例外を呼び出し元に漏らさない
+	try {
+		wstring	the_resp_str = SakuraDLLHost::I()->getversionlist(the_req_str);
 
-	// グローバルメモリで返す
-	return return_bytes(WtoACP(the_resp_str), io_data_len);
+		// グローバルメモリで返す
+		return return_bytes(WtoACP(the_resp_str), io_data_len);
+	}
+	catch ( ... ) {
+		*io_data_len = 0;
+		return NULL;
+	}
 }
 #endif
 

@@ -154,7 +154,7 @@ public:
 		::UpdateWindow(mWnd);
 
 		MSG msg;
-		while (::GetMessage(&msg, NULL, 0, 0)) 
+		while (::GetMessage(&msg, NULL, 0, 0) > 0) 	// -1（エラー）でも抜ける
 		{
 			if (i_h_accelerator == NULL || !::TranslateAccelerator(mWnd, i_h_accelerator, &msg)) 
 			{
@@ -169,7 +169,7 @@ public:
 	// 操作メソッド（主にAPIのラッパ）
 
 	operator HWND() { return mWnd; }
-	HINSTANCE	Instance() { ::GetWindowLong(mWnd, GWL_HINSTANCE); }
+	HINSTANCE	Instance() { return (HINSTANCE)::GetWindowLong(mWnd, GWL_HINSTANCE); }
 	BOOL	Show(int iShowCommand) { return ::ShowWindow(mWnd, iShowCommand); }
 	LRESULT	SendMessage(UINT iMsg, WPARAM wParam=0, LPARAM lParam=0) { return ::SendMessage(mWnd, iMsg, wParam, lParam); }
 	LRESULT	PostMessage(UINT iMsg, WPARAM wParam=0, LPARAM lParam=0) { return ::PostMessage(mWnd, iMsg, wParam, lParam); }
