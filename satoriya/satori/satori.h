@@ -213,12 +213,12 @@ private:
 	int		nade_sensitivity;				// なでられ我慢回数（発動までの回数）
 	bool	bool_of_action_when_ghost_is_stroked; //ゴーストがなでられた際の実行イベントの切り替え用
 
-	unsigned int mousedown_time;
+	unsigned long mousedown_time;	// posix_get_current_tick() の型に合わせる
 	strvec mousedown_reference_array;
 	bool mousedown_exec_complete;
 
 	bool mousedown_secchange_delay_exec;
-	unsigned int mousedown_secchange_delay_time;
+	unsigned long mousedown_secchange_delay_time;
 
 	strintmap	koro_count;	// ころころ回数
 	int	koro_valid_time;	// ころころ有効期間

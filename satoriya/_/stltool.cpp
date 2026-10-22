@@ -155,8 +155,9 @@ bool	bytes_from_file(std::string& o, const wstring& iFileName) {
 	while ( (n = fread(buf, 1, sizeof(buf), fp)) > 0 ) {
 		o.append(buf, n);
 	}
+	bool	ok = ( ferror(fp) == 0 );
 	fclose(fp);
-	return	true;
+	return	ok;
 }
 
 bool	bytes_to_file(const std::string& i, const wstring& iFileName) {
@@ -623,14 +624,12 @@ wstring int2zen(int i) {
 	static const wchar_t*	ary[] = {L"‚O",L"‚P",L"‚Q",L"‚R",L"‚S",L"‚T",L"‚U",L"‚V",L"‚W",L"‚X"};
 	
 	wstring	zen;
-	if ( i<0 ) {
-		zen += L"|";
-		i = -i; // INT_MIN‚ÌŽž‚Í•„†‚ª”½“]‚µ‚È‚¢
-	}
 	wstring	han=itos(i);
 	const wchar_t* p=han.c_str();
-	if ( i==INT_MIN )
-		++p;
+	if ( i<0 ) {
+		zen += L"|";
+		++p; // •„†‚ð”ò‚Î‚·i-i‚ÍINT_MIN‚Å–¢’è‹`“®ì‚É‚È‚éj
+	}
 	for (  ; *p != L'\0' ; ++p ) {
 		assert(*p>=L'0' && *p<=L'9');
 		zen += ary[*p-L'0'];

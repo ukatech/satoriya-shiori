@@ -113,14 +113,20 @@ inline wstring	ascii_to_w(const char* p) { wstring r; while (*p) { r += static_c
 inline std::string	w_to_ascii(const wchar_t* p) { std::string r; while (*p) { r += static_cast<char>(*p++); } return r; }
 
 // intとの相互変換
-inline long stoi_internal(const wstring& s) { return wcstol(s.c_str(),NULL,10); }
-inline long stoi_internal(const wchar_t* s) { return wcstol(s,NULL,10); }
+// int の範囲に丸める（long が 64bit の環境でも、32bit の Windows と同じ結果にする）
+inline long stoi_internal(const wchar_t* s) {
+	long v = wcstol(s,NULL,10);
+	if ( v > INT_MAX ) { v = INT_MAX; }
+	else if ( v < INT_MIN ) { v = INT_MIN; }
+	return v;
+}
+inline long stoi_internal(const wstring& s) { return stoi_internal(s.c_str()); }
 inline unsigned long stoui(const wstring& s) { return wcstoul(s.c_str(),NULL,10); }
 inline unsigned long stoui(const wchar_t* s) { return wcstoul(s,NULL,10); }
 
 // 書式は数値1つを取るprintf書式（ASCIIのみ）
-inline wstring	itos(long i, const wchar_t* iFormat=L"%d") { char buf[64]; sprintf(buf,w_to_ascii(iFormat).c_str(),i); return ascii_to_w(buf); }
-inline wstring	uitos(unsigned long i, const wchar_t* iFormat=L"%u") { char buf[64]; sprintf(buf,w_to_ascii(iFormat).c_str(),i); return ascii_to_w(buf); }
+inline wstring	itos(long i, const wchar_t* iFormat=L"%ld") { char buf[64]; sprintf(buf,w_to_ascii(iFormat).c_str(),i); return ascii_to_w(buf); }
+inline wstring	uitos(unsigned long i, const wchar_t* iFormat=L"%lu") { char buf[64]; sprintf(buf,w_to_ascii(iFormat).c_str(),i); return ascii_to_w(buf); }
 
 // 実数の読み書き。ロケールの小数点（localeconv）に依らず、常に . を小数点として扱う。
 // ホストが LC_NUMERIC を設定していると、wcstod や printf("%f") の小数点が , になるため。

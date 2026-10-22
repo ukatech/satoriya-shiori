@@ -108,14 +108,14 @@ typedef	ulong	dword;
 
 // 第１引数の指定bitをon/offし、参照を返す。演算子的に用いる。
 template<class T>
-T& BitOn( T& t, int bit ) { assert( bit>=0 && bit<sizeof(T)*8 ); return t |= (1<<bit); }
+T& BitOn( T& t, int bit ) { assert( bit>=0 && bit<sizeof(T)*8 ); return t |= (static_cast<T>(1)<<bit); }
 template<class T>
-T& BitOff( T& t, int bit ) { assert( bit>=0 && bit<sizeof(T)*8 ); return t &= ~(1<<(bit)); }
+T& BitOff( T& t, int bit ) { assert( bit>=0 && bit<sizeof(T)*8 ); return t &= ~(static_cast<T>(1)<<(bit)); }
 template<class T>
 T& SetBit( T& t, int bit, int value ) { assert( bit>=0 && bit<sizeof(T)*8 ); return value ? BitOn(t,bit) : BitOff(t,bit); }
 // 第１引数の指定bitを返す。値は変更しない。
 template<class T>
-int GetBit( T t, int bit ) { assert( bit>=0 && bit<sizeof(T)*8 ); return ( t & (1<<(bit)) ) != 0 ; }
+int GetBit( T t, int bit ) { assert( bit>=0 && bit<sizeof(T)*8 ); return ( t & (static_cast<T>(1)<<(bit)) ) != 0 ; }
 
 // 引数をｎバイトにアラインする際の足りないバイト数を返す。
 inline int AlignPad( int i, int n ) { assert(n!=0); return ( i%n == 0 ) ? 0 : (n-i%n); }
@@ -125,7 +125,7 @@ inline int Align( int i, int n ) { assert(n!=0); return ( i%n == 0 ) ? i : i+(n-
 
 // 構造体を0で埋める。
 template<class T>
-inline	void	ClearStruct( T* pt ) { assert(pt!=NULL); memset( pt, 0, sizeof(pt) ); }
+inline	void	ClearStruct( T* pt ) { assert(pt!=NULL); memset( pt, 0, sizeof(*pt) ); }
 // 引数を0で埋める。不完全でなく宣言された配列が対象。
 #define	ClearMemory(pt)	memset( pt, 0, sizeof(pt) )
 

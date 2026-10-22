@@ -470,20 +470,28 @@ bool	Satori::Save(bool isOnUnload) {
 		return	false;
 	}
 
-	GetSender().sender() << L"ok." << std::endl;
-
 	//バックアップ
+	// 旧ファイルが無いときは DeleteFile / MoveFile / rename が失敗するので、最後の入れ替えだけ確かめる。
 	wstring	realFullPath = mBaseFolder + L"satori_savedata." + (fEncodeSavedata?L"sat":dic_load_ext.c_str());
 	wstring	realFullPathBackup = mBaseFolder + L"satori_savebackup." + (fEncodeSavedata?L"sat":dic_load_ext.c_str());
+	bool	replaced;
 #ifdef POSIX
 	unlink(WtoUTF8(realFullPathBackup).c_str());
 	rename(WtoUTF8(realFullPath).c_str(),WtoUTF8(realFullPathBackup).c_str());
-	rename(WtoUTF8(theFullPath).c_str(),WtoUTF8(realFullPath).c_str());
+	replaced = ( rename(WtoUTF8(theFullPath).c_str(),WtoUTF8(realFullPath).c_str()) == 0 );
 #else
 	::DeleteFile(realFullPathBackup.c_str());
 	::MoveFile(realFullPath.c_str(),realFullPathBackup.c_str());
-	::MoveFile(theFullPath.c_str(),realFullPath.c_str());
+	replaced = ( ::MoveFile(theFullPath.c_str(),realFullPath.c_str()) != 0 );
 #endif
+	if ( !replaced )
+	{
+		// 新しいセーブデータは .tmp に残っている。もう一方の形式のファイルは消さない。
+		GetSender().sender() << L"failed." << std::endl;
+		return	false;
+	}
+
+	GetSender().sender() << L"ok." << std::endl;
 
 	//いらないほうを消す
 	wstring	delFullPath = mBaseFolder + L"satori_savedata." + (fEncodeSavedata?dic_load_ext.c_str():L"sat");

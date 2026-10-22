@@ -17,8 +17,10 @@ void	add_characters(const wchar_t* p, int& chars_spoken) {
 	while (*p) {
 		if (*p==L'\\'||*p==L'%') {
 			++p;
-			if (*p==L'\\'||*p==L'%')	// エスケープされた\, %
+			if (*p==L'\\'||*p==L'%') {	// エスケープされた\, %
+				++p;
 				continue;
+			}
 			while ( *p < 0x80 && (iswalpha(*p)||iswdigit(*p)||*p==L'!'||*p==L'*'||*p==L'&'||*p==L'?'||*p==L'_') )
 				++p;
 			if (*p==L'[') {

@@ -399,6 +399,12 @@ public:
 	{
 		if ( m_last == *i_it ) 
 		{
+			if ( i_candidates.size() <= 1 )
+			{
+				// 消える要素しかない（自分自身を指したままにしない）
+				m_last = INVALID_VALUE;
+				return;
+			}
 			if ( i_it == i_candidates.begin() )
 			{
 				i_it = i_candidates.end();
@@ -522,6 +528,11 @@ public:
 	{
 		if ( m_last == *i_it ) 
 		{
+			if ( i_candidates.size() <= 1 )
+			{
+				m_last = INVALID_VALUE;
+				return;
+			}
 			++i_it;
 			if ( i_it == i_candidates.end() )
 			{

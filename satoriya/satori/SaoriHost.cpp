@@ -44,10 +44,11 @@ int	SaoriHost::request(
 		}
 		if ( it->first.compare(0, 8, L"Argument") == 0 )
 		{
-			const int n = _wtoi(it->first.c_str() + 8);
+			// _wtoi ‚ÍŒ…‚ ‚Ó‚ê‚Å•Ê‚Ì”Ô†‚É‰»‚¯‚éiArgument4294967297 ‚ª 1 ‚É‚È‚éj‚Ì‚Å wcstol ‚Å”ÍˆÍ‚ðŠm‚©‚ß‚é
+			const long n = wcstol(it->first.c_str() + 8, NULL, 10);
 			if ( n>=0 && n<65536 )
 			{
-				if ( arguments.size() <= n )
+				if ( static_cast<long>(arguments.size()) <= n )
 				{
 					arguments.resize(n+1);
 				}

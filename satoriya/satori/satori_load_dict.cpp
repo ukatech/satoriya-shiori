@@ -192,6 +192,16 @@ static bool pre_process(
 			return false;
 		}
 	}
+
+	// 最後の行がφで終わっていると、行を足す処理が走らないまま終わるので、ここで足す
+	if ( !accumulater.empty() )
+	{
+		for ( strmap::iterator di=io_replace_dic.begin() ; di!=io_replace_dic.end() ; ++di )
+		{
+			replace(accumulater, di->first, di->second);
+		}
+		out.push_back(accumulater);
+	}
 	return true;
 }
 

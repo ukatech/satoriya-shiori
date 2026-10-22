@@ -383,7 +383,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,wstring &result,wst
 			else {
 				//v = p+strlen(p);
 				//value="";
-				result += L"\\n※　＄による変数代入文には、タブによる区切りか、＝による計算式が必要です　※\\n\\n[half]'" + value +L"'";
+				result += L"\\n※　＄による変数代入文には、タブによる区切りか、＝による計算式が必要です　※\\n\\n[half]'" + wstring(p) +L"'";
 				break;
 			}
 
@@ -473,7 +473,11 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,wstring &result,wst
 					else if ( cmd == INTERNAL_MARK_SURFACE_STR ) { //サーフェス加算のための遅延評価
 						int s = stoi_internal(param.c_str());
 						if ( s != -1 ) { // -1は「消し」なので特別扱い
-							s += surface_add_value[speaker];
+							const int add = surface_add_value[speaker];
+							// s += add が int を越えないように
+							if ( add > 0 && s > INT_MAX - add ) { s = INT_MAX; }
+							else if ( add < 0 && s < INT_MIN - add ) { s = INT_MIN; }
+							else { s += add; }
 						}
 
 						//ここをいじったら\sタグ処理部も更新すること

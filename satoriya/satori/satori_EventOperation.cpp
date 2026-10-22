@@ -128,11 +128,14 @@ int	Satori::EventOperation(wstring iEvent, std::map<wstring,wstring> &oResponse)
 		}
 		else {
 		//	GetSender().sender() << "■見切れ判定処理" <<std::endl;
-			RECT	rc;
-			::GetWindowRect((HWND)characters_hwnd[0], &rc);
-			int	center = (rc.left + rc.right)/2;
-			mRequestMap[L"Reference1"] = mReferences[1] =
-				( center >= max_screen_rect.left && center <= max_screen_rect.right ) ? L"0" : L"1";
+			RECT	rc = {0};
+			std::map<int, void*>::const_iterator hwnd0 = characters_hwnd.find(0);
+			// hwnd が無い・ウィンドウが無くなっている場合は判定しない（rc が不定になるため）
+			if ( hwnd0 != characters_hwnd.end() && hwnd0->second != NULL && ::GetWindowRect((HWND)hwnd0->second, &rc) ) {
+				int	center = (rc.left + rc.right)/2;
+				mRequestMap[L"Reference1"] = mReferences[1] =
+					( center >= max_screen_rect.left && center <= max_screen_rect.right ) ? L"0" : L"1";
+			}
 			/*GetSender().sender() << "シェルの左端: " << rc.left <<std::endl;
 			GetSender().sender() << "シェルの右端: " << rc.right <<std::endl;
 			GetSender().sender() << "シェルの中央: " << center <<std::endl;

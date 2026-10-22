@@ -198,6 +198,7 @@ bool Sender::send_to_window(const int mode,const wchar_t* theBuf)
 	}
 
 #ifdef POSIX
+	if ( mode >= SenderConst::E_END ) { return true; }	// êßå‰ópÇÕï\é¶ÇµÇ»Ç¢
 	fputs(WtoUTF8(theBuf).c_str(), stderr);
 	fputs("\n", stderr);
 	return true;
@@ -282,7 +283,7 @@ void error_buf::set_log_mode(bool is_log)
 	if ( is_log == false ) {
 		for (std::vector<wstring>::iterator i=log_data.begin() ; i!=log_data.end() ; ++i) {
 #ifdef POSIX
-			std::wcerr << L"error - SATORI : " << *i << std::endl;
+			fputs(("error - SATORI : " + WtoUTF8(*i) + "\n").c_str(), stderr);
 #else
 			::MessageBox(NULL, i->c_str(), L"error - SATORI", MB_OK|MB_SYSTEMMODAL);
 #endif
@@ -322,7 +323,7 @@ void error_buf::flush(void)
 		log_tmp_buffer.clear();
 
 #ifdef POSIX
-        std::wcerr << L"error - SATORI : " << out << std::endl;
+        fputs(("error - SATORI : " + WtoUTF8(out) + "\n").c_str(), stderr);
 #else
         ::MessageBox(NULL, out.c_str(), L"error - SATORI", MB_OK|MB_SYSTEMMODAL);
 #endif

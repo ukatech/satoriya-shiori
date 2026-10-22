@@ -13,11 +13,13 @@ public:
 
 	BOOL	create(DWORD Protect, DWORD MaxSize, LPCTSTR lpszName) {
 		assert(mHandle==NULL);
-		mHandle = ::CreateFileMapping((HANDLE)0xffffffff, NULL, Protect, 0, MaxSize, lpszName);
+		close();
+		mHandle = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL, Protect, 0, MaxSize, lpszName);
 		return	( mHandle != NULL );
 	}
 	BOOL	open(DWORD dwDesiredAccess, BOOL bInheritHandle, LPCTSTR lpszName) {
 		assert(mHandle==NULL);
+		close();
 		mHandle = ::OpenFileMapping(dwDesiredAccess, bInheritHandle, lpszName);
 		return	( mHandle != NULL );
 	}

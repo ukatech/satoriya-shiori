@@ -188,6 +188,10 @@ static SRV	call_ssu(wstring iCommand, std::deque<wstring>& iArguments, std::dequ
 		// 正規表現の照合中のエラー（バックトラックの回数超過など）
 		return	SRV(400, regex_error_message(e));
 	}
+	catch ( const std::exception& ) {
+		// メモリ不足や長さ超過などを、DLLの外に出さない
+		return	SRV(400, wstring()+L"Error: '"+iCommand+L"'の実行中に例外が起きました。");
+	}
 }
 
 // ここから実装
@@ -395,12 +399,15 @@ bool	printf_format(const wchar_t*& p, std::deque<wstring>& iArguments, std::wstr
 		}
 	case L'g':
 		{
-			os << std::scientific << std::fixed << std::nouppercase << wcstod_dot(zen2han_internal(str).c_str());
+			// floatfield を空にすると %g 相当（scientific と fixed の両方を立てると C++11 以降では hexfloat になる）
+			os.unsetf(std::ios_base::floatfield);
+			os << std::nouppercase << wcstod_dot(zen2han_internal(str).c_str());
 			break;
 		}
 	case L'G':
 		{
-			os << std::scientific << std::fixed << std::uppercase << wcstod_dot(zen2han_internal(str).c_str());
+			os.unsetf(std::ios_base::floatfield);
+			os << std::uppercase << wcstod_dot(zen2han_internal(str).c_str());
 			break;
 		}
 	case L'f':
@@ -423,6 +430,12 @@ wstring	sprintf(std::deque<wstring>& iArguments) {
 	iArguments.pop_front();
 	const wchar_t* p = str.c_str();
 	while ( *p!=L'\0' ) {
+		if ( *p==L'%' && p[1]==L'%' ) {
+			// %% は % 1文字（引数は使わない）
+			s.put(L'%');
+			p += 2;
+			continue;
+		}
 		if ( *p==L'%' ) {
 			std::wstringstream sf;
 			const wchar_t* p_before = p;
@@ -1379,7 +1392,7 @@ SRV _regex_escape(std::deque<wstring>& iArguments, std::deque<wstring>& oValues)
 	wstring	r;
 	r.reserve(iArguments[0].size() * 2);
 	for ( wstring::const_iterator i=iArguments[0].begin() ; i!=iArguments[0].end() ; ++i ) {
-		if ( wcschr(L"\\^$.|?*+()[]{}", *i) != NULL )
+		if ( *i != L'\0' && wcschr(L"\\^$.|?*+()[]{}", *i) != NULL )	// wcschr は終端の NUL にも一致する
 			r += L'\\';
 		r += *i;
 	}

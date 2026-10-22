@@ -22,7 +22,6 @@ typedef	double	VALUE_TYPE;
 // 単項演算子 +,-,!
 // 被演算子 整数値, カッコ。
 // 全て半角であること。空白等は認めない
-extern bool calc_float(const wchar_t* iExpression, int* oResult);
 // 半角全角スペースとタブ記号の消去、数字・記号の半角化まで全部やったげる
 extern	bool calc_float(wstring& ioString);
 

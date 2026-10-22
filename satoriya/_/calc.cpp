@@ -95,6 +95,17 @@ static calc_int	neg64(calc_int i) {
 	return	static_cast<calc_int>( 0-static_cast<calc_uint>(i) );
 }
 
+// 桁あふれは2の補数でまるめる（符号付きのままだと未定義動作になるので、符号なしで計算する）
+static calc_int	add64(calc_int a, calc_int b) {
+	return	static_cast<calc_int>( static_cast<calc_uint>(a)+static_cast<calc_uint>(b) );
+}
+static calc_int	sub64(calc_int a, calc_int b) {
+	return	static_cast<calc_int>( static_cast<calc_uint>(a)-static_cast<calc_uint>(b) );
+}
+static calc_int	mul64(calc_int a, calc_int b) {
+	return	static_cast<calc_int>( static_cast<calc_uint>(a)*static_cast<calc_uint>(b) );
+}
+
 
 struct calc_element {
 	wstring	str;
@@ -300,7 +311,7 @@ static bool	calc_polish(simple_stack<calc_element>& polish, wstring& oResult,boo
 			assert_special(stack.size()>=2);
 			wstring	rhs=stack.pop(), lhs=stack.pop();
 			if ( aredigits(lhs) && aredigits(rhs) ) {
-				stack.push(i64tos( stoi64(lhs)*stoi64(rhs) )); 
+				stack.push(i64tos( mul64(stoi64(lhs),stoi64(rhs)) )); 
 			} else if ( aredigits(rhs) && ! isStrict ) {
 				calc_int	num = stoi64(rhs);
 				// 巨大な繰り返しでメモリを使い果たしたり、空文字列の繰り返しで延々と回ったりしないように
@@ -344,7 +355,7 @@ static bool	calc_polish(simple_stack<calc_element>& polish, wstring& oResult,boo
 			assert_special(stack.size()>=2);
 			wstring	rhs=stack.pop(), lhs=stack.pop();
 			if ( aredigits(lhs) && aredigits(rhs) ) {
-				stack.push(i64tos( stoi64(lhs)+stoi64(rhs) )); 
+				stack.push(i64tos( add64(stoi64(lhs),stoi64(rhs)) )); 
 			} else if ( ! isStrict ) {
 				stack.push(lhs+rhs); 
 			} else {
@@ -355,7 +366,7 @@ static bool	calc_polish(simple_stack<calc_element>& polish, wstring& oResult,boo
 			assert_special(stack.size()>=2);
 			wstring	rhs=stack.pop(), lhs=stack.pop();
 			if ( aredigits(lhs) && aredigits(rhs) ) {
-				stack.push(i64tos( stoi64(lhs)-stoi64(rhs) )); 
+				stack.push(i64tos( sub64(stoi64(lhs),stoi64(rhs)) )); 
 			} else if ( ! isStrict ) {
 				erase_all(lhs, rhs);
 				stack.push(lhs);
