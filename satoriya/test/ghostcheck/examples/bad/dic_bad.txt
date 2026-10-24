@@ -1,0 +1,8 @@
+＊OnBoot
+：こんにちは。
+
+＊OnBroken
+：これは（replace、abc、a
+
+＊OnAfterBroken
+：ここは読み込まれない。

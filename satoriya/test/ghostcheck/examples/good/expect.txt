@@ -1,0 +1,5 @@
+# イベント名<TAB>応答に含まれるべき語（!で始めると含まれてはいけない語）
+OnBoot	こんにちは。
+OnBoot	いい天気だね。
+OnBoot	!（
+OnMinuteChange	散歩に行こう。
