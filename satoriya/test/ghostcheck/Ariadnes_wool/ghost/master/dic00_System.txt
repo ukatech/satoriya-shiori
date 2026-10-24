@@ -1,0 +1,94 @@
+
+＃　-----------------------------------------------------
+＃　
+＃　里々辞書 ── アリアドネの羔
+＃　
+＃　システム設定
+＃　
+＃　-----------------------------------------------------
+
+
+＊OnSatoriLoad
+＄デバッグ【タブ】無効
+＄NOTIFYの自動保存【タブ】有効
+＄文「＊」の重複回避【タブ】有効、起動中
+＄単語群「＊」の重複回避【タブ】有効、トーク中
+
+
+
+＠KillDangerousTag
+（
+	set
+	,単語群「DangerousTag」の重複回避
+	,降順、トーク中
+）（
+	set
+	,n
+	,（単語群「DangerousTag」の数）
+）（
+	set
+	,引数区切り追加
+	,（バイト値、２）
+）（
+	call
+	（バイト値、１）KillDangerousTag2
+	（バイト値、１）（A0）
+）（
+	set
+	,SaveDangerousTag
+	,
+）（
+	set
+	,n
+	,
+）（
+	set
+	,引数区切り削除
+	,（バイト値、２）
+）
+
+＠KillDangerousTag2
+（
+	set
+	,n
+	,（calc,（n）-1）
+）（
+	set
+	（バイト値、１）SaveDangerousTag
+	（バイト値、１）（DangerousTag）
+）（
+	（
+		unless
+		（バイト値、１）（n）==-1
+		（バイト値、１）
+			call
+			（バイト値、２）KillDangerousTag2
+			（バイト値、２）（
+				replace
+				（バイト値、１）（A0）
+				（バイト値、１）（SaveDangerousTag）
+				（バイト値、１）\（SaveDangerousTag）
+			）
+		（バイト値、１）A0
+	）
+）
+
+＃	危険なタグリスト
+＠DangerousTag
+\![updatebymyself]
+\![vanishbymyself]
+\![raise
+\![open,browser
+\![open,mailer
+\![execute,http
+\![enter,passive
+\![enter,induction
+\![enter,passivemode]
+\![leave,passivemode]
+\![lock,repaint]
+\![unlock,repaint]
+\![biff]
+\j[
+＃以下自由に追加可能
+
+
