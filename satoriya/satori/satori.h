@@ -121,9 +121,14 @@ struct RateOfUseGraph
 
 //---------------------------------------------------------------------------
 
-// 内蔵関数の表（satori_builtin.cpp）
+// 内蔵関数・内蔵変数の表（satori_builtin.cpp）
 struct SatoriFunction;
 struct SatoriFunctionTable;
+struct BuiltinNameTables;
+
+// 静的検査（satori_lint.cpp）
+struct SatoriLintContext;
+struct satori_unit;
 
 class Satori : public Evalcator, public SakuraDLLHost
 {
@@ -441,7 +446,11 @@ private:
 	void	InitMembers();
 
 	int	 LoadDicFolder(const wstring& path);
-	bool LoadDictionary(const wstring& filename,bool warnFileName,bool isUTF8);
+	bool LoadDictionary(const wstring& filename,bool warnFileName,bool isUTF8,bool forLint = false);
+
+	// 読み込んだ辞書ファイル（パス、UTF-8か）。lint が同じ手順で読み直すために覚えておく。
+	// セーブデータは含まない。
+	std::vector< std::pair<wstring, bool> >	m_dic_files;
 
 	wstring	GetWord(const wstring& name);
 
@@ -508,6 +517,48 @@ private:
 
 	static const SatoriFunctionTable&	function_table();
 	static const SatoriFunction*	find_function(const wstring& iName);
+	static const BuiltinNameTables&	builtin_name_tables();
+
+	// （名前、引数…）の名前の部分から、呼び出す先（SAORIか内蔵関数）を探した結果。
+	struct FunctionCall {
+		wstring	name;		// SAORIの呼び出し名、または内蔵関数の名前
+		const SatoriFunction*	func;	// 内蔵関数なら表の行。SAORIならNULL
+		std::set<wstring>::const_iterator	delimiter;	// 見つけた区切り。引数が無い呼び方なら mDelimiters.end()
+		const wchar_t*	args;	// 区切りの位置（引数が無い呼び方ならNULL）
+	};
+	// iNameが呼び出す先を探す。lint_saori_names がNULLなら実行時の探し方（本体の内蔵モジュールをここで登録する）。
+	// NULLでなければ lint 用で、何も登録しない。
+	bool	FindFunctionCall(const wstring& iName, bool use_arg_callstack, const std::set<wstring>* lint_saori_names, FunctionCall& oCall);
+	bool	is_saori_name(const wstring& iName, const std::set<wstring>* lint_saori_names);
+	// FindFunctionCall の結果から引数を分ける（lint 用。CallFunction と同じ分け方）。
+	void	SplitFunctionArguments(const FunctionCall& iCall, strvec& oArguments);
+	// 文章中の（の直後pが「特殊形式の名前＋区切り」なら、その行と区切りと引数の先頭を返す。
+	const SatoriFunction*	FindSpecialFunction(const wchar_t* p, wstring& oDelimiter, const wchar_t*& oArgs);
+	// iNameが内蔵変数の名前として成り立つか（値は求めず、何も実行しない）。lint 用。
+	// 名前の先頭・末尾だけで決まるものは、処理が断ることがあっても真にする。
+	bool	IsBuiltinName(const wstring& iName);
+
+	//---------------------------------------------------------------------------
+	// 静的検査（satori_lint.cpp）。実行はせず、辞書の書き方だけを調べる。
+
+	// 読み込んだ辞書ファイルを調べ、見つけた問題を「ファイル(行) : error|warning: 内容」の形で oMessages に足す。
+	// 返値は見つけた問題の数（oMessages には上限まで）。oErrors にはそのうちエラーの数を入れる。
+	int	Lint(strvec& oMessages, int& oErrors);
+
+	// 以下は Lint の内部。SatoriLintContext もそこにある。
+	void	lint_unit(SatoriLintContext& ctx, const satori_unit& unit);
+	void	lint_body_line(SatoriLintContext& ctx, const wchar_t* p, int line, bool is_first_line);
+	void	lint_text(SatoriLintContext& ctx, const wchar_t* p, int line);
+	void	lint_kakko(SatoriLintContext& ctx, const wchar_t*& p, int line);
+	void	lint_expression(SatoriLintContext& ctx, const wchar_t* p, int line);
+	void	lint_name(SatoriLintContext& ctx, const wstring& name, int line);
+	void	lint_function_call(SatoriLintContext& ctx, const FunctionCall& call, const wstring& name, bool has_nested, int line);
+	void	lint_special_function(SatoriLintContext& ctx, const SatoriFunction& func, const strvec& args, int line);
+
+	// ShioriLint の結果（応答の X-Lint ヘッダになる）
+	strvec	mLintMessages;
+	int		mLintCount;
+	int		mLintErrors;
 
 	// 繰り返しの結果が大きすぎたら警告してtrueを返す
 	bool	loop_result_too_large(const wstring& iResult);
@@ -701,6 +752,11 @@ public:
 //---------------------------------------------------------------------------
 
 bool	calc(wstring&,bool isStrict = false);
+// ＄行（＄の次から）を変数名と値に分ける（satori_sentence.cpp）。lint も使う。
+bool	split_variable_assignment(const wchar_t* p, const wchar_t*& oSeparator, bool& oDoCalc);
+// 特殊形式の引数を分ける（satori_builtin.cpp）。lint も使う。
+// 対応する）で終われば、pをその次へ進めてtrueを返す。文字列の終わりに達したら、残りを最後の引数にしてfalseを返す。
+bool	split_special_arguments(const wchar_t*& p, const wstring& iDelimiter, strvec& oArguments);
 void	diet_script(wstring&);
 // 文・さくらスクリプト変換の再帰の深さ（静的な変数）を0に戻す
 void	reset_nest_counters();

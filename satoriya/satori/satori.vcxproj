@@ -177,6 +177,8 @@
     </ClCompile>
     <ClCompile Include="satori_load_dict.cpp">
     </ClCompile>
+    <ClCompile Include="satori_lint.cpp">
+    </ClCompile>
     <ClCompile Include="satori_load_unload.cpp">
     </ClCompile>
     <ClCompile Include="satori_sentence.cpp">
@@ -208,6 +210,8 @@
     <ClInclude Include="SaoriClient.h" />
     <ClInclude Include="satori.h" />
     <ClInclude Include="satori_load_dict.h" />
+    <ClInclude Include="satori_dict.h" />
+    <ClInclude Include="satori_function_table.h" />
     <ClInclude Include="Selector.h" />
     <ClInclude Include="ShioriClient.h" />
     <ClInclude Include="shiori_plugin.h" />

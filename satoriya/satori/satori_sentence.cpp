@@ -75,6 +75,22 @@ bool	Satori::FindEventTalk(wstring& ioevent) {
 
 
 
+// ＄行（＄の次から）を、変数名と値に分ける。lint も使う。
+// タブがあればタブで分け、無ければ＝（全角・半角）で分ける。分けた位置（タブか＝）を oSeparator に入れる。
+// 区切りが無ければ false。＝で分けたときは oDoCalc が真になる。
+bool	split_variable_assignment(const wchar_t* p, const wchar_t*& oSeparator, bool& oDoCalc)
+{
+	oDoCalc = false;
+	if ( (oSeparator=strstr_hz(p, L"\t"))!=NULL ) { // 変数名と変数に設定する内容の区切り
+		return true;
+	}
+	if ( (oSeparator=strstr_hz(p, L"＝"))!=NULL || (oSeparator=strstr_hz(p, L"="))!=NULL ) {
+		oDoCalc = true;
+		return true;
+	}
+	return false;
+}
+
 wstring	Satori::GetSentence(const wstring& name)
 {
 	wstring script, sentence=name;
@@ -373,12 +389,8 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,wstring &result,wst
 			bool	do_calc=false;
 			p+=1;
 
-			if ( (v=strstr_hz(p, L"\t"))!=NULL ) { // 変数名と変数に設定する内容の区切り
+			if ( split_variable_assignment(p, v, do_calc) ) {
 				value = UnKakko(v+1,false,true);
-			}
-			else if ( (v=strstr_hz(p, L"＝"))!=NULL || (v=strstr_hz(p, L"="))!=NULL ) {
-				value = UnKakko(v+1,false,true);
-				do_calc=true;
 			}
 			else {
 				//v = p+strlen(p);

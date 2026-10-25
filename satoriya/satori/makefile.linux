@@ -47,6 +47,7 @@ LIBSATORI_OBJ = \
 	satori_EventOperation.o \
 	satori_Kakko.o \
 	satori_load_dict.o \
+	satori_lint.o \
 	satori_load_unload.o \
 	satori_sentence.o \
 	satori_tool.o \

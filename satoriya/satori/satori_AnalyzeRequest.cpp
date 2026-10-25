@@ -271,6 +271,26 @@ int	Satori::request(
 			}
 		}
 	}
+	else if ( mRequestID==L"ShioriLint" ) {
+		// 辞書の静的検査。何も実行しないので、デバッグモードでなくても SecurityLevel: local ならよい。
+		// 結果は応答の X-Lint ヘッダ（1件1行）と、X-Lint-Count / X-Lint-Errors。
+		if ( secure_flag ) {
+			mLintMessages.clear();
+			mLintErrors = 0;
+			mLintCount = Lint(mLintMessages, mLintErrors);
+			if ( mLintCount > static_cast<int>(mLintMessages.size()) ) {
+				mLintMessages.push_back(L"ほか" + itos(mLintCount - static_cast<int>(mLintMessages.size())) + L"件は省略しました");
+			}
+			for ( strvec::const_iterator m = mLintMessages.begin() ; m != mLintMessages.end() ; ++m ) {
+				GetSender().sender() << L"lint: " << *m << std::endl;
+			}
+			status_code = 200;
+		}
+		else {
+			GetSender().sender() << L"local/Localでないので蹴りました: ShioriLint" <<std::endl;
+			status_code = 403;
+		}
+	}
 	else if (mRequestID == L"SatolistEcho"){
 #ifndef POSIX
 		// さとりすとデバッガ実装
@@ -391,6 +411,15 @@ int	Satori::request(
 			break;
 		}
 		o_data.push_back( strpair(key, value) );
+	}
+
+	if ( mRequestID==L"ShioriLint" && status_code==200 ) {
+		o_data.push_back( strpair(L"X-Lint-Count", itos(mLintCount)) );
+		o_data.push_back( strpair(L"X-Lint-Errors", itos(mLintErrors)) );
+		for ( strvec::const_iterator m = mLintMessages.begin() ; m != mLintMessages.end() ; ++m ) {
+			o_data.push_back( strpair(L"X-Lint", *m) );
+		}
+		mLintMessages.clear();
 	}
 
 	if ( GetSender().errsender().get_log_mode() ) {

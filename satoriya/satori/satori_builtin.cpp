@@ -9,6 +9,7 @@
 //	・システム変数	＄名前＝値 で設定すると動作が変わるもの。system_variable_operation_real()
 //---------------------------------------------------------------------------
 #include	"satori.h"
+#include	"satori_function_table.h"
 #include	"../_/Utilities.h"
 #include	"posix_utils.h"
 #include	<time.h>
@@ -62,20 +63,7 @@ using std::max;
 //	表の型
 //===========================================================================
 
-// 内蔵関数。iArgvは引数、for_calc / for_non_talk は特殊形式の引数の展開に使う。
-typedef wstring (Satori::*FunctionHandler)(const strvec& iArgv, bool for_calc, bool for_non_talk);
-
-struct SatoriFunction {
-	FunctionHandler	handler;
-	bool	is_special;		// 特殊形式：引数を展開せずに渡し、必要なものだけ展開する
-	bool	need_secure;	// SecurityLevel: local のときだけ実行できる
-};
-
-struct SatoriFunctionTable {
-	std::map<wstring, SatoriFunction>	functions;
-	// 特殊形式の名前（KakkoSectionで（の直後と比べる）
-	std::vector<const std::pair<const wstring, SatoriFunction>*>	specials;
-};
+// 内蔵関数の表の型は satori_function_table.h（lint と共有）
 
 // 内蔵変数。iNameは名前全体、iArgは名前から前後の決まった部分を除いたもの。
 // 値があればoResultに入れてtrueを返す。falseなら次の候補を探す。
@@ -93,6 +81,15 @@ struct BuiltinNamePattern {
 	bool	use_hankaku;	// 全角を半角にした名前と比べる
 	NameHandler	handler;
 	int	param;
+};
+
+// 内蔵変数の表をまとめたもの（Satori::builtin_name_tables）
+struct BuiltinNameTables {
+	std::map<wstring, const BuiltinName*>	name_map, hankaku_name_map;
+	const BuiltinNamePattern*	patterns;
+	int	pattern_count;
+
+	BuiltinNameTables() : patterns(NULL), pattern_count(0) {}
 };
 
 // システム変数。iKeyは変数名全体、iArgは変数名から前後の決まった部分を除いたもの。
@@ -133,34 +130,35 @@ const SatoriFunctionTable&	Satori::function_table()
 			const wchar_t*	name;
 			SatoriFunction	func;
 		} entries[] = {
-			// 名前					処理								特殊形式	localのみ
-			{ L"バイト値",			{ &Satori::func_byte_value,			false,	false } },
-			{ L"nop",				{ &Satori::func_nop,				false,	false } },
-			{ L"合成単語群",		{ &Satori::func_synthesized_words,	false,	false } },
-			{ L"文の数",			{ &Satori::func_talk_count,			false,	false } },
-			{ L"set",				{ &Satori::func_set,				false,	true } },
-			{ L"loop",				{ &Satori::func_loop,				false,	true } },
-			{ L"sync",				{ &Satori::func_sync,				false,	true } },
-			{ L"remember",			{ &Satori::func_remember,			false,	true } },
-			{ L"変数の一括削除",	{ &Satori::func_erase_variables,	false,	true } },
-			{ L"変数の一括コピー",	{ &Satori::func_copy_variables,		false,	true } },
-			{ L"変数の列挙",		{ &Satori::func_list_variables,		false,	false } },
-			{ L"split_to",			{ &Satori::func_split_to,			false,	true } },
-			{ L"call",				{ &Satori::func_call,				false,	true } },
-			{ L"vncall",			{ &Satori::func_vncall,				false,	true } },
-			{ L"equal",				{ &Satori::func_equal,				false,	true } },
-			{ L"get_property",		{ &Satori::func_get_property,		false,	true } },
-			{ L"set_property",		{ &Satori::func_set_property,		false,	true } },
-			{ L"execute_sstp",		{ &Satori::func_execute_sstp,		false,	true } },
-			{ L"load_saori",		{ &Satori::func_load_saori,			false,	true } },
-			{ L"単語の追加",		{ &Satori::func_add_word,			false,	true } },
-			{ L"追加単語の削除",	{ &Satori::func_remove_added_word,	false,	true } },
-			{ L"追加単語の全削除",	{ &Satori::func_remove_all_added_words,	false,	true } },
-			{ L"when",				{ &Satori::func_when,				true,	false } },
-			{ L"whenlist",			{ &Satori::func_whenlist,			true,	false } },
-			{ L"times",				{ &Satori::func_times,				true,	false } },
-			{ L"while",				{ &Satori::func_while,				true,	false } },
-			{ L"for",				{ &Satori::func_for,				true,	false } },
+			// 名前					処理								特殊形式	localのみ	引数(最少,最大)	引数の意味
+			// 引数の個数は、処理が引数不足を無視して空文字列を返す（または「引数の個数が正しくありません」を返す）条件に合わせる。
+			{ L"バイト値",			{ &Satori::func_byte_value,			false,	false,	1, -1,	ARG_PLAIN } },
+			{ L"nop",				{ &Satori::func_nop,				false,	false,	0, -1,	ARG_PLAIN } },
+			{ L"合成単語群",		{ &Satori::func_synthesized_words,	false,	false,	1, -1,	ARG_PLAIN } },
+			{ L"文の数",			{ &Satori::func_talk_count,			false,	false,	1, 1,	ARG_PLAIN } },
+			{ L"set",				{ &Satori::func_set,				false,	true,	2, 2,	ARG_SET } },
+			{ L"loop",				{ &Satori::func_loop,				false,	true,	2, 4,	ARG_LOOP_NAME } },
+			{ L"sync",				{ &Satori::func_sync,				false,	true,	0, -1,	ARG_PLAIN } },
+			{ L"remember",			{ &Satori::func_remember,			false,	true,	1, 1,	ARG_PLAIN } },
+			{ L"変数の一括削除",	{ &Satori::func_erase_variables,	false,	true,	1, -1,	ARG_PLAIN } },
+			{ L"変数の一括コピー",	{ &Satori::func_copy_variables,		false,	true,	2, -1,	ARG_WRITES } },
+			{ L"変数の列挙",		{ &Satori::func_list_variables,		false,	false,	1, -1,	ARG_PLAIN } },
+			{ L"split_to",			{ &Satori::func_split_to,			false,	true,	2, -1,	ARG_WRITES } },
+			{ L"call",				{ &Satori::func_call,				false,	true,	1, -1,	ARG_CALL_NAME } },
+			{ L"vncall",			{ &Satori::func_vncall,				false,	true,	1, -1,	ARG_CALL_NAME } },
+			{ L"equal",				{ &Satori::func_equal,				false,	true,	2, 2,	ARG_PLAIN } },
+			{ L"get_property",		{ &Satori::func_get_property,		false,	true,	1, -1,	ARG_PLAIN } },
+			{ L"set_property",		{ &Satori::func_set_property,		false,	true,	2, -1,	ARG_PLAIN } },
+			{ L"execute_sstp",		{ &Satori::func_execute_sstp,		false,	true,	1, -1,	ARG_PLAIN } },
+			{ L"load_saori",		{ &Satori::func_load_saori,			false,	true,	2, -1,	ARG_WRITES } },
+			{ L"単語の追加",		{ &Satori::func_add_word,			false,	true,	2, 2,	ARG_WRITES } },
+			{ L"追加単語の削除",	{ &Satori::func_remove_added_word,	false,	true,	2, 2,	ARG_PLAIN } },
+			{ L"追加単語の全削除",	{ &Satori::func_remove_all_added_words,	false,	true,	1, 1,	ARG_PLAIN } },
+			{ L"when",				{ &Satori::func_when,				true,	false,	2, 3,	ARG_WHEN } },
+			{ L"whenlist",			{ &Satori::func_whenlist,			true,	false,	2, -1,	ARG_WHENLIST } },
+			{ L"times",				{ &Satori::func_times,				true,	false,	2, 3,	ARG_LOOP } },
+			{ L"while",				{ &Satori::func_while,				true,	false,	2, 3,	ARG_LOOP } },
+			{ L"for",				{ &Satori::func_for,				true,	false,	3, 4,	ARG_LOOP } },
 		};
 		for ( int i=0 ; i<sizeof(entries)/sizeof(entries[0]) ; ++i ) {
 			table.functions[entries[i].name] = entries[i].func;
@@ -188,7 +186,7 @@ bool	Satori::loop_result_too_large(const wstring& iResult)
 // 特殊形式の引数を分ける。pは最初の引数の先頭。
 // 対応する）で終われば、pをその次へ進めてtrueを返す。
 // 文字列の終わりに達したら、残りを最後の引数にしてfalseを返す。
-static bool	split_special_arguments(const wchar_t*& p, const wstring& iDelimiter, strvec& oArguments)
+bool	split_special_arguments(const wchar_t*& p, const wstring& iDelimiter, strvec& oArguments)
 {
 	int level = 0;
 	const wchar_t *p_start = p;
@@ -219,26 +217,32 @@ static bool	split_special_arguments(const wchar_t*& p, const wstring& iDelimiter
 
 // 文章中の（の直後pが「特殊形式の名前＋区切り」なら呼び出して結果をoResultに入れ、trueを返す。
 // pは）の次まで進める。）が無ければ oResult は（ で、pは進めない。
-bool	Satori::CallSpecialFunction(const wchar_t*& p, wstring& oResult, bool for_calc, bool for_non_talk)
+// 文章中の（の直後pが「特殊形式の名前＋区切り」なら、その行を返し、区切りと最初の引数の位置を入れる。違えばNULL。
+const SatoriFunction*	Satori::FindSpecialFunction(const wchar_t* p, wstring& oDelimiter, const wchar_t*& oArgs)
 {
 	const SatoriFunctionTable& table = function_table();
 
-	const SatoriFunction* func = NULL;
-	wstring delimiter;
-	const wchar_t *pp = NULL;
 	for ( int i=0 ; i<table.specials.size() ; ++i ) {
 		const wstring& name = table.specials[i]->first;
 		if ( wcsncmp(name.c_str(), p, name.size()) == 0 ) {
-			pp = p + name.size();
+			const wchar_t* pp = p + name.size();
 			const wstring c = next_a_chr(pp).str();
 			//引数がない場合はスペシャルフォームにする必要はない。
 			if ( mDelimiters.find(c) != mDelimiters.end() ) {
-				func = &(table.specials[i]->second);
-				delimiter = c;
-				break;
+				oDelimiter = c;
+				oArgs = pp;
+				return &(table.specials[i]->second);
 			}
 		}
 	}
+	return NULL;
+}
+
+bool	Satori::CallSpecialFunction(const wchar_t*& p, wstring& oResult, bool for_calc, bool for_non_talk)
+{
+	wstring delimiter;
+	const wchar_t *pp = NULL;
+	const SatoriFunction* func = FindSpecialFunction(p, delimiter, pp);
 	if ( func == NULL ) {
 		return false;
 	}
@@ -256,46 +260,106 @@ bool	Satori::CallSpecialFunction(const wchar_t*& p, wstring& oResult, bool for_c
 // iNameがSAORIか内蔵関数の呼び出しなら呼んで結果をoResultに入れ、trueを返す。
 // 名前の後ろに区切りがあれば、そこから後ろが引数。
 // use_arg_callstackがtrueのとき（call / vncall から）は、iName全体が名前で、引数はmCallStackの先頭。
-bool	Satori::CallFunction(const wstring& iName, wstring& oResult, bool use_arg_callstack)
+// 呼び出す先（SAORIか内蔵関数）を探す。SAORIは内蔵関数より優先。
+// lint_saori_names がNULLなら実行時の探し方（本体の内蔵モジュールはここで登録する）。
+// NULLでなければ何も登録せず、登録済みの名前と lint_saori_names と internal_* を SAORI とみなす。
+bool	Satori::FindFunctionCall(const wstring& iName, bool use_arg_callstack, const std::set<wstring>* lint_saori_names, FunctionCall& oCall)
 {
-	wstring	thePluginName;
-	const SatoriFunction* func = NULL;
-	std::set<wstring>::const_iterator theDelimiter = mDelimiters.end();
-	const wchar_t* p = NULL;	// 区切りの位置
+	oCall.name.erase();
+	oCall.func = NULL;
+	oCall.delimiter = mDelimiters.end();
+	oCall.args = NULL;
 
-	// 呼び出すものを探す。SAORIは内蔵関数より優先。
-	if ( mShioriPlugins->find(iName) ) {
-		thePluginName = iName;
+	if ( is_saori_name(iName, lint_saori_names) ) {
+		oCall.name = iName;
 	}
 	else if ( use_arg_callstack ) {
-		func = find_function(iName);
-		if ( func == NULL ) {
+		oCall.func = find_function(iName);
+		if ( oCall.func == NULL ) {
 			return false;
 		}
-		thePluginName = iName;
+		oCall.name = iName;
 	}
 	else {
 		for (std::set<wstring>::const_iterator i = mDelimiters.begin(); i != mDelimiters.end(); ++i) {
-			p = strstr_hz(iName.c_str(), i->c_str());
+			const wchar_t* p = strstr_hz(iName.c_str(), i->c_str());
 			if (p == NULL)
 				continue;
 			wstring	str(iName.c_str(), p - iName.c_str());
-			if ( mShioriPlugins->find(str) ) {
-				thePluginName = str;
-				theDelimiter = i;
+			if ( is_saori_name(str, lint_saori_names) ) {
+				oCall.name = str;
+				oCall.delimiter = i;
+				oCall.args = p;
 				break;
 			}
-			func = find_function(str);
-			if ( func != NULL ) {
-				thePluginName = str;
-				theDelimiter = i;
+			oCall.func = find_function(str);
+			if ( oCall.func != NULL ) {
+				oCall.name = str;
+				oCall.delimiter = i;
+				oCall.args = p;
 				break;
 			}
 		}
-		if ( theDelimiter == mDelimiters.end() ) {
+		if ( oCall.delimiter == mDelimiters.end() ) {
 			return false;
 		}
 	}
+	return true;
+}
+
+// SAORIの呼び出し名か。lint_saori_names がNULLでないときは何も登録しない。
+bool	Satori::is_saori_name(const wstring& iName, const std::set<wstring>* lint_saori_names)
+{
+	if ( lint_saori_names == NULL ) {
+		return mShioriPlugins->find(iName);
+	}
+	return mShioriPlugins->has(iName) || lint_saori_names->find(iName) != lint_saori_names->end()
+		|| compare_head_nocase(iName, L"internal_");	// 本体の内蔵モジュール。実際にあるかは本体に問い合わせないと分からない
+}
+
+// 区切りの位置pから後ろを、区切りで単純に引数に分ける。
+static void	split_plain_arguments(const wchar_t* p, const wstring& iDelimiter, strvec& oArguments)
+{
+	while (true)
+	{
+		p += iDelimiter.size();
+		const wchar_t* pdlmt = strstr_hz(p, iDelimiter.c_str());
+		if (pdlmt == NULL) {
+			oArguments.push_back(p);
+			break;
+		}
+		oArguments.push_back(wstring(p, pdlmt - p));
+		p = pdlmt;
+	}
+}
+
+// FindFunctionCall の結果から、呼び出しの区切り以降を引数に分ける。lint 用（CallFunction と同じ分け方）。
+// 特殊形式は括弧の深さを見て分け、それ以外は区切りで単純に分ける。
+void	Satori::SplitFunctionArguments(const FunctionCall& iCall, strvec& oArguments)
+{
+	const wchar_t* p = iCall.args;
+	if ( p == NULL || iCall.delimiter == mDelimiters.end() ) {
+		return;
+	}
+	if ( iCall.func != NULL && iCall.func->is_special ) {
+		next_a_chr(p);
+		split_special_arguments(p, *iCall.delimiter, oArguments);
+	}
+	else {
+		split_plain_arguments(p, *iCall.delimiter, oArguments);
+	}
+}
+
+bool	Satori::CallFunction(const wstring& iName, wstring& oResult, bool use_arg_callstack)
+{
+	FunctionCall call;
+	if ( !FindFunctionCall(iName, use_arg_callstack, NULL, call) ) {
+		return false;
+	}
+	const wstring&	thePluginName = call.name;
+	const SatoriFunction* func = call.func;
+	std::set<wstring>::const_iterator theDelimiter = call.delimiter;
+	const wchar_t* p = call.args;	// 区切りの位置
 
 	// 引数を作る
 	strvec	theArguments;
@@ -312,17 +376,7 @@ bool	Satori::CallFunction(const wstring& iName, wstring& oResult, bool use_arg_c
 			split_special_arguments(p, *theDelimiter, theArguments);
 		}
 		else {
-			while (true)
-			{
-				p += theDelimiter->size();
-				const wchar_t* pdlmt = strstr_hz(p, theDelimiter->c_str());
-				if (pdlmt == NULL) {
-					theArguments.push_back(p);
-					break;
-				}
-				theArguments.push_back(wstring(p, pdlmt - p));
-				p = pdlmt;
-			}
+			split_plain_arguments(p, *theDelimiter, theArguments);
 
 			if (mSaoriArgumentCalcMode != SACM_OFF) {
 				for (strvec::iterator i = theArguments.begin(); i != theArguments.end(); ++i) {
@@ -1474,12 +1528,12 @@ wstring	Satori::func_for(const strvec& iArgv, bool for_calc, bool for_non_talk)
 //	内蔵変数
 //===========================================================================
 
-// iNameが内蔵変数なら値をoResultに入れ、trueを返す。
-// 単語群・文・変数に同じ名前が無いときだけ呼ばれる。
-bool	Satori::GetBuiltinValue(const wstring& iName, wstring& oResult)
+// 内蔵変数の名前の表。GetBuiltinValue（値を求める）と IsBuiltinName（名前だけ調べる lint 用）が使う。
+// 処理（var_*）は private なので、表はメンバ関数の中に置く。
+const BuiltinNameTables&	Satori::builtin_name_tables()
 {
 	// 名前が完全に一致するもの
-	static const BuiltinName names[] = {
+	static const BuiltinName builtin_names[] = {
 		{ L"里々のバージョン",		&Satori::var_version,		0 },
 		{ L"里々のライセンス",		&Satori::var_license,		0 },
 
@@ -1530,7 +1584,7 @@ bool	Satori::GetBuiltinValue(const wstring& iName, wstring& oResult)
 	};
 
 	// 全角を半角にした名前が完全に一致するもの
-	static const BuiltinName hankaku_names[] = {
+	static const BuiltinName builtin_hankaku_names[] = {
 		{ L"Aの数",		&Satori::var_argument_count,	L'A' },
 		{ L"Rの数",		&Satori::var_argument_count,	L'R' },
 		{ L"Sの数",		&Satori::var_argument_count,	L'S' },
@@ -1539,7 +1593,7 @@ bool	Satori::GetBuiltinValue(const wstring& iName, wstring& oResult)
 	};
 
 	// 名前の先頭・末尾で決まるもの。上から順に調べる。
-	static const BuiltinNamePattern patterns[] = {
+	static const BuiltinNamePattern builtin_patterns[] = {
 		// 先頭				末尾						半角	処理
 		{ L"乱数",			L"",						false,	&Satori::var_random,			0 },
 		{ L"サーフェス",	L"",						false,	&Satori::var_surface,			0 },
@@ -1580,40 +1634,56 @@ bool	Satori::GetBuiltinValue(const wstring& iName, wstring& oResult)
 		{ L"トーク「",		L"」の予約有無",			false,	&Satori::var_is_talk_reserved,	0 },
 	};
 
-	static std::map<wstring, const BuiltinName*>	name_map, hankaku_name_map;
-	if ( name_map.empty() ) {
-		for ( int i=0 ; i<sizeof(names)/sizeof(names[0]) ; ++i ) {
-			name_map[names[i].name] = &names[i];
+	static BuiltinNameTables	tables;
+	if ( tables.name_map.empty() ) {
+		for ( int i=0 ; i<sizeof(builtin_names)/sizeof(builtin_names[0]) ; ++i ) {
+			tables.name_map[builtin_names[i].name] = &builtin_names[i];
 		}
-		for ( int j=0 ; j<sizeof(hankaku_names)/sizeof(hankaku_names[0]) ; ++j ) {
-			hankaku_name_map[hankaku_names[j].name] = &hankaku_names[j];
+		for ( int j=0 ; j<sizeof(builtin_hankaku_names)/sizeof(builtin_hankaku_names[0]) ; ++j ) {
+			tables.hankaku_name_map[builtin_hankaku_names[j].name] = &builtin_hankaku_names[j];
 		}
+		tables.patterns = builtin_patterns;
+		tables.pattern_count = sizeof(builtin_patterns)/sizeof(builtin_patterns[0]);
 	}
+	return	tables;
+}
+
+// 数字だけの名前（半角にした名前）か。サーフェス切り替えになる。
+static bool	is_surface_number_name(const wstring& hankaku)
+{
+	return	aredigits(hankaku) || (hankaku.c_str()[0]==L'-' && aredigits(hankaku.c_str()+1));
+}
+
+// iNameが内蔵変数なら値をoResultに入れ、trueを返す。
+// 単語群・文・変数に同じ名前が無いときだけ呼ばれる。
+bool	Satori::GetBuiltinValue(const wstring& iName, wstring& oResult)
+{
+	const BuiltinNameTables& tables = builtin_name_tables();
 
 	oResult = L"";
 
 	// ここにある名前は、下のどのパターンにも当てはまらないので先に調べてよい。
-	std::map<wstring, const BuiltinName*>::const_iterator found = name_map.find(iName);
-	if ( found != name_map.end() ) {
+	std::map<wstring, const BuiltinName*>::const_iterator found = tables.name_map.find(iName);
+	if ( found != tables.name_map.end() ) {
 		return	(this->*(found->second->handler))(iName, iName, found->second->param, oResult);
 	}
 
 	const wstring hankaku = zen2han(iName);
 
 	// 数字はサーフェス切り替え
-	if ( aredigits(hankaku) || (hankaku.c_str()[0]==L'-' && aredigits(hankaku.c_str()+1)) ) {
+	if ( is_surface_number_name(hankaku) ) {
 		int	s = stoi_internal(hankaku);
 		oResult = wstring(INTERNAL_MARK_STR) + INTERNAL_MARK_SURFACE_STR + itos(s) + INTERNAL_MARK_STR; //内部特殊表現に一旦変換して、後でサーフェス加算処理をする
 		return	true;
 	}
 
-	found = hankaku_name_map.find(hankaku);
-	if ( found != hankaku_name_map.end() ) {
+	found = tables.hankaku_name_map.find(hankaku);
+	if ( found != tables.hankaku_name_map.end() ) {
 		return	(this->*(found->second->handler))(hankaku, hankaku, found->second->param, oResult);
 	}
 
-	for ( int i=0 ; i<sizeof(patterns)/sizeof(patterns[0]) ; ++i ) {
-		const BuiltinNamePattern& pt = patterns[i];
+	for ( int i=0 ; i<tables.pattern_count ; ++i ) {
+		const BuiltinNamePattern& pt = tables.patterns[i];
 		const wstring& name = pt.use_hankaku ? hankaku : iName;
 		if ( !match_head_tail(name, pt.head, pt.tail) ) {
 			continue;
@@ -1640,6 +1710,36 @@ bool	Satori::GetBuiltinValue(const wstring& iName, wstring& oResult)
 	}
 
 	return	false;
+}
+
+// iNameが内蔵変数の名前として成り立つか。値は求めず、何も実行しない（lint 用）。
+// GetBuiltinValue と同じ表を同じ順に当てるが、名前の先頭・末尾で決まるものは、
+// 処理が値を返さないことがあっても真にする（見つからないと決めつけない側に倒す）。
+bool	Satori::IsBuiltinName(const wstring& iName)
+{
+	const BuiltinNameTables& tables = builtin_name_tables();
+
+	if ( tables.name_map.find(iName) != tables.name_map.end() ) {
+		return	true;
+	}
+
+	const wstring hankaku = zen2han(iName);
+	if ( is_surface_number_name(hankaku) ) {
+		return	true;
+	}
+	if ( tables.hankaku_name_map.find(hankaku) != tables.hankaku_name_map.end() ) {
+		return	true;
+	}
+
+	for ( int i=0 ; i<tables.pattern_count ; ++i ) {
+		const BuiltinNamePattern& pt = tables.patterns[i];
+		if ( match_head_tail(pt.use_hankaku ? hankaku : iName, pt.head, pt.tail) ) {
+			return	true;
+		}
+	}
+
+	// リクエストのヘッダ、全変数列挙
+	return	mRequestMap.find(iName) != mRequestMap.end() || iName == L"全変数列挙";
 }
 
 //---------------------------------------------------------------------------

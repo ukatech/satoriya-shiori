@@ -325,7 +325,19 @@ SOURCE=.\satori_load_dict.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\satori_lint.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\satori_load_dict.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\satori_dict.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\satori_function_table.h
 # End Source File
 # Begin Source File
 

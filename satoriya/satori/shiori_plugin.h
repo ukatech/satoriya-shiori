@@ -78,6 +78,11 @@ public:
 	wstring	request(const wstring& iCallName, const strvec& iArguments, strvec& oResults, const wstring& iSecurityLevel);
 	void	unload();
 
+	// 呼び出し名が登録済みか。何も登録しない（lint 用）。
+	bool	has(const wstring& iCallName) const {
+		return mCallData.find(iCallName) != mCallData.end();
+	}
+
 	// 呼び出し名が定義されているか。本体の内蔵モジュールの名前なら、ここで登録する。
 	bool	find(const wstring& iCallName) {
 		if ( mCallData.find(iCallName) != mCallData.end() ) {

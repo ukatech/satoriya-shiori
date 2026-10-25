@@ -7,6 +7,7 @@
 #include	"../_/Utilities.h"
 #include	"../_/charset.h"
 #include	"satori_load_dict.h"
+#include	"satori_dict.h"
 
 #ifdef POSIX
 #  include <iostream>
@@ -23,13 +24,6 @@
 #endif
 ////////////////////////////////////////
 
-struct satori_unit
-{
-	wstring typemark;
-	wstring name;
-	wstring condition;
-	strvec body;
-};
 #ifdef _DEBUG
 std::wostream& operator<<(std::wostream& o, const satori_unit& su)
 {
@@ -39,11 +33,12 @@ std::wostream& operator<<(std::wostream& o, const satori_unit& su)
 }
 #endif
 
-static void lines_to_units(
+void lines_to_units(
 	const std::vector<wstring>& i_lines,
 	const std::vector<wstring>& i_typemarks,
 	const wstring& i_name_cond_delimiter,
-	std::vector<satori_unit>& o_units)
+	std::vector<satori_unit>& o_units,
+	const std::vector<int>* i_line_numbers)
 {
 	std::vector<wstring>::const_iterator line_it = i_lines.begin();
 	for ( ; line_it != i_lines.end() ; ++line_it)
@@ -60,11 +55,16 @@ static void lines_to_units(
 			}
 		}
 		
+		// この行の元ファイルでの行番号（渡されていなければ0）
+		const int line_number = ( i_line_numbers != NULL && static_cast<size_t>(line_it - i_lines.begin()) < i_line_numbers->size() )
+			? (*i_line_numbers)[line_it - i_lines.begin()] : 0;
+
 		// 出現してたらヘッダ、さもなくばボディ
 		if ( mark_it != i_typemarks.end() )
 		{
 			satori_unit unit;
 			unit.typemark = *mark_it;
+			unit.line = line_number;
 			
 			const wchar_t* name = line_it->c_str() + mark_it->size();
 			const wchar_t* delimiter = strstr_hz(name, i_name_cond_delimiter.c_str());
@@ -90,6 +90,7 @@ static void lines_to_units(
 			{
 				// 最後のo_unitsにミを追加
 				o_units.back().body.push_back(*line_it);
+				o_units.back().body_lines.push_back(line_number);
 			}
 		}
 	}
@@ -105,6 +106,7 @@ static void lines_to_units(
 				break;
 			}
 			i->body.pop_back();
+			i->body_lines.pop_back();
 		}
 
 		//GetSender().sender() << *i << std::endl;
@@ -114,27 +116,42 @@ static void lines_to_units(
 
 // プリプロセス的な処理。
 // 改行キャンセル適用、コメント削除、before_replaceの適用
-static bool pre_process(
+// o_report があれば、行番号と書き方の問題を入れる（lint 用。処理は変わらない）
+bool pre_process(
 	const strvec& in,
 	strvec& out,
 
 	escaper& io_escaper,
-	strmap& io_replace_dic
+	strmap& io_replace_dic,
+	pre_process_report* o_report
 	
 	)
 {
 	int	kakko_nest_count=0;	// "（" のネスト数。1以上の場合は改行を無効化する。
 	wstring	accumulater=L"";	// 行あきゅむれーた
 	int	line_number=1;
+	int	accumulater_line=1;	// 行あきゅむれーたの先頭の行番号
+	bool	escaped_at_end=false;	// 直前の行がφで終わっていたか
 	for ( strvec::const_iterator fi=in.begin() ; fi!=in.end() ; ++fi, ++line_number )
 	{
 		const wchar_t* p=fi->c_str();
 		bool	escape = false;
 
+		// あきゅむれーたが空なら、この行から新しい行が始まる
+		if ( accumulater.empty() )
+			accumulater_line = line_number;
+
 		// カッコ内の場合、行頭のタブは無視する。
 		if ( kakko_nest_count>0 )
 			while ( *p==L'\t' )
 				++p;
+
+		// カッコの中なのに行頭が＊／＠なら、）の書き忘れの疑い
+		if ( o_report != NULL && kakko_nest_count>0 && (*p==L'＊' || *p==L'＠') )
+		{
+			if ( o_report->suspect_lines.empty() || o_report->suspect_lines.back() != accumulater_line )
+				o_report->suspect_lines.push_back(accumulater_line);
+		}
 
 		// 一行（物理行）に対する処理
 		while ( *p!=L'\0' )
@@ -168,6 +185,7 @@ static bool pre_process(
 			}
 		}
 
+		escaped_at_end = escape;
 		if ( escape )
 		{
 			continue;
@@ -183,12 +201,16 @@ static bool pre_process(
 
 			// 一行追加
 			out.push_back(accumulater);
+			if ( o_report != NULL )
+				o_report->line_numbers.push_back(accumulater_line);
 			//GetSender().sender() << line_number << " [" << accumulater << "]" << std::endl;
 			accumulater=L"";
 		}
 		else if ( line_number == in.size() ) 
 		{
 			// エラー
+			if ( o_report != NULL )
+				o_report->unclosed_line = accumulater_line;
 			return false;
 		}
 	}
@@ -201,6 +223,12 @@ static bool pre_process(
 			replace(accumulater, di->first, di->second);
 		}
 		out.push_back(accumulater);
+		if ( o_report != NULL )
+		{
+			o_report->line_numbers.push_back(accumulater_line);
+			if ( escaped_at_end )
+				o_report->dangling_escape_line = line_number - 1;
+		}
 	}
 	return true;
 }
@@ -283,7 +311,7 @@ static bool satori_anchor_compare(const wstring &lhs,const wstring &rhs)
 }
 
 // 辞書を読み込む。
-bool Satori::LoadDictionary(const wstring& iFileName,bool warnFileName,bool isUTF8) 
+bool Satori::LoadDictionary(const wstring& iFileName,bool warnFileName,bool isUTF8,bool forLint) 
 {
 	// ファイルからvectorへ読み込む。
 	// その際、同ファイル名で拡張子が.txt(または指定拡張子)と.satのファイルの日付を比較し、新しい方だけを採用する。
@@ -292,6 +320,11 @@ bool Satori::LoadDictionary(const wstring& iFileName,bool warnFileName,bool isUT
 	if ( !select_dict_and_load_to_vector(iFileName, file_vec, warnFileName, isUTF8 ? CS_UTF8 : CS_NULL) )
 	{
 		return false;
+	}
+
+	if ( forLint )
+	{
+		m_dic_files.push_back( std::make_pair(iFileName, isUTF8) );
 	}
 
 	bool	is_for_anchor = compare_head(get_file_name(iFileName), dic_load_prefix + L"Anchor");
@@ -449,7 +482,7 @@ int Satori::LoadDicFolder(const wstring& i_base_folder)
 		const bool is_sat = ( len >= 4 && it->compare(len-4,4,L".sat") == 0 );
 		if ( !is_ext && !is_sat ) { continue; }
 
-		if ( LoadDictionary(i_base_folder + *it,true,is_utf8_dic) ) {
+		if ( LoadDictionary(i_base_folder + *it,true,is_utf8_dic,true) ) {
 			++count;
 		}
 	}

@@ -242,7 +242,7 @@ bool	Satori::load(const wstring& iBaseFolder)
 	//------------------------------------------
 
 	// コンフィグ読み込み
-	LoadDictionary(mBaseFolder + L"satori_conf.txt", false, is_utf8_dic);
+	LoadDictionary(mBaseFolder + L"satori_conf.txt", false, is_utf8_dic, true);
 
 	// 変数初期化実行
 	GetSentence(L"初期化");	

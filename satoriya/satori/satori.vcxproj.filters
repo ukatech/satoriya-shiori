@@ -48,6 +48,9 @@
     <ClCompile Include="satori_load_dict.cpp">
       <Filter>Satori\phase0</Filter>
     </ClCompile>
+    <ClCompile Include="satori_lint.cpp">
+      <Filter>Satori\phase0</Filter>
+    </ClCompile>
     <ClCompile Include="satori_load_unload.cpp">
       <Filter>Satori\phase0</Filter>
     </ClCompile>
@@ -129,6 +132,12 @@
       <Filter>Satori\Base</Filter>
     </ClInclude>
     <ClInclude Include="satori_load_dict.h">
+      <Filter>Satori\phase0</Filter>
+    </ClInclude>
+    <ClInclude Include="satori_dict.h">
+      <Filter>Satori\phase0</Filter>
+    </ClInclude>
+    <ClInclude Include="satori_function_table.h">
       <Filter>Satori\phase0</Filter>
     </ClInclude>
     <ClInclude Include="Families.h">
