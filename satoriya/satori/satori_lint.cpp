@@ -63,6 +63,7 @@ struct SatoriLintContext
 	bool	depth_reported;
 
 	std::set<wstring>	talk_names;		// 辞書に書かれた＊の名前
+	std::map<wstring, wstring>	talk_normalized;	// 空白・全角半角・大文字小文字を無くした＊の名前 → 元の名前
 	std::set<wstring>	word_names;		// 辞書に書かれた＠の名前
 	std::set<wstring>	saori_names;	// ＠SAORI に書かれた呼び出し名
 	std::set<wstring>	assigned_vars;	// 辞書で代入されている変数名（字面で分かるもの）
@@ -149,6 +150,14 @@ static wstring	quote(const wstring& name)
 	return	L"「" + name + L"」";
 }
 
+// φエスケープを元に戻す。escaper::unescape は記録した全部の置き換えを順に試すので、印が無い文字列では呼ばない。
+static void	lint_unescape(escaper& esc, wstring& s)
+{
+	if ( s.find(static_cast<wchar_t>(0xE09E)) != wstring::npos ) {
+		esc.unescape(s);
+	}
+}
+
 // 前後の空白（半角・全角・タブ）しかないか
 static bool	is_blank(const wstring& s)
 {
@@ -192,6 +201,12 @@ static bool	is_request_header_name(const wstring& name)
 //---------------------------------------------------------------------------
 //	（）と文章
 
+// escaper がエスケープした文字の頭に付ける印（satori.cpp の escaper::sm_escape_code）
+static wchar_t	escaper_mark()
+{
+	return	static_cast<wchar_t>(0xE09E);
+}
+
 // 直前の文字が、「１）」「a）」のような箇条書きの番号か。
 static bool	is_list_marker_char(wchar_t c)
 {
@@ -204,6 +219,7 @@ static bool	is_list_marker_char(wchar_t c)
 void	Satori::lint_text(SatoriLintContext& ctx, const wchar_t* p, int line)
 {
 	wchar_t	previous = L'\0';
+	int		escaped_open = 0;	// φ（ で表示するつもりの （ の数。対になる ） は報告しない
 	while ( *p != L'\0' ) {
 		const wchar_t	head = *p;
 		a_chr c = next_a_chr(p);
@@ -212,16 +228,36 @@ void	Satori::lint_text(SatoriLintContext& ctx, const wchar_t* p, int line)
 			previous = L'）';
 			continue;
 		}
-		if ( c == L"）" && ctx.reporting && !is_list_marker_char(previous) ) {
-			// 実行時は対応する（ が無い ） をそのまま表示する
-			ctx.notice(line, L"対応する （ が無い ） があります。文字としてそのまま表示されます");
+		if ( head == escaper_mark() && ctx.reporting ) {
+			// φでエスケープされた文字は「印+番号+空白」になっている。元が （ なら数える
+			wstring	token(1, head);
+			const wchar_t*	q = p;
+			while ( *q >= L'0' && *q <= L'9' ) {
+				token += *q++;
+			}
+			if ( *q == L' ' ) {
+				token += *q;
+			}
+			lint_unescape(ctx.esc, token);
+			if ( token == L"（" ) {
+				++escaped_open;
+			}
+		}
+		else if ( c == L"）" && ctx.reporting && !is_list_marker_char(previous) ) {
+			if ( escaped_open > 0 ) {
+				--escaped_open;
+			}
+			else {
+				// 実行時は対応する （ が無い ） をそのまま表示する
+				ctx.notice(line, L"対応する （ が無い ） があります。文字としてそのまま表示されます");
+			}
 		}
 		previous = head;
 	}
 }
 
 // 式の中の（…）を調べ、式の書き方を calc で確かめる。
-// （…）は実行すると値になるので、数値の 0 に置き換えて確かめる（実行時も UnKakko(for_calc) してから calc する）。
+// （…）は実行すると値になるので、数値の 1 に置き換えて確かめる（実行時も UnKakko(for_calc) してから calc する）。
 void	Satori::lint_expression(SatoriLintContext& ctx, const wchar_t* p, int line)
 {
 	wstring	neutral;
@@ -231,7 +267,7 @@ void	Satori::lint_expression(SatoriLintContext& ctx, const wchar_t* p, int line)
 		if ( c == L"（" ) {
 			has_kakko = true;
 			lint_kakko(ctx, p, line);
-			neutral += L'0';
+			neutral += L'1';	// 0 だと 割り算や剰余が 0 で割ることになって、誤って失敗する
 		}
 		else {
 			neutral += c;
@@ -245,7 +281,7 @@ void	Satori::lint_expression(SatoriLintContext& ctx, const wchar_t* p, int line)
 	wstring	probe = neutral;
 	if ( !calc(probe) ) {
 		if ( has_kakko ) {
-			// 値を 0 に置き換えただけなので、実際の値では通ることもある
+			// 値を 1 に置き換えただけなので、実際の値では通ることもある
 			ctx.report(false, line, L"計算式を確認してください（（）を数値に置き換えて検査しました）：" + quote(neutral));
 		}
 		else {
@@ -321,12 +357,16 @@ void	Satori::lint_kakko(SatoriLintContext& ctx, const wchar_t*& p, int line)
 void	Satori::lint_name(SatoriLintContext& ctx, const wstring& name, int line)
 {
 	if ( name.empty() ) {
-		ctx.report(false, line, L"（） の中身が空です");
+		// 名前の無い ＊ ＠ があれば、（） で呼べる（ランダムトークなど）
+		if ( ctx.talk_names.find(name) == ctx.talk_names.end() && ctx.word_names.find(name) == ctx.word_names.end()
+			&& !talks.is_exist(name) && !words.is_exist(name) ) {
+			ctx.report(false, line, L"（） の中身が空で、名前の無い＊も＠もありません");
+		}
 		return;
 	}
 
 	wstring	plain = name;
-	ctx.esc.unescape(plain);
+	lint_unescape(ctx.esc, plain);
 	if ( plain != name ) {
 		return;	// φでエスケープされた文字を含む。辞書の名前とは別に扱われる
 	}
@@ -352,7 +392,11 @@ void	Satori::lint_name(SatoriLintContext& ctx, const wstring& name, int line)
 
 	wstring	text = quote(name) + L"は、単語群・文・変数・内蔵関数・SAORIのどれにも見つかりません。";
 	if ( ctx.dynamic_writer ) {
+		// 実行時に名前が決まる変数などを作る記述があると、辞書だけでは無いと言い切れないので、重さを下げる
 		text += L"（実行時に名前が決まる変数や単語群を作る記述があるので、あるのかもしれません）";
+		text += L"（ を文字として表示するときは φ（ と書きます。";
+		ctx.notice(line, text);
+		return;
 	}
 	text += L"（ を文字として表示するときは φ（ と書きます。";
 	ctx.report(false, line, text);
@@ -390,7 +434,7 @@ void	Satori::lint_function_call(SatoriLintContext& ctx, const FunctionCall& call
 	case ARG_SET:
 		if ( arg0_literal ) {
 			wstring key = arg0;
-			ctx.esc.unescape(key);
+			lint_unescape(ctx.esc, key);
 			if ( aredigits(zen2han(key)) ) {
 				ctx.report(true, line, quote(key) + L"　数字のみの変数名は扱えません");
 			}
@@ -462,6 +506,34 @@ void	Satori::lint_special_function(SatoriLintContext& ctx, const SatoriFunction&
 //---------------------------------------------------------------------------
 //	＊の本文の行
 
+// 比べるための名前：空白と全角半角と大文字小文字の違いを無くす。
+static wstring	normalize_name(const wstring& name)
+{
+	wstring s = zen2han(name);
+	erase_all(s, L" ");
+	erase_all(s, L"\t");
+	erase_all(s, L"　");
+	for ( wstring::iterator i = s.begin() ; i != s.end() ; ++i ) {
+		if ( *i >= L'A' && *i <= L'Z' ) {
+			*i = static_cast<wchar_t>(*i - L'A' + L'a');
+		}
+	}
+	return	s;
+}
+
+// 飛び先の＊の文が無いときの報告。
+// 飛び先の無い＞や選択肢は、実行しても続きが実行されるだけで、任意の飛び先として使われることも多い（ひな形が用意するフックなど）。
+// そのため、書き間違いらしいとき（空白・全角半角・大文字小文字だけが違う文がある）だけ warning にして、ほかは notice にする。
+void	Satori::lint_missing_target(SatoriLintContext& ctx, const wchar_t* what, const wstring& id, int line)
+{
+	std::map<wstring, wstring>::const_iterator near_name = ctx.talk_normalized.find(normalize_name(id));
+	if ( near_name != ctx.talk_normalized.end() ) {
+		ctx.report(false, line, wstring(what) + quote(id) + L"という＊の文はありませんが、空白や全角半角・大文字小文字だけが違う" + quote(near_name->second) + L"があります");
+		return;
+	}
+	ctx.notice(line, wstring(what) + quote(id) + L"という＊の文が見つかりません。任意の飛び先として使っているのでなければ、名前を確認してください");
+}
+
 // 選択肢の飛び先が、字面で決まるなら、その文があるか。URLやイベント名（On…）、script: なども使われる。
 // ＿ラベル【タブ】ID と、さくらスクリプトの \q[ラベル,ID] の両方で使う。
 void	Satori::lint_choice_target(SatoriLintContext& ctx, const wstring& target, int line)
@@ -470,12 +542,12 @@ void	Satori::lint_choice_target(SatoriLintContext& ctx, const wstring& target, i
 		return;
 	}
 	wstring	id = target;
-	ctx.esc.unescape(id);
+	lint_unescape(ctx.esc, id);
 	const bool	is_special_id = compare_head(id, L"On") || compare_head(id, L"http") || id.find(L':') != wstring::npos;
 	const bool	has_handler = ctx.talk_names.find(L"OnChoiceSelect") != ctx.talk_names.end() || talks.is_exist(L"OnChoiceSelect");
 	if ( !is_special_id && !has_handler
 		&& ctx.talk_names.find(id) == ctx.talk_names.end() && !talks.is_exist(id) ) {
-		ctx.report(false, line, L"選択肢の飛び先" + quote(id) + L"という＊の文が見つかりません");
+		lint_missing_target(ctx, L"選択肢の飛び先", id, line);
 	}
 }
 
@@ -598,10 +670,10 @@ void	Satori::lint_body_line(SatoriLintContext& ctx, const wchar_t* p, int line, 
 			// ＞だけは飛び先が文の名前。≫≧は検索なので調べない。空は「ランダムトーク」、OnTalk は予約トークがあるので存在しなくてよい
 			if ( *p == L'＞' && words[0].find(L'（') == wstring::npos && ctx.reporting ) {
 				wstring	target = words[0];
-				ctx.esc.unescape(target);
+				lint_unescape(ctx.esc, target);
 				if ( !target.empty() && target != L"OnTalk"
 					&& ctx.talk_names.find(target) == ctx.talk_names.end() && !talks.is_exist(target) ) {
-					ctx.report(true, line, L"ジャンプ先" + quote(target) + L"という＊の文がありません");
+					lint_missing_target(ctx, L"ジャンプ先", target, line);
 				}
 			}
 		}
@@ -614,7 +686,11 @@ void	Satori::lint_body_line(SatoriLintContext& ctx, const wchar_t* p, int line, 
 		const wchar_t*	separator = NULL;
 		bool	do_calc = false;
 		if ( !split_variable_assignment(key_start, separator, do_calc) ) {
-			ctx.report(true, line, L"＄による変数代入文には、タブによる区切りか、＝による計算式が必要です");
+			wstring	text = L"＄による変数代入文には、タブによる区切りか、＝による計算式が必要です";
+			if ( wcsstr(p, L"【タブ】") != NULL ) {
+				text += L"（「【タブ】」という文字がそのまま書かれています。タブ文字にしてください）";
+			}
+			ctx.report(true, line, text);
 			return;
 		}
 
@@ -625,7 +701,7 @@ void	Satori::lint_body_line(SatoriLintContext& ctx, const wchar_t* p, int line, 
 		}
 		else {
 			wstring	key = key_text;
-			ctx.esc.unescape(key);
+			lint_unescape(ctx.esc, key);
 			if ( key.empty() ) {
 				// ＄そのまま表示
 			}
@@ -652,7 +728,8 @@ void	Satori::lint_body_line(SatoriLintContext& ctx, const wchar_t* p, int line, 
 
 	// 全角にするつもりだった行頭の記号
 	if ( ctx.reporting && (*p == L'*' || *p == L'@' || *p == L'$') ) {
-		ctx.report(false, line, wstring(L"行頭が半角の「") + *p + L"」です。この行は文の本文として扱われます（全角の「＊」「＠」「＄」にするつもりでは？）");
+		// 区切り線（*****）や、そのまま表示したい記号の可能性もあるので notice にとどめる
+		ctx.notice(line, wstring(L"行頭が半角の「") + *p + L"」です。この行は文の本文として扱われます（全角の「＊」「＠」「＄」にするつもりでは？）");
 	}
 
 	lint_text(ctx, p, line);
@@ -664,7 +741,7 @@ void	Satori::lint_unit(SatoriLintContext& ctx, const satori_unit& unit)
 	const bool	is_talk = ( unit.typemark == L"＊" );
 
 	wstring	name = unit.name;
-	ctx.esc.unescape(name);
+	lint_unescape(ctx.esc, name);
 
 	// 名前や条件の中の（）
 	lint_text(ctx, unit.name.c_str(), unit.line);
@@ -745,7 +822,7 @@ void	Satori::Lint(strpairvec& oMessages)
 		for ( size_t u=0 ; u<files[f].units.size() ; ++u ) {
 			const satori_unit&	unit = files[f].units[u];
 			wstring	name = unit.name;
-			ctx.esc.unescape(name);
+			lint_unescape(ctx.esc, name);
 			if ( unit.typemark == L"＊" ) {
 				ctx.talk_names.insert(name);
 			}
@@ -761,6 +838,12 @@ void	Satori::Lint(strpairvec& oMessages)
 					}
 				}
 			}
+		}
+	}
+
+	for ( std::set<wstring>::const_iterator t = ctx.talk_names.begin() ; t != ctx.talk_names.end() ; ++t ) {
+		if ( !t->empty() ) {
+			ctx.talk_normalized.insert(std::make_pair(normalize_name(*t), *t));
 		}
 	}
 

@@ -551,6 +551,7 @@ private:
 	void	lint_body_line(SatoriLintContext& ctx, const wchar_t* p, int line, bool is_first_line);
 	void	lint_text(SatoriLintContext& ctx, const wchar_t* p, int line);
 	void	lint_choice_target(SatoriLintContext& ctx, const wstring& target, int line);
+	void	lint_missing_target(SatoriLintContext& ctx, const wchar_t* what, const wstring& id, int line);
 	void	lint_kakko(SatoriLintContext& ctx, const wchar_t*& p, int line);
 	void	lint_expression(SatoriLintContext& ctx, const wchar_t* p, int line);
 	void	lint_name(SatoriLintContext& ctx, const wstring& name, int line);
