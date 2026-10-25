@@ -541,24 +541,24 @@ private:
 	//---------------------------------------------------------------------------
 	// 静的検査（satori_lint.cpp）。実行はせず、辞書の書き方だけを調べる。
 
-	// 読み込んだ辞書ファイルを調べ、見つけた問題を「ファイル(行) : error|warning: 内容」の形で oMessages に足す。
-	// 返値は見つけた問題の数（oMessages には上限まで）。oErrors にはそのうちエラーの数を入れる。
-	int	Lint(strvec& oMessages, int& oErrors);
+	// 読み込んだ辞書ファイルを調べ、見つけた問題を oMessages に足す。
+	// 要素は（ErrorLevel の値 = error|warning|notice|info、「ファイル(行) : error|warning|notice: 内容」）。
+	// 上限を超えて省略した分は、末尾に info の要素ひとつで知らせる。
+	void	Lint(strpairvec& oMessages);
 
 	// 以下は Lint の内部。SatoriLintContext もそこにある。
 	void	lint_unit(SatoriLintContext& ctx, const satori_unit& unit);
 	void	lint_body_line(SatoriLintContext& ctx, const wchar_t* p, int line, bool is_first_line);
 	void	lint_text(SatoriLintContext& ctx, const wchar_t* p, int line);
+	void	lint_choice_target(SatoriLintContext& ctx, const wstring& target, int line);
 	void	lint_kakko(SatoriLintContext& ctx, const wchar_t*& p, int line);
 	void	lint_expression(SatoriLintContext& ctx, const wchar_t* p, int line);
 	void	lint_name(SatoriLintContext& ctx, const wstring& name, int line);
 	void	lint_function_call(SatoriLintContext& ctx, const FunctionCall& call, const wstring& name, bool has_nested, int line);
 	void	lint_special_function(SatoriLintContext& ctx, const SatoriFunction& func, const strvec& args, int line);
 
-	// ShioriLint の結果（応答の X-Lint ヘッダになる）
-	strvec	mLintMessages;
-	int		mLintCount;
-	int		mLintErrors;
+	// ShioriLint の結果（応答の ErrorLevel / ErrorDescription ヘッダになる）
+	strpairvec	mLintMessages;
 
 	// 繰り返しの結果が大きすぎたら警告してtrueを返す
 	bool	loop_result_too_large(const wstring& iResult);

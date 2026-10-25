@@ -377,6 +377,7 @@ wstring SakuraDLLHost::request(const wstring& i_request_string, CharactorSet i_r
 	case 200: response += L"200 OK"; break;
 	case 204: response += L"204 No Content"; break;
 	case 400: response += L"400 Bad Request"; break;
+	case 403: response += L"403 Forbidden"; break;
 	default: response += L"500 Internal Server Error"; break;
 	}
 	response += CRLF;

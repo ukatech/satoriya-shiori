@@ -31,17 +31,31 @@
 
 // 報告するメッセージの上限（超えた分は数だけ数える）
 static const size_t	LINT_MAX_MESSAGES = 1000;
+// 上限のうち、error のために空けておく件数
+static const size_t	LINT_ERROR_RESERVE = 200;
+// そのうち notice の上限（件数が多くなりやすいので、error や warning を押し出さないように別に抑える）
+static const size_t	LINT_MAX_NOTICES = 100;
 // （）の入れ子をたどる深さの上限
 static const int	LINT_MAX_DEPTH = 200;
 // 名前の中の入れ子の（）の代わりに入れる文字（私用領域。展開後の中身は分からない）
 static const wchar_t	LINT_NESTED = 0xE0FB;
 
 
+// 問題の重さ。ErrorLevel の値（error / warning / notice）になる。
+enum LintLevel
+{
+	LINT_NOTICE,
+	LINT_WARNING,
+	LINT_ERROR
+};
+
 struct SatoriLintContext
 {
-	strvec&	messages;
+	strpairvec&	messages;	// （ErrorLevel の値、本文）
 	int		count;			// 見つけた問題の数（messages に入りきらなかった分も数える）
 	int		errors;			// そのうちエラーの数
+	int		stored_errors;	// messages に入ったエラーの数
+	int		stored_notices;	// messages に入った notice の数
 	bool	reporting;		// 偽のときは名前などを集めるだけで、問題は報告しない
 	wstring	file;			// 報告に付けるファイル名
 	escaper	esc;			// φエスケープの復元用。実行中のものとは別
@@ -54,26 +68,52 @@ struct SatoriLintContext
 	std::set<wstring>	assigned_vars;	// 辞書で代入されている変数名（字面で分かるもの）
 	bool	dynamic_writer;	// 実行時に決まる名前の変数・単語群・SAORIを作るものがある
 
-	SatoriLintContext(strvec& i_messages)
-		: messages(i_messages), count(0), errors(0), reporting(false), depth(0), depth_reported(false), dynamic_writer(false) {}
+	SatoriLintContext(strpairvec& i_messages)
+		: messages(i_messages), count(0), errors(0), stored_errors(0), stored_notices(0), reporting(false), depth(0), depth_reported(false), dynamic_writer(false) {}
 
-	void	report(bool is_error, int line, const wstring& text)
+	void	add(LintLevel level, int line, const wstring& text)
 	{
 		if ( !reporting ) {
 			return;
 		}
 		++count;
-		if ( is_error ) {
+		if ( level == LINT_ERROR ) {
 			++errors;
 		}
-		if ( messages.size() >= LINT_MAX_MESSAGES ) {
+		// error は最後まで入るように、それ以外は error の分の余地を残して打ち切る
+		const size_t	limit = ( level == LINT_ERROR ) ? LINT_MAX_MESSAGES : LINT_MAX_MESSAGES - LINT_ERROR_RESERVE;
+		if ( messages.size() >= limit ) {
 			return;
+		}
+		if ( level == LINT_NOTICE && stored_notices >= static_cast<int>(LINT_MAX_NOTICES) ) {
+			return;
+		}
+
+		const wchar_t*	label = L"warning";
+		if ( level == LINT_ERROR ) {
+			label = L"error";
+			++stored_errors;
+		}
+		else if ( level == LINT_NOTICE ) {
+			label = L"notice";
+			++stored_notices;
 		}
 		wstring s = file;
 		s += L"(" + itos(line) + L") : ";
-		s += is_error ? L"error: " : L"warning: ";
+		s += label;
+		s += L": ";
 		s += text;
-		messages.push_back(s);
+		messages.push_back(strpair(label, s));
+	}
+
+	void	report(bool is_error, int line, const wstring& text)
+	{
+		add(is_error ? LINT_ERROR : LINT_WARNING, line, text);
+	}
+
+	void	notice(int line, const wstring& text)
+	{
+		add(LINT_NOTICE, line, text);
 	}
 };
 
@@ -152,14 +192,31 @@ static bool	is_request_header_name(const wstring& name)
 //---------------------------------------------------------------------------
 //	（）と文章
 
+// 直前の文字が、「１）」「a）」のような箇条書きの番号か。
+static bool	is_list_marker_char(wchar_t c)
+{
+	return	(c >= L'0' && c <= L'9') || (c >= L'０' && c <= L'９')
+		|| (c >= L'a' && c <= L'z') || (c >= L'A' && c <= L'Z')
+		|| (c >= L'ａ' && c <= L'ｚ') || (c >= L'Ａ' && c <= L'Ｚ');
+}
+
 // 文章中の（…）を調べる。
 void	Satori::lint_text(SatoriLintContext& ctx, const wchar_t* p, int line)
 {
+	wchar_t	previous = L'\0';
 	while ( *p != L'\0' ) {
+		const wchar_t	head = *p;
 		a_chr c = next_a_chr(p);
 		if ( c == L"（" ) {
 			lint_kakko(ctx, p, line);
+			previous = L'）';
+			continue;
 		}
+		if ( c == L"）" && ctx.reporting && !is_list_marker_char(previous) ) {
+			// 実行時は対応する（ が無い ） をそのまま表示する
+			ctx.notice(line, L"対応する （ が無い ） があります。文字としてそのまま表示されます");
+		}
+		previous = head;
 	}
 }
 
@@ -405,6 +462,84 @@ void	Satori::lint_special_function(SatoriLintContext& ctx, const SatoriFunction&
 //---------------------------------------------------------------------------
 //	＊の本文の行
 
+// 選択肢の飛び先が、字面で決まるなら、その文があるか。URLやイベント名（On…）、script: なども使われる。
+// ＿ラベル【タブ】ID と、さくらスクリプトの \q[ラベル,ID] の両方で使う。
+void	Satori::lint_choice_target(SatoriLintContext& ctx, const wstring& target, int line)
+{
+	if ( target.empty() || target.find(L'（') != wstring::npos || !ctx.reporting ) {
+		return;
+	}
+	wstring	id = target;
+	ctx.esc.unescape(id);
+	const bool	is_special_id = compare_head(id, L"On") || compare_head(id, L"http") || id.find(L':') != wstring::npos;
+	const bool	has_handler = ctx.talk_names.find(L"OnChoiceSelect") != ctx.talk_names.end() || talks.is_exist(L"OnChoiceSelect");
+	if ( !is_special_id && !has_handler
+		&& ctx.talk_names.find(id) == ctx.talk_names.end() && !talks.is_exist(id) ) {
+		ctx.report(false, line, L"選択肢の飛び先" + quote(id) + L"という＊の文が見つかりません");
+	}
+}
+
+// 文字列中の \q[ラベル,ID,…] と \__q[ID,…] から ID を集める。
+// 括弧の中の \] は閉じ括弧ではなく、"…" で括った中の , と ] は区切りにならない。
+static void	find_choice_targets(const wchar_t* p, strvec& o_targets)
+{
+	while ( *p != L'\0' ) {
+		if ( *p != L'\\' ) {
+			++p;
+			continue;
+		}
+		++p;
+		if ( *p == L'\\' ) {
+			++p;	// \\ はバックスラッシュそのもの
+			continue;
+		}
+
+		size_t	target_index;
+		if ( p[0] == L'q' && p[1] == L'[' ) {
+			p += 2;
+			target_index = 1;	// \q[ラベル,ID,…]
+		}
+		else if ( p[0] == L'_' && p[1] == L'_' && p[2] == L'q' && p[3] == L'[' ) {
+			p += 4;
+			target_index = 0;	// \__q[ID,…]
+		}
+		else {
+			continue;
+		}
+
+		strvec	fields(1);
+		bool	in_quote = false;
+		bool	closed = false;
+		while ( *p != L'\0' ) {
+			const wchar_t	c = *p;
+			if ( c == L'\\' && (p[1] == L']' || p[1] == L'\\') ) {
+				fields.back() += p[1];
+				p += 2;
+			}
+			else if ( c == L'"' ) {
+				in_quote = !in_quote;
+				++p;
+			}
+			else if ( !in_quote && c == L',' ) {
+				fields.push_back(wstring());
+				++p;
+			}
+			else if ( !in_quote && c == L']' ) {
+				closed = true;
+				++p;
+				break;
+			}
+			else {
+				fields.back() += c;
+				++p;
+			}
+		}
+		if ( closed && fields.size() > target_index ) {
+			o_targets.push_back(fields[target_index]);
+		}
+	}
+}
+
 // 本文の1行を調べる。SentenceToSakuraScriptInternal が行の頭で分ける順（＿、＞≫≧、＄、本文）と同じ。
 void	Satori::lint_body_line(SatoriLintContext& ctx, const wchar_t* p, int line, bool is_first_line)
 {
@@ -440,17 +575,7 @@ void	Satori::lint_body_line(SatoriLintContext& ctx, const wchar_t* p, int line, 
 			lint_text(ctx, choice_line.c_str() + tab_pos + 1, line);
 		}
 
-		// 飛び先が字面で決まるなら、その文があるか。URLやイベント名（On…）、script: なども使われる
-		if ( !target.empty() && target.find(L'（') == wstring::npos && ctx.reporting ) {
-			wstring	id = target;
-			ctx.esc.unescape(id);
-			const bool	is_special_id = compare_head(id, L"On") || compare_head(id, L"http") || id.find(L':') != wstring::npos;
-			const bool	has_handler = ctx.talk_names.find(L"OnChoiceSelect") != ctx.talk_names.end() || talks.is_exist(L"OnChoiceSelect");
-			if ( !is_special_id && !has_handler
-				&& ctx.talk_names.find(id) == ctx.talk_names.end() && !talks.is_exist(id) ) {
-				ctx.report(false, line, L"選択肢の飛び先" + quote(id) + L"という＊の文が見つかりません");
-			}
-		}
+		lint_choice_target(ctx, target, line);
 		return;
 	}
 
@@ -558,6 +683,22 @@ void	Satori::lint_unit(SatoriLintContext& ctx, const satori_unit& unit)
 
 	for ( size_t i=0 ; i<unit.body.size() ; ++i ) {
 		const int	line = ( i < unit.body_lines.size() ) ? unit.body_lines[i] : unit.line;
+
+		// さくらスクリプトの選択肢 \q[ラベル,ID] の飛び先（行ごとに、（）の中も含めて見る）
+		if ( ctx.reporting && unit.body[i].find(L'\\') != wstring::npos ) {
+			strvec	targets;
+			find_choice_targets(unit.body[i].c_str(), targets);
+			for ( size_t t=0 ; t<targets.size() ; ++t ) {
+				lint_choice_target(ctx, targets[t], line);
+			}
+		}
+
+		// ＠の本文は単語としてそのまま使われるので、＄の行は代入されない
+		if ( !is_talk && unit.body[i].find(L"＄") == 0
+			&& (unit.body[i].find(L'\t') != wstring::npos || unit.body[i].find(L'＝') != wstring::npos) ) {
+			ctx.report(false, line, L"＠の本文では、＄の行は変数の代入になりません（単語としてそのまま使われます）。＊の本文に書くつもりでは？");
+		}
+
 		if ( is_talk ) {
 			lint_body_line(ctx, unit.body[i].c_str(), line, i == 0);
 		}
@@ -571,7 +712,7 @@ void	Satori::lint_unit(SatoriLintContext& ctx, const satori_unit& unit)
 //---------------------------------------------------------------------------
 //	全体
 
-int	Satori::Lint(strvec& oMessages, int& oErrors)
+void	Satori::Lint(strpairvec& oMessages)
 {
 	SatoriLintContext	ctx(oMessages);
 
@@ -653,6 +794,13 @@ int	Satori::Lint(strvec& oMessages, int& oErrors)
 		}
 	}
 
-	oErrors = ctx.errors;
-	return	ctx.count;
+	// 入りきらなかった分は、数だけ知らせる
+	const int	omitted = ctx.count - static_cast<int>(oMessages.size());
+	if ( omitted > 0 ) {
+		wstring	text = L"ほか" + itos(omitted) + L"件は省略しました";
+		if ( ctx.errors > ctx.stored_errors ) {
+			text += L"（うち error " + itos(ctx.errors - ctx.stored_errors) + L"件）";
+		}
+		oMessages.push_back(strpair(L"info", text));
+	}
 }
