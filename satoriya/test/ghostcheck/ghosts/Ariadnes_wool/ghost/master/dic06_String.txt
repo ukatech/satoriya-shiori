@@ -1,0 +1,65 @@
+
+＃　-----------------------------------------------------
+＃　
+＃　里々辞書 ── アリアドネの羔
+＃　
+＃　メニューのボタン名・おすすめURL等
+＃　
+＃　-----------------------------------------------------
+
+
+
+＠portalrootbutton.caption
+きほん(&P)
+
+＠recommendrootbutton.caption
+おすすめ(&R)
+
+＠kero.recommendbuttoncaption
+￥１のおすすめ(&R)
+
+＠updatebutton.caption
+ネットワーク更新(&U)
+
+＠vanishbutton.caption
+消滅(&F)
+
+＠readmebutton.caption
+Read me(&R)
+
+＠vanishbutton.visible
+1
+
+＠homeurl
+
+＃ネットワーク更新先URL（設定時に記述）
+
+＠username
+（ユーザ名）
+
+
+＊sakura.portalsites
+伺かのあそびかたφ（FIRST GUIDEφ）
+http://haka.sakura.ne.jp/guide/
+
+＊sakura.portalsites
+-
+
+＊sakura.portalsites
+SSP BUGTRAQ
+https://ssp.shillest.net/
+
+＊sakura.portalsites
+-
+
+＊sakura.portalsites
+里々Wiki
+https://soliton.sub.jp/satori/
+：里々のことが書いてある場所だよ。
+：困ったら見てみてね。
+
+＊sakura.portalsites
+里々φ/整備班カスタム
+https://ms.shillest.net/
+：いまの里々はここで更新されてるんだって。
+
