@@ -688,7 +688,7 @@ void	Satori::lint_body_line(SatoriLintContext& ctx, const wchar_t* p, int line, 
 		if ( !split_variable_assignment(key_start, separator, do_calc) ) {
 			wstring	text = L"＄による変数代入文には、タブによる区切りか、＝による計算式が必要です";
 			if ( wcsstr(p, L"【タブ】") != NULL ) {
-				text += L"（「【タブ】」という文字がそのまま書かれています。タブ文字にしてください）";
+				text += L"（「【タブ】」という文字がそのまま書かれています。replace.txt に【タブ】をタブ文字に置き換える行を書くか、タブ文字にしてください）";
 			}
 			ctx.report(true, line, text);
 			return;
