@@ -1,9 +1,0 @@
-charset,UTF-8
-
-name,アリアドネの羔
-type,ghost
-
-sakura.name,ロトン
-kero.name,オレン
-
-shiori,satori.dll
