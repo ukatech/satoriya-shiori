@@ -49,6 +49,41 @@ enum LintLevel
 	LINT_ERROR
 };
 
+// （）や＊の本文が実行すると、変数や単語を書き換える処理。
+// if / unless / choice などは、選ばれなかった枝の（）も先に展開するので、枝にこれがあると両方の枝で実行される。
+struct SatoriLintEffect
+{
+	bool	direct;				// 書き換える処理が必ず実行される
+	wstring	what;				// 最初に見つけた処理（メッセージ用）
+	std::set<wstring>	calls;	// 呼んでいる（名前）。呼び先の＊に処理があれば、それも実行される
+
+	SatoriLintEffect() : direct(false) {}
+
+	void	add_direct(const wstring& i_what)
+	{
+		if ( !direct ) {
+			direct = true;
+			what = i_what;
+		}
+	}
+	void	merge(const SatoriLintEffect& other)
+	{
+		if ( other.direct ) {
+			add_direct(other.what);
+		}
+		for ( std::set<wstring>::const_iterator i = other.calls.begin() ; i != other.calls.end() ; ++i ) {
+			calls.insert(*i);
+		}
+	}
+	// 中身を入れ替える（std::set の swap は定数時間）
+	void	swap(SatoriLintEffect& other)
+	{
+		std::swap(direct, other.direct);
+		what.swap(other.what);
+		calls.swap(other.calls);
+	}
+};
+
 struct SatoriLintContext
 {
 	strpairvec&	messages;	// （ErrorLevel の値、本文）
@@ -68,6 +103,11 @@ struct SatoriLintContext
 	std::set<wstring>	saori_names;	// ＠SAORI に書かれた呼び出し名
 	std::set<wstring>	assigned_vars;	// 辞書で代入されている変数名（字面で分かるもの）
 	bool	dynamic_writer;	// 実行時に決まる名前の変数・単語群・SAORIを作るものがある
+
+	SatoriLintEffect	effect;			// いま読んでいる（）や＊の中で実行される処理（入れ子の中も含む）
+	SatoriLintEffect	last_effect;	// 直前に読み終えた（）のもの
+	std::map<wstring, SatoriLintEffect>	talk_effects;	// ＊の名前 → 本文で実行される処理（1回目に集める）
+	std::set<wstring>	effectful_talks;	// 呼ぶと処理が実行される＊の名前（talk_effects から求める）
 
 	SatoriLintContext(strpairvec& i_messages)
 		: messages(i_messages), count(0), errors(0), stored_errors(0), stored_notices(0), reporting(false), depth(0), depth_reported(false), dynamic_writer(false) {}
@@ -115,6 +155,51 @@ struct SatoriLintContext
 	void	notice(int line, const wstring& text)
 	{
 		add(LINT_NOTICE, line, text);
+	}
+
+	// talk_effects から、呼ぶと処理が実行される＊を求める（呼び先をたどる）。
+	// 同じ名前の＠があるときは（名前）が単語群として読まれ、どの単語が選ばれるか分からないので数えない。
+	void	resolve_effects()
+	{
+		effectful_talks.clear();
+		std::map<wstring, SatoriLintEffect>::const_iterator t;
+		for ( t = talk_effects.begin() ; t != talk_effects.end() ; ++t ) {
+			if ( t->second.direct && word_names.find(t->first) == word_names.end() ) {
+				effectful_talks.insert(t->first);
+			}
+		}
+		bool	changed = true;
+		while ( changed ) {
+			changed = false;
+			for ( t = talk_effects.begin() ; t != talk_effects.end() ; ++t ) {
+				if ( effectful_talks.find(t->first) != effectful_talks.end() || word_names.find(t->first) != word_names.end() ) {
+					continue;
+				}
+				for ( std::set<wstring>::const_iterator c = t->second.calls.begin() ; c != t->second.calls.end() ; ++c ) {
+					if ( effectful_talks.find(*c) != effectful_talks.end() ) {
+						effectful_talks.insert(t->first);
+						changed = true;
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	// e が実行されると処理が起きるか。起きるなら what に何かを入れる。
+	bool	has_effect(const SatoriLintEffect& e, wstring& what) const
+	{
+		if ( e.direct ) {
+			what = e.what;
+			return	true;
+		}
+		for ( std::set<wstring>::const_iterator c = e.calls.begin() ; c != e.calls.end() ; ++c ) {
+			if ( effectful_talks.find(*c) != effectful_talks.end() ) {
+				what = L"（" + *c + L"）の中の処理";
+				return	true;
+			}
+		}
+		return	false;
 	}
 };
 
@@ -195,6 +280,87 @@ static bool	is_request_header_name(const wstring& name)
 		}
 	}
 	return	compare_head(name, L"Reference") && name.size() > 9 && aredigits(name.c_str()+9);
+}
+
+
+// 半角・全角の空白か
+static bool	is_space_char(wchar_t c)
+{
+	return	c == L' ' || c == L'　';
+}
+
+static bool	is_digit_char(wchar_t c)
+{
+	return	(c >= L'0' && c <= L'9') || (c >= L'０' && c <= L'９');
+}
+
+// 変数に代入される名前を調べる。＄の行と（set、名前、…）で共通。key はφエスケープを戻したもの。
+// from_set は（set、名前、…）の場合。名前の衝突は、＄の行より数が多くなりやすい（生成した名前に set する辞書など）ので notice にする。
+static void	lint_assigned_name(SatoriLintContext& ctx, const wstring& key, int line, bool from_set = false)
+{
+	if ( key.empty() ) {
+		return;	// ＄そのまま表示
+	}
+	if ( aredigits(zen2han(key)) ) {
+		ctx.report(true, line, quote(key) + L"　数字のみの変数名は扱えません");
+		return;
+	}
+	ctx.assigned_vars.insert(key);
+	// 空白だけの名前（＄　【タブ】 で空文字列の定数にする書き方）は意図したものとして扱う
+	if ( (is_space_char(key[0]) || is_space_char(key[key.size()-1])) && !is_blank(key) ) {
+		ctx.report(false, line, L"変数名" + quote(key) + L"の前か後ろに空白があります。空白も含めた名前で登録されるので、空白なしの名前では読めません（＝ やタブの手前の空白も名前に含まれます）");
+	}
+	if ( ctx.word_names.find(key) != ctx.word_names.end() || ctx.talk_names.find(key) != ctx.talk_names.end() ) {
+		const wstring	text = L"変数" + quote(key) + L"と同じ名前の単語群か文があります。トラブルの元なので避けましょう";
+		if ( from_set ) {
+			ctx.notice(line, text);
+		}
+		else {
+			ctx.report(false, line, text);
+		}
+	}
+}
+
+// タブ区切りの代入の値に、計算のつもりの演算子があるか。
+// （）の外の演算子で、片側が数、反対側が（）のとき（（カウンタ）＋１ や １＋（カウンタ） の形）に限る。
+static bool	has_calc_operator(const wchar_t* val)
+{
+	static const wchar_t	operators[] = { L'+', L'-', L'*', L'/', L'%', L'＋', L'－', L'×', L'÷', L'％', 0x2212, 0 };
+	const size_t	n = wcslen(val);
+	int	depth = 0;
+	for ( size_t i=0 ; i<n ; ++i ) {
+		const wchar_t	c = val[i];
+		if ( c == L'（' ) {
+			++depth;
+			continue;
+		}
+		if ( c == L'）' ) {
+			if ( depth > 0 ) {
+				--depth;
+			}
+			continue;
+		}
+		if ( depth > 0 || wcschr(operators, c) == NULL ) {
+			continue;
+		}
+		size_t	l = i;	// 演算子の手前の、空白を除いた終わり（この手前の文字を見る）
+		while ( l > 0 && is_space_char(val[l-1]) ) {
+			--l;
+		}
+		size_t	r = i + 1;
+		while ( r < n && is_space_char(val[r]) ) {
+			++r;
+		}
+		if ( l == 0 || r >= n ) {
+			continue;
+		}
+		const wchar_t	prev = val[l-1];
+		const wchar_t	next = val[r];
+		if ( (prev == L'）' && is_digit_char(next)) || (is_digit_char(prev) && next == L'（') ) {
+			return	true;
+		}
+	}
+	return	false;
 }
 
 
@@ -291,7 +457,18 @@ void	Satori::lint_expression(SatoriLintContext& ctx, const wchar_t* p, int line)
 }
 
 // （ の直後 p から ） までを調べる。p は ） の次へ進める。
+// この（）の中（入れ子を含む）で実行される処理を ctx.last_effect に残し、外側の ctx.effect に足す。
 void	Satori::lint_kakko(SatoriLintContext& ctx, const wchar_t*& p, int line)
+{
+	SatoriLintEffect	outer;
+	outer.swap(ctx.effect);
+	lint_kakko_inner(ctx, p, line);
+	ctx.last_effect = ctx.effect;
+	outer.merge(ctx.effect);
+	ctx.effect.swap(outer);
+}
+
+void	Satori::lint_kakko_inner(SatoriLintContext& ctx, const wchar_t*& p, int line)
 {
 	if ( ctx.depth >= LINT_MAX_DEPTH ) {
 		if ( !ctx.depth_reported ) {
@@ -316,11 +493,13 @@ void	Satori::lint_kakko(SatoriLintContext& ctx, const wchar_t*& p, int line)
 		}
 		p = pp;
 		lint_special_function(ctx, *special, arguments, line);
+		// 特殊形式の引数は、条件によって実行されないことがある。処理があるとは言えないので数えない
+		ctx.effect = SatoriLintEffect();
 		return;
 	}
 
 	wstring	name;
-	bool	has_nested = false;
+	std::vector<SatoriLintEffect>	nested;	// 名前の中の入れ子の（）ごとの処理（LINT_NESTED と同じ順）
 	while ( true ) {
 		if ( *p == L'\0' ) {
 			ctx.report(true, line, L"（ に対応する ） がありません");
@@ -332,8 +511,8 @@ void	Satori::lint_kakko(SatoriLintContext& ctx, const wchar_t*& p, int line)
 		}
 		else if ( c == L"（" ) {
 			// 内側の展開結果は実行するまで分からない
-			has_nested = true;
 			lint_kakko(ctx, p, line);
+			nested.push_back(ctx.last_effect);
 			name += LINT_NESTED;
 		}
 		else {
@@ -343,10 +522,10 @@ void	Satori::lint_kakko(SatoriLintContext& ctx, const wchar_t*& p, int line)
 
 	FunctionCall	call;
 	if ( FindFunctionCall(name, false, &ctx.saori_names, call) ) {
-		lint_function_call(ctx, call, name, has_nested, line);
+		lint_function_call(ctx, call, name, nested, line);
 		return;
 	}
-	if ( has_nested ) {
+	if ( !nested.empty() ) {
 		return;	// 名前が実行時に決まる
 	}
 	lint_name(ctx, name, line);
@@ -371,6 +550,9 @@ void	Satori::lint_name(SatoriLintContext& ctx, const wstring& name, int line)
 		return;	// φでエスケープされた文字を含む。辞書の名前とは別に扱われる
 	}
 
+	// ＊を呼ぶと、その本文の処理が実行される（呼び先に処理があるかは、全部読んでから調べる）
+	ctx.effect.calls.insert(name);
+
 	if ( ctx.word_names.find(name) != ctx.word_names.end() || words.is_exist(name) ) {
 		return;
 	}
@@ -385,6 +567,14 @@ void	Satori::lint_name(SatoriLintContext& ctx, const wstring& name, int line)
 	}
 	if ( ctx.assigned_vars.find(name) != ctx.assigned_vars.end() || variables.find(name) != variables.end() ) {
 		return;
+	}
+	if ( compare_head(name, L"乱数") && name.size() >= 4 ) {
+		// 乱数m～n。実行時は、区切りが 1 つでないと「乱数の指定が変です」と表示する（var_random）
+		strvec	vec;
+		if ( split(name.c_str() + 2, L"\xFF5E\x301C", vec) != 2 ) {
+			ctx.report(false, line, quote(name) + L"は、乱数の指定が変です。「（乱数1～6）」のように、～を 1 つだけ書きます");
+			return;
+		}
 	}
 	if ( IsBuiltinName(name) || is_request_header_name(name) ) {
 		return;
@@ -403,14 +593,28 @@ void	Satori::lint_name(SatoriLintContext& ctx, const wstring& name, int line)
 }
 
 // 内蔵関数の呼び出し（特殊形式以外）を調べる。
-void	Satori::lint_function_call(SatoriLintContext& ctx, const FunctionCall& call, const wstring& name, bool has_nested, int line)
+void	Satori::lint_function_call(SatoriLintContext& ctx, const FunctionCall& call, const wstring& name, const std::vector<SatoriLintEffect>& nested, int line)
 {
 	if ( call.func == NULL ) {
-		return;	// SAORI。引数は SAORI ごとの決まりなので調べない
+		// SAORI。引数は SAORI ごとの決まりなので調べないが、if などの枝は調べる
+		lint_eager_branches(ctx, call, nested, line);
+		return;
 	}
 	const SatoriFunction& func = *call.func;
 	if ( func.is_special ) {
 		return;	// KakkoSection のほうで読んでいるので、ここには来ない
+	}
+	const bool	has_nested = !nested.empty();
+
+	// 変数や単語を書き換える関数
+	static const wchar_t* const writers[] = {
+		L"set", L"変数の一括削除", L"変数の一括コピー", L"split_to", L"単語の追加", L"追加単語の削除", L"追加単語の全削除",
+	};
+	for ( int w=0 ; w<sizeof(writers)/sizeof(writers[0]) ; ++w ) {
+		if ( call.name == writers[w] ) {
+			ctx.effect.add_direct(L"（" + call.name + L"）");
+			break;
+		}
 	}
 
 	strvec	args;
@@ -435,12 +639,7 @@ void	Satori::lint_function_call(SatoriLintContext& ctx, const FunctionCall& call
 		if ( arg0_literal ) {
 			wstring key = arg0;
 			lint_unescape(ctx.esc, key);
-			if ( aredigits(zen2han(key)) ) {
-				ctx.report(true, line, quote(key) + L"　数字のみの変数名は扱えません");
-			}
-			else if ( !key.empty() ) {
-				ctx.assigned_vars.insert(key);
-			}
+			lint_assigned_name(ctx, key, line, true);
 		}
 		else {
 			ctx.dynamic_writer = true;
@@ -460,6 +659,77 @@ void	Satori::lint_function_call(SatoriLintContext& ctx, const FunctionCall& call
 		break;
 	default:
 		break;
+	}
+}
+
+// if / unless / iflist / switch / nswitch / choice（ssu）の枝を調べる。
+// これらは特殊形式ではないので、引数の（）は選ぶ前に全部展開される。枝に処理があると、選ばれなかった枝でも実行される。
+void	Satori::lint_eager_branches(SatoriLintContext& ctx, const FunctionCall& call, const std::vector<SatoriLintEffect>& nested, int line)
+{
+	if ( !ctx.reporting || nested.empty() ) {
+		return;
+	}
+
+	// 枝になる引数は first から step おき。iflist / switch は（比べる値、結果）の組で、余りがあれば最後が else
+	const wstring&	fn = call.name;
+	size_t	first, step;
+	bool	trailing_else = false;
+	if ( fn == L"if" || fn == L"unless" || fn == L"nswitch" ) {
+		first = 1;
+		step = 1;
+	}
+	else if ( fn == L"choice" ) {
+		first = 0;
+		step = 1;
+	}
+	else if ( fn == L"iflist" || fn == L"switch" ) {
+		first = 2;
+		step = 2;
+		trailing_else = true;
+	}
+	else {
+		return;
+	}
+
+	strvec	args;
+	SplitFunctionArguments(call, args);
+	const size_t	argc = args.size();
+
+	// 各引数の中の入れ子の（）が、nested の何番目から何個か
+	size_t	total = 0;
+	std::vector<size_t>	counts(argc);
+	for ( size_t i=0 ; i<argc ; ++i ) {
+		counts[i] = 0;
+		for ( wstring::size_type c=0 ; c<args[i].size() ; ++c ) {
+			if ( args[i][c] == LINT_NESTED ) {
+				++counts[i];
+			}
+		}
+		total += counts[i];
+	}
+	if ( total > nested.size() ) {
+		return;
+	}
+	size_t	next_index = nested.size() - total;	// 名前の側にあった分（普通は 0）を飛ばす
+
+	for ( size_t i=0 ; i<argc ; ++i ) {
+		const size_t	start = next_index;
+		next_index += counts[i];
+
+		const bool	is_branch = ( i >= first && (i - first) % step == 0 ) || ( trailing_else && argc % 2 == 0 && i == argc - 1 && i >= first );
+		if ( !is_branch || counts[i] == 0 ) {
+			continue;
+		}
+		SatoriLintEffect	branch;
+		for ( size_t k=start ; k<start+counts[i] ; ++k ) {
+			branch.merge(nested[k]);
+		}
+		wstring	what;
+		if ( ctx.has_effect(branch, what) ) {
+			ctx.report(false, line, quote(fn) + L"は引数を先に展開するので、選ばれなかった枝も実行されます。枝に" + what
+				+ L"があります。片方だけ実行したいときは、when か whenlist を使ってください");
+			return;	// 1 つの（）につき 1 件
+		}
 	}
 }
 
@@ -702,18 +972,7 @@ void	Satori::lint_body_line(SatoriLintContext& ctx, const wchar_t* p, int line, 
 		else {
 			wstring	key = key_text;
 			lint_unescape(ctx.esc, key);
-			if ( key.empty() ) {
-				// ＄そのまま表示
-			}
-			else if ( aredigits(zen2han(key)) ) {
-				ctx.report(true, line, quote(key) + L"　数字のみの変数名は扱えません");
-			}
-			else {
-				ctx.assigned_vars.insert(key);
-				if ( ctx.word_names.find(key) != ctx.word_names.end() || ctx.talk_names.find(key) != ctx.talk_names.end() ) {
-					ctx.report(false, line, L"変数" + quote(key) + L"と同じ名前の単語群か文があります。トラブルの元なので避けましょう");
-				}
-			}
+			lint_assigned_name(ctx, key, line);
 		}
 
 		const wchar_t*	value = separator + 1;
@@ -722,7 +981,22 @@ void	Satori::lint_body_line(SatoriLintContext& ctx, const wchar_t* p, int line, 
 		}
 		else {
 			lint_text(ctx, value, line);
+			// 自分自身に演算子をつないでいる形（＄回数【タブ】（回数）－１）。計算した数ではなく式の文字列が入るので、
+			// 実行のたびに伸びていく。式のまま計算に使えば動くため、そうしている辞書も多く、notice にとどめる。
+			// 自分自身を含まない形は、表示用の文字（[（x）/3] など）と区別できないので調べない。
+			if ( has_calc_operator(value) ) {
+				wstring	key = key_text;
+				lint_unescape(ctx.esc, key);
+				while ( !key.empty() && is_space_char(key[key.size()-1]) ) {
+					key.erase(key.size()-1);
+				}
+				if ( !key.empty() && wstring(value).find(L"（" + key + L"）") != wstring::npos ) {
+					ctx.notice(line, L"タブ区切りの代入は計算せず、式を文字列として入れます。自分自身を含むので、実行のたびに式が長くなっていきます（（" + key + L"）を表示すると式のまま出ます）。計算した数を入れるなら、＝ で書くか calc を使ってください");
+				}
+			}
 		}
+		// 本文に＄の行があると、その＊が（）で呼ばれたときも代入が実行される
+		ctx.effect.add_direct(L"＄の行");
 		return;
 	}
 
@@ -758,6 +1032,9 @@ void	Satori::lint_unit(SatoriLintContext& ctx, const satori_unit& unit)
 		ctx.report(false, unit.line, L"同じ名前" + quote(name) + L"の単語群と文があります。トラブルの元なので避けましょう");
 	}
 
+	// ここからが、（名前）で呼ばれたときに実行される本文
+	ctx.effect = SatoriLintEffect();
+
 	for ( size_t i=0 ; i<unit.body.size() ; ++i ) {
 		const int	line = ( i < unit.body_lines.size() ) ? unit.body_lines[i] : unit.line;
 
@@ -783,6 +1060,12 @@ void	Satori::lint_unit(SatoriLintContext& ctx, const satori_unit& unit)
 			lint_text(ctx, unit.body[i].c_str(), line);
 		}
 	}
+
+	// 1回目に、＊ごとの処理を集める（2回目の報告で呼び先をたどるのに使う）
+	if ( !ctx.reporting && is_talk ) {
+		ctx.talk_effects[name].merge(ctx.effect);
+	}
+	ctx.effect = SatoriLintEffect();
 }
 
 
@@ -849,6 +1132,9 @@ void	Satori::Lint(strpairvec& oMessages)
 
 	// 1回目は変数への代入などを集めるだけ。2回目に、集めたものを使って報告する。
 	for ( int pass=0 ; pass<2 ; ++pass ) {
+		if ( pass == 1 ) {
+			ctx.resolve_effects();	// 1回目で集めた＊ごとの処理から、呼ぶと処理が起きる＊を求める
+		}
 		ctx.reporting = ( pass == 1 );
 		for ( size_t f=0 ; f<files.size() ; ++f ) {
 			const LintFile&	file = files[f];

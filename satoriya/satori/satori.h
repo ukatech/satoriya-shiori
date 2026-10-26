@@ -128,6 +128,7 @@ struct BuiltinNameTables;
 
 // 静的検査（satori_lint.cpp）
 struct SatoriLintContext;
+struct SatoriLintEffect;
 struct satori_unit;
 
 class Satori : public Evalcator, public SakuraDLLHost
@@ -553,9 +554,11 @@ private:
 	void	lint_choice_target(SatoriLintContext& ctx, const wstring& target, int line);
 	void	lint_missing_target(SatoriLintContext& ctx, const wchar_t* what, const wstring& id, int line);
 	void	lint_kakko(SatoriLintContext& ctx, const wchar_t*& p, int line);
+	void	lint_kakko_inner(SatoriLintContext& ctx, const wchar_t*& p, int line);
 	void	lint_expression(SatoriLintContext& ctx, const wchar_t* p, int line);
 	void	lint_name(SatoriLintContext& ctx, const wstring& name, int line);
-	void	lint_function_call(SatoriLintContext& ctx, const FunctionCall& call, const wstring& name, bool has_nested, int line);
+	void	lint_function_call(SatoriLintContext& ctx, const FunctionCall& call, const wstring& name, const std::vector<SatoriLintEffect>& nested, int line);
+	void	lint_eager_branches(SatoriLintContext& ctx, const FunctionCall& call, const std::vector<SatoriLintEffect>& nested, int line);
 	void	lint_special_function(SatoriLintContext& ctx, const SatoriFunction& func, const strvec& args, int line);
 
 	// ShioriLint の結果（応答の ErrorLevel / ErrorDescription ヘッダになる）
