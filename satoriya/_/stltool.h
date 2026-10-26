@@ -711,6 +711,23 @@ T	round(T num, const int figure=0) {
 wstring	int2zen(int i);
 wstring ul2zen(unsigned long i);
 
+// 数式（calc）の数値は64bit整数（VC6には long long が無いので __int64）
+#if defined(_MSC_VER) && _MSC_VER <= 1200
+typedef __int64				calc_int;
+typedef unsigned __int64	calc_uint;
+#else
+typedef long long			calc_int;
+typedef unsigned long long	calc_uint;
+#endif
+
+// 10進数の文字列を数値に。範囲外は最大値・最小値にする
+calc_int	stoi64(const wchar_t* s);
+inline calc_int	stoi64(const wstring& s) { return stoi64(s.c_str()); }
+// 数値を10進数の文字列に（半角）
+wstring	i64tos(calc_int i);
+// 数値を10進数の文字列に（全角）
+wstring	i64tozen(calc_int i);
+
 int     zen2int(const wchar_t *str);
 inline int zen2int(const wstring &s)
 {

@@ -761,7 +761,7 @@ bool Satori::SubstVariable(const wstring &key,wstring &value,wstring &result,boo
 			calc_result = UnKakko(value.c_str(),true);
 			calc_ok = calc(calc_result);
 			if ( calc_ok && aredigits(calc_result) ) {
-				calc_result = int2zen(stoi_internal(calc_result));
+				calc_result = i64tozen(stoi64(calc_result));
 			}
 		}
 		const bool	is_number = calc_ok && aredigits(zen2han(calc_result));

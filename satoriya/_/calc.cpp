@@ -40,55 +40,10 @@ extern bool calc(const wchar_t* iExpression, wstring& oResult,bool isStrict);
 extern	bool calc(wstring& ioString,bool isStrict = false);
 
 
-// 数値は64bit整数（VC6には long long が無いので __int64）
-#if defined(_MSC_VER) && _MSC_VER <= 1200
-typedef __int64				calc_int;
-typedef unsigned __int64	calc_uint;
-#else
-typedef long long			calc_int;
-typedef unsigned long long	calc_uint;
-#endif
-
-static const calc_uint	CALC_INT_MAX = ~static_cast<calc_uint>(0) >> 1;
+// 数値は64bit整数（calc_int、stoi64、i64tos は stltool.h）
 
 // 文字列 * 数値 で作れる文字列の最大の長さ（文字数）
 static const calc_uint	CALC_MAX_STRING_LENGTH = 4 * 1024 * 1024;
-
-// 10進数の文字列を数値に。範囲外は wcstol と同じく最大値・最小値にする
-static calc_int	stoi64(const wstring& s) {
-	const wchar_t*	p = s.c_str();
-	const bool	minus = ( *p==L'-' );
-	if ( minus || *p==L'+' )
-		++p;
-	const calc_uint	limit = minus ? CALC_INT_MAX+1 : CALC_INT_MAX;
-	calc_uint	n = 0;
-	for ( ; *p>=L'0' && *p<=L'9' ; ++p ) {
-		const calc_uint	d = *p - L'0';
-		if ( n > (limit-d)/10 ) {
-			n = limit;
-			break;
-		}
-		n = n*10 + d;
-	}
-	return	static_cast<calc_int>( minus ? 0-n : n );
-}
-
-static wstring	i64tos(calc_int i) {
-	wchar_t	buf[24];
-	wchar_t*	p = buf + sizeof(buf)/sizeof(buf[0]) - 1;
-	*p = L'\0';
-	// 最小値は符号を反転できないので、符号なしで桁を求める
-	calc_uint	n = static_cast<calc_uint>(i);
-	if ( i<0 )
-		n = 0-n;
-	do {
-		*--p = static_cast<wchar_t>(L'0' + static_cast<int>(n%10));
-		n /= 10;
-	} while ( n!=0 );
-	if ( i<0 )
-		*--p = L'-';
-	return	p;
-}
 
 // 符号反転（最小値はそのまま）
 static calc_int	neg64(calc_int i) {

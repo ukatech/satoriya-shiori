@@ -637,6 +637,56 @@ wstring int2zen(int i) {
 	return	zen;
 }
 
+calc_int	stoi64(const wchar_t* p) {
+	const calc_uint	int_max = ~static_cast<calc_uint>(0) >> 1;
+	const bool	minus = ( *p==L'-' );
+	if ( minus || *p==L'+' )
+		++p;
+	const calc_uint	limit = minus ? int_max+1 : int_max;
+	calc_uint	n = 0;
+	for ( ; *p>=L'0' && *p<=L'9' ; ++p ) {
+		const calc_uint	d = *p - L'0';
+		if ( n > (limit-d)/10 ) {
+			n = limit;
+			break;
+		}
+		n = n*10 + d;
+	}
+	return	static_cast<calc_int>( minus ? 0-n : n );
+}
+
+wstring	i64tos(calc_int i) {
+	wchar_t	buf[24];
+	wchar_t*	p = buf + sizeof(buf)/sizeof(buf[0]) - 1;
+	*p = L'\0';
+	// Å¬’l‚Í•„†‚ğ”½“]‚Å‚«‚È‚¢‚Ì‚ÅA•„†‚È‚µ‚ÅŒ…‚ğ‹‚ß‚é
+	calc_uint	n = static_cast<calc_uint>(i);
+	if ( i<0 )
+		n = 0-n;
+	do {
+		*--p = static_cast<wchar_t>(L'0' + static_cast<int>(n%10));
+		n /= 10;
+	} while ( n!=0 );
+	if ( i<0 )
+		*--p = L'-';
+	return	p;
+}
+
+wstring	i64tozen(calc_int i) {
+	static const wchar_t*	ary[] = {L"‚O",L"‚P",L"‚Q",L"‚R",L"‚S",L"‚T",L"‚U",L"‚V",L"‚W",L"‚X"};
+
+	wstring	zen;
+	const wstring	han = i64tos(i);
+	const wchar_t* p=han.c_str();
+	if ( i<0 ) {
+		zen += L"|";
+		++p;	// •„†‚ğ”ò‚Î‚·
+	}
+	for (  ; *p != L'\0' ; ++p )
+		zen += ary[*p-L'0'];
+	return	zen;
+}
+
 wstring ul2zen(unsigned long i) {
 	static const wchar_t*	ary[] = { L"‚O", L"‚P", L"‚Q", L"‚R", L"‚S", L"‚T", L"‚U", L"‚V", L"‚W", L"‚X" };
 
