@@ -28,7 +28,7 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2,206,1,1
+ FILEVERSION 2,206,2,1
  PRODUCTVERSION 1,0,0,1
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
@@ -47,7 +47,7 @@ BEGIN
             VALUE "Comments", " \0"
             VALUE "CompanyName", " \0"
             VALUE "FileDescription", "satori\0"
-            VALUE "FileVersion", "2, 206, 1, 1\0"
+            VALUE "FileVersion", "2, 206, 2, 1\0"
             VALUE "InternalName", "satori\0"
             VALUE "LegalCopyright", " \0"
             VALUE "LegalTrademarks", "\0"
@@ -95,11 +95,20 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 //
+// Icon
+//
+
+// 最小の ID のアイコンが実行ファイルのアイコンになる
+IDI_SATORITE            ICON    DISCARDABLE     "satorite.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
 // Dialog
 //
 
 IDD_DIALOG DIALOGEX 0, 0, 223, 281
-STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU | 
+      WS_THICKFRAME
 CAPTION "さとりて"
 FONT 9, "ＭＳ Ｐゴシック", 0, 0, 0x1
 BEGIN
@@ -109,6 +118,7 @@ BEGIN
     EDITTEXT        IDC_EDIT2,7,198,209,61,ES_MULTILINE | ES_READONLY | 
                     WS_VSCROLL
     PUSHBUTTON      "終了(&X)",IDEXIT,7,181,28,14
+    PUSHBUTTON      "検査(&L)",IDC_LINT,40,181,28,14
     CONTROL         "辞書扱い",IDC_LIKE_DICT,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,98,264,43,10
     PUSHBUTTON      "Button1",IDCANCEL,166,175,50,14,NOT WS_VISIBLE

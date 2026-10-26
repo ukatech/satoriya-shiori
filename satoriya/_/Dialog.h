@@ -25,6 +25,8 @@ private:
 	virtual	BOOL	OnTimer( WPARAM wTimerID, TIMERPROC* tmprc ) { return FALSE; }
 	virtual BOOL	OnJoy1ButtonDown( WPARAM button, int x, int y ) { return FALSE; }
 	virtual	BOOL	OnCopyData( HWND hwndSender, PCOPYDATASTRUCT pcds) { return FALSE; }
+	virtual	BOOL	OnSize( UINT nType, int cx, int cy ) { return FALSE; }	// cx, cy はクライアント領域の大きさ
+	virtual	BOOL	OnGetMinMaxInfo( MINMAXINFO* pInfo ) { return FALSE; }
 	virtual	BOOL	OnClose() { return FALSE; }
 	virtual	BOOL	OnDestroy() { return FALSE; }
 

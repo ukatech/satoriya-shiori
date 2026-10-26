@@ -84,6 +84,16 @@ Dialog::DialogProcedure( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam )
 		return	sm_pDialog->OnJoy1ButtonDown( wParam, LOWORD(lParam), HIWORD(lParam) );
 	case WM_COPYDATA:
 		return	sm_pDialog->OnCopyData( (HWND)wParam, (PCOPYDATASTRUCT)lParam );
+	case WM_SIZE:
+	case WM_GETMINMAXINFO:
+		// WM_INITDIALOG ‚æ‚è‘O‚É“Í‚­‚±‚Æ‚ª‚ ‚éi‚»‚Ì‚Æ‚«‚Í‰½‚à‚µ‚È‚¢j
+		if ( sm_pDialog == NULL ) {
+			return	FALSE;
+		}
+		if ( message == WM_SIZE ) {
+			return	sm_pDialog->OnSize( (UINT)wParam, (int)LOWORD(lParam), (int)HIWORD(lParam) );
+		}
+		return	sm_pDialog->OnGetMinMaxInfo( (MINMAXINFO*)lParam );
 	case WM_CLOSE:
 		return	sm_pDialog->OnClose();
 	case WM_DESTROY:
