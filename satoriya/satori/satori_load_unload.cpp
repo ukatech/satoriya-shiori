@@ -284,9 +284,27 @@ bool	Satori::load(const wstring& iBaseFolder)
 	// セーブデータ読み込み
 	//bool oldConf = fEncodeSavedata;
 
-	bool loadResult = LoadDictionary(mBaseFolder + L"satori_savedata." + (fEncodeSavedata?L"sat":dic_load_ext.c_str()), false, is_utf8_savedata);
+	bool loadResult = false;
+	bool execResult = false;
+	bool fromSnapshot = false;
+
+	// リロードのときは、直前の Save が作った内容をそのまま使う。
+	// ファイルを経由すると、入れ替えに失敗したり他のプロセスに掴まれていたりしたときに、古い状態や初期値になってしまう。
+	if ( ! m_savedata_snapshot.empty() ) {
+		loadResult = LoadSavedataFromSnapshot();
+		GetSentence(L"セーブデータ");
+		execResult = talks.get_family(L"セーブデータ") != NULL;
+		fromSnapshot = loadResult && execResult;
+		std::string().swap(m_savedata_snapshot);
+	}
+
+	if ( fromSnapshot ) {
+		load_savedata_status = L"正常";
+	}
+	else {
+	loadResult = LoadDictionary(mBaseFolder + L"satori_savedata." + (fEncodeSavedata?L"sat":dic_load_ext.c_str()), false, is_utf8_savedata);
 	GetSentence(L"セーブデータ");
-	bool execResult = talks.get_family(L"セーブデータ") != NULL;
+	execResult = talks.get_family(L"セーブデータ") != NULL;
 
 	if ( ! loadResult || ! execResult ) {
 		loadResult = LoadDictionary(mBaseFolder + L"satori_savebackup." + (fEncodeSavedata?L"sat":dic_load_ext.c_str()), false, is_utf8_savedata);
@@ -295,6 +313,7 @@ bool	Satori::load(const wstring& iBaseFolder)
 
 		if ( ! loadResult || ! execResult ) {
 			load_savedata_status = L"失敗";
+			PreserveUnreadableSavedata();
 		}
 		else {
 			load_savedata_status = L"バックアップ";
@@ -302,6 +321,7 @@ bool	Satori::load(const wstring& iBaseFolder)
 	}
 	else {
 		load_savedata_status = L"正常";
+	}
 	}
 
 	talks.clear();
@@ -464,6 +484,11 @@ bool	Satori::Save(bool isOnUnload) {
 		}
 	}
 
+	// リロードで読み直すときのために、ファイルへの書き込みより先に内容を覚えておく。
+	if ( isOnUnload ) {
+		m_savedata_snapshot = out;
+	}
+
 	if ( !bytes_to_file(out, theFullPath) )
 	{
 		GetSender().sender() << L"failed." << std::endl;
@@ -471,18 +496,38 @@ bool	Satori::Save(bool isOnUnload) {
 	}
 
 	//バックアップ
-	// 旧ファイルが無いときは DeleteFile / MoveFile / rename が失敗するので、最後の入れ替えだけ確かめる。
+	// 旧バックアップは消さずに、今のセーブデータのコピーで上書きする。
+	// 入れ替えに失敗しても、旧セーブデータと旧バックアップが残るようにするため。
+	// 旧ファイルが無いときのコピーの失敗は無視する。確かめるのは、最後の入れ替えだけ。
 	wstring	realFullPath = mBaseFolder + L"satori_savedata." + (fEncodeSavedata?L"sat":dic_load_ext.c_str());
 	wstring	realFullPathBackup = mBaseFolder + L"satori_savebackup." + (fEncodeSavedata?L"sat":dic_load_ext.c_str());
-	bool	replaced;
+	bool	replaced = false;
 #ifdef POSIX
-	unlink(WtoUTF8(realFullPathBackup).c_str());
-	rename(WtoUTF8(realFullPath).c_str(),WtoUTF8(realFullPathBackup).c_str());
+	{
+		std::string	old_bytes;
+		if ( bytes_from_file(old_bytes, realFullPath) ) {
+			bytes_to_file(old_bytes, realFullPathBackup);
+		}
+	}
+	// rename は同名の既存ファイルを置き換える。
 	replaced = ( rename(WtoUTF8(theFullPath).c_str(),WtoUTF8(realFullPath).c_str()) == 0 );
 #else
-	::DeleteFile(realFullPathBackup.c_str());
-	::MoveFile(realFullPath.c_str(),realFullPathBackup.c_str());
-	replaced = ( ::MoveFile(theFullPath.c_str(),realFullPath.c_str()) != 0 );
+	::CopyFile(realFullPath.c_str(),realFullPathBackup.c_str(),FALSE);
+	// 他のプロセス（ウイルス対策・同期ソフトなど）が一時的に掴んでいると失敗するので、少し待って繰り返す。
+	for ( int retry=0 ; retry<=SATORI_FILE_RETRY_COUNT ; ++retry )
+	{
+		if ( retry>0 ) {
+			satori_sleep_ms(SATORI_FILE_RETRY_WAIT_MS);
+		}
+		replaced = ( ::MoveFileEx(theFullPath.c_str(),realFullPath.c_str(),MOVEFILE_REPLACE_EXISTING) != 0 );
+		if ( replaced ) {
+			break;
+		}
+		DWORD err = ::GetLastError();
+		if ( err != ERROR_SHARING_VIOLATION && err != ERROR_ACCESS_DENIED && err != ERROR_LOCK_VIOLATION ) {
+			break;
+		}
+	}
 #endif
 	if ( !replaced )
 	{
@@ -505,6 +550,46 @@ bool	Satori::Save(bool isOnUnload) {
 #endif
 
 	return	true;
+}
+
+//---------------------------------------------------------------------------
+// Save が覚えておいたセーブデータの内容を、ファイルを読むときと同じ手順で辞書として取り込む。
+bool	Satori::LoadSavedataFromSnapshot() {
+	std::vector<std::string>	lines;
+	split_lines(m_savedata_snapshot, lines);
+
+	if ( fEncodeSavedata ) {
+		// 暗号化を解除（バイト列の並べ替えなので文字コード変換の前に行う）
+		for ( std::vector<std::string>::iterator it=lines.begin() ; it!=lines.end() ; ++it )
+		{
+			*it = decode( decode(*it) );
+		}
+	}
+
+	// セーブデータは常にUTF-8で書いている。
+	strvec	body;
+	lines_to_strvec(lines, body, CS_UTF8);
+
+	GetSender().sender() << L"  loading savedata (reload)" << std::endl;
+	return LoadDictionaryLines(body, L"satori_savedata.snapshot", true, false);
+}
+
+//---------------------------------------------------------------------------
+// セーブデータもバックアップも読み込めなかったとき、ファイルが残っていれば別名で残しておく。
+// このまま次のセーブで初期値が上書きされると、元のデータが失われるため。
+// 2回目以降は、最初に残したものを上書きしない（初期値になった後のデータで置き換わらないように）。
+void	Satori::PreserveUnreadableSavedata() {
+	wstring	src = mBaseFolder + L"satori_savedata." + (fEncodeSavedata?L"sat":dic_load_ext.c_str());
+	wstring	dst = mBaseFolder + L"satori_savedata_failed." + (fEncodeSavedata?L"sat":dic_load_ext.c_str());
+
+	bool FileExist(const wstring& f);
+	if ( FileExist(dst.c_str()) ) {
+		return;
+	}
+	std::string	bytes;
+	if ( bytes_from_file(bytes, src) && ! bytes.empty() && bytes_to_file(bytes, dst) ) {
+		GetSender().sender() << L"セーブデータを読み込めなかったため、元のファイルを " << get_file_name(dst) << L" に残しました。" << std::endl;
+	}
 }
 
 //---------------------------------------------------------------------------

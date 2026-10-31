@@ -131,6 +131,11 @@ struct SatoriLintContext;
 struct SatoriLintEffect;
 struct satori_unit;
 
+// 他のプロセス（ウイルス対策・同期ソフトなど）が掴んでいるファイルを、少し待って開き直すときの回数と間隔。
+#define	SATORI_FILE_RETRY_COUNT	20
+#define	SATORI_FILE_RETRY_WAIT_MS	50
+void	satori_sleep_ms(unsigned int ms);
+
 class Satori : public Evalcator, public SakuraDLLHost
 {
 
@@ -283,6 +288,12 @@ private:
 	bool auto_newline_enable_onetime;
 
 	wstring load_savedata_status;
+
+	// リロード（＄辞書フォルダ・＄辞書リロード）のとき、Save が作ったセーブデータの内容をそのまま持つ。
+	// load はファイルの代わりにこれを読むので、ファイルの入れ替えに失敗しても状態を失わない。
+	std::string	m_savedata_snapshot;
+	bool	LoadSavedataFromSnapshot();
+	void	PreserveUnreadableSavedata();
 
 	std::map<int, int>	default_surface;
 	std::map<int, int>	surface_add_value;
@@ -448,6 +459,7 @@ private:
 
 	int	 LoadDicFolder(const wstring& path);
 	bool LoadDictionary(const wstring& filename,bool warnFileName,bool isUTF8,bool forLint = false);
+	bool LoadDictionaryLines(const strvec& file_vec, const wstring& iFileName, bool isUTF8, bool forLint);
 
 	// 読み込んだ辞書ファイル（パス、UTF-8か）。lint が同じ手順で読み直すために覚えておく。
 	// セーブデータは含まない。

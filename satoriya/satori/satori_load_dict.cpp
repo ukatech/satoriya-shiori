@@ -241,6 +241,13 @@ wstring	Satori::SentenceToSakuraScriptExec_with_PreProcess(const strvec& i_vec)
 	return SentenceToSakuraScriptExec(vec);
 }
 
+#ifdef POSIX
+#  include <unistd.h>
+void	satori_sleep_ms(unsigned int ms) { usleep(ms * 1000); }
+#else
+void	satori_sleep_ms(unsigned int ms) { ::Sleep(ms); }
+#endif
+
 // .txtと.satの両方がくるので、新しい方だけを読み込む。
 bool Satori::select_dict_and_load_to_vector(const wstring& iFileName, strvec& oFileBody, bool warnFileName, CharactorSet cs)
 {
@@ -281,7 +288,15 @@ bool Satori::select_dict_and_load_to_vector(const wstring& iFileName, strvec& oF
 
 	GetSender().sender() << L"  loading " << get_file_name(file);
 	std::string bytes;
-	if ( !bytes_from_file(bytes, file) )
+	bool	read_ok = bytes_from_file(bytes, file);
+	// ファイルはあるのに読めないときは、他のプロセス（ウイルス対策や同期ソフトなど）が
+	// 一時的に掴んでいることがあるので、少し待って読み直す。
+	for ( int retry=0 ; !read_ok && retry<SATORI_FILE_RETRY_COUNT && FileExist(file.c_str()) ; ++retry )
+	{
+		satori_sleep_ms(SATORI_FILE_RETRY_WAIT_MS);
+		read_ok = bytes_from_file(bytes, file);
+	}
+	if ( !read_ok )
 	{
 		GetSender().sender() << L"... failed.";
 		return	false;
@@ -322,6 +337,13 @@ bool Satori::LoadDictionary(const wstring& iFileName,bool warnFileName,bool isUT
 		return false;
 	}
 
+	return LoadDictionaryLines(file_vec, iFileName, isUTF8, forLint);
+}
+
+// 読み込み済みの行（文字コード変換と暗号化の解除まで済んだもの）を辞書として取り込む。
+// iFileName は辞書の名前として使う（ログとアンカー辞書の判定）。
+bool Satori::LoadDictionaryLines(const strvec& file_vec, const wstring& iFileName, bool isUTF8, bool forLint)
+{
 	if ( forLint )
 	{
 		m_dic_files.push_back( std::make_pair(iFileName, isUTF8) );
