@@ -85,8 +85,10 @@ class escaper
 	// 私用領域の文字を使っている。
 	static const wchar_t sm_escape_code[2];
 
-	//map<string, int> m_str2id;
+	std::map<wstring, long> m_str2id;
 	std::vector<wstring> m_id2str;
+
+	void unescape_impl(wstring& io_str, const wchar_t* i_prefix);
 
 public:
 	// 引数文字列を受け取り、メンバに格納し、「エスケープされた文字列」を返す。

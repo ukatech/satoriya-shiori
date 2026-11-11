@@ -125,7 +125,20 @@ inline unsigned long stoui(const wstring& s) { return wcstoul(s.c_str(),NULL,10)
 inline unsigned long stoui(const wchar_t* s) { return wcstoul(s,NULL,10); }
 
 // 書式は数値1つを取るprintf書式（ASCIIのみ）
-inline wstring	itos(long i, const wchar_t* iFormat=L"%ld") { char buf[64]; sprintf(buf,w_to_ascii(iFormat).c_str(),i); return ascii_to_w(buf); }
+inline wstring	itos(long i, const wchar_t* iFormat=L"%ld")
+{
+	// 既定の書式 %ld は sprintf と文字コード変換を通さずに直接組み立てる（変数・計算結果・エスケープの番号で多用される）
+	if ( iFormat[0]==L'%' && iFormat[1]==L'l' && iFormat[2]==L'd' && iFormat[3]==L'\0' ) {
+		wchar_t wbuf[3 * sizeof(long) + 2];	// 64bit の long なら符号と19桁で20文字
+		wchar_t* e = wbuf + sizeof(wbuf) / sizeof(wbuf[0]);
+		wchar_t* p = e;
+		unsigned long u = ( i < 0 ) ? 0UL - (unsigned long)i : (unsigned long)i;
+		do { *--p = (wchar_t)(L'0' + u % 10); u /= 10; } while ( u != 0 );
+		if ( i < 0 ) { *--p = L'-'; }
+		return wstring(p, e - p);
+	}
+	char buf[64]; sprintf(buf,w_to_ascii(iFormat).c_str(),i); return ascii_to_w(buf);
+}
 inline wstring	uitos(unsigned long i, const wchar_t* iFormat=L"%lu") { char buf[64]; sprintf(buf,w_to_ascii(iFormat).c_str(),i); return ascii_to_w(buf); }
 
 // 実数の読み書き。ロケールの小数点（localeconv）に依らず、常に . を小数点として扱う。

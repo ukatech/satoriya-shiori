@@ -64,35 +64,86 @@ const wchar_t escaper::sm_escape_code[2]={(wchar_t)0xE09E,0x00};
 // 引数文字列を受け取り、メンバに格納し、「エスケープされた文字列」を返す。
 wstring escaper::insert(const wstring& i_str)
 {
-	std::vector<wstring>::iterator it = std::find(m_id2str.begin(),m_id2str.end(),i_str);
-	if ( it != m_id2str.end() ) {
-		return wstring() + sm_escape_code + itos(std::distance(m_id2str.begin(),it)) + L" ";
+	long id;
+	std::map<wstring,long>::const_iterator it = m_str2id.find(i_str);
+	if ( it != m_str2id.end() ) {
+		id = it->second;
 	}
 	else {
+		id = (long)m_id2str.size();
 		m_id2str.push_back(i_str);
-		return wstring() + sm_escape_code + itos(m_id2str.size()-1) + L" ";
+		m_str2id.insert(std::make_pair(i_str, id));
 	}
+	return wstring() + sm_escape_code + itos(id) + L" ";
+}
+
+// 「印 + 番号 + 半角空白」を、記録した文字列に置き換える。1回の走査で済ませる。
+// 印が無い（ほとんどの）文字列では、探すだけで戻る。
+void escaper::unescape_impl(wstring& io_str, const wchar_t* i_prefix)
+{
+	if ( m_id2str.empty() ) {
+		return;
+	}
+	const wchar_t	mark = sm_escape_code[0];
+	wstring::size_type	pos = io_str.find(mark);
+	if ( pos == wstring::npos ) {
+		return;
+	}
+
+	const wstring::size_type	size = io_str.size();
+	const wstring::size_type	count = m_id2str.size();
+	const wstring::size_type	prefix_len = wcslen(i_prefix);
+	wstring	result;
+	result.reserve(size + 64);
+	wstring::size_type	copied = 0;	// io_str のここまでを result に写した
+
+	while ( pos != wstring::npos )
+	{
+		// 印の後ろの数字を読む。itos(i) と同じく、先頭の0は認めない。
+		wstring::size_type	q = pos + 1;
+		wstring::size_type	id = 0;
+		while ( q < size && io_str[q] >= L'0' && io_str[q] <= L'9' && q - pos <= 9 ) {
+			id = id * 10 + (io_str[q] - L'0');
+			++q;
+		}
+		const wstring::size_type	digits = q - (pos + 1);
+		const bool	ok = digits > 0
+			&& !( digits > 1 && io_str[pos + 1] == L'0' )
+			&& q < size && io_str[q] == L' '
+			&& id < count;
+
+		if ( ok ) {
+			result.append(io_str, copied, pos - copied);
+			if ( prefix_len > 0 ) {
+				result.append(i_prefix, prefix_len);
+			}
+			result.append(m_id2str[id]);
+			copied = q + 1;
+			pos = io_str.find(mark, copied);
+		}
+		else {
+			pos = io_str.find(mark, pos + 1);
+		}
+	}
+	result.append(io_str, copied, wstring::npos);
+	io_str.swap(result);
 }
 
 // 対象文字列中に含まれる「エスケープされた文字列」を元に戻す。
 void escaper::unescape(wstring& io_str)
 {
-	const int	max = m_id2str.size();
-	for (int i=0 ; i<max ; ++i)
-		replace(io_str, wstring(sm_escape_code)+itos(i)+L" ", m_id2str[i]);
+	unescape_impl(io_str, L"");
 }
 
 void escaper::unescape_for_dic(wstring& io_str)
 {
-	const int	max = m_id2str.size();
-	for (int i=0 ; i<max ; ++i)
-		replace(io_str, wstring(sm_escape_code)+itos(i)+L" ", L"φ"+m_id2str[i]);
+	unescape_impl(io_str, L"φ");
 }
 
 // メンバをクリア
 void escaper::clear()
 {
-	//m_str2id.clear();
+	m_str2id.clear();
 	m_id2str.clear();
 }
 
