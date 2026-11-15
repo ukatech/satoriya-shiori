@@ -15,6 +15,19 @@ msdev satori.dsw /MAKE "ssu - Win32 Release" /REBUILD /OUT "$env:TEMP\claude\sat
 - ログは `Get-Content <log> -Encoding oem` で読む。最終行の「ｴﾗｰ n、警告 n」を見る。ssu は変更前から警告5件（STLヘッダ由来）が出る。
 - 出力先は satori が `Release\`、satorite が `Release_ST\`、ssu が `Release_SU\`（`satori\Release\satorite.exe` などは古い残骸）。
 
+### Windows（最新の Visual Studio、Win32 / x64）
+`satori.sln`（vcxproj）で Win32 と x64 の両方を作れる。VS 2026（v145）なら次のようにする。vcxproj の `PlatformToolset` は v143 のままなので、手元のツールセットに合わせて `/p:PlatformToolset` で上書きする。
+
+```
+$msb = 'C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe'
+& $msb satori.vcxproj /t:Rebuild /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v145
+```
+
+- x64 の出力先は `Release_x64\`、`Release_ST_x64\`、`Release_SU_x64\`（Win32 は VC6 と同じ `Release\` など）。Win32 の vcxproj ビルドは VC6 の成果物（`Release\` など）を上書きするので、リリース用は VC6 で作り直す。
+- 64bit で通すために、`SendMessageTimeout` の結果は `SMTO_RESULT`（`_/Sender.h`。`GWLP_USERDATA` のある SDK では `DWORD_PTR`）、ウィンドウハンドルと整数の変換は `INT_PTR` を経由する。`DWORD_PTR` / `LONG_PTR` が無い古い SDK でも VC6 で通るよう、`#ifdef GWLP_USERDATA` で分けるか `INT_PTR`（VC6 付属の BASETSD.H にある）を使う。
+- vcxproj のソース一覧は dsp とずれやすい（`dsstp.cpp` / `charset.cpp` の漏れ、死んだ `TimeCommands.cpp` の混入があった）。ソースを足したら dsp と vcxproj の両方に入れる。
+- x64 の DLL は 32bit の harness では読めないので、動作確認はビルドまで。
+
 ### サブモジュール（uka_regexp）
 `satoriya/uka_regexp`（https://github.com/ukatech/uka_regexp 、`uka_regexp.h` と `uka_regexp.cpp` の2ファイル）は ssu の `regex_*` が使う正規表現エンジンで、git サブモジュールです。伺か共用の PCRE2 寄りのエンジンで、Unlicense のためライセンス表記は要りません。**ビルドの前に必ず最新にします**。
 

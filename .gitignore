@@ -29,3 +29,9 @@ satorite.dat
 /.claude
 .mcp.json
 temp-doc-*.md
+satoriya/satori/Debug_x64/
+satoriya/satori/Release_x64/
+satoriya/satori/Debug_ST_x64/
+satoriya/satori/Release_ST_x64/
+satoriya/satori/Debug_SU_x64/
+satoriya/satori/Release_SU_x64/
