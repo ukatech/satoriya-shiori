@@ -215,7 +215,7 @@ bool	Satori::GetURLList(const wstring& name, wstring& result)
 		wstring	url = (vec.size()<2) ? (L"") : (UnKakko(vec[1].c_str()));
 		wstring	banner = (vec.size()<3) ? (L"") : (UnKakko(vec[2].c_str()));
 		
-		int	len = menu.size()+url.size()+banner.size()+3;
+		int	len = (int)(menu.size()+url.size()+banner.size()+3);
 		result.reserve(result.size() + len + 1);
 		
 		result += menu;
@@ -380,7 +380,7 @@ void	Satori::erase_var(const wstring& key)
 			// Event’Ê’mŽž‚Ìˆø”Žæ“¾
 			if (ref>=0 && ref<mReferences.size()) {
 				mReferences[ref] = L"";
-				if ( ref == (mReferences.size()-1) ) {
+				if ( ref == (int)mReferences.size()-1 ) {
 					mReferences.pop_back();
 				}
 			}
@@ -395,7 +395,7 @@ void	Satori::erase_var(const wstring& key)
 			
 			if ( ref>=0 && ref < khr.size() ) {
 				khr[ref] = L"";
-				if ( ref == (khr.size()-1) ) {
+				if ( ref == (int)khr.size()-1 ) {
 					khr.pop_back();
 				}
 			}
@@ -407,7 +407,7 @@ void	Satori::erase_var(const wstring& key)
 			strvec&	v = mCallStack.top();
 			if ( ref >= 0 && ref < v.size() ) {
 				v[ref] = L"";
-				if ( ref == (v.size()-1) ) {
+				if ( ref == (int)v.size()-1 ) {
 					v.pop_back();
 				}
 			}
@@ -416,7 +416,7 @@ void	Satori::erase_var(const wstring& key)
 			// SAORI‚È‚ÇƒR[ƒ‹Žž‚ÌŒ‹‰Êˆ—
 			if (ref>=0 && ref<mKakkoCallResults.size()) {
 				mKakkoCallResults[ref] = L"";
-				if ( ref == (mKakkoCallResults.size()-1) ) {
+				if ( ref == (int)mKakkoCallResults.size()-1 ) {
 					mKakkoCallResults.pop_back();
 				}
 			}

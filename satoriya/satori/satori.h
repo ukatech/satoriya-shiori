@@ -37,7 +37,7 @@ typedef Families<Talk> AllTalks;
 #ifdef	_DEBUG
 	#define	DBG(a)	a
 #else
-	#define	DBG(a)	NULL
+	#define	DBG(a)	((void)0)
 #endif	//	_DEBUG
 
 //---------------------------------------------------------------------------

@@ -86,7 +86,7 @@ static bool	make_array(const wchar_t*& p, std::vector<calc_element>& oData, int 
 
 		int	len=0, i=0;
 		for (i=0 ; i<sizeof(oprs)/sizeof(oprs[0]) ; ++i) {
-			len = wcslen(oprs[i]);
+			len = (int)wcslen(oprs[i]);
 			if ( wcsncmp(p, oprs[i], len) == 0 )
 				break;
 		}

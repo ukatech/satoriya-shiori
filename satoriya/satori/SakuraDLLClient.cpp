@@ -51,7 +51,7 @@ wstring	SakuraDLLClient::request(const wstring& iRequestString)
 	}
 	const std::string theRequest = WtoMB(iRequestString, cs);
 
-	long len = theRequest.length();
+	long len = (long)theRequest.length();
 
 #ifdef POSIX
 	char* h = static_cast<char*>(malloc(len + 1));
@@ -254,7 +254,7 @@ bool	SakuraDLLClient::load(
 
 	if ( theLoad!=NULL )
 	{
-		long len = theFolder.length();
+		long len = (long)theFolder.length();
 #ifdef POSIX
 		char* h = static_cast<char*>(malloc(len + 1));
 #else

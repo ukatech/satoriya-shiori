@@ -36,6 +36,8 @@ public:
 	// Charsetを見ない古い呼び出し元にUTF-8で返すと文字化けするので、固定にしない。
 	virtual ~SaoriHost() {}
 
+	// 下の request が基底クラスの request を隠さないようにする
+	using SakuraDLLHost::request;
 	virtual SRV	request(std::deque<wstring>& iArguments, std::deque<wstring>& oValues)=0;
 		// iArgumentsはいじられます。
 };

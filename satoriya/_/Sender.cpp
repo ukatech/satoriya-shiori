@@ -215,7 +215,7 @@ bool Sender::send_to_window(const int mode,const wchar_t* theBuf)
 		// ‚ê‚µ‚Î‚ÍSJIS‚Ì‚Ý‘Î‰ž
 		mbstr = WtoSJIS(theBuf);
 		cds.dwData = 0;
-		cds.cbData = mbstr.size()+1;
+		cds.cbData = (DWORD)(mbstr.size()+1);
 		cds.lpData = const_cast<char*>(mbstr.c_str());
 	}
 	else /*MODE_TAMA*/ {
@@ -228,7 +228,7 @@ bool Sender::send_to_window(const int mode,const wchar_t* theBuf)
 			wstr += L"\n";
 		}
 
-		cds.cbData = (wstr.size()+1) * sizeof(wchar_t);
+		cds.cbData = (DWORD)((wstr.size()+1) * sizeof(wchar_t));
 		cds.lpData = const_cast<wchar_t*>(wstr.c_str());
 	}
 

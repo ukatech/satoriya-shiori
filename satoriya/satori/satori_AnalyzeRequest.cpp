@@ -311,7 +311,7 @@ int	Satori::request(
 
 			COPYDATASTRUCT cds;
 			cds.dwData = 0;
-			cds.cbData = copyData.length() + 1;
+			cds.cbData = (DWORD)(copyData.length() + 1);
 			cds.lpData = const_cast<char*>(copyData.c_str());
 			SMTO_RESULT ret;
 

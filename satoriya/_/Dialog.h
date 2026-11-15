@@ -52,15 +52,15 @@ public:
 
 	void	Check( int id, BOOL f=TRUE ) { ::SendMessage( toHWND(id), BM_SETCHECK, (WPARAM)f, 0 ); }
 	void	Uncheck( int id ) {  ::SendMessage( toHWND(id), BM_SETCHECK, (WPARAM)FALSE, 0 ); }
-	BOOL	isChecked( int id ) { return ::SendMessage( toHWND(id), BM_GETCHECK, 0, 0 ); }
-	BOOL	isChecked( LPARAM lParam ) { return ::SendMessage( (HWND)lParam, BM_GETCHECK, 0, 0 ); }
+	BOOL	isChecked( int id ) { return (BOOL)::SendMessage( toHWND(id), BM_GETCHECK, 0, 0 ); }
+	BOOL	isChecked( LPARAM lParam ) { return (BOOL)::SendMessage( (HWND)lParam, BM_GETCHECK, 0, 0 ); }
 
 	void	SetRange( int id, int min, int max ) {
 		::SendMessage( toHWND(id), TBM_SETRANGEMIN, FALSE, min );
 		::SendMessage( toHWND(id), TBM_SETRANGEMAX, TRUE, max );
 	}
-	int		GetPos( int id ) { return ::SendMessage( toHWND(id), TBM_GETPOS, 0 ,0 ); }
-	int		GetPos( LPARAM lParam ) { return ::SendMessage( (HWND)lParam, TBM_GETPOS, 0 ,0 ); }
+	int		GetPos( int id ) { return (int)::SendMessage( toHWND(id), TBM_GETPOS, 0 ,0 ); }
+	int		GetPos( LPARAM lParam ) { return (int)::SendMessage( (HWND)lParam, TBM_GETPOS, 0 ,0 ); }
 	void	SetPos( int id, int pos ) { ::SendMessage( toHWND(id), TBM_SETPOS, (WPARAM)TRUE , (LPARAM)pos ); }
 
 	void	GetText(int id, std::wstring& str) {
@@ -73,7 +73,7 @@ public:
 	std::wstring	GetText(int id) { std::wstring str; GetText(id, str); return str; }
 	void	SetText(int id, const std::wstring& str) { ::SetDlgItemText(m_hDlg, id, str.c_str()); }
 
-	int		GetTextLength(int id) { return ::SendMessage(toHWND(id), WM_GETTEXTLENGTH, 0, 0); }
+	int		GetTextLength(int id) { return (int)::SendMessage(toHWND(id), WM_GETTEXTLENGTH, 0, 0); }
 	void	GetText( int id, LPTSTR str, int max ) { ::GetDlgItemText( m_hDlg, id, str, max ); }
 	void	SetText( int id, const wchar_t* format, ... );
 	void	SetSel( int id, int nStart, int nEnd ) { ::SendDlgItemMessage( m_hDlg, id, EM_SETSEL, (WPARAM)nStart, (LPARAM)nEnd ); }
@@ -82,13 +82,13 @@ public:
 	void	End( int nResult ) { ::EndDialog( m_hDlg, nResult ); }
 
 	void	LB_ResetContent( int id ) { ::SendDlgItemMessage( m_hDlg, id, LB_RESETCONTENT, 0, 0 ); }
-	LONG	LB_AddString( int id, LPCTSTR str ) { return ::SendDlgItemMessage( m_hDlg, id, LB_ADDSTRING, 0, (LPARAM)str ); }
+	LONG	LB_AddString( int id, LPCTSTR str ) { return (LONG)::SendDlgItemMessage( m_hDlg, id, LB_ADDSTRING, 0, (LPARAM)str ); }
 	void	LB_SetCurSel( int id, int index ) { ::SendDlgItemMessage( m_hDlg, id, LB_SETCURSEL, (WPARAM)index, 0 ); }
-	LONG	LB_GetCurSel( int id ) { return ::SendDlgItemMessage( m_hDlg, id, LB_GETCURSEL, 0, 0 ); }
-	LONG	LB_GetSelCount( int id ) { ::SendDlgItemMessage( m_hDlg, id, LB_GETSELCOUNT, 0, 0 ); }
-	LONG	LB_GetText( int id, int index, LPTSTR buf ) { return ::SendDlgItemMessage( m_hDlg, id, LB_GETTEXT, (WPARAM)index, (LPARAM)buf ); }
-	LONG	LB_SetTopIndex( int id, int index ) { return ::SendDlgItemMessage( m_hDlg, id, LB_SETTOPINDEX, (WPARAM)index, 0 ); }
-	LONG	LB_GetCount(int id) { return ::SendDlgItemMessage( m_hDlg, id, LB_GETCOUNT, 0, 0 ); }
+	LONG	LB_GetCurSel( int id ) { return (LONG)::SendDlgItemMessage( m_hDlg, id, LB_GETCURSEL, 0, 0 ); }
+	LONG	LB_GetSelCount( int id ) { return (LONG)::SendDlgItemMessage( m_hDlg, id, LB_GETSELCOUNT, 0, 0 ); }
+	LONG	LB_GetText( int id, int index, LPTSTR buf ) { return (LONG)::SendDlgItemMessage( m_hDlg, id, LB_GETTEXT, (WPARAM)index, (LPARAM)buf ); }
+	LONG	LB_SetTopIndex( int id, int index ) { return (LONG)::SendDlgItemMessage( m_hDlg, id, LB_SETTOPINDEX, (WPARAM)index, 0 ); }
+	LONG	LB_GetCount(int id) { return (LONG)::SendDlgItemMessage( m_hDlg, id, LB_GETCOUNT, 0, 0 ); }
 
 	bool	LB_SelectText(int iID, LPCTSTR iBuf) {
 		TCHAR	theBuf[1024];
@@ -104,10 +104,10 @@ public:
 	}
 
 	void	CB_ResetContent( int id ) { ::SendDlgItemMessage( m_hDlg, id, CB_RESETCONTENT, 0, 0 ); }
-	LONG	CB_AddString( int id, LPCTSTR str ) { return ::SendDlgItemMessage( m_hDlg, id, CB_ADDSTRING, 0, (LPARAM)str ); }
+	LONG	CB_AddString( int id, LPCTSTR str ) { return (LONG)::SendDlgItemMessage( m_hDlg, id, CB_ADDSTRING, 0, (LPARAM)str ); }
 	void	CB_SetCurSel( int id, int index ) { ::SendDlgItemMessage( m_hDlg, id, CB_SETCURSEL, (WPARAM)index, 0 ); }
-	LONG	CB_GetCurSel( int id ) { return ::SendDlgItemMessage( m_hDlg, id, CB_GETCURSEL, 0, 0 ); }
-	LONG	CB_SetTopIndex( int id, int index ) { return ::SendDlgItemMessage( m_hDlg, id, CB_SETTOPINDEX, (WPARAM)index, 0 ); }
+	LONG	CB_GetCurSel( int id ) { return (LONG)::SendDlgItemMessage( m_hDlg, id, CB_GETCURSEL, 0, 0 ); }
+	LONG	CB_SetTopIndex( int id, int index ) { return (LONG)::SendDlgItemMessage( m_hDlg, id, CB_SETTOPINDEX, (WPARAM)index, 0 ); }
 
 	// ダイアログボックスを開始。終了するまで処理を戻さない。
 	virtual 

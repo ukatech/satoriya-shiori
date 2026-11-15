@@ -447,7 +447,7 @@ wstring	Satori::func_set(const strvec& iArgv, bool, bool)
 
 wstring	Satori::func_loop(const strvec& iArgv, bool, bool)
 {
-	int	init=1, max=0, step=1, arg_size=iArgv.size();
+	int	init=1, max=0, step=1, arg_size=(int)iArgv.size();
 	if ( arg_size==2 ) {
 		max=zen2int(iArgv[1]);
 	}
@@ -608,7 +608,7 @@ wstring	Satori::func_erase_variables(const strvec& iArgv, bool, bool)
 		wstring	value, result;
 		SubstVariable(*it, value, result, false);
 	}
-	return	itos(names.size());
+	return	itos((long)names.size());
 }
 
 // （変数の一括コピー、元の接頭辞、先の接頭辞）元の接頭辞を先の接頭辞に付け替えた名前へ代入する。コピーした個数を返す。
@@ -632,7 +632,7 @@ wstring	Satori::func_copy_variables(const strvec& iArgv, bool, bool)
 		wstring	result;
 		SubstVariable(key, values[i], result, false);
 	}
-	return	itos(names.size());
+	return	itos((long)names.size());
 }
 
 // （変数の列挙、接頭辞[、区切り]）名前が接頭辞で始まる変数の名前を、名前順に区切りでつないで返す。
@@ -695,7 +695,7 @@ wstring	Satori::func_split_to(const strvec& iArgv, bool, bool)
 		if ( old_count > MAX_ARRAY_INDEX ) {
 			old_count = MAX_ARRAY_INDEX;
 		}
-		for ( int k=vec.size() ; k<old_count ; ++k ) {
+		for ( int k=(int)vec.size() ; k<old_count ; ++k ) {
 			variables.erase(prefix + itos(k));
 		}
 	}
@@ -703,8 +703,8 @@ wstring	Satori::func_split_to(const strvec& iArgv, bool, bool)
 	for ( int i=0 ; i<vec.size() ; ++i ) {
 		variables[prefix + itos(i)] = vec[i];
 	}
-	variables[count_name] = itos(vec.size());
-	GetSender().sender() << L"split_to: " << prefix << L"0～ に " << itos(vec.size()) << L"個" << std::endl;
+	variables[count_name] = itos((long)vec.size());
+	GetSender().sender() << L"split_to: " << prefix << L"0～ に " << itos((long)vec.size()) << L"個" << std::endl;
 	return	L"";
 }
 
@@ -747,7 +747,7 @@ wstring	Satori::func_synthesized_words(const strvec& iArgv, bool, bool)
 			words.select_all(*it,*this,vt);
 		}
 		if ( vt.size() ) {
-			return *(vt[random(vt.size())]);
+			return *(vt[random((int)vt.size())]);
 		}
 		else {
 			return L"";
@@ -1165,7 +1165,7 @@ static bool SendExecuteSSTP(const void* i_target, const std::string& i_request, 
 
 	COPYDATASTRUCT cds;
 	cds.dwData = 9801;
-	cds.cbData = i_request.size();
+	cds.cbData = (DWORD)i_request.size();
 	cds.lpData = (void*)i_request.data();
 
 	// 相手はWM_COPYDATAの処理中に、こちらのウィンドウへWM_COPYDATAで返信してくるので、
@@ -1221,7 +1221,7 @@ int	Satori::ExecuteSSTP(const wstring& i_name, const wstring& i_command, const s
 
 	wstring request = L"EXECUTE SSTP/1.1\r\nCharset: UTF-8\r\nSender: Satori\r\nCommand: " + command + L"\r\n";
 	for ( strvec::size_type i = 0 ; i < references.size() ; ++i ) {
-		request += L"Reference" + itos(i) + L": " + references[i] + L"\r\n";
+		request += L"Reference" + itos((long)i) + L": " + references[i] + L"\r\n";
 	}
 	request += L"\r\n";
 
@@ -1347,7 +1347,7 @@ wstring	Satori::func_whenlist(const strvec& iArgv, bool for_calc, bool for_non_t
 		wstring exp = lhs + UnKakko(iArgv[i].c_str(), for_calc, for_non_talk);
 		int result = 0;
 		if (!calc_argument(exp, result, for_non_talk)) {
-			return L"' whenlistの" + itos((i - 1) / 2 + 1) + L"番目、式" + exp + L"は計算不能でした。";
+			return L"' whenlistの" + itos((long)((i - 1) / 2 + 1)) + L"番目、式" + exp + L"は計算不能でした。";
 		}
 		if (result != 0){
 			return	UnKakko(iArgv[i + 1].c_str(), for_calc, for_non_talk);
@@ -1903,13 +1903,13 @@ bool	Satori::var_argument_count(const wstring&, const wstring&, int iParam, wstr
 {
 	switch ( iParam ) {
 	case L'A':
-		oResult = mCallStack.empty() ? wstring(L"0") : itos(mCallStack.top().size());
+		oResult = mCallStack.empty() ? wstring(L"0") : itos((long)mCallStack.top().size());
 		break;
 	case L'R':
-		oResult = itos(mReferences.size());
+		oResult = itos((long)mReferences.size());
 		break;
 	case L'S':
-		oResult = itos(mKakkoCallResults.size());
+		oResult = itos((long)mKakkoCallResults.size());
 		break;
 	}
 	return	true;
@@ -1968,7 +1968,7 @@ bool	Satori::var_neighbor_ghost(const wstring&, const wstring&, int, wstring& oR
 
 bool	Satori::var_ghost_count(const wstring&, const wstring&, int, wstring& oResult)
 {
-	oResult = int2zen(otherghostname.size()+1); //自分自身はotherghostnameには含まないので +1
+	oResult = int2zen((int)(otherghostname.size()+1)); //自分自身はotherghostnameには含まないので +1
 	return	true;
 }
 
@@ -2100,8 +2100,8 @@ bool	Satori::var_count(const wstring&, const wstring& iArg, int, wstring& oResul
 int Satori::count_func(const wstring &name)
 {
 	if ( name==L"Words" ) { return words.size_of_family(); }
-	else if ( name==L"Variable" ) { return variables.size(); }
-	else if ( name==L"Anchor" ) { return anchors.size(); }
+	else if ( name==L"Variable" ) { return (int)variables.size(); }
+	else if ( name==L"Anchor" ) { return (int)anchors.size(); }
 	else if ( name==L"Talk" ) { return talks.size_of_element(); }
 	else if ( name==L"Word" ) { return words.size_of_element(); }
 	else if ( name==L"NoNameTalk" )
@@ -2138,7 +2138,7 @@ int Satori::count_func(const wstring &name)
 			it->second.get_elements_pointers(v);
 			for ( std::vector<const Talk*>::const_iterator el_it = v.begin() ; el_it != v.end() ; ++el_it )
 			{
-				n += (*el_it)->size();
+				n += (int)(*el_it)->size();
 			}
 		}
 		for ( std::map< wstring, Family<Word> >::const_iterator it = words.compatible().begin() ; it != words.compatible().end() ; ++it )
@@ -2217,7 +2217,7 @@ bool	Satori::var_is_talk_reserved(const wstring&, const wstring& iArg, int, wstr
 
 bool	Satori::var_reserved_talk_count(const wstring&, const wstring&, int, wstring& oResult)
 {
-	oResult = int2zen( reserved_talk.size() );
+	oResult = int2zen( (int)reserved_talk.size() );
 	return	true;
 }
 

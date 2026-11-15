@@ -23,7 +23,7 @@ bool	SetClipBoard(HWND iWnd, const wchar_t* iFormat, ...) {
 	va_end(theArgPtr);
 	theString[1023] = L'\0';	// 入りきらないときは終端が付かない
 
-	int	len = (wcslen(theString)+1) * sizeof(wchar_t);
+	const SIZE_T	len = (wcslen(theString)+1) * sizeof(wchar_t);
 	HGLOBAL	hGlobal = ::GlobalAlloc(GHND, len);
 	if ( hGlobal == NULL )
 		return	false;
@@ -107,7 +107,9 @@ PutWindowMessage( UINT message, WPARAM wParam, LPARAM lParam )
 {
 	TCHAR	buf[1024];
 #ifndef	_DEBUG
-	swprintf( buf, L"WM_0x%x\t\t\t( %x, %x )\n", message, wParam, lParam );
+	// WPARAM / LPARAM は 64bit では 8 バイトなので %I64x で出す
+	_snwprintf( buf, 1023, L"WM_0x%x\t\t\t( %I64x, %I64x )\n", message, (unsigned __int64)(UINT_PTR)wParam, (unsigned __int64)(UINT_PTR)lParam );
+	buf[1023] = L'\0';
 	::OutputDebugString(buf);
 #else
 	switch ( message ) {

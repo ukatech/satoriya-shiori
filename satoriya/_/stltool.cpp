@@ -351,7 +351,7 @@ size_t	char_pos_to_index(const wstring& str, size_t char_pos) {
 
 std::string	encode(const std::string& s) {
 	const char*	p = s.c_str();
-	int	len = s.size();
+	int	len = (int)s.size();
 	std::string	ret;
 	ret.reserve(len);
 
@@ -366,7 +366,7 @@ std::string	encode(const std::string& s) {
 
 std::string	decode(const std::string& s) {
 	const char*	p = s.c_str();
-	int	len = s.size();
+	int	len = (int)s.size();
 	std::string	ret;
 	ret.reserve(len);
 
@@ -390,7 +390,7 @@ static int	charactor_to_binary(char c) {
 }
 
 void	string_to_binary(const std::string& iString, byte* oArray) {
-	int	len = iString.size()/2;
+	int	len = (int)(iString.size()/2);
 	for ( int i=0 ; i<len ; ++i)
 		oArray[i] = charactor_to_binary(iString[i*2])*16 + charactor_to_binary(iString[i*2+1]);
 }
@@ -463,7 +463,7 @@ bool	compare_tail_s(const wchar_t* str, const wchar_t* tail)
 	size_t len = wcslen(tail);
 	size_t str_len = wcslen(str);
 
-	const int diff = str_len-len;
+	const int diff = (int)(str_len-len);
 	if ( diff < 0 ) {
 		return	false;
 	}
@@ -476,7 +476,7 @@ bool	compare_tail_nocase_s(const wchar_t* str, const wchar_t* tail)
 	size_t len = wcslen(tail);
 	size_t str_len = wcslen(str);
 
-	const int diff = str_len-len;
+	const int diff = (int)(str_len-len);
 	if ( diff < 0 ) {
 		return	false;
 	}

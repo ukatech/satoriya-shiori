@@ -671,7 +671,7 @@ int Satori::SentenceToSakuraScriptInternal(const strvec &vec,wstring &result,wst
 				static unsigned int tag_pattern_count = sizeof(tag_pattern)/sizeof(tag_pattern[0]);
 
 				for ( unsigned int tg = 0 ; tg < tag_pattern_count ; ++tg ) {
-					int len = wcslen(tag_pattern[tg]);
+					int len = (int)wcslen(tag_pattern[tg]);
 
 					if ( wcsncmp(p,tag_pattern[tg],len) == 0 ) {
 						cmd = tag_pattern[tg];

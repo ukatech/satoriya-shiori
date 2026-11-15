@@ -82,7 +82,7 @@ bool	Satori::Translate(wstring& ioScript) {
 						{
 							//script: ‚à‘ÎÛŠO
 
-							int	count = question_record.size() + 1;
+							int	count = (int)(question_record.size() + 1);
 							question_record.push_back( std::pair<wstring, wstring>(id, label) );
 
 							//id‚à•ª—£

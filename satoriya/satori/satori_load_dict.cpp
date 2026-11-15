@@ -206,7 +206,7 @@ bool pre_process(
 			//GetSender().sender() << line_number << " [" << accumulater << "]" << std::endl;
 			accumulater=L"";
 		}
-		else if ( line_number == in.size() ) 
+		else if ( line_number == (int)in.size() ) 
 		{
 			// ƒGƒ‰[
 			if ( o_report != NULL )

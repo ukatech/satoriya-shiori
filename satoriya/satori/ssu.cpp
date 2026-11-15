@@ -104,6 +104,10 @@ public:
 		setlocale(LC_ALL, "Japanese");
 		return true;
 	}
+	// 下の request が基底クラスの request を隠さないようにする（VC6 は間接基底への using を受け付けない）
+	virtual wstring	request(const wstring& i_request_string, CharactorSet i_request_charset) {
+		return	SakuraDLLHost::request(i_request_string, i_request_charset);
+	}
 	virtual SRV		request(std::deque<wstring>& iArguments, std::deque<wstring>& oValues);
 };
 SakuraDLLHost* SakuraDLLHost::m_dll = new ssu;
@@ -517,7 +521,7 @@ SRV _switch(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {
 		return	SRV(400, L"引数が足りません。");
 
 	const wstring	lhs = iArguments[0];
-	const int max = iArguments.size();
+	const int max = (int)iArguments.size();
 	for (int i=1 ; i<max ; i+=2) {
 		if ( i==max-1 ) // 引数が奇数個の場合、最後の１つはelse式
 			return	SRV(200, iArguments[i]);
@@ -535,7 +539,7 @@ SRV _iflist(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {
 		return	SRV(400, L"引数が足りません。");
 
 	const wstring	lhs = iArguments[0];
-	const int max = iArguments.size();
+	const int max = (int)iArguments.size();
 	for (int i=1 ; i<max ; i+=2) {
 		if ( i==max-1 ) // 引数が奇数個の場合、最後の１つはelse扱い。ここまできたら無条件でそれを返す。
 			return	SRV(200, iArguments[i]);
@@ -559,7 +563,7 @@ SRV _substr(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {
 	if ( iArguments.size()==1 )
 		return	SRV(200, p); // 引数１個なら全体を返す
 
-	const int	len = count_chars(p);
+	const int	len = (int)count_chars(p);
 
 	// 始点
 	int	start = zen2int(iArguments[1]);
@@ -617,7 +621,7 @@ SRV _split(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {
 
 	for ( strvec::iterator i=vec.begin() ; i!=vec.end() ; ++i )
 		oValues.push_back(*i);
-	return	SRV(200, itos(vec.size()));
+	return	SRV(200, itos((long)vec.size()));
 }
 
 SRV _split_string(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {
@@ -644,7 +648,7 @@ SRV _split_string(std::deque<wstring>& iArguments, std::deque<wstring>& oValues)
 
 	for ( strvec::iterator i=vec.begin() ; i!=vec.end() ; ++i )
 		oValues.push_back(*i);
-	return	SRV(200, itos(vec.size()));
+	return	SRV(200, itos((long)vec.size()));
 }
 
 SRV _join(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {
@@ -750,7 +754,7 @@ SRV _count(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {
 	if ( iArguments.size() >= 2 ) {
 		int cnt = 0;
 
-		int argsize = iArguments.size();
+		int argsize = (int)iArguments.size();
 
 		for ( int arg = 0 ; arg < (argsize-1) ; ++arg ) {
 			cnt += count(iArguments[arg], iArguments[argsize-1]);
@@ -805,7 +809,7 @@ SRV _compare_tail(std::deque<wstring>& iArguments, std::deque<wstring>& oValues)
 SRV _length(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {
 	if ( iArguments.size()<1 )
 		return	L"0";
-	return	itos( count_chars(iArguments[0]) );
+	return	itos( (long)count_chars(iArguments[0]) );
 }
 
 SRV _is_empty(std::deque<wstring>& iArguments, std::deque<wstring>& oValues) {
@@ -1024,7 +1028,7 @@ SRV _choice(std::deque<wstring>& iArguments, std::deque<wstring>& oValues)
 	{
 		return	L"";
 	}
-	return iArguments[ random(iArguments.size()) ];
+	return iArguments[ random((int)iArguments.size()) ];
 }
 
 static bool is_image_file_name(const wstring& name)
@@ -1055,7 +1059,7 @@ SRV _lsimg(std::deque<wstring>& iArguments, std::deque<wstring>& oValues)
 			oValues.push_back(wfd.cFileName);
 	} while (FindNextFile(h, &wfd));
 	FindClose(h);
-	return itos(oValues.size());
+	return itos((long)oValues.size());
 #else
 	DIR* dh = opendir(WtoUTF8(iArguments[0]).c_str());
 	if (dh == NULL)

@@ -219,7 +219,7 @@ static HGLOBAL return_bytes(const std::string& the_resp_str, long* io_data_len)
 		*io_data_len = 0;
 		return NULL;
 	}
-	*io_data_len = the_resp_str.size();
+	*io_data_len = (long)the_resp_str.size();
 	::CopyMemory(the_return_data, the_resp_str.c_str(), *io_data_len + 1);
 	return	the_return_data;
 }
@@ -309,7 +309,7 @@ wstring SakuraDLLHost::request(const wstring& i_request_string, CharactorSet i_r
 	wstring command = cut_token(rest, CRLF);
 	// 後ろから ' ' を探し、見つかればそれ以降をプロトコル部分として認識する
 	wstring protocol, protocol_version;
-	for ( int n = command.size()-1 ; n >= 0 ; --n )
+	for ( int n = (int)command.size()-1 ; n >= 0 ; --n )
 	{
 		if ( command[n] == L' ' )
 		{

@@ -265,7 +265,8 @@ bool	RunLint(strvec& oLines)
 	}
 
 	wchar_t	summary[128];
-	swprintf(summary, L"検査が終わりました。エラー %d 件、警告 %d 件", errors, warnings);
+	_snwprintf(summary, 127, L"検査が終わりました。エラー %d 件、警告 %d 件", errors, warnings);
+	summary[127] = L'\0';
 	oLines.push_back(summary);
 	return	errors > 0;
 }
@@ -456,13 +457,17 @@ class UserDialog : public Dialog {
 		RECT	rc;
 		::GetWindowRect(m_hDlg, &rc);
 		wchar_t	buf[32];
-		swprintf(buf, L"%d", (int)rc.left);
+		_snwprintf(buf, 31, L"%d", (int)rc.left);
+		buf[31] = L'\0';
 		gConf[L"WINDOW_X"] = buf;
-		swprintf(buf, L"%d", (int)rc.top);
+		_snwprintf(buf, 31, L"%d", (int)rc.top);
+		buf[31] = L'\0';
 		gConf[L"WINDOW_Y"] = buf;
-		swprintf(buf, L"%d", (int)(rc.right - rc.left));
+		_snwprintf(buf, 31, L"%d", (int)(rc.right - rc.left));
+		buf[31] = L'\0';
 		gConf[L"WINDOW_W"] = buf;
-		swprintf(buf, L"%d", (int)(rc.bottom - rc.top));
+		_snwprintf(buf, 31, L"%d", (int)(rc.bottom - rc.top));
+		buf[31] = L'\0';
 		gConf[L"WINDOW_H"] = buf;
 	}
 

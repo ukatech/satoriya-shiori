@@ -79,7 +79,7 @@ inline int check_operator(const wchar_t* p) {
 	static const int	num_oprs = sizeof(oprs)/sizeof(oprs[0]);
 
 	for (int i=0 ; i<num_oprs ; ++i) {
-		int len=wcslen(oprs[i]);
+		int len=(int)wcslen(oprs[i]);
 		if ( wcsncmp(p, oprs[i], len) == 0 )
 			return	len;
 	}

@@ -68,7 +68,7 @@ public:
 	virtual T select(const std::list<T>& i_candidates)
 	{
 		typename std::list<T>::const_iterator it = i_candidates.begin();
-		std::advance( it, random(i_candidates.size()) );
+		std::advance( it, random((int)i_candidates.size()) );
 		return *it;
 	}
 
@@ -111,7 +111,7 @@ public:
 
 			// 「未使用」からランダムに一つを選び出す
 			typename std::set<T>::iterator it = m_unused.begin();
-			std::advance( it, random(m_unused.size()) );
+			std::advance( it, random((int)m_unused.size()) );
 
 			// 選んだ一つを「未使用」から「使用済み」に移す
 			T t = *it;
@@ -219,7 +219,7 @@ public:
 		
 		// ランダムに一つ選ぶ
 		typename std::list<T>::const_iterator it = i_candidates.begin();
-		std::advance( it, random(i_candidates.size()) );
+		std::advance( it, random((int)i_candidates.size()) );
 		
 		if ( m_last != INVALID_VALUE )
 		{

@@ -179,7 +179,7 @@ BOOL sendDirectSSTP_for_NOTIFY(wstring client, wstring id, deque<wstring>& refs)
 	// ëóêM
 	const std::string sendBytes = WtoUTF8(strSendBuffer);
 	cds.dwData = MY_DIRECTSSTP_PORT;
-	cds.cbData = sendBytes.size();
+	cds.cbData = (DWORD)sendBytes.size();
 	cds.lpData = (LPVOID)sendBytes.c_str();
 	for(it = vec.begin(); it != vec.end(); it++)
 	{

@@ -187,7 +187,7 @@ public:
 		int r = 0;
 		for ( typename CondsMap::const_iterator i = m_conds_map.begin() ; i != m_conds_map.end() ; ++i )
 		{
-			r += i->second.size();
+			r += (int)i->second.size();
 		}
 		return r;
 	}

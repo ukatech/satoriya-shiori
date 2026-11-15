@@ -41,7 +41,7 @@ bool direct_sstp(
 	COPYDATASTRUCT cds;
 	cds.dwData = 9801; // ‚Å‚¢‚¢‚Ì‚©‚È
 	const std::string request_bytes = WtoUTF8(request);
-	cds.cbData = request_bytes.size();
+	cds.cbData = (DWORD)request_bytes.size();
 	cds.lpData = (LPVOID)request_bytes.c_str();
 
 	for( std::map<wstring, strmap>::iterator i=fmo.begin() ; i!=fmo.end() ; ++i )

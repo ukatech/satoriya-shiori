@@ -297,7 +297,7 @@ template<class T>
 int	split(const wchar_t* p, T& o) {
 	while ( *p != L'\0' )
 		o.push_back(next_a_chr(p).str());
-	return	o.size();
+	return	(int)o.size();
 }
 
 template<class T>
@@ -350,7 +350,7 @@ int	split(const wchar_t* p, const wchar_t* dp, T& o, int max_words=0, bool split
 		return 1;
 	}
 
-	return	o.size();
+	return	(int)o.size();
 }
 
 template<class T>
@@ -411,7 +411,7 @@ int	split_string(const wchar_t* p, const wchar_t* dp, T& o, int max_words=0, boo
 		return 1;
 	}
 
-	return	o.size();
+	return	(int)o.size();
 }
 
 template<class T>
@@ -444,7 +444,7 @@ inline int	splitToSet(const wstring& iString, std::set<wstring>& oSet, int iDeli
 	{
 		oSet.insert(start);
 	}
-	return	oSet.size();
+	return	(int)oSet.size();
 }
 
 
@@ -492,14 +492,14 @@ int	combine(wstring& out, const T& in, const wstring& dlmt=L"", bool add_dlmt_on
 		}
 	}
 	else {
-		int	size=in.size();
+		int	size=(int)in.size();
 		for (int n=0 ; n<size ; ++n,++i) {
 			append_grow(out, *i);
 			if (n<size-1)
 				append_grow(out, dlmt);
 		}
 	}
-	return	out.size();
+	return	(int)out.size();
 }
 template<class T>
 wstring	combine(const T& in, const wstring& dlmt=L"", bool add_dlmt_on_final=false) {

@@ -196,10 +196,10 @@ int	Satori::EventOperation(wstring iEvent, std::map<wstring,wstring> &oResponse)
 		on_loaded_script = L"";
 	}
 	else if ( iEvent==L"OnClose" || iEvent==L"OnGhostChanging" ) {
-		wstring	on_unloading_script = GetSentence(L"OnSatoriClose");
-		diet_script(on_unloading_script);
-		if ( !is_empty_script(on_unloading_script) )
-			script = on_unloading_script;
+		wstring	unloading_script = GetSentence(L"OnSatoriClose");
+		diet_script(unloading_script);
+		if ( !is_empty_script(unloading_script) )
+			script = unloading_script;
 	}
 	else if ( iEvent==L"OnMouseDragStart" ) {
 		if ( ! mousedown_exec_complete ) {
@@ -514,11 +514,11 @@ int	Satori::EventOperation(wstring iEvent, std::map<wstring,wstring> &oResponse)
 			}
 
 			if ( talk_interval>0 && --talk_interval_count<0 ) {
-				wstring	iEvent=L"OnTalk";
-				FindEventTalk(iEvent);
+				wstring	talk_event=L"OnTalk";
+				FindEventTalk(talk_event);
 
 				reset_speaked_status();
-				script=GetSentence(iEvent);
+				script=GetSentence(talk_event);
 
 				diet_script(script);
 				is_rnd_talk = true;
@@ -528,11 +528,11 @@ int	Satori::EventOperation(wstring iEvent, std::map<wstring,wstring> &oResponse)
 		//発話が発生してない場合、辞書が独自で実行する自動発話向けにOnSatoriSecondChangeを呼ぶ
 		if (is_empty_script(script))
 		{
-			wstring iEvent = L"OnSatoriSecondChange";
-			FindEventTalk(iEvent);
+			wstring second_change_event = L"OnSatoriSecondChange";
+			FindEventTalk(second_change_event);
 
 			reset_speaked_status();
-			script = GetSentence(iEvent);
+			script = GetSentence(second_change_event);
 
 			diet_script(script);
 			if (!is_empty_script(script))

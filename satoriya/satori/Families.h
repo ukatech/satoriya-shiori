@@ -102,7 +102,7 @@ public:
 	// family数
 	int size_of_family() const
 	{
-		return m_elements.size();
+		return (int)m_elements.size();
 	}
 	
 	// 全Familyの全要素数を計算
@@ -145,7 +145,7 @@ public:
 		
 		//無効、起動中　など複数指定の場合がある
 		strvec argv;
-		const int n = split(i_value, L"、,", argv);
+		split(i_value, L"、,", argv);
 		const wstring method = (argv.size()>=1) ? argv[0] : L"無効";
 		const wstring span = (argv.size()>=2) ? argv[1] : L"起動中";
 		
@@ -277,13 +277,13 @@ public:
 					else {
 						//単語一致。点数計算。
 						if ( type == COMSEARCH_LENGTH ) {
-							hit_point += 10*count_chars(*wds_it);
+							hit_point += (int)(10*count_chars(*wds_it));
 						}
 						else if (type == COMSEARCH_TAG){
 							hit_point = 100;
 						}
 						else {
-							hit_point += 10+(count_chars(*wds_it)/2);	// SJIS時代のバイト数/4相当
+							hit_point += (int)(10+(count_chars(*wds_it)/2));	// SJIS時代のバイト数/4相当
 						}
 					}
 				}
@@ -359,7 +359,7 @@ public:
 			return	NULL;
 		}
 
-		const Talk* res = result[ random(result.size()) ];
+		const Talk* res = result[ random((int)result.size()) ];
 
 		//選択したものを重複回避に渡し直す
 		//外部選択になっているので例外的…
