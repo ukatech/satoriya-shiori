@@ -109,11 +109,11 @@ int	Satori::EventOperation(wstring iEvent, std::map<wstring,wstring> &oResponse)
 			strmap &ghost = ghosts_info[0];
 			strmap::const_iterator it = ghost.find(L"hwnd");
 			if ( it != ghost.end() ) {
-				characters_hwnd[0] = (void*)(stoi_internal(it->second));
+				characters_hwnd[0] = (void*)(INT_PTR)(stoi_internal(it->second));
 			}
 			it = ghost.find(L"kerohwnd");
 			if ( it != ghost.end() ) {
-				characters_hwnd[1] = (void*)(stoi_internal(it->second));
+				characters_hwnd[1] = (void*)(INT_PTR)(stoi_internal(it->second));
 			}
 		}
 
@@ -302,10 +302,10 @@ int	Satori::EventOperation(wstring iEvent, std::map<wstring,wstring> &oResponse)
 			else {
 				if ( !insert_nade_talk_at_other_talk && updateGhostsInfo() ) {
 					wstring	hwnd_str = (ghosts_info[0])[L"hwnd"];
-					HWND	hwnd = (HWND)(stoi_internal(hwnd_str));
+					HWND	hwnd = (HWND)(INT_PTR)(stoi_internal(hwnd_str));
 					if ( hwnd!=NULL ) {
 						UINT	WM_SAKURAAPI = RegisterWindowMessage(L"Sakura");
-						DWORD ret_dword = 0;
+						SMTO_RESULT ret_dword = 0;
 						if ( ::SendMessageTimeout(hwnd, WM_SAKURAAPI, 140, 0,SMTO_BLOCK|SMTO_ABORTIFHUNG,5000,&ret_dword) ) { //GETGHOSTSTATE
 							ret = ret_dword;
 						}

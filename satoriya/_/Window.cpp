@@ -34,7 +34,11 @@ LRESULT	Window::WindowProcedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		LPCREATESTRUCT	pc = (LPCREATESTRUCT)lParam;
 		Window*	pw = (Window*)(pc->lpCreateParams);
 		pw->mWnd = hWnd;
+#ifdef GWLP_USERDATA
+		::SetWindowLongPtr(hWnd, 0, (LONG_PTR)pw);
+#else
 		::SetWindowLong(hWnd, 0, (long)pw);
+#endif
 		bool b = pw->OnCreate(pc);
 
 		gTaskbarCreatedMessage = ::RegisterWindowMessage(TEXT("TaskbarCreated"));
@@ -42,7 +46,11 @@ LRESULT	Window::WindowProcedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		return	b ? 0 : -1;
 	}
 
+#ifdef GWLP_USERDATA
+	Window*	p=(Window*)(::GetWindowLongPtr(hWnd, 0));
+#else
 	Window*	p=(Window*)(::GetWindowLong(hWnd, 0));
+#endif
 	if ( p == NULL )
 		return	::DefWindowProc(hWnd, message, wParam, lParam);
 

@@ -1,6 +1,7 @@
 #include "../_/stltool.h"
 #include "SSTPClient.h"
 #include "SakuraFMO.h"
+#include "../_/Sender.h"
 
 // ƒCƒxƒ“ƒg‚ð‘—‚é“z‚Æ‚©
 // http://futaba.sakura.st/sstp.html#notify11
@@ -32,7 +33,7 @@ bool direct_sstp(
 		L"SEND SSTP/1.1" + CRLF +
 		L"Charset: UTF-8" + CRLF +
 		L"Sender: " + i_client_name + CRLF +
-		L"HWnd: " + itos((int)i_client_window) + CRLF +
+		L"HWnd: " + itos((int)(INT_PTR)i_client_window) + CRLF +
 		L"Script: " + i_script + CRLF +
 		L"Option: notranslate" + CRLF +
 		CRLF;
@@ -45,13 +46,13 @@ bool direct_sstp(
 
 	for( std::map<wstring, strmap>::iterator i=fmo.begin() ; i!=fmo.end() ; ++i )
 	{
-		HWND host_window = (HWND)_wtoi(i->second[L"hwnd"].c_str());
+		HWND host_window = (HWND)(INT_PTR)_wtoi(i->second[L"hwnd"].c_str());
 		if ( host_window == NULL )
 		{
 			continue;
 		}
 		
-		DWORD ret_dword = 0;
+		SMTO_RESULT ret_dword = 0;
 		::SendMessageTimeout(host_window, WM_COPYDATA, (WPARAM)i_client_window, (LPARAM)&cds,SMTO_NORMAL|SMTO_ABORTIFHUNG,5000,&ret_dword);
 	}
 	return true;

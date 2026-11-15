@@ -116,7 +116,7 @@ extern "C" __declspec(dllexport) BOOL __cdecl loadu(HGLOBAL i_data, long i_data_
 // チェックツール（tama/tamac）のログ受信ウィンドウを指定する（YAYA互換）
 extern "C" __declspec(dllexport) BOOL __cdecl logsend(long hwnd)
 {
-	GetSender().set_receiver_window((HWND)hwnd);
+	GetSender().set_receiver_window((HWND)(INT_PTR)hwnd);
 	return TRUE;
 }
 #endif

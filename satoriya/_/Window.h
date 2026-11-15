@@ -169,7 +169,11 @@ public:
 	// 操作メソッド（主にAPIのラッパ）
 
 	operator HWND() { return mWnd; }
+#ifdef GWLP_HINSTANCE
+	HINSTANCE	Instance() { return (HINSTANCE)::GetWindowLongPtr(mWnd, GWLP_HINSTANCE); }
+#else
 	HINSTANCE	Instance() { return (HINSTANCE)::GetWindowLong(mWnd, GWL_HINSTANCE); }
+#endif
 	BOOL	Show(int iShowCommand) { return ::ShowWindow(mWnd, iShowCommand); }
 	LRESULT	SendMessage(UINT iMsg, WPARAM wParam=0, LPARAM lParam=0) { return ::SendMessage(mWnd, iMsg, wParam, lParam); }
 	LRESULT	PostMessage(UINT iMsg, WPARAM wParam=0, LPARAM lParam=0) { return ::PostMessage(mWnd, iMsg, wParam, lParam); }

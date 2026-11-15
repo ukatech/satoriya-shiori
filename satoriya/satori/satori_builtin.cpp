@@ -1170,7 +1170,7 @@ static bool SendExecuteSSTP(const void* i_target, const std::string& i_request, 
 
 	// 相手はWM_COPYDATAの処理中に、こちらのウィンドウへWM_COPYDATAで返信してくるので、
 	// 待っている間も送られてきたメッセージを処理できるよう、SMTO_BLOCKは付けない
-	DWORD ret_dword = 0;
+	SMTO_RESULT ret_dword = 0;
 	const LRESULT sent = ::SendMessageTimeout(target, WM_COPYDATA, (WPARAM)receiver, (LPARAM)&cds, SMTO_ABORTIFHUNG, i_timeout_ms, &ret_dword);
 
 	::DestroyWindow(receiver);
@@ -1954,7 +1954,7 @@ bool	Satori::var_window_handle(const wstring&, const wstring& iArg, int, wstring
 #ifdef POSIX
 		oResult = uitos((unsigned long)found->second);
 #else
-		oResult = uitos((unsigned int)found->second);
+		oResult = uitos((unsigned int)(UINT_PTR)found->second);	// ウィンドウハンドルは64bitでも32bitに収まる
 #endif // POSIX
 	}
 	return	true;
@@ -2345,7 +2345,7 @@ unsigned long Satori::FindTopLevelWindow(const wchar_t* txt,bool isPartial)
 
 	::EnumWindows(EnumWindowsProc,(LPARAM)&inf);
 
-	return (unsigned long)inf.hWnd;
+	return (unsigned long)(UINT_PTR)inf.hWnd;	// ウィンドウハンドルは64bitでも32bitに収まる
 #endif
 }
 

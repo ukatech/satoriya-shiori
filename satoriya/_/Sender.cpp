@@ -206,7 +206,7 @@ bool Sender::send_to_window(const int mode,const wchar_t* theBuf)
 	if ( !auto_init() ) { return false; }
 	
 	COPYDATASTRUCT cds;
-	DWORD ret_dword = 0;
+	SMTO_RESULT ret_dword = 0;
 
 	std::string mbstr;
 	std::wstring wstr;

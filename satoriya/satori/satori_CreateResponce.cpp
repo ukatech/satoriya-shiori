@@ -27,7 +27,7 @@ int		Satori::CreateResponse(strmap& oResponse)
 				characters_hwnd.clear();
 			}
 			for (int n=0 ; n<max ; ++n) {
-				characters_hwnd[n] = (void*)(stoi_internal(vec[n]));
+				characters_hwnd[n] = (void*)(INT_PTR)(stoi_internal(vec[n]));
 				GetSender().sender() << L"—¢X‚Í id:" << n << L" ‚ÌhWnd‚ðŽæ“¾‚µ‚Ü‚µ‚½B" << std::endl;
 			}
 		}

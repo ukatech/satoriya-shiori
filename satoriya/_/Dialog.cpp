@@ -57,7 +57,7 @@ Dialog::SetText( int id, const wchar_t* format, ... ) {
 }
 
 //---------------------------------------------------------------------
-BOOL	
+INT_PTR CALLBACK
 Dialog::DialogProcedure( HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam ) {
 
 //#ifdef	_DEBUG

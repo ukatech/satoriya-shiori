@@ -13,6 +13,13 @@ using std::wstring;
 
 #ifndef POSIX
 #include <windows.h> // for HWND
+
+// SendMessageTimeout ÇÃåãâ ÇÃå^ÅB64bit Ç≈ÇÕ DWORD_PTRÅiå√Ç¢ SDK Ç…ÇÕ DWORD_PTR Ç™ñ≥Ç¢Åj
+#ifdef GWLP_USERDATA
+typedef DWORD_PTR SMTO_RESULT;
+#else
+typedef DWORD SMTO_RESULT;
+#endif
 #endif
 
 namespace SenderConst {

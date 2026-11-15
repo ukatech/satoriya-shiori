@@ -13,7 +13,7 @@ class	Dialog {
 
 private:
 	static	Dialog*	sm_pDialog;
-	static	BOOL WINAPI DialogProcedure( HWND, UINT, WPARAM, LPARAM );
+	static	INT_PTR CALLBACK DialogProcedure( HWND, UINT, WPARAM, LPARAM );
 
 	// イベントハンドラ
 	virtual	BOOL	OnInitDialog( HWND hwndFocus, LONG lInitParam ) { return TRUE; }

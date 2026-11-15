@@ -97,7 +97,7 @@ BOOL CheckSakuraFileMapping(HWND hParentWnd, vector<HWND>& vec)
 				if ( !lpType1 ) { break; }
 				lpType1++;
 				lstrcpynA(szTemp, lpType2, min((int)sizeof(szTemp), lpType1 - lpType2));
-				hWnd = (HWND)atoi(szTemp);
+				hWnd = (HWND)(INT_PTR)atoi(szTemp);
 
 				vec.push_back(hWnd);
 			}
@@ -134,7 +134,11 @@ BOOL sendDirectSSTP_for_NOTIFY(wstring client, wstring id, deque<wstring>& refs)
 	HWND hParentWnd=NULL;
 	const wchar_t* szClient=client.c_str();
 	COPYDATASTRUCT cds;
+#ifdef GWLP_USERDATA
+	DWORD_PTR dwRet;	// 64bit ‚Å‚Í DWORD_PTR ‚ª—v‚é
+#else
 	DWORD dwRet;
+#endif
 	vector<HWND> vec;
 	vector<HWND>::iterator it;
 	wstring strSendBuffer;
