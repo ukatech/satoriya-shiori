@@ -203,13 +203,13 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\Release\ssu.bsc</OutputFile>
+      <OutputFile>.\Release_SU\ssu.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <LinkDLL>true</LinkDLL>
       <SubSystem>Console</SubSystem>
-      <OutputFile>.\Release\ssu.dll</OutputFile>
+      <OutputFile>.\Release_SU\ssu.dll</OutputFile>
       <ImportLibrary>.\Release\ssu.lib</ImportLibrary>
       <AdditionalDependencies>odbc32.lib;odbccp32.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -244,13 +244,13 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\Release_x64\ssu.bsc</OutputFile>
+      <OutputFile>.\Release_SU_x64\ssu.bsc</OutputFile>
     </Bscmake>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <LinkDLL>true</LinkDLL>
       <SubSystem>Console</SubSystem>
-      <OutputFile>.\Release_x64\ssu.dll</OutputFile>
+      <OutputFile>.\Release_SU_x64\ssu.dll</OutputFile>
       <ImportLibrary>.\Release_x64\ssu.lib</ImportLibrary>
       <AdditionalDependencies>odbc32.lib;odbccp32.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
