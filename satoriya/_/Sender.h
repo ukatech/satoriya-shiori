@@ -11,7 +11,10 @@
 #include      <wchar.h>
 using std::wstring;
 
-#ifndef POSIX
+#ifdef POSIX
+// ウィンドウハンドルと整数の変換用。POSIX では long がポインタと同じ大きさ
+typedef long INT_PTR;
+#else
 #include <windows.h> // for HWND
 
 // SendMessageTimeout の結果の型。64bit では DWORD_PTR（古い SDK には DWORD_PTR が無い）
