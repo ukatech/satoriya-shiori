@@ -43,6 +43,10 @@ void randomize(void)
 	dwSeed = ::GetTickCount();
 #endif
 
+	// 複数のインスタンスを同じ瞬間に読み込んでも、同じ乱数列にならないよう、呼ぶたびに値を変える
+	static unsigned int s_call_count = 0;
+	dwSeed ^= (s_call_count++) * 2654435761U;
+
 	init_genrand(dwSeed);
 }
 

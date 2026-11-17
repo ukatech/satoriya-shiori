@@ -231,20 +231,17 @@ wstring Satori::SentenceToSakuraScriptExec(const Talk& vec)
 	return allresult;
 }
 
-// 再帰の深さ。例外で途中から抜けたときに reset_nest_counters で戻せるよう、関数の外に置く。
-static int	g_sentence_internal_nest_count = 0;
-static int	g_get_sentence_nest_count = 0;
-
-void reset_nest_counters()
+// 再帰の深さを0に戻す。例外で途中から抜けたときに使う。
+void Satori::reset_nest_counters()
 {
-	g_sentence_internal_nest_count = 0;
-	g_get_sentence_nest_count = 0;
+	m_sentence_internal_nest_count = 0;
+	m_get_sentence_nest_count = 0;
 }
 
 int Satori::SentenceToSakuraScriptInternal(const strvec &vec,wstring &result,wstring &jump_to, std::ptrdiff_t &ip)
 {
 	// 再帰管理
-	int&	nest_count = g_sentence_internal_nest_count;
+	int&	nest_count = m_sentence_internal_nest_count;
 	++nest_count;
 	//DBG(GetSender().sender() << "enter SentenceToSakuraScriptInternal, nest-count: " << nest_count << ", vector_size: " << vec.size() << std::endl);
 
@@ -796,11 +793,11 @@ bool Satori::SubstVariable(const wstring &key,wstring &value,wstring &result,boo
 const Talk* Satori::GetSentenceInternal(wstring& ioSentenceName)
 {
 	// 再帰管理
-	int&	nest_count = g_get_sentence_nest_count;
+	int&	nest_count = m_get_sentence_nest_count;
 	++nest_count;
 
 	// ランダムトークが予約されていた場合の特殊処理。ただし１回のトーク生成で１回だけ。
-	static	bool	reserved_talk_processed;
+	bool&	reserved_talk_processed = m_reserved_talk_processed;
 	if ( nest_count==1 )
 		reserved_talk_processed=false;
 	if ( !reserved_talk_processed && (ioSentenceName==L"" || ioSentenceName==L"OnTalk") )

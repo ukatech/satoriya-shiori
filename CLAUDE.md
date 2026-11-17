@@ -131,10 +131,17 @@ git submodule update --init --remote satoriya/uka_regexp
   - `function_table` の「localのみ」が真のものは `SecurityLevel: local` 以外では実行されない。
 - ssu：`ssu.cpp`。satori.dll 内では SAORI を経由せず直接呼ばれ、ssu.dll 単体ビルドは `SSU_SAORI_CALL_INTERFACE` を定義した場合。`regex_*` は uka_regexp（オプション `i` `s` `m` `x`、置換後は `$1` `$&` `${名前}`）。パターンに定義の無いサブルーチン名（`(?&名前)` `\g<名前>`）は、`set_ssu_name_resolver` で渡される関数（`shiori_plugin.cpp` の `resolve_ssu_regex_name`。`Satori::Call` で `（名前）` を展開する）が解決する。解決した個数だけ、エンジンが呼び出し専用のグループを末尾に足すので、`regex_push_groups` では数えない。
 - `SakuraScript.cpp` / `main.cpp` / `cn.cpp` / `TimeCommands.cpp` はどのプロジェクトにも入っていない（死んだコード）。
+- マルチインスタンス（`multi_loadu` / `multi_load` / `multi_unload` / `multi_request` / `multi_Set_loghandler`。YAYA・華和梨と同じ形）：入口は `SakuraDLLHost.cpp` の末尾（`SATORI_DLL` か `POSIX` のビルドだけ。ssu.dll には入れない）。実体は `SakuraDLLHost::m_instances`（id が添字、0 は空き）に入り、従来の `load` / `request` / `unload` の実体（`gSatori`、`m_dll`）とは別。
+  - 実体を呼ぶ間は、必ず `SakuraDLLHostScope` を作る。`m_dll`（`I()`）・`GetSender()` の Sender・乱数（`mt19937_set_current`）を実体のものに差し替え、抜けると戻す。だから実体の中のコードは「自分が唯一の実体」として書ける。
+  - 実体ごとに持つ状態のうち、`Satori` のメンバでないのは Sender（`m_own_sender`）と乱数の状態（`m_own_mt`）だけ。残りは `Satori` のメンバ（再帰カウンタの `m_sentence_internal_nest_count` なども）。**新しい static を足すときは、定数表（遅延初期化）に限る。実体の状態はメンバに置く。**ある実体の呼び出しの途中で別の実体が呼ばれることがある（SAORI や SSTP を経由してベースウェアが同期で呼ぶ）ので、「1回のリクエストの中だけの値」でも static にしない。
+  - ssu の正規表現のサブルーチン名の解決先（`set_ssu_name_resolver`）はプロセスで1つだが、`ShioriPlugins::request` が SAORI を呼ぶたびに呼んだ実体を設定し直すので、実体どうしで混ざらない。
+  - VC6 は `Create<T>()` のようなメンバーテンプレートの明示的な型指定で内部エラーになる。`SakuraDLLHost::Add(new Satori())` の形にしてある。
+  - `multi_load*` は失敗で `-1`、`multi_unload` は存在しない id で FALSE、`multi_request` は NULL。渡したメモリは失敗しても解放する。里々の `load` は常に成功する。
 - ログ送信：`_/Sender.cpp`。送信先は `logsend(hwnd)` で渡されたウィンドウで、無ければ最初の送信時に れしば → tama（`TamaWndClass`）の順に FindWindow する。tama モードでは WM_COPYDATA の `dwData` がログコード（YAYA と同じ値）。errsender は E_E で送られ、`capability` で `response.errorlevel` 非対応と分かった後は MessageBox になる。
 
 ## 動作確認
 
+- **multi_harness**：`satoriya/test/harness/multi_harness.c`（辞書と使い方は同じフォルダの README.md）。マルチインスタンスのエクスポートを、変数・乱数・正規表現のサブルーチン名・ログのコールバックが混ざらないか、unload 後も残りが動くか、無効な id まで含めて確かめる。POSIX は `test/posix/posix_smoke.c` が同じ趣旨の確認をする。
 - **harness**：`satoriya/test/harness/harness.c`（使い方は同じフォルダの README.md）で、SSP を起動せずに satori.dll の `load` / `request` / `unload` を直接呼べる。リクエストも応答も生のバイト列（文字コード変換なし）なので、master の DLL には SJIS、unicode 版には Charset ヘッダに合わせたバイト列を渡して比較できる。
   - 辞書の例は、トークを `：` から書き始めるのが一般的。最初の `：` が `\0`、次が `\1` で、以後交互になる。`：` なしだと冒頭のデフォルトサーフェスの後の `\1` のまま話す。
   - トーク名をそのまま ID にすると、`On` で始まらない ID では冒頭のデフォルトサーフェス（`\0\s[0]\1\s[10]`）と末尾の `\e` が付かない。サーフェスを見るときは `On` で始まる名前にする。

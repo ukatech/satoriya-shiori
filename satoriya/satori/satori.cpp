@@ -14,7 +14,7 @@ const wchar_t* gSatoriName = L"Satori";
 const wchar_t* gSatoriNameW = L"—¢X";
 const wchar_t* gSatoriCraftman = L"Yagi Kushigahama/The Maintenance Shop";
 const wchar_t* gSatoriCraftmanW = L"‹ùƒ–•l‚â‚¬/®”õ”Ç";
-const wchar_t* gSatoriVersion = L"phase Mc206-7";
+const wchar_t* gSatoriVersion = L"phase Mc206-8";
 const wchar_t* gShioriVersion = L"3.0";
 const wchar_t* gSaoriVersion = L"1.0";
 
@@ -47,12 +47,8 @@ const wchar_t* gSatoriLicense =
 //#ifdef SATORI_DLL
 	// Satori‚Ì—Bˆê‚ÌÀ‘Ì
 	Satori gSatori;
-#ifdef POSIX
-	int SakuraDLLHost::m_id = 0;
-    std::vector<SakuraDLLHost *> SakuraDLLHost::m_dll(1, &gSatori);
-#else
+	// ]—ˆ‚Ì load / request / unload ‚ªˆµ‚¤À‘ÌBmulti_load* ‚Åì‚éÀ‘Ì‚Í SakuraDLLHost::m_instances ‚É“ü‚é
 	SakuraDLLHost* SakuraDLLHost::m_dll = &gSatori;
-#endif
 //#else
 //	SakuraDLLHost* SakuraDLLHost::m_dll = NULL;
 //#endif // SATORI_DLL
@@ -162,6 +158,9 @@ bool Satori::evalcate_to_bool(const Condition& i_cond)
 
 Satori::Satori()
 {
+	m_sentence_internal_nest_count = 0;
+	m_get_sentence_nest_count = 0;
+	m_reserved_talk_processed = false;
 	mShioriPlugins = new ShioriPlugins(this);
 }
 

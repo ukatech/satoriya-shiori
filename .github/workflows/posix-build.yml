@@ -27,12 +27,12 @@ jobs:
           ls -l libsatori.so
           file libsatori.so
 
-      # 入口の 7 個だけが公開され、内部の関数（乱数など）が公開されていないことを確かめる
+      # 入口の 12 個だけが公開され、内部の関数（乱数など）が公開されていないことを確かめる
       - name: Check exported symbols
         working-directory: satoriya/satori
         run: |
-          nm -D --defined-only libsatori.so | grep -E ' (load|unload|request|satori_load|satori_unload|satori_request|Set_loghandler)$'
-          test "$(nm -D --defined-only libsatori.so | grep -cE ' (load|unload|request|satori_load|satori_unload|satori_request|Set_loghandler)$')" -eq 7
+          nm -D --defined-only libsatori.so | grep -E ' (load|unload|request|satori_load|satori_unload|satori_request|Set_loghandler|multi_load|multi_loadu|multi_unload|multi_request|multi_Set_loghandler)$'
+          test "$(nm -D --defined-only libsatori.so | grep -cE ' (load|unload|request|satori_load|satori_unload|satori_request|Set_loghandler|multi_load|multi_loadu|multi_unload|multi_request|multi_Set_loghandler)$')" -eq 12
           if nm -D --defined-only libsatori.so | grep -E 'init_genrand|genrand_|randomizev|gen_randomv|6Satori'; then
             echo "internal symbols are exported"
             exit 1
@@ -64,12 +64,12 @@ jobs:
           ls -l libsatori.bundle
           file libsatori.bundle
 
-      # 入口の 7 個だけが公開され、内部の関数（乱数など）が公開されていないことを確かめる
+      # 入口の 12 個だけが公開され、内部の関数（乱数など）が公開されていないことを確かめる
       - name: Check exported symbols
         working-directory: satoriya/satori
         run: |
-          nm -gU libsatori.bundle | grep -E ' _(load|unload|request|satori_load|satori_unload|satori_request|Set_loghandler)$'
-          test "$(nm -gU libsatori.bundle | grep -cE ' _(load|unload|request|satori_load|satori_unload|satori_request|Set_loghandler)$')" -eq 7
+          nm -gU libsatori.bundle | grep -E ' _(load|unload|request|satori_load|satori_unload|satori_request|Set_loghandler|multi_load|multi_loadu|multi_unload|multi_request|multi_Set_loghandler)$'
+          test "$(nm -gU libsatori.bundle | grep -cE ' _(load|unload|request|satori_load|satori_unload|satori_request|Set_loghandler|multi_load|multi_loadu|multi_unload|multi_request|multi_Set_loghandler)$')" -eq 12
           if nm -gU libsatori.bundle | grep -E 'init_genrand|genrand_|randomizev|gen_randomv|6Satori'; then
             echo "internal symbols are exported"
             exit 1

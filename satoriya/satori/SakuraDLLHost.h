@@ -4,59 +4,51 @@
 #ifndef SAKURA_DLL_HOST_INCLUDED
 #define SAKURA_DLL_HOST_INCLUDED
 
+#include <vector>
+
+class Sender;
+struct mt19937_state;
+class SakuraDLLHostScope;
+
 // 「dllとして呼ばれる側」を作る際に使用するクラス。
 // これを継承したクラスを定義し、m_dllに唯一の実体を代入する。
+//
+// 従来の load / request / unload は、m_dll の実体（DLLに1つだけの既定の実体）を扱う。
+// multi_load* で作る実体は m_instances に入り、id（1以上）で区別する。
+// どちらの実体も、呼び出しの間だけ SakuraDLLHostScope で m_dll と Sender と乱数の状態を差し替えて動かすので、
+// 実体の中のコードは「自分が唯一の実体」として書いてよい。ロックはしないので、呼び出しは1つのスレッドから順に行うこと。
 class SakuraDLLHost : public SakuraCS
 {
-#ifdef POSIX
-private:
-	static int m_id;
 protected:
-	static std::vector<SakuraDLLHost *> m_dll;
-public:
-    // IDは m_dll の添字。他のIDがずれないよう、破棄しても vector からは取り除かず NULL にして、Create で再利用する。
-    // 0 は静的な実体（gSatori）なので、Create / Destroy の対象外。
-    template<typename T>
-    static int Create() {
-        T* p = new T();
-        for (size_t i = 1; i < m_dll.size(); ++i) {
-            if (m_dll[i] == NULL) {
-                m_dll[i] = p;
-                return static_cast<int>(i);
-            }
-        }
-        m_dll.push_back(p);
-        return static_cast<int>(m_dll.size() - 1);
-    }
-    // 無効な ID（範囲外、破棄済み、0）なら選択を変えず false を返す。
-    // 呼び出し側が無視すると、直前に選んでいた別のインスタンスを操作してしまう
-    static bool Select(int id) {
-        if (id <= 0 || static_cast<size_t>(id) >= m_dll.size() || m_dll[id] == NULL) {
-            return false;
-        }
-        m_id = id;
-        return true;
-    }
-    static void Destroy(int id) {
-        if (id <= 0 || static_cast<size_t>(id) >= m_dll.size() || m_dll[id] == NULL) {
-            return;
-        }
-        delete m_dll[id];
-        m_dll[id] = NULL;
-        if (m_id == id) {
-            m_id = 0;	// 選択中のものを破棄したら静的な実体に戻す（I() が NULL を返さないように）
-        }
-    }
-	static SakuraDLLHost* I() { return m_dll[m_id]; }
-#else
-protected:
+	// 現在の実体。呼び出しの間だけ SakuraDLLHostScope が差し替える。定義は各DLL側に置く。
 	static SakuraDLLHost* m_dll;
+
+	// multi_load* で作った実体。id が添字（0は従来の実体のために空けてあり、使わない）。
+	// 破棄しても vector からは取り除かず NULL にして、後の Register で再利用する（他の id がずれないように）。
+	static std::vector<SakuraDLLHost *> m_instances;
+
+	// マルチインスタンスの実体だけが持つ、実体専用のログ送信と乱数の状態。
+	// 従来の実体は NULL で、DLLに1つだけの既定のものを使う。
+	Sender*	m_own_sender;
+	mt19937_state*	m_own_mt;
+
+	friend class SakuraDLLHostScope;
+
 public:
 	static SakuraDLLHost* I() { return m_dll; }
-#endif // POSIX
 
-	SakuraDLLHost() : SakuraCS() {}
-	virtual ~SakuraDLLHost() {}
+	// new した実体（SakuraDLLHost の派生クラス）を表に登録し、実体専用の状態を作って、id（1以上）を返す。
+	// 実体の所有権を受け取る。失敗したら実体を delete して例外を投げる。
+	// （VC6 はメンバーテンプレートの明示的な型指定で内部エラーになるので、Create<T>() の形にしていない）
+	static long Add(SakuraDLLHost* i_instance);
+	// id の実体を返す。無効な id（0以下、範囲外、破棄済み）なら NULL。
+	static SakuraDLLHost* Find(long i_id);
+	// id の実体を unload して破棄する。無効な id なら false。
+	// 破棄は unload が例外を投げても行う。
+	static bool Destroy(long i_id);
+
+	SakuraDLLHost();
+	virtual ~SakuraDLLHost();
 
 	virtual bool	load(const wstring& i_base_folder) { return true; }
 	virtual bool	unload() { return true; }
@@ -91,5 +83,19 @@ public:
 		strpairvec& o_data)=0;
 };
 
-#endif //SAKURA_DLL_HOST_INCLUDED
+// ある実体を呼び出している間だけ、「現在の実体」を差し替える。スコープを抜けると元に戻す。
+// 実体の load / request / unload / 破棄、実体専用のログ送信の設定は、必ずこれを作ってから行う。
+class SakuraDLLHostScope
+{
+	SakuraDLLHost*	m_prev_host;
+	Sender*	m_prev_sender;
+	mt19937_state*	m_prev_mt;
 
+	SakuraDLLHostScope(const SakuraDLLHostScope&);
+	SakuraDLLHostScope& operator=(const SakuraDLLHostScope&);
+public:
+	explicit SakuraDLLHostScope(SakuraDLLHost* i_host);
+	~SakuraDLLHostScope();
+};
+
+#endif //SAKURA_DLL_HOST_INCLUDED

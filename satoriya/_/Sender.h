@@ -110,7 +110,13 @@ public:
 
 class Sender;
 
+// 現在のインスタンスの Sender を返す。何も選ばれていなければ、DLL に1つだけの既定の Sender。
 extern Sender& GetSender();
+
+// GetSender() が返す Sender を差し替える（NULL で既定の Sender に戻す）。
+// マルチインスタンスのホストが、呼び出しの間だけインスタンス専用の Sender を選ぶために使う。
+// 戻り値は直前に選ばれていたもの（既定なら NULL）。
+extern Sender* SetCurrentSender(Sender* i_sender);
 
 // Set_loghandler で渡されるログのコールバック（YAYA互換）
 typedef void (*sender_loghandler)(const wchar_t *str, int mode, int id);
@@ -146,8 +152,6 @@ class Sender
 	bool sm_buffering_flag;		// バッファリングモード
 	bool is_do_auto_initialize;
 
-	Sender();
-
 	bool initialize();
 	bool send_to_window(const int mode,const wchar_t* text);
 
@@ -155,6 +159,8 @@ class Sender
 
 	friend Sender& GetSender();
 public:
+	// 通常は GetSender() の既定の1つを使う。マルチインスタンスのホストだけが、インスタンスごとに作る。
+	Sender();
 	~Sender();
 
 	// このクラスのインスタンスのライフタイムに合わせ、ログ表示の際にネストを行う

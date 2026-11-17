@@ -17,3 +17,10 @@
 ＊OnRegexSub
 ＄year	\d{4}
 ：（regex_replace、abc2026def、(?&year)、#）
+
+＊OnMultiSet
+＄mv＝（Reference0）
+：set
+
+＊OnMultiGet
+：mv is （mv）

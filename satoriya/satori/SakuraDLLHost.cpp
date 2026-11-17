@@ -1,5 +1,8 @@
 #ifndef POSIX
 #  include <windows.h>
+#  ifdef SATORI_DLL
+#    include "satori.h"	// multi_load* で Satori の実体を作る
+#  endif
 #else
 #  include <stdlib.h>
 #  include <string.h>
@@ -8,6 +11,7 @@
 #include "SakuraDLLHost.h"
 #include <iostream>
 #include "../_/Sender.h"
+#include "../_/mt19937ar.h"
 
 //////////DEBUG/////////////////////////
 #include "warning.h"
@@ -25,6 +29,100 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL,DWORD fdwReason,LPVOID lpvReserved)
 	return TRUE;
 }
 #endif
+
+//---------------------------------------------------------------------------
+// マルチインスタンス（実体の表と、呼び出しの間だけ実体を差し替える仕組み）
+
+std::vector<SakuraDLLHost *> SakuraDLLHost::m_instances;
+
+SakuraDLLHost::SakuraDLLHost() : SakuraCS(), m_own_sender(NULL), m_own_mt(NULL)
+{
+}
+
+SakuraDLLHost::~SakuraDLLHost()
+{
+	if ( m_own_sender ) {
+		// 選ばれたままで消すと、ぶら下がった Sender を GetSender() が返してしまう
+		Sender* prev = SetCurrentSender(NULL);
+		if ( prev != m_own_sender ) {
+			SetCurrentSender(prev);
+		}
+		delete m_own_sender;
+		m_own_sender = NULL;
+	}
+	if ( m_own_mt ) {
+		mt19937_destroy(m_own_mt);
+		m_own_mt = NULL;
+	}
+}
+
+long SakuraDLLHost::Add(SakuraDLLHost* i_instance)
+{
+	try {
+		i_instance->m_own_sender = new Sender();
+		i_instance->m_own_mt = mt19937_create();
+
+		if ( m_instances.empty() ) {
+			m_instances.push_back(NULL);	// 添字0は従来の実体のために空けておく
+		}
+		for ( size_t i = 1 ; i < m_instances.size() ; ++i ) {
+			if ( m_instances[i] == NULL ) {
+				m_instances[i] = i_instance;
+				return static_cast<long>(i);
+			}
+		}
+		m_instances.push_back(i_instance);
+		return static_cast<long>(m_instances.size() - 1);
+	}
+	catch ( ... ) {
+		delete i_instance;	// 実体専用の状態は、デストラクタが片付ける
+		throw;
+	}
+}
+
+SakuraDLLHost* SakuraDLLHost::Find(long i_id)
+{
+	if ( i_id <= 0 || static_cast<size_t>(i_id) >= m_instances.size() ) {
+		return NULL;
+	}
+	return m_instances[i_id];
+}
+
+bool SakuraDLLHost::Destroy(long i_id)
+{
+	SakuraDLLHost* p = Find(i_id);
+	if ( p == NULL ) {
+		return false;
+	}
+	m_instances[i_id] = NULL;
+
+	SakuraDLLHostScope scope(p);	// 破棄の中のログも、この実体のものに出す
+	try {
+		p->unload();
+	}
+	catch ( ... ) {
+		// 例外を呼び出し元に漏らさない。破棄は続ける
+	}
+	delete p;
+	return true;
+}
+
+SakuraDLLHostScope::SakuraDLLHostScope(SakuraDLLHost* i_host)
+{
+	m_prev_host = SakuraDLLHost::m_dll;
+	SakuraDLLHost::m_dll = i_host;
+	m_prev_sender = SetCurrentSender(i_host->m_own_sender);
+	m_prev_mt = mt19937_set_current(i_host->m_own_mt);
+}
+
+SakuraDLLHostScope::~SakuraDLLHostScope()
+{
+	SakuraDLLHost::m_dll = m_prev_host;
+	SetCurrentSender(m_prev_sender);
+	mt19937_set_current(m_prev_mt);
+}
+
+//---------------------------------------------------------------------------
 
 // 受け取ったメモリをstd::stringにする。lenには終端のNULが含まれている場合もある。
 static std::string	to_bytes(const char* p, long len)
@@ -45,23 +143,6 @@ static std::string	to_bytes(const char* p, long len)
 #define SATORI_EXPORT __attribute__((visibility("default")))
 
 // POSIXではパスはUTF-8で渡される
-extern "C" SATORI_EXPORT int satori_load(char* i_data, long i_data_len) {
-//	GetSender().initialize();
-    wstring the_base_folder = UTF8toW(to_bytes(i_data, i_data_len));
-    free(i_data);
-    GetSender().sender() << the_base_folder << std::endl;
-    try {
-        int id = SakuraDLLHost::Create<Satori>();
-        SakuraDLLHost::Select(id);
-        SakuraDLLHost::I()->load(the_base_folder);
-        return id;
-    }
-    catch ( ... ) {
-        // 例外を呼び出し元に漏らさない
-        return 0;
-    }
-}
-
 extern "C" SATORI_EXPORT int load(char* i_data, long i_data_len) {
 //	GetSender().initialize();
     wstring the_base_folder = UTF8toW(to_bytes(i_data, i_data_len));
@@ -132,22 +213,6 @@ extern "C" __declspec(dllexport) void __cdecl Set_loghandler(void (*loghandler)(
 }
 
 #ifdef POSIX
-extern "C" SATORI_EXPORT int satori_unload(int id)
-{
-    if ( ! SakuraDLLHost::Select(id) ) {
-        return 0;
-    }
-	int ret = 0;
-	try {
-		ret = SakuraDLLHost::I()->unload();
-	}
-	catch ( ... ) {
-		// 例外を呼び出し元に漏らさない
-	}
-    SakuraDLLHost::Destroy(id);
-    return ret;
-}
-
 extern "C" SATORI_EXPORT int unload(void)
 #else
 extern "C" __declspec(dllexport) BOOL __cdecl unload(void)
@@ -188,19 +253,6 @@ static char* request_and_return(const std::string& the_req_str, long* io_data_le
         *io_data_len = 0;
         return NULL;
     }
-}
-
-extern "C" SATORI_EXPORT char* satori_request(int id, char* i_data, long* io_data_len) {
-    // グローバルメモリを受けとる
-    std::string the_req_str(i_data, *io_data_len);
-    free(i_data);
-
-    if ( ! SakuraDLLHost::Select(id) ) {
-        *io_data_len = 0;
-        return NULL;
-    }
-    // リクエスト実行
-    return request_and_return(the_req_str, io_data_len);
 }
 
 extern "C" SATORI_EXPORT char* request(char* i_data, long* io_data_len) {
@@ -265,6 +317,221 @@ extern "C" __declspec(dllexport) HGLOBAL __cdecl getversionlist(HGLOBAL i_data, 
 	}
 }
 #endif
+
+
+//---------------------------------------------------------------------------
+// マルチインスタンス用のエクスポート（仕様は ukadoc-spec の dll.md を参照）
+//  - 従来の load / request / unload とは別の実体を、id（1以上）で区別して作る。
+//  - 失敗したときは、multi_load* が -1、multi_unload が FALSE、multi_request が NULL を返す。
+//  - 渡されたメモリは、失敗しても必ず解放する。
+//  - 呼び出しは1つのスレッドから順に行う（ロックはしない）。
+//  - 里々の load は常に成功する。辞書の読み込みエラーはログに出るだけで、id は返る。
+//---------------------------------------------------------------------------
+#if defined(POSIX) || defined(SATORI_DLL)
+
+// 実体を作って load する。失敗したら破棄して -1 を返す。
+static long multi_load_common(const wstring& i_base_folder)
+{
+	long id = -1;
+	try {
+		id = SakuraDLLHost::Add(new Satori());
+		SakuraDLLHost* p = SakuraDLLHost::Find(id);
+
+		bool ok;
+		{
+			SakuraDLLHostScope scope(p);
+			GetSender().sender() << i_base_folder << std::endl;
+			ok = p->load(i_base_folder);
+		}
+		if ( ok ) {
+			return id;
+		}
+	}
+	catch ( ... ) {
+		// 例外を呼び出し元に漏らさない
+	}
+	if ( id > 0 ) {
+		try {
+			SakuraDLLHost::Destroy(id);
+		}
+		catch ( ... ) {
+		}
+	}
+	return -1;
+}
+
+// id の実体にリクエストを渡す。実体が無ければ false。
+static bool multi_request_common(long i_id, const std::string& i_request, std::string& o_response)
+{
+	SakuraDLLHost* p = SakuraDLLHost::Find(i_id);
+	if ( p == NULL ) {
+		return false;
+	}
+	SakuraDLLHostScope scope(p);
+	o_response = p->request_bytes(i_request);
+	return true;
+}
+
+static void multi_set_loghandler_common(long i_id, void (*i_loghandler)(const wchar_t *str, int mode, int id))
+{
+	SakuraDLLHost* p = SakuraDLLHost::Find(i_id);
+	if ( p == NULL ) {
+		return;
+	}
+	try {
+		SakuraDLLHostScope scope(p);
+		GetSender().set_loghandler(i_loghandler);
+	}
+	catch ( ... ) {
+	}
+}
+
+#ifdef POSIX
+
+// POSIXではパスは常にUTF-8。multi_load と multi_loadu は同じ
+extern "C" SATORI_EXPORT long multi_loadu(char* i_data, long i_data_len)
+{
+	wstring the_base_folder;
+	try {
+		the_base_folder = UTF8toW(to_bytes(i_data, i_data_len));
+	}
+	catch ( ... ) {
+	}
+	free(i_data);
+	return multi_load_common(the_base_folder);
+}
+
+extern "C" SATORI_EXPORT long multi_load(char* i_data, long i_data_len)
+{
+	return multi_loadu(i_data, i_data_len);
+}
+
+extern "C" SATORI_EXPORT int multi_unload(long id)
+{
+	try {
+		return SakuraDLLHost::Destroy(id) ? 1 : 0;
+	}
+	catch ( ... ) {
+		return 0;
+	}
+}
+
+extern "C" SATORI_EXPORT char* multi_request(long id, char* i_data, long* io_data_len)
+{
+	std::string the_req_str;
+	try {
+		the_req_str.assign(i_data, *io_data_len);
+	}
+	catch ( ... ) {
+	}
+	free(i_data);
+
+	try {
+		std::string resp;
+		if ( ! multi_request_common(id, the_req_str, resp) ) {
+			*io_data_len = 0;
+			return NULL;
+		}
+		return return_bytes(resp, io_data_len);
+	}
+	catch ( ... ) {
+		*io_data_len = 0;
+		return NULL;
+	}
+}
+
+extern "C" SATORI_EXPORT void multi_Set_loghandler(long id, void (*loghandler)(const wchar_t *str, int mode, int id))
+{
+	multi_set_loghandler_common(id, loghandler);
+}
+
+// 以前からある名前。multi_ 系と同じ表を使う。失敗したら 0 を返す（multi_ 系は -1）。
+extern "C" SATORI_EXPORT int satori_load(char* i_data, long i_data_len)
+{
+	long id = multi_loadu(i_data, i_data_len);
+	return id > 0 ? static_cast<int>(id) : 0;
+}
+
+extern "C" SATORI_EXPORT int satori_unload(int id)
+{
+	// 以前から、無効な id では 0 を返し、有効なら里々の unload の戻り値（常に1）を返す
+	return multi_unload(id);
+}
+
+extern "C" SATORI_EXPORT char* satori_request(int id, char* i_data, long* io_data_len)
+{
+	return multi_request(id, i_data, io_data_len);
+}
+
+#else
+
+// 従来の load / loadu と違い、s_loadu_called は見ない（実体ごとに独立しているので、どちらでも作れる）
+static long multi_load_from(HGLOBAL i_data, long i_data_len, bool i_utf8)
+{
+	wstring the_base_folder;
+	try {
+		const std::string bytes = to_bytes((const char*)::GlobalLock(i_data), i_data_len);
+		the_base_folder = i_utf8 ? UTF8toW(bytes) : ACPtoW(bytes);
+	}
+	catch ( ... ) {
+	}
+	::GlobalFree(i_data);
+	return multi_load_common(the_base_folder);
+}
+
+extern "C" __declspec(dllexport) long __cdecl multi_loadu(HGLOBAL i_data, long i_data_len)
+{
+	return multi_load_from(i_data, i_data_len, true);
+}
+
+extern "C" __declspec(dllexport) long __cdecl multi_load(HGLOBAL i_data, long i_data_len)
+{
+	return multi_load_from(i_data, i_data_len, false);
+}
+
+extern "C" __declspec(dllexport) BOOL __cdecl multi_unload(long id)
+{
+	try {
+		return SakuraDLLHost::Destroy(id) ? TRUE : FALSE;
+	}
+	catch ( ... ) {
+		return FALSE;
+	}
+}
+
+extern "C" __declspec(dllexport) HGLOBAL __cdecl multi_request(long id, HGLOBAL i_data, long* io_data_len)
+{
+	std::string the_req_str;
+	try {
+		the_req_str.assign((const char*)::GlobalLock(i_data), *io_data_len);
+	}
+	catch ( ... ) {
+	}
+	::GlobalFree(i_data);
+
+	try {
+		std::string resp;
+		if ( ! multi_request_common(id, the_req_str, resp) ) {
+			*io_data_len = 0;
+			return NULL;
+		}
+		return return_bytes(resp, io_data_len);
+	}
+	catch ( ... ) {
+		*io_data_len = 0;
+		return NULL;
+	}
+}
+
+// 実体専用のログコールバック（YAYA互換）。multi_load* で作った実体にだけ設定でき、無効な id では何もしない
+extern "C" __declspec(dllexport) void __cdecl multi_Set_loghandler(long id, void (*loghandler)(const wchar_t *str, int mode, int id))
+{
+	multi_set_loghandler_common(id, loghandler);
+}
+
+#endif // POSIX
+
+#endif // POSIX || SATORI_DLL
 
 
 static bool	is_ascii_only(const std::string& i_bytes)

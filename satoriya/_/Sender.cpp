@@ -22,10 +22,23 @@ static const wchar_t RECV_CLASSNAME[] = L"‚ê‚µ‚Î";
 
 int Sender::nest_object::sm_nest = 0;
 
+// Œ»İ‘I‚Î‚ê‚Ä‚¢‚é SenderBNULL ‚È‚çŠù’è‚Ì‚à‚Ì
+static Sender* g_current_sender = NULL;
+
 Sender& GetSender()
 {
+	if ( g_current_sender ) {
+		return *g_current_sender;
+	}
 	static Sender send;
 	return send;
+}
+
+Sender* SetCurrentSender(Sender* i_sender)
+{
+	Sender* prev = g_current_sender;
+	g_current_sender = i_sender;
+	return prev;
 }
 
 Sender::Sender()
@@ -37,7 +50,6 @@ Sender::Sender()
 	sm_buffering_flag = false;
 
 	is_do_auto_initialize = false;
-	nest_object::sm_nest = 0;
 	sm_loghandler = NULL;
 #ifndef POSIX
 	sm_receiver_window = NULL;

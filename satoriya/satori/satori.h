@@ -318,6 +318,13 @@ private:
 
 	int m_nest_count;
 
+	// 文・さくらスクリプト変換の再帰の深さ。例外で途中から抜けたときに reset_nest_counters で戻せるよう、関数の外に置く。
+	// 実体ごとに持つ（マルチインスタンスで、別の実体を呼び出している途中に、他の実体の値を巻き込まないため）
+	int m_sentence_internal_nest_count;
+	int m_get_sentence_nest_count;
+	bool m_reserved_talk_processed;	// 今回のトーク生成で、予約トークをすでに処理したか
+	void reset_nest_counters();
+
 	// 括弧（（）の入れ子の深さ。深さの上限を越えたら展開せずに打ち切る（スタックを使い果たさないため）
 	int m_kakko_depth;
 
@@ -776,9 +783,6 @@ bool	split_variable_assignment(const wchar_t* p, const wchar_t*& oSeparator, boo
 // 対応する）で終われば、pをその次へ進めてtrueを返す。文字列の終わりに達したら、残りを最後の引数にしてfalseを返す。
 bool	split_special_arguments(const wchar_t*& p, const wstring& iDelimiter, strvec& oArguments);
 void	diet_script(wstring&);
-// 文・さくらスクリプト変換の再帰の深さ（静的な変数）を0に戻す
-void	reset_nest_counters();
-
 //---------------------------------------------------------------------------
 #endif
 

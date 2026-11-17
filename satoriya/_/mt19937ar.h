@@ -46,6 +46,16 @@
 #ifndef	MTRANDH
 #define	MTRANDH
 
+/* Generator state. Normally one shared default state is used (single instance).   */
+/* A multi-instance host creates one state per instance and selects it with        */
+/* mt19937_set_current() while that instance runs (not thread-safe, like the rest). */
+struct mt19937_state;
+mt19937_state* mt19937_create(void);
+void mt19937_destroy(mt19937_state* s);
+/* Selects the state used by the functions below (NULL = default state).          */
+/* Returns the previously selected state (NULL if it was the default one).        */
+mt19937_state* mt19937_set_current(mt19937_state* s);
+
 /* initializes mt[N] with a seed */
 void init_genrand(unsigned long s);
 
