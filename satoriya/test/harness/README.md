@@ -43,7 +43,7 @@ master の DLL には SJIS のリクエスト、unicode 版には SJIS か UTF-8
 ## multi_harness
 
 `multi_harness.c` は、マルチインスタンスのエクスポート（`multi_loadu` / `multi_request` / `multi_unload` / `multi_Set_loghandler`）を確かめる。
-ゴースト A・B を `multi_loadu`、C を従来の `load` で読み込み、リクエストを交互に送って、変数・乱数・正規表現のサブルーチン名・ログのコールバックが実体どうしで混ざらないこと、片方を unload しても残りが動くこと、無効な id の扱いを調べる。全部通れば終了コード 0。
+ゴースト A・B を `multi_loadu`、C を従来の `load` で読み込み、リクエストを交互に送って、変数・乱数・正規表現のサブルーチン名・ログのコールバックが実体どうしで混ざらないこと、`multi_request` の途中（B のログのコールバックの中）から従来の `request` を呼んでも従来の実体（C）に入ること、片方を unload しても残りが動くこと、無効な id の扱いを調べる。全部通れば終了コード 0。
 
 ```
 cl /nologo /O2 multi_harness.c user32.lib

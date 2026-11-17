@@ -20,8 +20,6 @@
 static const wchar_t TAMA_CLASSNAME[] = L"TamaWndClass";
 static const wchar_t RECV_CLASSNAME[] = L"れしば";
 
-int Sender::nest_object::sm_nest = 0;
-
 // 現在選ばれている Sender。NULL なら既定のもの
 static Sender* g_current_sender = NULL;
 
@@ -41,8 +39,19 @@ Sender* SetCurrentSender(Sender* i_sender)
 	return prev;
 }
 
+Sender::nest_object::nest_object(int i_nest) : m_sender(&GetSender()), m_nest(i_nest)
+{
+	m_sender->add_nest(m_nest);
+}
+
+Sender::nest_object::~nest_object()
+{
+	m_sender->add_nest(-m_nest);
+}
+
 Sender::Sender()
 {
+	m_nest_count = 0;
 	delay_send_event_max = 0;
 	delay_send_string_max = 200;
 
@@ -157,7 +166,7 @@ bool Sender::auto_init()
 // レシーバウィンドウにメッセージを送信
 bool Sender::send(int mode,const wchar_t* iString)
 {
-	const int nest = nest_object::count();
+	const int nest = m_nest_count;
 	wchar_t *theBuf = buffer_to_send;
 	
 	if ( nest>0 ) {

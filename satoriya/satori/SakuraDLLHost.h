@@ -37,6 +37,12 @@ protected:
 public:
 	static SakuraDLLHost* I() { return m_dll; }
 
+	// 従来の load / request / unload が扱う、DLLに1つだけの既定の実体。
+	// multi_request の途中でベースウェアが従来の入口を呼び直しても（再入）、I() は呼び出し中の実体を返してしまうので、
+	// 従来の入口は SakuraDLLHostScope(Default()) を作ってから I() を使う。
+	// 最初の SakuraDLLHostScope が作られた時点（そのとき m_dll は既定の実体）で覚える。
+	static SakuraDLLHost* Default();
+
 	// new した実体（SakuraDLLHost の派生クラス）を表に登録し、実体専用の状態を作って、id（1以上）を返す。
 	// 実体の所有権を受け取る。失敗したら実体を delete して例外を投げる。
 	// （VC6 はメンバーテンプレートの明示的な型指定で内部エラーになるので、Create<T>() の形にしていない）

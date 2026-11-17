@@ -157,24 +157,32 @@ class Sender
 
 	bool auto_init();
 
+	// ログ表示のネストの深さ（nest_object が増減する）。実体ごとの Sender が持つので、実体をまたいだ入れ子でも混ざらない
+	int m_nest_count;
+
 	friend Sender& GetSender();
 public:
 	// 通常は GetSender() の既定の1つを使う。マルチインスタンスのホストだけが、インスタンスごとに作る。
 	Sender();
 	~Sender();
 
-	// このクラスのインスタンスのライフタイムに合わせ、ログ表示の際にネストを行う
+	// このクラスのインスタンスのライフタイムに合わせ、ログ表示の際にネストを行う。
+	// 作った時点の GetSender()（現在の実体の Sender）の深さを増減する。
 	class nest_object
 	{
-		friend Sender;
-
-		static int sm_nest;
+		Sender* m_sender;
 		int m_nest;
+
+		nest_object(const nest_object&);
+		nest_object& operator=(const nest_object&);
 	public:
-		nest_object(int i_nest) : m_nest(i_nest) { sm_nest += m_nest; }
-		~nest_object() { sm_nest -= m_nest; }
-		static int count() { return sm_nest; }
+		nest_object(int i_nest);
+		~nest_object();
 	};
+
+	// ログ表示のネストの深さ。nest_object が増減に使う
+	void add_nest(int i_delta) { m_nest_count += i_delta; }
+	int get_nest() const { return m_nest_count; }
 
 	bool reinit(bool isEnable);
 #ifndef POSIX

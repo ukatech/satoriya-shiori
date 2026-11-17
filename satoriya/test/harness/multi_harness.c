@@ -50,6 +50,22 @@ static void __cdecl log_a(const wchar_t *s, int mode, int id) { (void)s; (void)m
 static void __cdecl log_b(const wchar_t *s, int mode, int id) { (void)s; (void)mode; (void)id; count_b++; }
 static void __cdecl log_c(const wchar_t *s, int mode, int id) { (void)s; (void)mode; (void)id; count_c++; }
 
+/* Re-entrancy: while multi_request(B) is running, B's log callback calls the legacy request (OnSet 9).
+   It must reach the legacy instance (C), not B. */
+static int reenter_armed;
+static int reenter_done;
+static char *send_event(long id, const char *event_id, const char *ref0);
+static void __cdecl log_b_reenter(const wchar_t *s, int mode, int id)
+{
+	(void)s; (void)mode; (void)id;
+	count_b++;
+	if (reenter_armed) {
+		reenter_armed = 0;
+		free(send_event(0, "OnSet", "9"));
+		reenter_done = 1;
+	}
+}
+
 static void ok(int cond, const char *msg)
 {
 	printf("%s  %s\n", cond ? "OK" : "NG", msg);
@@ -193,6 +209,20 @@ int main(int argc, char **argv)
 	free(send_event(0, "OnGet", "-"));
 	ok(count_c > before_c, "log: request to C(legacy) reaches Set_loghandler's handler");
 	ok(count_a == before_a && count_b == before_b, "log: request to C does not reach A's / B's handler");
+
+	/* --- the legacy entry points called from inside a multi_request go to the legacy instance --- */
+	p_multi_set_loghandler(b, log_b_reenter);
+	reenter_armed = 1;
+	reenter_done = 0;
+	before_c = count_c;
+	free(send_event(b, "OnGet", "-"));
+	ok(reenter_done, "reentrancy: B's log callback called the legacy request");
+	p_multi_set_loghandler(b, log_b);
+	reenter_armed = 0;
+	expect(b, "OnGet", "-", "v is \xef\xbc\x92", "reentrancy: B's variable is untouched by the legacy request made during B's request");
+	expect(0, "OnGet", "-", "v is \xef\xbc\x99", "reentrancy: the legacy request made during B's request reached C (v=9)");
+	ok(count_c > before_c, "reentrancy: the legacy request's log went to C's handler");
+	expect(0, "OnSet", "3", "set", "C(legacy): set v=3 again");
 
 	/* --- random numbers are not mixed (instances loaded at the same moment give different values) --- */
 	ra = send_event(a, "OnRand", "-");

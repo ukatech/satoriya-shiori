@@ -133,6 +133,8 @@ git submodule update --init --remote satoriya/uka_regexp
 - `SakuraScript.cpp` / `main.cpp` / `cn.cpp` / `TimeCommands.cpp` はどのプロジェクトにも入っていない（死んだコード）。
 - マルチインスタンス（`multi_loadu` / `multi_load` / `multi_unload` / `multi_request` / `multi_Set_loghandler`。YAYA・華和梨と同じ形）：入口は `SakuraDLLHost.cpp` の末尾（`SATORI_DLL` か `POSIX` のビルドだけ。ssu.dll には入れない）。実体は `SakuraDLLHost::m_instances`（id が添字、0 は空き）に入り、従来の `load` / `request` / `unload` の実体（`gSatori`、`m_dll`）とは別。
   - 実体を呼ぶ間は、必ず `SakuraDLLHostScope` を作る。`m_dll`（`I()`）・`GetSender()` の Sender・乱数（`mt19937_set_current`）を実体のものに差し替え、抜けると戻す。だから実体の中のコードは「自分が唯一の実体」として書ける。
+  - 従来の入口（`load` / `loadu` / `unload` / `request` / `getversionlist` / `logsend` / `Set_loghandler`）も `SakuraDLLHostScope scope(SakuraDLLHost::Default())` を作ってから実体を使う。`I()` は呼び出し中の実体を返すだけなので、`multi_request` の途中（ログのコールバックなど）で従来の入口が再入されると、張らなければその実体に入ってしまう。`Default()` は最初のスコープに入る前の `m_dll`（既定の実体）を覚えている。
+  - ログのインデント（`Sender::nest_object`）の深さは Sender のメンバ（`m_nest_count`）。実体をまたぐ入れ子（A → SAORI → B）でも混ざらない。
   - 実体ごとに持つ状態のうち、`Satori` のメンバでないのは Sender（`m_own_sender`）と乱数の状態（`m_own_mt`）だけ。残りは `Satori` のメンバ（再帰カウンタの `m_sentence_internal_nest_count` なども）。**新しい static を足すときは、定数表（遅延初期化）に限る。実体の状態はメンバに置く。**ある実体の呼び出しの途中で別の実体が呼ばれることがある（SAORI や SSTP を経由してベースウェアが同期で呼ぶ）ので、「1回のリクエストの中だけの値」でも static にしない。
   - ssu の正規表現のサブルーチン名の解決先（`set_ssu_name_resolver`）はプロセスで1つだが、`ShioriPlugins::request` が SAORI を呼ぶたびに呼んだ実体を設定し直すので、実体どうしで混ざらない。
   - VC6 は `Create<T>()` のようなメンバーテンプレートの明示的な型指定で内部エラーになる。`SakuraDLLHost::Add(new Satori())` の形にしてある。

@@ -107,8 +107,22 @@ bool SakuraDLLHost::Destroy(long i_id)
 	return true;
 }
 
+// 既定の実体（最も外側のスコープに入る前の m_dll）と、いまのスコープの深さ。
+// 呼び出しは1つのスレッドから順に行う前提なので、ロックはしない。
+static SakuraDLLHost* s_default_host = NULL;
+static int s_scope_depth = 0;
+
+SakuraDLLHost* SakuraDLLHost::Default()
+{
+	return s_default_host ? s_default_host : m_dll;
+}
+
 SakuraDLLHostScope::SakuraDLLHostScope(SakuraDLLHost* i_host)
 {
+	if ( s_scope_depth == 0 ) {
+		s_default_host = SakuraDLLHost::m_dll;
+	}
+	++s_scope_depth;
 	m_prev_host = SakuraDLLHost::m_dll;
 	SakuraDLLHost::m_dll = i_host;
 	m_prev_sender = SetCurrentSender(i_host->m_own_sender);
@@ -120,6 +134,7 @@ SakuraDLLHostScope::~SakuraDLLHostScope()
 	SakuraDLLHost::m_dll = m_prev_host;
 	SetCurrentSender(m_prev_sender);
 	mt19937_set_current(m_prev_mt);
+	--s_scope_depth;
 }
 
 //---------------------------------------------------------------------------
@@ -147,6 +162,7 @@ extern "C" SATORI_EXPORT int load(char* i_data, long i_data_len) {
 //	GetSender().initialize();
     wstring the_base_folder = UTF8toW(to_bytes(i_data, i_data_len));
     free(i_data);
+    SakuraDLLHostScope scope(SakuraDLLHost::Default());	// multi_ の呼び出し中に再入されても、従来の実体を扱う
     GetSender().sender() << the_base_folder << std::endl;
     try {
         return SakuraDLLHost::I()->load(the_base_folder);
@@ -168,6 +184,7 @@ extern "C" __declspec(dllexport) BOOL __cdecl load(HGLOBAL i_data, long i_data_l
 	if ( s_loadu_called ) {
 		return TRUE;
 	}
+	SakuraDLLHostScope scope(SakuraDLLHost::Default());	// multi_ の呼び出し中に再入されても、従来の実体を扱う
 	GetSender().sender() << the_base_folder << std::endl;
 	try {
 		return SakuraDLLHost::I()->load(the_base_folder);
@@ -184,6 +201,7 @@ extern "C" __declspec(dllexport) BOOL __cdecl loadu(HGLOBAL i_data, long i_data_
 	wstring the_base_folder = UTF8toW(to_bytes((const char*)::GlobalLock(i_data), i_data_len));
 	::GlobalFree(i_data);
 	s_loadu_called = true;
+	SakuraDLLHostScope scope(SakuraDLLHost::Default());
 	GetSender().sender() << the_base_folder << std::endl;
 	try {
 		return SakuraDLLHost::I()->load(the_base_folder);
@@ -197,6 +215,7 @@ extern "C" __declspec(dllexport) BOOL __cdecl loadu(HGLOBAL i_data, long i_data_
 // チェックツール（tama/tamac）のログ受信ウィンドウを指定する（YAYA互換）
 extern "C" __declspec(dllexport) BOOL __cdecl logsend(long hwnd)
 {
+	SakuraDLLHostScope scope(SakuraDLLHost::Default());
 	GetSender().set_receiver_window((HWND)(INT_PTR)hwnd);
 	return TRUE;
 }
@@ -209,6 +228,7 @@ extern "C" SATORI_EXPORT void Set_loghandler(void (*loghandler)(const wchar_t *s
 extern "C" __declspec(dllexport) void __cdecl Set_loghandler(void (*loghandler)(const wchar_t *str, int mode, int id))
 #endif
 {
+	SakuraDLLHostScope scope(SakuraDLLHost::Default());
 	GetSender().set_loghandler(loghandler);
 }
 
@@ -221,6 +241,7 @@ extern "C" __declspec(dllexport) BOOL __cdecl unload(void)
 #ifndef POSIX
 	s_loadu_called = false;
 #endif
+	SakuraDLLHostScope scope(SakuraDLLHost::Default());
 	try {
 		return SakuraDLLHost::I()->unload();
 	}
@@ -246,6 +267,7 @@ static char* return_bytes(const std::string& the_resp_str, long* io_data_len)
 // 例外（メモリ不足など）を呼び出し元に漏らさない。失敗したら NULL を返す。
 static char* request_and_return(const std::string& the_req_str, long* io_data_len)
 {
+    SakuraDLLHostScope scope(SakuraDLLHost::Default());
     try {
         return return_bytes(SakuraDLLHost::I()->request_bytes(the_req_str), io_data_len);
     }
@@ -283,6 +305,7 @@ extern "C" __declspec(dllexport) HGLOBAL __cdecl request(HGLOBAL i_data, long* i
 	::GlobalFree(i_data);
 
 	// リクエスト実行。例外（メモリ不足など）を呼び出し元に漏らさない
+	SakuraDLLHostScope scope(SakuraDLLHost::Default());	// multi_ の呼び出し中に再入されても、従来の実体を扱う
 	try {
 		std::string	the_resp_str = SakuraDLLHost::I()->request_bytes(the_req_str);
 
@@ -305,6 +328,7 @@ extern "C" __declspec(dllexport) HGLOBAL __cdecl getversionlist(HGLOBAL i_data, 
 	::GlobalFree(i_data);
 
 	// リクエスト実行。例外を呼び出し元に漏らさない
+	SakuraDLLHostScope scope(SakuraDLLHost::Default());
 	try {
 		wstring	the_resp_str = SakuraDLLHost::I()->getversionlist(the_req_str);
 
